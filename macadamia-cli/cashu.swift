@@ -7,45 +7,40 @@ var mintKeyset:Dictionary<String, String> = [:]
 
 // 1. retrieve keyset from mint
 
-func getMintKeyset() {
+func getMintKeyset(completion: @escaping (Dictionary<String,String>) -> Void) {
     if let url = URL(string: mintURL + "/keys") {
-        let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
-            if let error = error {
-                print("Error: \(error)")
-            } else if let data = data {
+            let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
+                if let error = error {
+                    print("Network error: \(error)")
+                    return
+                }
+                guard let data = data else {
+                    print("No data received")
+                    return
+                }
                 do {
                     if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: String] {
-                        mintKeyset = json
-                        //print(mintKeyset)
+                        print("Successfully parsed JSON")
+                        completion(json)
+                    } else {
+                        print("Unable to cast JSON to [Int: String]")
                     }
                 } catch {
                     print("JSON Serialization error: \(error)")
                 }
             }
+            print("Starting download")
+            task.resume()
+        } else {
+            print("Invalid URL")
         }
-        // Start the task
-        task.resume()
-    }
 }
 
-
-// ------------ MINTING
-// 1. get invoice from mint for token minting
+// 2. get invoice from mint for token minting
 
 struct PaymentRequest: Codable {
     let pr: String
     let hash: String
-}
-
-
-
-func serializationTest() {
-    let teststring = """
-{"token":[{"mint":"https://8333.space:3338","proofs":[{"id":"DSAl9nvvyfva","amount":2,"secret":"EhpennC9qB3iFlW8FZ_pZw","C":"02c020067db727d586bc3183aecf97fcb800c3f4cc4759f69c626c9db5d8f5b5d4"},{"id":"DSAl9nvvyfva","amount":8,"secret":"TmS6Cv0YT5PU_5ATVKnukw","C":"02ac910bef28cbe5d7325415d5c263026f15f9b967a079ca9779ab6e5c2db133a7"}]}],"memo":"Thankyou."}
-"""
-    
-    let serialized = Base64FS.encodeString(str: teststring)
-    print(serialized)
 }
 
 func requestMint(amount:Int, completion: @escaping (PaymentRequest?) -> Void) {
@@ -60,7 +55,7 @@ func requestMint(amount:Int, completion: @escaping (PaymentRequest?) -> Void) {
     }
     print("Created the following secrets: \(secrets)")
     
-    /*
+    
     let urlString = mintURL + "/mint?amount=" + String(amount)
     if let url = URL(string: urlString) {
         let task = URLSession.shared.dataTask(with: url) {payload, response, error in
@@ -75,8 +70,10 @@ func requestMint(amount:Int, completion: @escaping (PaymentRequest?) -> Void) {
         task.resume()
     } else {
         print("invalid URL")
-    }*/
+    }
 }
+
+
 
 // HELPER FUNCTIONS:
 

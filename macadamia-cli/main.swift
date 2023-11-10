@@ -8,4 +8,13 @@
 import Foundation
 import secp256k1
 
-test()
+let dispatchGroup = DispatchGroup()
+
+dispatchGroup.enter()
+
+getMintKeyset { keyDictionary in
+    print("keys: " + keyDictionary.description)
+    dispatchGroup.leave()
+}
+
+_ = dispatchGroup.wait(timeout: .now() + 5)
