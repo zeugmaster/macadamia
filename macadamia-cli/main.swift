@@ -6,6 +6,6 @@
 //
 
 import Foundation
+import secp256k1
 
-print("Hello, World!")
-
+test()

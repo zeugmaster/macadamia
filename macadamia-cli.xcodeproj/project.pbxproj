@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		3709F1E92AFD51D90091DE8D /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1E82AFD51D90091DE8D /* main.swift */; };
+		3709F1F12AFD52040091DE8D /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 3709F1F02AFD52040091DE8D /* secp256k1 */; };
+		3709F1F52AFD52760091DE8D /* b_dhke.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F22AFD52760091DE8D /* b_dhke.swift */; };
+		3709F1F62AFD52760091DE8D /* cashu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F32AFD52760091DE8D /* cashu.swift */; };
+		3709F1F72AFD52760091DE8D /* Base64FS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F42AFD52760091DE8D /* Base64FS.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +29,9 @@
 /* Begin PBXFileReference section */
 		3709F1E52AFD51D90091DE8D /* macadamia-cli */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "macadamia-cli"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3709F1E82AFD51D90091DE8D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		3709F1F22AFD52760091DE8D /* b_dhke.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = b_dhke.swift; sourceTree = "<group>"; };
+		3709F1F32AFD52760091DE8D /* cashu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cashu.swift; sourceTree = "<group>"; };
+		3709F1F42AFD52760091DE8D /* Base64FS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Base64FS.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +39,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3709F1F12AFD52040091DE8D /* secp256k1 in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -58,6 +66,9 @@
 			isa = PBXGroup;
 			children = (
 				3709F1E82AFD51D90091DE8D /* main.swift */,
+				3709F1F22AFD52760091DE8D /* b_dhke.swift */,
+				3709F1F42AFD52760091DE8D /* Base64FS.swift */,
+				3709F1F32AFD52760091DE8D /* cashu.swift */,
 			);
 			path = "macadamia-cli";
 			sourceTree = "<group>";
@@ -78,6 +89,9 @@
 			dependencies = (
 			);
 			name = "macadamia-cli";
+			packageProductDependencies = (
+				3709F1F02AFD52040091DE8D /* secp256k1 */,
+			);
 			productName = "macadamia-cli";
 			productReference = 3709F1E52AFD51D90091DE8D /* macadamia-cli */;
 			productType = "com.apple.product-type.tool";
@@ -106,6 +120,9 @@
 				Base,
 			);
 			mainGroup = 3709F1DC2AFD51D90091DE8D;
+			packageReferences = (
+				3709F1EF2AFD52040091DE8D /* XCRemoteSwiftPackageReference "secp256k1.swift" */,
+			);
 			productRefGroup = 3709F1E62AFD51D90091DE8D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -120,7 +137,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3709F1F62AFD52760091DE8D /* cashu.swift in Sources */,
+				3709F1F52AFD52760091DE8D /* b_dhke.swift in Sources */,
 				3709F1E92AFD51D90091DE8D /* main.swift in Sources */,
+				3709F1F72AFD52760091DE8D /* Base64FS.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -289,6 +309,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3709F1EF2AFD52040091DE8D /* XCRemoteSwiftPackageReference "secp256k1.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/GigaBitcoin/secp256k1.swift.git";
+			requirement = {
+				branch = COMBINE;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3709F1F02AFD52040091DE8D /* secp256k1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3709F1EF2AFD52040091DE8D /* XCRemoteSwiftPackageReference "secp256k1.swift" */;
+			productName = secp256k1;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3709F1DD2AFD51D90091DE8D /* Project object */;
 }
