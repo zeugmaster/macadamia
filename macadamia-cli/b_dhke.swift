@@ -21,7 +21,7 @@ struct BlindedOutput {
 struct Promise {
     let amount: Int
     let promise: secp256k1.Signing.PublicKey
-    let blindingFactor: secp256k1.Signing.PrivateKey // THIS DOESN'T ACTUALLY MAKE SENSE AND IS CHEATING
+    let blindingFactor: secp256k1.Signing.PrivateKey // THIS DOESN'T ACTUALLY MAKE SENSE AND IS CHEATING because the blindingfactor can't be known by the mint
 }
 struct Token {
     let amount: Int
@@ -37,9 +37,9 @@ func generateBlindedOutputs(outputs:[Output]) -> [BlindedOutput]{
         
         //let blindingFactor = try! secp256k1.Signing.PrivateKey()
         
-        let blindingFactor = try! secp256k1.Signing.PrivateKey(dataRepresentation: "14E4A74438858920D8A35FB2D88677580B6A2EE9BE4E711AE34EC6B396D87B5C".bytes)
+        let blindingFactor = try! secp256k1.Signing.PrivateKey()
         
-        let blindedOutput = try! Y.add(blindingFactor.dataRepresentation.bytes)
+        let blindedOutput = try! Y.combine([blindingFactor.publicKey])
         blindedOutputs.append(BlindedOutput(amount: output.amount,
                                             blindedOutput: blindedOutput,
                                             secret: output.secret,
@@ -89,6 +89,8 @@ func unblindPromises(promises:[Promise],
     
     return tokens
 }
+
+//-------------- Verification ---------------------------------------------------------
 
 func verify(mintPrivateKey: secp256k1.Signing.PrivateKey, token: Token, secret: String) -> Bool {
     let secretHashedToCurve = hashToCurve(message: secret)

@@ -67,8 +67,8 @@
 			children = (
 				3709F1E82AFD51D90091DE8D /* main.swift */,
 				3709F1F22AFD52760091DE8D /* b_dhke.swift */,
-				3709F1F42AFD52760091DE8D /* Base64FS.swift */,
 				3709F1F32AFD52760091DE8D /* cashu.swift */,
+				3709F1F42AFD52760091DE8D /* Base64FS.swift */,
 			);
 			path = "macadamia-cli";
 			sourceTree = "<group>";
