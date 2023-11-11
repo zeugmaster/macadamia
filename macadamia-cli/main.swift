@@ -12,9 +12,35 @@ let dispatchGroup = DispatchGroup()
 
 dispatchGroup.enter()
 
+
 getMintKeyset { keyDictionary in
-    print("keys: " + keyDictionary.description)
-    dispatchGroup.leave()
+    //print("keys: " + keyDictionary.description)
+    
+    var amount:Int = 0
+    
+    while amount == 0 {
+        print("Please enter amount to request: ", terminator: "")
+        if let input = readLine(), let inputAmount = Int(input) {
+            amount = inputAmount
+        } else {
+            print("Invalid input, try again")
+        }
+    }
+    
+    requestMint(amount: amount) { paymentReq in
+        print(paymentReq ?? "nil")
+        
+        print("when you have paid the invoice, press enter to proceed")
+        _ = readLine()
+        
+        requestBlindedOutputs(amount: amount, payReq: paymentReq!) { blindedOutputs in
+            print("requestBlindedOutputs completion handler ran")
+            dispatchGroup.leave()
+        }
+        
+    }
+    
+    
 }
 
-_ = dispatchGroup.wait(timeout: .now() + 5)
+dispatchGroup.wait()
