@@ -33,8 +33,12 @@ getMintKeyset { keyDictionary in
         print("when you have paid the invoice, press enter to proceed")
         _ = readLine()
         
-        requestBlindedOutputs(amount: amount, payReq: paymentReq!) { blindedOutputs in
-            print("requestBlindedOutputs completion handler ran")
+        requestBlindedPromises(amount: amount, payReq: paymentReq!) { promises in
+            //print("promises: \(promises)")
+            
+            _ = unblindPromises(promises: promises, mintPublicKeys: keyDictionary)
+            
+            // end execution
             dispatchGroup.leave()
         }
         
@@ -44,3 +48,4 @@ getMintKeyset { keyDictionary in
 }
 
 dispatchGroup.wait()
+

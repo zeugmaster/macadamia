@@ -8,26 +8,6 @@ import Foundation
 import CryptoKit
 import secp256k1
 
-struct Output {
-    let amount: Int
-    let secret: String
-}
-struct BlindedOutput {
-    let amount: Int
-    let blindedOutput: secp256k1.Signing.PublicKey
-    let secret: String
-    let blindingFactor: secp256k1.Signing.PrivateKey
-}
-struct Promise {
-    let amount: Int
-    let promise: secp256k1.Signing.PublicKey
-    let blindingFactor: secp256k1.Signing.PrivateKey // THIS DOESN'T ACTUALLY MAKE SENSE AND IS CHEATING because the blindingfactor can't be known by the mint
-}
-struct Token {
-    let amount: Int
-    let token: secp256k1.Signing.PublicKey
-}
-
 // Step 1 (Alice)
 func generateBlindedOutputs(outputs:[Output]) -> [BlindedOutput]{
     var blindedOutputs:Array<BlindedOutput> = []
@@ -54,7 +34,7 @@ func signBlindedOutputs(blindedOutputs:[BlindedOutput],
     var promises:[Promise] = []
     for blindedOutput in blindedOutputs {
         let multiplication = try! blindedOutput.blindedOutput.multiply(mintPrivateKey.dataRepresentation.bytes)
-        promises.append(Promise(amount: blindedOutput.amount, promise: multiplication, blindingFactor: blindedOutput.blindingFactor))
+        promises.append(Promise(amount: blindedOutput.amount, promise: multiplication, id: "", blindingFactor: blindedOutput.blindingFactor))
     }
     return promises
 }
@@ -62,13 +42,16 @@ func signBlindedOutputs(blindedOutputs:[BlindedOutput],
 // Step 3 (Alice)
 func unblindPromises(promises:[Promise],
                      //fix this method call to include the blinding factor in the correct way
-                     mintPublicKeys:Dictionary<String,secp256k1.Signing.PublicKey>) -> [Token] {
-    var tokens:[Token] = []
+                     mintPublicKeys:Dictionary<String,String>) -> [Token] {
+    var tokens = [Token]()
+    
+    
     
     for promise in promises {
-        let mintPubkeyBytes = mintPublicKeys[String(promise.amount)]!.dataRepresentation.bytes
-        let mintPubKey = try! secp256k1.Signing.PublicKey(dataRepresentation: mintPubkeyBytes, format: .compressed)
+        let pubBytes = try! mintPublicKeys[String(promise.amount)]!.bytes
+        let mintPubKey = try! secp256k1.Signing.PublicKey(dataRepresentation: pubBytes, format: .compressed)
         print("mint pubkey: " + String(bytes: mintPubKey.dataRepresentation))
+        
         let product = try! mintPubKey.multiply(promise.blindingFactor.dataRepresentation.bytes)
         
         let neg = negatePublicKey(key: product)
@@ -114,7 +97,7 @@ func test() {
     print("C_: " + String(bytes: promises[0].promise.dataRepresentation))
     
     // generate dummy public key dict
-    let keyset = ["64":mintPrivateKey.publicKey]
+    let keyset = ["64":"036f48e8b3246cbd9110fe97889e63300f4fff607078b8637a7469cecec0166ca4"]
     
     let tokens = unblindPromises(promises: promises, mintPublicKeys: keyset)
     print("C: " + String(bytes: tokens[0].token.dataRepresentation))

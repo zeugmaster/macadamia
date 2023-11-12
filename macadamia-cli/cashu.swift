@@ -1,5 +1,39 @@
 import Foundation
 import CryptoKit
+import secp256k1
+
+struct Output {
+    let amount: Int
+    let secret: String
+}
+
+struct BlindedOutput {
+    let amount: Int
+    let blindedOutput: secp256k1.Signing.PublicKey
+    let secret: String
+    let blindingFactor: secp256k1.Signing.PrivateKey
+}
+
+struct Promise {
+    let amount: Int
+    let promise: secp256k1.Signing.PublicKey
+    let id: String
+    let blindingFactor:secp256k1.Signing.PrivateKey
+}
+
+struct Promise_JSON: Codable {
+    let id: String
+    let amount: Int
+    let C_: String
+}
+struct Promise_JSON_List: Codable {
+    let promises: [Promise_JSON]
+}
+
+struct Token {
+    let amount: Int
+    let token: secp256k1.Signing.PublicKey
+}
 
 //let mintURL = "https://8333.space:3338"
 let mintURL = "https://63ff34c9b6.d.voltageapp.io/cashu/api/v1/aCPSKZ993aY9Z8ECK6uqe7"
@@ -74,9 +108,10 @@ func requestMint(amount:Int, completion: @escaping (PaymentRequest?) -> Void) {
 // 4b blind outputs ✔
 // 4c construct JSON with blinded outputs and amounts ✔
 // 4d make post req to mint with payment hash in url and JSON as payload ✔
-// 4e store list of blinded outputs for later unblinding
+// 4e read JSON data to object and transform by changind key strings to objects, adding blindingfactors
+// 4f store list of blinded outputs for later unblinding
 
-func requestBlindedOutputs(amount:Int, payReq:PaymentRequest, completion: @escaping ([BlindedOutput]) -> Void) {
+func requestBlindedPromises(amount:Int, payReq:PaymentRequest, completion: @escaping ([Promise]) -> Void) {
     var outputs:[Output] = []
     for m in splitIntoBase2Numbers(n: amount) {
         let output = Output(amount: m, secret: "test_\(m)")
@@ -100,7 +135,7 @@ func requestBlindedOutputs(amount:Int, payReq:PaymentRequest, completion: @escap
     do {
         let jsonData = try JSONSerialization.data(withJSONObject: containerDict, options: [])
         let jsonString = String(data: jsonData, encoding: .utf8)
-        print(jsonString ?? "Invalid JSON String")
+        //print(jsonString ?? "Invalid JSON String")
 
         if let url = URL(string: mintURL + "/mint?hash=" + payReq.hash) {
             print(url)
@@ -114,8 +149,12 @@ func requestBlindedOutputs(amount:Int, payReq:PaymentRequest, completion: @escap
                     print("Error: \(error)")
                     return
                 }
-                print(String(data: data!, encoding: .utf8) ?? "no data")
-                completion([])
+                
+                if let jsonObject = try? JSONDecoder().decode(Promise_JSON_List.self, from: data!) {
+                    completion(transformPromises(promises: jsonObject.promises))
+                } else {
+                    print("could not decode promises from JSON: \(String(data: data!, encoding: .utf8) ?? "no data")")
+                }
             }
             task.resume()
         } else {
@@ -126,7 +165,19 @@ func requestBlindedOutputs(amount:Int, payReq:PaymentRequest, completion: @escap
     }
 }
 
-// 5. UNBLIND SIGNATURES
+func transformPromises(promises:[Promise_JSON]) -> [Promise] {
+    var transformed = [Promise]()
+    print(promises)
+    for promise in promises {
+        let pK = try! secp256k1.Signing.PublicKey(dataRepresentation: promise.C_.bytes, format: .compressed)
+        let blindingFactor = blindedOutputs.first(where: { $0.amount == promise.amount})!.blindingFactor
+        let p = Promise(amount: promise.amount, promise:pK , id: promise.id, blindingFactor: blindingFactor)
+        transformed.append(p)
+    }
+    return transformed
+}
+
+// 5. UNBLIND PROMISES
 
 // HELPER FUNCTIONS:
 
