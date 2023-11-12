@@ -21,6 +21,12 @@ struct Promise {
     let blindingFactor:secp256k1.Signing.PrivateKey
 }
 
+struct Token {
+    let amount: Int
+    let token: secp256k1.Signing.PublicKey
+    let id: String
+}
+
 struct Promise_JSON: Codable {
     let id: String
     let amount: Int
@@ -28,11 +34,6 @@ struct Promise_JSON: Codable {
 }
 struct Promise_JSON_List: Codable {
     let promises: [Promise_JSON]
-}
-
-struct Token {
-    let amount: Int
-    let token: secp256k1.Signing.PublicKey
 }
 
 //let mintURL = "https://8333.space:3338"
@@ -114,7 +115,10 @@ func requestMint(amount:Int, completion: @escaping (PaymentRequest?) -> Void) {
 func requestBlindedPromises(amount:Int, payReq:PaymentRequest, completion: @escaping ([Promise]) -> Void) {
     var outputs:[Output] = []
     for m in splitIntoBase2Numbers(n: amount) {
-        let output = Output(amount: m, secret: "test_\(m)")
+        let key = SymmetricKey(size: .bits128)
+        let keyData = key.withUnsafeBytes {Data($0)}
+        let secretString = Base64FS.encodeString(str: keyData.base64EncodedString())
+        let output = Output(amount: m, secret:secretString)
         outputs.append(output)
     }
     //print("outputs: \(outputs)")
@@ -178,6 +182,41 @@ func transformPromises(promises:[Promise_JSON]) -> [Promise] {
 }
 
 // 5. UNBLIND PROMISES
+// -> done in b_dhk.swift
+
+// 6. serialize tokens
+struct Token_Container: Codable {
+    let token: [Token_JSON]
+    let memo: String
+}
+struct Token_JSON: Codable {
+    let mint: String
+    let proofs: [Proofs_JSON]
+}
+struct Proofs_JSON: Codable {
+    let id: String
+    let amount: Int
+    let secret: String
+    let C: String
+}
+
+func serializeTokens(tokens: [Token]) -> String {
+    var proofs = [Proofs_JSON]()
+    for token in tokens {
+        let secret = blindedOutputs.first(where: { $0.amount == token.amount})!.secret
+        proofs.append(Proofs_JSON(id: token.id, amount: token.amount, secret: secret, C: String(bytes: token.token.dataRepresentation)))
+    }
+    let token = Token_JSON(mint: mintURL, proofs: proofs)
+    let tokenContainer = Token_Container(token: [token], memo: "jeeez")
+    
+    let jsonData = try! JSONEncoder().encode(tokenContainer)
+    let jsonString = String(data: jsonData, encoding: .utf8)!
+    print(jsonString)
+    
+    let safeString = Base64FS.encodeString(str: jsonString)
+    
+    return "cashuA" + safeString
+}
 
 // HELPER FUNCTIONS:
 

@@ -36,7 +36,11 @@ getMintKeyset { keyDictionary in
         requestBlindedPromises(amount: amount, payReq: paymentReq!) { promises in
             //print("promises: \(promises)")
             
-            _ = unblindPromises(promises: promises, mintPublicKeys: keyDictionary)
+            let unblindedPromises = unblindPromises(promises: promises, mintPublicKeys: keyDictionary)
+            
+            let tokenString = serializeTokens(tokens: unblindedPromises)
+            
+            print(tokenString)
             
             // end execution
             dispatchGroup.leave()

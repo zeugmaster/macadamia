@@ -50,24 +50,23 @@ func unblindPromises(promises:[Promise],
     for promise in promises {
         let pubBytes = try! mintPublicKeys[String(promise.amount)]!.bytes
         let mintPubKey = try! secp256k1.Signing.PublicKey(dataRepresentation: pubBytes, format: .compressed)
-        print("mint pubkey: " + String(bytes: mintPubKey.dataRepresentation))
+        //print("mint pubkey: " + String(bytes: mintPubKey.dataRepresentation))
         
         let product = try! mintPubKey.multiply(promise.blindingFactor.dataRepresentation.bytes)
         
         let neg = negatePublicKey(key: product)
-        print("neg from custom: " + String(bytes: neg.dataRepresentation))
+        //print("neg from custom: " + String(bytes: neg.dataRepresentation))
         
         // C = C_ - A.mult(r)
-        print("blinded promise: " + String(bytes: promise.promise.dataRepresentation))
+        //print("blinded promise: " + String(bytes: promise.promise.dataRepresentation))
         
         // The Combine API arguments are an array of PublicKey objects and an optional format
         
         let unblindedPromise = try! promise.promise.combine([neg]) //adding the negative should behave just like subtracting
         
         
-        print("unblinded promise: " + String(bytes: unblindedPromise.dataRepresentation))
-        tokens.append(Token(amount: promise.amount, token: unblindedPromise))
-        
+        //print("unblinded promise: " + String(bytes: unblindedPromise.dataRepresentation))
+        tokens.append(Token(amount: promise.amount, token: unblindedPromise, id: promise.id))
     }
     
     return tokens
