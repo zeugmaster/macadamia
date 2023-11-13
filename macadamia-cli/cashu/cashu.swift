@@ -36,6 +36,34 @@ struct Promise_JSON_List: Codable {
     let promises: [Promise_JSON]
 }
 
+class Wallet {
+    
+    init() throws {
+        
+    }
+    
+    func mint(amount:Int, completion: @escaping (Result<Void,Error>) -> Void) {
+        
+    }
+
+    func sendTokens(amount:Int, completion: @escaping (Result<String,Error>) -> Void) {
+        
+    }
+
+    func receiveTokens(tokenString:String, completion: @escaping (Result<Void,Error>) -> Void) {
+        
+    }
+
+    func melt(amount:Int, completion: @escaping (Result<Void,Error>) -> Void) {
+        
+    }
+
+    fileprivate func split() {
+        
+    }
+}
+
+
 //let mintURL = "https://8333.space:3338"
 let mintURL = "https://63ff34c9b6.d.voltageapp.io/cashu/api/v1/aCPSKZ993aY9Z8ECK6uqe7"
 
