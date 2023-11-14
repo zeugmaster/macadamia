@@ -31,10 +31,25 @@ struct Token {
     let token: secp256k1.Signing.PublicKey
     let id: String
 }
+struct Token_Container: Codable {
+    let token: [Token_JSON]
+    let memo: String
+}
+struct Token_JSON: Codable {
+    let mint: String
+    let proofs: [Proofs_JSON]
+}
+struct Proofs_JSON: Codable {
+    let id: String
+    let amount: Int
+    let secret: String
+    let C: String
+}
 
 class Wallet {
     var knownMints = [Mint]()
     var blindedOutputs = [BlindedOutput]()
+    var tokenStore = TokenStore()
     
     init() {
         
@@ -84,12 +99,20 @@ class Wallet {
                 //2. after invoice is paid, send blinded outputs for signing and subsequent unblinding
                 self.requestBlindedPromises(amount: amount, payReq: paymentRequest) { promises in
                     if promises.isEmpty == false {
-                        mintCompletion(.success("yay"))
-                        
+                        let tokens = unblindPromises(promises: promises, mintPublicKeys: self.knownMints[0].keySet)
                         //TODO: save tokens to disk
+                        var jsonProofs = [Proofs_JSON]()
+                        for token in tokens {
+                            let proofString = String(bytes: token.token.dataRepresentation)
+                            let secretString = self.blindedOutputs.first(where: {$0.amount == token.amount})!.secret
+                            jsonProofs.append(Proofs_JSON(id: token.id, amount: token.amount, secret: secretString, C: proofString))
+                        }
+                        //FIXME: url is wrong
+                        self.tokenStore.addToken(token: Token_JSON(mint: self.knownMints[0].url.path(), proofs: jsonProofs))
                         
+                        mintCompletion(.success("yay"))
                     } else {
-                        print("empty promises")
+                        print("empty promises lol")
                     }
                 }
             } else {
@@ -212,20 +235,7 @@ class Wallet {
     // -> done in b_dhk.swift
     
     // 6. serialize tokens
-    struct Token_Container: Codable {
-        let token: [Token_JSON]
-        let memo: String
-    }
-    struct Token_JSON: Codable {
-        let mint: String
-        let proofs: [Proofs_JSON]
-    }
-    struct Proofs_JSON: Codable {
-        let id: String
-        let amount: Int
-        let secret: String
-        let C: String
-    }
+    
 
     func serializeTokens(tokens: [Token]) -> String {
         var proofs = [Proofs_JSON]()
