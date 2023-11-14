@@ -12,11 +12,21 @@ let dispatchGroup = DispatchGroup()
 
 func start() {
     
-    var wallet = Wallet()
+    let wallet = Wallet()
     
     wallet.updateMints {mints in
         print("downloaded \(mints.count) mint(s)")
-        dispatchGroup.leave()
+        
+        wallet.mint(amount: 21) { prResult in
+            print(prResult)
+            print("press enter when invoice is payed")
+            _ = readLine()
+        } mintCompletion: { mintResult in
+            print(mintResult)
+            dispatchGroup.leave()
+        }
+
+        
     }
 }
 

@@ -6,6 +6,10 @@ struct Mint {
     let url: URL
     let keySet: Dictionary<String,String>
 }
+struct PaymentRequest: Codable {
+    let pr: String
+    let hash: String
+}
 struct Output {
     let amount: Int
     let secret: String
@@ -30,6 +34,7 @@ struct Token {
 
 class Wallet {
     var knownMints = [Mint]()
+    var blindedOutputs = [BlindedOutput]()
     
     init() {
         
@@ -60,8 +65,40 @@ class Wallet {
             await fetchAllData()
         }
     }
-
-    func mint(amount:Int, completion: @escaping (Result<Void,Error>) -> Void) {
+    //FIXME: this is propably unnecessary complexity using two completion handlers
+    func mint(amount:Int,
+              prCompletion: @escaping (Result<PaymentRequest,Error>) -> Void,
+              mintCompletion: @escaping (Result<String,Error>) -> Void) {
+        //1. make GET req to the mint to receive lightning invoice
+        // TODO: change to async await
+        let urlString = knownMints[0].url.absoluteString + "/mint?amount=\(String(amount))"
+        let url = URL(string: urlString)!
+        print(url)
+        let task = URLSession.shared.dataTask(with: url) {payload, response, error in
+            if error == nil {
+                let paymentRequest = try! JSONDecoder().decode(PaymentRequest.self, from: payload!)
+                // TODO: needs to handle case where JSON could not be decoded
+                prCompletion(.success(paymentRequest))
+                
+                //WAIT FOR INVOICE PAYED
+                //2. after invoice is paid, send blinded outputs for signing and subsequent unblinding
+                self.requestBlindedPromises(amount: amount, payReq: paymentRequest) { promises in
+                    if promises.isEmpty == false {
+                        mintCompletion(.success("yay"))
+                        
+                        //TODO: save tokens to disk
+                        
+                    } else {
+                        print("empty promises")
+                    }
+                }
+            } else {
+                //needs much more robust error handling
+                prCompletion(.failure(error!))
+            }
+        }
+        task.resume()
+        
         
     }
 
@@ -80,38 +117,16 @@ class Wallet {
     fileprivate func split() {
         
     }
-    
-    var blindedOutputs:Array<BlindedOutput> = []
-
-    // 1. retrieve keyset from mint
-
-
-
-    // 2. get invoice from mint for token minting
-
-    struct PaymentRequest: Codable {
-        let pr: String
-        let hash: String
-    }
 
     func requestMint(amount:Int, completion: @escaping (PaymentRequest?) -> Void) {
-        // make GET req and save payment req and hash
-        let task = URLSession.shared.dataTask(with: knownMints[0].url) {payload, response, error in
-            if error == nil {
-                let paymentRequest = try? JSONDecoder().decode(PaymentRequest.self, from: payload!)
-                completion(paymentRequest)
-            } else {
-                //needs much more robust error handling
-                completion(nil)
-            }
-        }
-        task.resume()
+        
     }
 
     // 3. pay invoice
 
     // ...
-
+    
+    //MARK: -
     // 4. MINT TOKENS aka request blinded signatures:
     // 4a generate array of outputs with amounts adding up to invoice payed ✔
     // 4b blind outputs ✔
@@ -119,7 +134,7 @@ class Wallet {
     // 4d make post req to mint with payment hash in url and JSON as payload ✔
     // 4e read JSON data to object and transform by changind key strings to objects, adding blindingfactors
     // 4f store list of blinded outputs for later unblinding
-
+    
     func requestBlindedPromises(amount:Int, payReq:PaymentRequest, completion: @escaping ([Promise]) -> Void) {
         var outputs:[Output] = []
         for m in splitIntoBase2Numbers(n: amount) {
@@ -129,10 +144,8 @@ class Wallet {
             let output = Output(amount: m, secret:secretString)
             outputs.append(output)
         }
-        //print("outputs: \(outputs)")
         
         blindedOutputs = generateBlindedOutputs(outputs: outputs)
-        //print("blindedOutputs: \(blindedOutputs)")
         
         var outputArray: [[String: Any]] = []
         for o in blindedOutputs {
@@ -146,9 +159,6 @@ class Wallet {
 
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: containerDict, options: [])
-            let jsonString = String(data: jsonData, encoding: .utf8)
-            //print(jsonString ?? "Invalid JSON String")
-
             if let url = URL(string: knownMints[0].url.absoluteString + "/mint?hash=" + payReq.hash) {
                 print(url)
                 var request = URLRequest(url: url)
@@ -185,7 +195,7 @@ class Wallet {
     struct Promise_JSON_List: Codable {
         let promises: [Promise_JSON]
     }
-
+    // TODO: not a very elegant solution, refactor
     func transformPromises(promises:[Promise_JSON]) -> [Promise] {
         var transformed = [Promise]()
         print(promises)
@@ -200,7 +210,7 @@ class Wallet {
 
     // 5. UNBLIND PROMISES
     // -> done in b_dhk.swift
-
+    
     // 6. serialize tokens
     struct Token_Container: Codable {
         let token: [Token_JSON]
