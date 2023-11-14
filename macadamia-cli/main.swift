@@ -10,46 +10,42 @@ import secp256k1
 
 let dispatchGroup = DispatchGroup()
 
-dispatchGroup.enter()
-
-
-getMintKeyset { keyDictionary in
-    //print("keys: " + keyDictionary.description)
+func start() {
     
-    var amount:Int = 0
+    var wallet = Wallet()
     
-    while amount == 0 {
-        print("Please enter amount to request: ", terminator: "")
-        if let input = readLine(), let inputAmount = Int(input) {
-            amount = inputAmount
-        } else {
-            print("Invalid input, try again")
-        }
+    wallet.updateMints {mints in
+        print("downloaded \(mints.count) mint(s)")
+        dispatchGroup.leave()
     }
-    
-    requestMint(amount: amount) { paymentReq in
-        print(paymentReq ?? "nil")
-        
-        print("when you have paid the invoice, press enter to proceed")
-        _ = readLine()
-        
-        requestBlindedPromises(amount: amount, payReq: paymentReq!) { promises in
-            //print("promises: \(promises)")
-            
-            let unblindedPromises = unblindPromises(promises: promises, mintPublicKeys: keyDictionary)
-            
-            let tokenString = serializeTokens(tokens: unblindedPromises)
-            
-            print(tokenString)
-            
-            // end execution
-            dispatchGroup.leave()
-        }
-        
-    }
-    
-    
 }
 
+dispatchGroup.enter()
+start()
 dispatchGroup.wait()
 
+//getMintKeyset { keyDictionary in
+//    //print("keys: " + keyDictionary.description)
+//    var amount:Int = 0
+//    while amount == 0 {
+//        print("Please enter amount to request: ", terminator: "")
+//        if let input = readLine(), let inputAmount = Int(input) {
+//            amount = inputAmount
+//        } else {
+//            print("Invalid input, try again")
+//        }
+//    }
+//    requestMint(amount: amount) { paymentReq in
+//        print(paymentReq ?? "nil")
+//        print("when you have paid the invoice, press enter to proceed")
+//        _ = readLine()
+//        requestBlindedPromises(amount: amount, payReq: paymentReq!) { promises in
+//            //print("promises: \(promises)")
+//            let unblindedPromises = unblindPromises(promises: promises, mintPublicKeys: keyDictionary)
+//            let tokenString = serializeTokens(tokens: unblindedPromises)
+//            print(tokenString)
+//            // end execution
+//            dispatchGroup.leave()
+//        }
+//    }
+//}
