@@ -25,11 +25,7 @@ struct Promise {
     let promise: secp256k1.Signing.PublicKey
     let id: String
     let blindingFactor:secp256k1.Signing.PrivateKey
-}
-struct Token {
-    let amount: Int
-    let token: secp256k1.Signing.PublicKey
-    let id: String
+    let secret: String
 }
 struct Token_Container: Codable {
     let token: [Token_JSON]
@@ -37,9 +33,9 @@ struct Token_Container: Codable {
 }
 struct Token_JSON: Codable {
     let mint: String
-    var proofs: [Proofs_JSON]
+    var proofs: [Proof]
 }
-struct Proofs_JSON: Codable {
+struct Proof: Codable {
     let id: String
     let amount: Int
     let secret: String
@@ -99,15 +95,8 @@ class Wallet {
                 //2. after invoice is paid, send blinded outputs for signing and subsequent unblinding
                 self.requestBlindedPromises(amount: amount, payReq: paymentRequest) { promises in
                     if promises.isEmpty == false {
-                        let tokens = unblindPromises(promises: promises, mintPublicKeys: self.knownMints[0].keySet)
-                        //TODO: save tokens to disk
-                        var jsonProofs = [Proofs_JSON]()
-                        for token in tokens {
-                            let proofString = String(bytes: token.token.dataRepresentation)
-                            let secretString = self.blindedOutputs.first(where: {$0.amount == token.amount})!.secret
-                            jsonProofs.append(Proofs_JSON(id: token.id, amount: token.amount, secret: secretString, C: proofString))
-                        }
-                        self.tokenStore.addToken(token: Token_JSON(mint: self.knownMints[0].url.absoluteString, proofs: jsonProofs))
+                        let proofs = unblindPromises(promises: promises, mintPublicKeys: self.knownMints[0].keySet)
+                        self.tokenStore.addToken(token: Token_JSON(mint: self.knownMints[0].url.absoluteString, proofs: proofs))
                         mintCompletion(.success("yay"))
                     } else {
                         print("empty promises lol")
@@ -119,15 +108,22 @@ class Wallet {
             }
         }
         task.resume()
-        
-        
     }
 
     func sendTokens(amount:Int, completion: @escaping (Result<String,Error>) -> Void) {
         // 1. retrieve tokens from database. if amounts match, serialize right away
         // if amounts dont match: split, serialize token for sending, add the rest back to db
-        
-        
+        if let proofs = self.tokenStore.retrieveProofsForAmount(amount: amount) {
+            var totalInProofs = 0
+            for proof in proofs {
+                totalInProofs += proof.amount
+            }
+            if totalInProofs == amount {
+                
+            }
+        } else {
+            print("did not retrieve any proofs")
+        }
     }
 
     func receiveTokens(tokenString:String, completion: @escaping (Result<Void,Error>) -> Void) {
@@ -226,7 +222,8 @@ class Wallet {
         for promise in promises {
             let pK = try! secp256k1.Signing.PublicKey(dataRepresentation: promise.C_.bytes, format: .compressed)
             let blindingFactor = blindedOutputs.first(where: { $0.amount == promise.amount})!.blindingFactor
-            let p = Promise(amount: promise.amount, promise:pK , id: promise.id, blindingFactor: blindingFactor)
+            let secret = blindedOutputs.first(where: { $0.amount == promise.amount})!.secret
+            let p = Promise(amount: promise.amount, promise:pK , id: promise.id, blindingFactor: blindingFactor, secret: secret)
             transformed.append(p)
         }
         return transformed
@@ -238,14 +235,9 @@ class Wallet {
     // 6. serialize tokens
     
 
-    func serializeTokens(tokens: [Token]) -> String {
-        var proofs = [Proofs_JSON]()
-        for token in tokens {
-            let secret = blindedOutputs.first(where: { $0.amount == token.amount})!.secret
-            proofs.append(Proofs_JSON(id: token.id, amount: token.amount, secret: secret, C: String(bytes: token.token.dataRepresentation)))
-        }
+    func serializeProofs(proofs: [Proof]) -> String {
         let token = Token_JSON(mint: knownMints[0].url.absoluteString, proofs: proofs)
-        let tokenContainer = Token_Container(token: [token], memo: "jeeez")
+        let tokenContainer = Token_Container(token: [token], memo: "Thank you!")
         
         let jsonData = try! JSONEncoder().encode(tokenContainer)
         let jsonString = String(data: jsonData, encoding: .utf8)!

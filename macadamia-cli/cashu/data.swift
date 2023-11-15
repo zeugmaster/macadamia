@@ -35,10 +35,10 @@ class TokenStore {
     }
     
     //TODO: mint selection & rework to allow for management of PENDING proofs
-    func retrieveProofsForAmount(amount:Int) -> [Proofs_JSON]? {
+    func retrieveProofsForAmount(amount:Int) -> [Proof]? {
         //check if we have enough total in the db
         var accumulatedAmount: Int = 0
-        var selectedProofs: [Proofs_JSON] = []
+        var selectedProofs: [Proof] = []
         var proofsToRemove: [(tokenIndex: Int, proofIndex: Int)] = []
 
         outerLoop: for (tokenIndex, token) in database.tokens.enumerated() {
