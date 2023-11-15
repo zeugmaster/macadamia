@@ -37,7 +37,7 @@ struct Token_Container: Codable {
 }
 struct Token_JSON: Codable {
     let mint: String
-    let proofs: [Proofs_JSON]
+    var proofs: [Proofs_JSON]
 }
 struct Proofs_JSON: Codable {
     let id: String
@@ -107,9 +107,7 @@ class Wallet {
                             let secretString = self.blindedOutputs.first(where: {$0.amount == token.amount})!.secret
                             jsonProofs.append(Proofs_JSON(id: token.id, amount: token.amount, secret: secretString, C: proofString))
                         }
-                        //FIXME: url is wrong
-                        self.tokenStore.addToken(token: Token_JSON(mint: self.knownMints[0].url.path(), proofs: jsonProofs))
-                        
+                        self.tokenStore.addToken(token: Token_JSON(mint: self.knownMints[0].url.absoluteString, proofs: jsonProofs))
                         mintCompletion(.success("yay"))
                     } else {
                         print("empty promises lol")
@@ -126,6 +124,9 @@ class Wallet {
     }
 
     func sendTokens(amount:Int, completion: @escaping (Result<String,Error>) -> Void) {
+        // 1. retrieve tokens from database. if amounts match, serialize right away
+        // if amounts dont match: split, serialize token for sending, add the rest back to db
+        
         
     }
 
