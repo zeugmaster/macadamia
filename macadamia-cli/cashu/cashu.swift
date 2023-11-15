@@ -76,6 +76,7 @@ class Wallet {
             await fetchAllData()
         }
     }
+    //MARK: - Mint
     //FIXME: this is propably unnecessary complexity using two completion handlers
     func mint(amount:Int,
               prCompletion: @escaping (Result<PaymentRequest,Error>) -> Void,
@@ -109,7 +110,8 @@ class Wallet {
         }
         task.resume()
     }
-
+    
+    //MARK: - Send
     func sendTokens(amount:Int, completion: @escaping (Result<String,Error>) -> Void) {
         // 1. retrieve tokens from database. if amounts match, serialize right away
         // if amounts dont match: split, serialize token for sending, add the rest back to db
@@ -118,18 +120,24 @@ class Wallet {
             for proof in proofs {
                 totalInProofs += proof.amount
             }
+            print(proofs)
             if totalInProofs == amount {
-                
+                let tokenstring = serializeProofs(proofs: proofs)
+                completion(.success(tokenstring))
+            } else if totalInProofs > amount {
+                print("need to split for send ...")
             }
         } else {
             print("did not retrieve any proofs")
         }
     }
-
+    
+    //MARK: - Receive
     func receiveTokens(tokenString:String, completion: @escaping (Result<Void,Error>) -> Void) {
         
     }
-
+    
+    //MARK: - Melt
     func melt(amount:Int, completion: @escaping (Result<Void,Error>) -> Void) {
         
     }
@@ -137,7 +145,8 @@ class Wallet {
     fileprivate func split() {
         
     }
-
+    
+    //TODO: to use or not to use
     func requestMint(amount:Int, completion: @escaping (PaymentRequest?) -> Void) {
         
     }
@@ -180,7 +189,7 @@ class Wallet {
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: containerDict, options: [])
             if let url = URL(string: knownMints[0].url.absoluteString + "/mint?hash=" + payReq.hash) {
-                print(url)
+                //print(url)
                 var request = URLRequest(url: url)
                 request.httpMethod = "POST"
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -218,7 +227,6 @@ class Wallet {
     // TODO: not a very elegant solution, refactor
     func transformPromises(promises:[Promise_JSON]) -> [Promise] {
         var transformed = [Promise]()
-        print(promises)
         for promise in promises {
             let pK = try! secp256k1.Signing.PublicKey(dataRepresentation: promise.C_.bytes, format: .compressed)
             let blindingFactor = blindedOutputs.first(where: { $0.amount == promise.amount})!.blindingFactor
@@ -237,14 +245,10 @@ class Wallet {
 
     func serializeProofs(proofs: [Proof]) -> String {
         let token = Token_JSON(mint: knownMints[0].url.absoluteString, proofs: proofs)
-        let tokenContainer = Token_Container(token: [token], memo: "Thank you!")
-        
+        let tokenContainer = Token_Container(token: [token], memo: "...fiat esse delendam.")
         let jsonData = try! JSONEncoder().encode(tokenContainer)
         let jsonString = String(data: jsonData, encoding: .utf8)!
-        print(jsonString)
-        
         let safeString = Base64FS.encodeString(str: jsonString)
-        
         return "cashuA" + safeString
     }
 

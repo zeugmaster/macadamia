@@ -62,10 +62,10 @@ class TokenStore {
             return nil
         }
         print("Target amount reached or exceeded with a total of \(accumulatedAmount).")
-        
+        //save state without selected proofs, effectively removing them from database
+        save(data: self.database)
         return selectedProofs
     }
-
     private func save(data: Database) {
         let url = getFileURL()
         do {

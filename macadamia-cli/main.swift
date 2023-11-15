@@ -13,15 +13,18 @@ let dispatchGroup = DispatchGroup()
 func start() {
     
     let wallet = Wallet()
-    
+  
+    wallet.updateMints { mints in
+        print("downloaded \(mints.count) mint(s)")
+    }
+  
     print("""
-        Welcome to macadamia. Would you like to
-        - mint
-        - send
-        - receive or
-        - melt?
-        """)
-    
+            Welcome to macadamia. Would you like to
+            - mint
+            - send
+            - receive or
+            - melt?
+            """)
     askInput()
     
     func askInput() {
@@ -44,16 +47,13 @@ func start() {
     #warning("make sure to call dispatchGroup.leave() in every scenario")
     
     func startMint() {
-        wallet.updateMints {mints in
-            print("downloaded \(mints.count) mint(s)")
-            wallet.mint(amount: numberInput()) { prResult in
-                print(prResult)
-                print("press enter when invoice is payed")
-                _ = readLine()
-            } mintCompletion: { mintResult in
-                //print(mintResult)
-                dispatchGroup.leave()
-            }
+        wallet.mint(amount: numberInput()) { prResult in
+            print(prResult)
+            print("press enter when invoice is payed")
+            _ = readLine()
+        } mintCompletion: { mintResult in
+            //print(mintResult)
+            dispatchGroup.leave()
         }
     }
     
