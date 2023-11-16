@@ -9,21 +9,19 @@ import CryptoKit
 import secp256k1
 
 // Step 1 (Alice)
-func generateBlindedOutputs(outputs:[Output]) -> [BlindedOutput]{
-    var blindedOutputs:Array<BlindedOutput> = []
+func generateOutputs(amounts:[Int]) -> [Output] {
+    var outputs = [Output]()
     
-    for output in outputs {
-        let Y = hashToCurve(message: output.secret)
-        
+    for n in amounts {
+        let key = SymmetricKey(size: .bits128)
+        let keyData = key.withUnsafeBytes {Data($0)}
+        let secretString = Base64FS.encodeString(str: keyData.base64EncodedString())
+        let Y = hashToCurve(message: secretString)
         let blindingFactor = try! secp256k1.Signing.PrivateKey()
-        
-        let blindedOutput = try! Y.combine([blindingFactor.publicKey])
-        blindedOutputs.append(BlindedOutput(amount: output.amount,
-                                            blindedOutput: blindedOutput,
-                                            secret: output.secret,
-                                            blindingFactor: blindingFactor))
+        let output = try! Y.combine([blindingFactor.publicKey])
+        outputs.append(Output(amount: n, output: output, secret: secretString, blindingFactor: blindingFactor))
     }
-    return blindedOutputs
+    return outputs
 }
 
 // Step 2 (Bob)

@@ -12,11 +12,7 @@ struct PaymentRequest: Codable {
 }
 struct Output {
     let amount: Int
-    let secret: String
-}
-struct BlindedOutput {
-    let amount: Int
-    let blindedOutput: secp256k1.Signing.PublicKey
+    let output: secp256k1.Signing.PublicKey
     let secret: String
     let blindingFactor: secp256k1.Signing.PrivateKey
 }
@@ -44,7 +40,7 @@ struct Proof: Codable {
 
 class Wallet {
     var knownMints = [Mint]()
-    var blindedOutputs = [BlindedOutput]()
+    var blindedOutputs = [Output]()
     var tokenStore = TokenStore()
     
     init() {
@@ -53,7 +49,6 @@ class Wallet {
     
     func updateMints(completion: @escaping ([Mint]) -> Void) {
         //load from database
-        
         // TODO: replace hardcoded static mints
         let mintURLs = [URL(string: "https://63ff34c9b6.d.voltageapp.io/cashu/api/v1/aCPSKZ993aY9Z8ECK6uqe7")!,
                         URL(string: "https://8333.space:3338")!]
@@ -142,7 +137,7 @@ class Wallet {
         
     }
 
-    fileprivate func split() {
+    private func split() {
         
     }
     
@@ -165,27 +160,17 @@ class Wallet {
     // 4f store list of blinded outputs for later unblinding
     
     func requestBlindedPromises(amount:Int, payReq:PaymentRequest, completion: @escaping ([Promise]) -> Void) {
-        var outputs:[Output] = []
-        for m in splitIntoBase2Numbers(n: amount) {
-            let key = SymmetricKey(size: .bits128)
-            let keyData = key.withUnsafeBytes {Data($0)}
-            let secretString = Base64FS.encodeString(str: keyData.base64EncodedString())
-            let output = Output(amount: m, secret:secretString)
-            outputs.append(output)
-        }
-        
-        blindedOutputs = generateBlindedOutputs(outputs: outputs)
-        
+        //generates outputs (blindedMessages) to use when requesting
+        blindedOutputs = generateOutputs(amounts: splitIntoBase2Numbers(n: amount))
         var outputArray: [[String: Any]] = []
         for o in blindedOutputs {
             var dict: [String: Any] = [:]
             dict["amount"] = o.amount
             // Ensure this is the correct string representation
-            dict["B_"] = String(bytes: o.blindedOutput.dataRepresentation)
+            dict["B_"] = String(bytes: o.output.dataRepresentation)
             outputArray.append(dict)
         }
         let containerDict = ["outputs": outputArray]
-
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: containerDict, options: [])
             if let url = URL(string: knownMints[0].url.absoluteString + "/mint?hash=" + payReq.hash) {
@@ -242,7 +227,6 @@ class Wallet {
     
     // 6. serialize tokens
     
-
     func serializeProofs(proofs: [Proof]) -> String {
         let token = Token_JSON(mint: knownMints[0].url.absoluteString, proofs: proofs)
         let tokenContainer = Token_Container(token: [token], memo: "...fiat esse delendam.")
