@@ -19,7 +19,10 @@ func generateOutputs(amounts:[Int]) -> [Output] {
         let Y = hashToCurve(message: secretString)
         let blindingFactor = try! secp256k1.Signing.PrivateKey()
         let output = try! Y.combine([blindingFactor.publicKey])
-        outputs.append(Output(amount: n, output: output, secret: secretString, blindingFactor: blindingFactor))
+        outputs.append(Output(amount: n,
+                              output: String(bytes: output.dataRepresentation),
+                              secret: secretString,
+                              blindingFactor: String(bytes: blindingFactor.dataRepresentation)))
     }
     return outputs
 }

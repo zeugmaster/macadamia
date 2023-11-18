@@ -78,6 +78,7 @@ class TokenStore {
             print("Failed to write JSON data: \(error.localizedDescription)")
         }
     }
+    //FIXME: when retrieving proofs, token info remains, even without proofs in it, in which case loading crashes
     private func load() -> Database? {
         let url = getFileURL()
         do {
