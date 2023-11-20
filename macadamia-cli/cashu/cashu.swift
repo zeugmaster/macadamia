@@ -12,11 +12,13 @@ struct PaymentRequest: Codable {
 }
 struct Output: Codable {
     let amount: Int
-    //let output: secp256k1.Signing.PublicKey
     let output: String
     let secret: String
-//    let blindingFactor: secp256k1.Signing.PrivateKey
     let blindingFactor: String
+}
+struct Output_JSON: Codable {
+    let amount: Int
+    let B_: String
 }
 struct Promise {
     let amount: Int
@@ -42,7 +44,8 @@ struct Proof: Codable {
 
 class Wallet {
     var knownMints = [Mint]()
-    var outputs = [Output]()
+    var currentMintOutputs = [Output]()
+    //var currentSplitOutputs = [Output]()
     var tokenStore = TokenStore()
     
     init() {
@@ -169,11 +172,17 @@ class Wallet {
     
     struct SplitRequest_JSON: Codable {
         let proofs:[Proof]
-        let outputs:[Output]
+        let outputs:[Output_JSON]
     }
     private func requestSplit(forProofs:[Proof], withOutputs:[Output], completion: @escaping (Result<[Proof], Error>) -> Void) {
         //construct mint request payload and make http post req
-        let splitReq = SplitRequest_JSON(proofs: forProofs, outputs: withOutputs)
+        //transform outputs to outputs_JSON
+        var outputs_json = [Output_JSON]()
+        for o in withOutputs {
+            outputs_json.append(Output_JSON(amount: o.amount, B_: o.output))
+        }
+        
+        let splitReq = SplitRequest_JSON(proofs: forProofs, outputs: outputs_json)
         let payload = try! JSONEncoder().encode(splitReq)
         
         let prettyEncoder = JSONEncoder()
@@ -194,9 +203,10 @@ class Wallet {
                 return
             }
             if let promisesJSON = try? JSONDecoder().decode(Promise_JSON_List.self, from: data!) {
-                let promises = self.transformPromises(promises: promisesJSON.promises)
-                let proofs = unblindPromises(promises: promises, mintPublicKeys: self.knownMints[0].keySet)
-                completion(.success(proofs))
+                //let promises = self.transformPromises(promises: promisesJSON.promises)
+                print(promisesJSON)
+//                let proofs = unblindPromises(promises: promises, mintPublicKeys: self.knownMints[0].keySet)
+//                completion(.success(proofs))
             } else {
                 print("could not decode promises from JSON: \(String(data: data!, encoding: .utf8) ?? "no data")")
             }
@@ -224,9 +234,9 @@ class Wallet {
     
     func requestBlindedPromises(amount:Int, payReq:PaymentRequest, completion: @escaping ([Promise]) -> Void) {
         //generates outputs (blindedMessages) to use when requesting
-        outputs = generateOutputs(amounts: splitIntoBase2Numbers(n: amount))
+        currentMintOutputs = generateOutputs(amounts: splitIntoBase2Numbers(n: amount))
         var outputArray: [[String: Any]] = []
-        for o in outputs {
+        for o in currentMintOutputs {
             var dict: [String: Any] = [:]
             dict["amount"] = o.amount
             // Ensure this is the correct string representation
@@ -277,9 +287,9 @@ class Wallet {
         var transformed = [Promise]()
         for promise in promises {
             let pK = try! secp256k1.Signing.PublicKey(dataRepresentation: promise.C_.bytes, format: .compressed)
-            let blindingFactor = outputs.first(where: { $0.amount == promise.amount})!.blindingFactor
+            let blindingFactor = currentMintOutputs.first(where: { $0.amount == promise.amount})!.blindingFactor
             let bfKey = try! secp256k1.Signing.PrivateKey(dataRepresentation: blindingFactor.bytes, format: .compressed)
-            let secret = outputs.first(where: { $0.amount == promise.amount})!.secret
+            let secret = currentMintOutputs.first(where: { $0.amount == promise.amount})!.secret
             
             let p = Promise(amount: promise.amount, promise:pK , id: promise.id, blindingFactor: bfKey, secret: secret)
             transformed.append(p)
