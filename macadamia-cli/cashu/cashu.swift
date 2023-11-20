@@ -44,7 +44,7 @@ struct Proof: Codable {
 
 class Wallet {
     var knownMints = [Mint]()
-    var currentMintOutputs = [Output]()
+//    var currentMintOutputs = [Output]()
     //var currentSplitOutputs = [Output]()
     var tokenStore = TokenStore()
     
@@ -203,10 +203,10 @@ class Wallet {
                 return
             }
             if let promisesJSON = try? JSONDecoder().decode(Promise_JSON_List.self, from: data!) {
-                //let promises = self.transformPromises(promises: promisesJSON.promises)
+                let promises = self.transformPromises(promises: promisesJSON.promises, originalOutputs: withOutputs)
                 print(promisesJSON)
-//                let proofs = unblindPromises(promises: promises, mintPublicKeys: self.knownMints[0].keySet)
-//                completion(.success(proofs))
+                let proofs = unblindPromises(promises: promises, mintPublicKeys: self.knownMints[0].keySet)
+                completion(.success(proofs))
             } else {
                 print("could not decode promises from JSON: \(String(data: data!, encoding: .utf8) ?? "no data")")
             }
@@ -234,7 +234,7 @@ class Wallet {
     
     func requestBlindedPromises(amount:Int, payReq:PaymentRequest, completion: @escaping ([Promise]) -> Void) {
         //generates outputs (blindedMessages) to use when requesting
-        currentMintOutputs = generateOutputs(amounts: splitIntoBase2Numbers(n: amount))
+        var currentMintOutputs = generateOutputs(amounts: splitIntoBase2Numbers(n: amount))
         var outputArray: [[String: Any]] = []
         for o in currentMintOutputs {
             var dict: [String: Any] = [:]
@@ -260,7 +260,7 @@ class Wallet {
                     }
                     
                     if let jsonObject = try? JSONDecoder().decode(Promise_JSON_List.self, from: data!) {
-                        completion(self.transformPromises(promises: jsonObject.promises))
+                        completion(self.transformPromises(promises: jsonObject.promises, originalOutputs: currentMintOutputs))
                     } else {
                         print("could not decode promises from JSON: \(String(data: data!, encoding: .utf8) ?? "no data")")
                     }
@@ -283,13 +283,13 @@ class Wallet {
         let promises: [Promise_JSON]
     }
     // TODO: not a very elegant solution, refactor
-    func transformPromises(promises:[Promise_JSON]) -> [Promise] {
+    func transformPromises(promises:[Promise_JSON], originalOutputs:[Output]) -> [Promise] {
         var transformed = [Promise]()
         for promise in promises {
             let pK = try! secp256k1.Signing.PublicKey(dataRepresentation: promise.C_.bytes, format: .compressed)
-            let blindingFactor = currentMintOutputs.first(where: { $0.amount == promise.amount})!.blindingFactor
+            let blindingFactor = originalOutputs.first(where: { $0.amount == promise.amount})!.blindingFactor
             let bfKey = try! secp256k1.Signing.PrivateKey(dataRepresentation: blindingFactor.bytes, format: .compressed)
-            let secret = currentMintOutputs.first(where: { $0.amount == promise.amount})!.secret
+            let secret = originalOutputs.first(where: { $0.amount == promise.amount})!.secret
             
             let p = Promise(amount: promise.amount, promise:pK , id: promise.id, blindingFactor: bfKey, secret: secret)
             transformed.append(p)
