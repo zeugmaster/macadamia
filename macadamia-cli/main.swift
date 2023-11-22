@@ -35,7 +35,7 @@ func start() {
         case "send":
             send()
         case "receive":
-            print("not yet supported")
+            receive()
         case "melt":
             print("not yet supported")
         default:
@@ -66,6 +66,14 @@ func start() {
                 print(error)
             }
             dispatchGroup.leave()
+        }
+    }
+    
+    func receive() {
+        print("paste your token")
+        let token = readLine()!
+        wallet.receiveTokens(tokenString: token) { result in
+            print(result)
         }
     }
     

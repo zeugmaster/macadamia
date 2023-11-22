@@ -29,7 +29,7 @@ struct Promise {
 }
 struct Token_Container: Codable {
     let token: [Token_JSON]
-    let memo: String
+    let memo: String?
 }
 struct Token_JSON: Codable {
     let mint: String
@@ -44,8 +44,6 @@ struct Proof: Codable {
 
 class Wallet {
     var knownMints = [Mint]()
-//    var currentMintOutputs = [Output]()
-    //var currentSplitOutputs = [Output]()
     var tokenStore = TokenStore()
     
     init() {
@@ -162,7 +160,16 @@ class Wallet {
     
     //MARK: - Receive
     func receiveTokens(tokenString:String, completion: @escaping (Result<Void,Error>) -> Void) {
+        //deserialise token
+        let tokenlist = self.deserializeToken(token:tokenString)
+        print(tokenlist ?? "function returned nil")
+        //parse proofs
         
+        //construct new outputs
+        
+        //.requestSplit
+        
+        //save new proofs
     }
     
     //MARK: - Melt
@@ -234,7 +241,7 @@ class Wallet {
     
     func requestBlindedPromises(amount:Int, payReq:PaymentRequest, completion: @escaping ([Promise]) -> Void) {
         //generates outputs (blindedMessages) to use when requesting
-        var currentMintOutputs = generateOutputs(amounts: splitIntoBase2Numbers(n: amount))
+        let currentMintOutputs = generateOutputs(amounts: splitIntoBase2Numbers(n: amount))
         var outputArray: [[String: Any]] = []
         for o in currentMintOutputs {
             var dict: [String: Any] = [:]
@@ -309,6 +316,19 @@ class Wallet {
         let jsonString = String(data: jsonData, encoding: .utf8)!
         let safeString = Base64FS.encodeString(str: jsonString)
         return "cashuA" + safeString
+    }
+    
+    func deserializeToken(token: String) -> [Token_JSON]? {
+        let noPrefix = token.dropFirst(6)
+        let jsonString = Base64FS.decodeString(str: String(noPrefix))
+        print(jsonString)
+        let jsonData = jsonString.data(using: .utf8)!
+        if let tokenContainer:Token_Container = try? JSONDecoder().decode(Token_Container.self, from: jsonData) {
+            return tokenContainer.token
+        } else {
+            print("could not deserialise token")
+            return nil
+        }
     }
 
     // HELPER FUNCTIONS:
