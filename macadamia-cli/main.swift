@@ -22,8 +22,9 @@ func start() {
             Welcome to macadamia. Would you like to
             - mint
             - send
-            - receive or
-            - melt?
+            - receive
+            - melt or
+            - balance?
             """)
     askInput()
     
@@ -38,6 +39,8 @@ func start() {
             receive()
         case "melt":
             print("not yet supported")
+        case "balance":
+            
         default:
             print("invalid input. please try again")
             askInput()
@@ -88,6 +91,10 @@ func start() {
             }
         }
         return amount
+    }
+    
+    func queryBalance() {
+        
     }
 }
 

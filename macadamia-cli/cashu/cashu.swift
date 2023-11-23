@@ -27,6 +27,12 @@ struct Promise {
     let blindingFactor:secp256k1.Signing.PrivateKey
     let secret: String
 }
+struct Proof: Codable {
+    let id: String
+    let amount: Int
+    let secret: String
+    let C: String
+}
 struct Token_Container: Codable {
     let token: [Token_JSON]
     let memo: String?
@@ -35,13 +41,6 @@ struct Token_JSON: Codable {
     let mint: String
     var proofs: [Proof]
 }
-struct Proof: Codable {
-    let id: String
-    let amount: Int
-    let secret: String
-    let C: String
-}
-
 class Wallet {
     var knownMints = [Mint]()
     var tokenStore = TokenStore()
@@ -82,6 +81,7 @@ class Wallet {
               mintCompletion: @escaping (Result<String,Error>) -> Void) {
         //1. make GET req to the mint to receive lightning invoice
         // TODO: change to async await
+        //TODO: remove hardcoded mint selection
         let urlString = knownMints[0].url.absoluteString + "/mint?amount=\(String(amount))"
         let url = URL(string: urlString)!
         print(url)
@@ -95,6 +95,7 @@ class Wallet {
                 //2. after invoice is paid, send blinded outputs for signing and subsequent unblinding
                 self.requestBlindedPromises(amount: amount, payReq: paymentRequest) { promises in
                     if promises.isEmpty == false {
+                        //TODO: remove hardcoded mint selection
                         let proofs = unblindPromises(promises: promises, mintPublicKeys: self.knownMints[0].keySet)
                         self.tokenStore.addToken(token: Token_JSON(mint: self.knownMints[0].url.absoluteString, proofs: proofs))
                         mintCompletion(.success("yay"))
@@ -161,15 +162,28 @@ class Wallet {
     //MARK: - Receive
     func receiveTokens(tokenString:String, completion: @escaping (Result<Void,Error>) -> Void) {
         //deserialise token
-        let tokenlist = self.deserializeToken(token:tokenString)
-        print(tokenlist ?? "function returned nil")
-        //parse proofs
-        
-        //construct new outputs
-        
-        //.requestSplit
-        
-        //save new proofs
+        if let tokenlist = self.deserializeToken(token:tokenString) {
+            var amounts = [Int]()
+            for p in tokenlist[0].proofs {
+                amounts.append(p.amount)
+            }
+            let newOutputs = generateOutputs(amounts: amounts)
+            //TODO: remove hardcoded mint selection
+            requestSplit(forProofs: tokenlist[0].proofs, withOutputs: newOutputs) { result in
+                switch result {
+                case .success(let newProofs):
+                    //TODO: remove hardcoded mint selection
+                    self.tokenStore.addToken(token: Token_JSON(mint: self.knownMints[0].url.absoluteString, proofs: newProofs))
+                    completion(.success(()))
+                    print("saved new proofs to db")
+                case .failure(let error):
+                    completion(.failure(error))
+                    print("split request for receive was unsuccessful error: \(error)")
+                }
+            }
+        } else {
+            
+        }
     }
     
     //MARK: - Melt
@@ -197,7 +211,7 @@ class Wallet {
 
         let pretty = try! prettyEncoder.encode(splitReq)
         print(String(data: pretty, encoding: .utf8)!)
-        
+        //TODO: remove hardcoded mint selection
         let url = URL(string: self.knownMints[0].url.absoluteString + "/split")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -212,6 +226,7 @@ class Wallet {
             if let promisesJSON = try? JSONDecoder().decode(Promise_JSON_List.self, from: data!) {
                 let promises = self.transformPromises(promises: promisesJSON.promises, originalOutputs: withOutputs)
                 print(promisesJSON)
+                //TODO: remove hardcoded mint selection
                 let proofs = unblindPromises(promises: promises, mintPublicKeys: self.knownMints[0].keySet)
                 completion(.success(proofs))
             } else {
@@ -253,6 +268,7 @@ class Wallet {
         let containerDict = ["outputs": outputArray]
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: containerDict, options: [])
+            //TODO: remove hardcoded mint selection
             if let url = URL(string: knownMints[0].url.absoluteString + "/mint?hash=" + payReq.hash) {
                 //print(url)
                 var request = URLRequest(url: url)
@@ -304,12 +320,9 @@ class Wallet {
         return transformed
     }
 
-    // 5. UNBLIND PROMISES
-    // -> done in b_dhk.swift
-    
-    // 6. serialize tokens
-    
+
     func serializeProofs(proofs: [Proof]) -> String {
+        //TODO: remove hardcoded mint selection
         let token = Token_JSON(mint: knownMints[0].url.absoluteString, proofs: proofs)
         let tokenContainer = Token_Container(token: [token], memo: "...fiat esse delendam.")
         let jsonData = try! JSONEncoder().encode(tokenContainer)
@@ -317,7 +330,6 @@ class Wallet {
         let safeString = Base64FS.encodeString(str: jsonString)
         return "cashuA" + safeString
     }
-    
     func deserializeToken(token: String) -> [Token_JSON]? {
         let noPrefix = token.dropFirst(6)
         let jsonString = Base64FS.decodeString(str: String(noPrefix))
