@@ -10,29 +10,19 @@ struct PaymentRequest: Codable {
     let pr: String
     let hash: String
 }
-struct Output: Codable {
-    let amount: Int
-    let output: String
-    let secret: String
-    let blindingFactor: String
-}
+
 struct Output_JSON: Codable {
     let amount: Int
     let B_: String
 }
 struct Promise {
     let amount: Int
-    let promise: secp256k1.Signing.PublicKey
+    let promise: String
     let id: String
-    let blindingFactor:secp256k1.Signing.PrivateKey
+    let blindingFactor:String
     let secret: String
 }
-struct Proof: Codable {
-    let id: String
-    let amount: Int
-    let secret: String
-    let C: String
-}
+
 struct Token_Container: Codable {
     let token: [Token_JSON]
     let memo: String?
@@ -48,7 +38,7 @@ class Wallet {
     init() {
         
     }
-    
+
     //FIXME: not being able to decode json from one mint (e.g. because its offline) crashes program
     func updateMints(completion: @escaping ([Mint]) -> Void) {
         //load from database
@@ -314,7 +304,7 @@ class Wallet {
             let bfKey = try! secp256k1.Signing.PrivateKey(dataRepresentation: blindingFactor.bytes, format: .compressed)
             let secret = originalOutputs.first(where: { $0.amount == promise.amount})!.secret
             
-            let p = Promise(amount: promise.amount, promise:pK , id: promise.id, blindingFactor: bfKey, secret: secret)
+            let p = Promise(amount: promise.amount, promise:String(bytes: pK.dataRepresentation) , id: promise.id, blindingFactor: blindingFactor, secret: secret)
             transformed.append(p)
         }
         return transformed

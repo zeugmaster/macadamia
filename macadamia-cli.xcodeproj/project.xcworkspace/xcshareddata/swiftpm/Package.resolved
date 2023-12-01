@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GigaBitcoin/secp256k1.swift.git",
       "state" : {
-        "branch" : "COMBINE",
-        "revision" : "aae94319ce0719db820cc4497316ea7449634ec8"
+        "revision" : "0f5f60ee9ad739c9603c3546c726a109d2c24cbd",
+        "version" : "0.14.0"
       }
     }
   ],

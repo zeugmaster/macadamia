@@ -34,11 +34,13 @@ func unblindPromises(promises:[Promise],
     for promise in promises {
         let pubBytes = try! mintPublicKeys[String(promise.amount)]!.bytes
         let mintPubKey = try! secp256k1.Signing.PublicKey(dataRepresentation: pubBytes, format: .compressed)
-        let product = try! mintPubKey.multiply(promise.blindingFactor.dataRepresentation.bytes)
+        let pK = try! secp256k1.Signing.PublicKey(dataRepresentation: promise.promise.bytes, format: .compressed)
+        let product = try! mintPubKey.multiply(pK.dataRepresentation.bytes)
         let neg = negatePublicKey(key: product)
 
         // C = C_ - A.mult(r)
-        let unblindedPromise = try! promise.promise.combine([neg])
+        let p = try! secp256k1.Signing.PublicKey(dataRepresentation: promise.promise.bytes, format: .compressed)
+        let unblindedPromise = try! p.combine([neg])
         
         proofs.append(Proof(id: promise.id, amount: promise.amount, secret: promise.secret, C: String(bytes: unblindedPromise.dataRepresentation)))
     }

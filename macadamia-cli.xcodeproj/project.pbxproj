@@ -9,10 +9,12 @@
 /* Begin PBXBuildFile section */
 		3709F1E92AFD51D90091DE8D /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1E82AFD51D90091DE8D /* main.swift */; };
 		3709F1F12AFD52040091DE8D /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 3709F1F02AFD52040091DE8D /* secp256k1 */; };
-		3709F1F52AFD52760091DE8D /* b_dhke.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F22AFD52760091DE8D /* b_dhke.swift */; };
+		3709F1F52AFD52760091DE8D /* crypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F22AFD52760091DE8D /* crypto.swift */; };
 		3709F1F62AFD52760091DE8D /* cashu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F32AFD52760091DE8D /* cashu.swift */; };
 		3709F1F72AFD52760091DE8D /* Base64FS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F42AFD52760091DE8D /* Base64FS.swift */; };
 		3783B0EA2B03CB7B0063E3FB /* data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3783B0E92B03CB7B0063E3FB /* data.swift */; };
+		37C727372B19EAB500052093 /* network.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37C727362B19EAB500052093 /* network.swift */; };
+		37C727392B19EAC900052093 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37C727382B19EAC900052093 /* model.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -30,10 +32,12 @@
 /* Begin PBXFileReference section */
 		3709F1E52AFD51D90091DE8D /* macadamia-cli */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "macadamia-cli"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3709F1E82AFD51D90091DE8D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		3709F1F22AFD52760091DE8D /* b_dhke.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = b_dhke.swift; sourceTree = "<group>"; };
+		3709F1F22AFD52760091DE8D /* crypto.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = crypto.swift; sourceTree = "<group>"; };
 		3709F1F32AFD52760091DE8D /* cashu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cashu.swift; sourceTree = "<group>"; };
 		3709F1F42AFD52760091DE8D /* Base64FS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Base64FS.swift; sourceTree = "<group>"; };
 		3783B0E92B03CB7B0063E3FB /* data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = data.swift; sourceTree = "<group>"; };
+		37C727362B19EAB500052093 /* network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = network.swift; sourceTree = "<group>"; };
+		37C727382B19EAC900052093 /* model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = model.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,7 +82,9 @@
 			children = (
 				3709F1F32AFD52760091DE8D /* cashu.swift */,
 				3783B0E92B03CB7B0063E3FB /* data.swift */,
-				3709F1F22AFD52760091DE8D /* b_dhke.swift */,
+				37C727362B19EAB500052093 /* network.swift */,
+				37C727382B19EAC900052093 /* model.swift */,
+				3709F1F22AFD52760091DE8D /* crypto.swift */,
 				3709F1F42AFD52760091DE8D /* Base64FS.swift */,
 			);
 			path = cashu;
@@ -149,9 +155,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				3709F1F62AFD52760091DE8D /* cashu.swift in Sources */,
-				3709F1F52AFD52760091DE8D /* b_dhke.swift in Sources */,
+				3709F1F52AFD52760091DE8D /* crypto.swift in Sources */,
 				3709F1E92AFD51D90091DE8D /* main.swift in Sources */,
 				3783B0EA2B03CB7B0063E3FB /* data.swift in Sources */,
+				37C727372B19EAB500052093 /* network.swift in Sources */,
+				37C727392B19EAC900052093 /* model.swift in Sources */,
 				3709F1F72AFD52760091DE8D /* Base64FS.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -327,8 +335,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/GigaBitcoin/secp256k1.swift.git";
 			requirement = {
-				branch = COMBINE;
-				kind = branch;
+				kind = exactVersion;
+				version = 0.14.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
