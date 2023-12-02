@@ -7,6 +7,8 @@
 import Foundation
 import CryptoKit
 import secp256k1
+import BIP32
+import BIP39
 
 // Step 1 (Alice)
 func generateOutputs(amounts:[Int]) -> [Output] {
@@ -81,3 +83,36 @@ func negatePublicKey(key: secp256k1.Signing.PublicKey) -> secp256k1.Signing.Publ
     return newKey
 }
 
+func childPrivateKeyForDerivationPath(seed:String, derivationPath:String) -> String? {
+    var parts = derivationPath.split(separator: "/")
+    
+    if parts.count > 7 || parts.count < 1 {
+        return nil
+    }
+    
+    if parts.first!.contains("m") {
+        parts.removeFirst()
+    }
+    
+    let privateMasterKeyDerivator: PrivateMasterKeyDerivating = PrivateMasterKeyDerivator()
+    var current = try! privateMasterKeyDerivator.privateKey(seed: Data(seed.bytes))
+
+    for var part in parts {
+        var index:Int = 0
+        if part.contains("'") {
+            part.replace("'", with: "")
+            index = 2147483648
+        }
+        if let i = Int(part) {
+             index += i
+        } else {
+            print("could not read index from string")
+            return nil
+        }
+        //derive child for current key and set current = new
+        let new = try! PrivateChildKeyDerivator().privateKey(privateParentKey: current, index: UInt32(index))
+        current = new
+    }
+
+    return String(bytes: current.key)
+}

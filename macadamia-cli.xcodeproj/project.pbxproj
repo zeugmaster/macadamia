@@ -13,6 +13,8 @@
 		3709F1F62AFD52760091DE8D /* cashu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F32AFD52760091DE8D /* cashu.swift */; };
 		3709F1F72AFD52760091DE8D /* Base64FS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F42AFD52760091DE8D /* Base64FS.swift */; };
 		3783B0EA2B03CB7B0063E3FB /* data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3783B0E92B03CB7B0063E3FB /* data.swift */; };
+		37A44A862B1B2C16007A8D0D /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 37A44A852B1B2C16007A8D0D /* BIP39 */; };
+		37A44A892B1B2C40007A8D0D /* BIP32 in Frameworks */ = {isa = PBXBuildFile; productRef = 37A44A882B1B2C40007A8D0D /* BIP32 */; };
 		37C727372B19EAB500052093 /* network.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37C727362B19EAB500052093 /* network.swift */; };
 		37C727392B19EAC900052093 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37C727382B19EAC900052093 /* model.swift */; };
 /* End PBXBuildFile section */
@@ -36,6 +38,7 @@
 		3709F1F32AFD52760091DE8D /* cashu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cashu.swift; sourceTree = "<group>"; };
 		3709F1F42AFD52760091DE8D /* Base64FS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Base64FS.swift; sourceTree = "<group>"; };
 		3783B0E92B03CB7B0063E3FB /* data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = data.swift; sourceTree = "<group>"; };
+		37A44A8A2B1B9162007A8D0D /* macadamia-cli.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "macadamia-cli.entitlements"; sourceTree = "<group>"; };
 		37C727362B19EAB500052093 /* network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = network.swift; sourceTree = "<group>"; };
 		37C727382B19EAC900052093 /* model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = model.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -45,6 +48,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				37A44A892B1B2C40007A8D0D /* BIP32 in Frameworks */,
+				37A44A862B1B2C16007A8D0D /* BIP39 in Frameworks */,
 				3709F1F12AFD52040091DE8D /* secp256k1 in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -71,6 +76,7 @@
 		3709F1E72AFD51D90091DE8D /* macadamia-cli */ = {
 			isa = PBXGroup;
 			children = (
+				37A44A8A2B1B9162007A8D0D /* macadamia-cli.entitlements */,
 				3709F1E82AFD51D90091DE8D /* main.swift */,
 				3783B0E82B0276AE0063E3FB /* cashu */,
 			);
@@ -108,6 +114,8 @@
 			name = "macadamia-cli";
 			packageProductDependencies = (
 				3709F1F02AFD52040091DE8D /* secp256k1 */,
+				37A44A852B1B2C16007A8D0D /* BIP39 */,
+				37A44A882B1B2C40007A8D0D /* BIP32 */,
 			);
 			productName = "macadamia-cli";
 			productReference = 3709F1E52AFD51D90091DE8D /* macadamia-cli */;
@@ -139,6 +147,8 @@
 			mainGroup = 3709F1DC2AFD51D90091DE8D;
 			packageReferences = (
 				3709F1EF2AFD52040091DE8D /* XCRemoteSwiftPackageReference "secp256k1.swift" */,
+				37A44A842B1B2C16007A8D0D /* XCRemoteSwiftPackageReference "BIP39" */,
+				37A44A872B1B2C40007A8D0D /* XCRemoteSwiftPackageReference "BIP32" */,
 			);
 			productRefGroup = 3709F1E62AFD51D90091DE8D /* Products */;
 			projectDirPath = "";
@@ -288,6 +298,7 @@
 		3709F1ED2AFD51D90091DE8D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "macadamia-cli/macadamia-cli.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = AN6VRTK6TB;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -299,6 +310,7 @@
 		3709F1EE2AFD51D90091DE8D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "macadamia-cli/macadamia-cli.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = AN6VRTK6TB;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -339,6 +351,22 @@
 				version = 0.14.0;
 			};
 		};
+		37A44A842B1B2C16007A8D0D /* XCRemoteSwiftPackageReference "BIP39" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pengpengliu/BIP39";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+		37A44A872B1B2C40007A8D0D /* XCRemoteSwiftPackageReference "BIP32" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/zeugmaster/BIP32.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -346,6 +374,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3709F1EF2AFD52040091DE8D /* XCRemoteSwiftPackageReference "secp256k1.swift" */;
 			productName = secp256k1;
+		};
+		37A44A852B1B2C16007A8D0D /* BIP39 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 37A44A842B1B2C16007A8D0D /* XCRemoteSwiftPackageReference "BIP39" */;
+			productName = BIP39;
+		};
+		37A44A882B1B2C40007A8D0D /* BIP32 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 37A44A872B1B2C40007A8D0D /* XCRemoteSwiftPackageReference "BIP32" */;
+			productName = BIP32;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

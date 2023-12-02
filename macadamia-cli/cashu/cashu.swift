@@ -15,14 +15,6 @@ struct Output_JSON: Codable {
     let amount: Int
     let B_: String
 }
-struct Promise {
-    let amount: Int
-    let promise: String
-    let id: String
-    let blindingFactor:String
-    let secret: String
-}
-
 struct Token_Container: Codable {
     let token: [Token_JSON]
     let memo: String?
@@ -31,6 +23,7 @@ struct Token_JSON: Codable {
     let mint: String
     var proofs: [Proof]
 }
+
 class Wallet {
     var knownMints = [Mint]()
     var tokenStore = TokenStore()
@@ -230,19 +223,6 @@ class Wallet {
     func requestMint(amount:Int, completion: @escaping (PaymentRequest?) -> Void) {
         
     }
-
-    // 3. pay invoice
-
-    // ...
-    
-    //MARK: -
-    // 4. MINT TOKENS aka request blinded signatures:
-    // 4a generate array of outputs with amounts adding up to invoice payed ✔
-    // 4b blind outputs ✔
-    // 4c construct JSON with blinded outputs and amounts ✔
-    // 4d make post req to mint with payment hash in url and JSON as payload ✔
-    // 4e read JSON data to object and transform by changind key strings to objects, adding blindingfactors
-    // 4f store list of blinded outputs for later unblinding
     
     func requestBlindedPromises(amount:Int, payReq:PaymentRequest, completion: @escaping ([Promise]) -> Void) {
         //generates outputs (blindedMessages) to use when requesting
@@ -301,7 +281,6 @@ class Wallet {
         for promise in promises {
             let pK = try! secp256k1.Signing.PublicKey(dataRepresentation: promise.C_.bytes, format: .compressed)
             let blindingFactor = originalOutputs.first(where: { $0.amount == promise.amount})!.blindingFactor
-            let bfKey = try! secp256k1.Signing.PrivateKey(dataRepresentation: blindingFactor.bytes, format: .compressed)
             let secret = originalOutputs.first(where: { $0.amount == promise.amount})!.secret
             
             let p = Promise(amount: promise.amount, promise:String(bytes: pK.dataRepresentation) , id: promise.id, blindingFactor: blindingFactor, secret: secret)
@@ -309,7 +288,6 @@ class Wallet {
         }
         return transformed
     }
-
 
     func serializeProofs(proofs: [Proof]) -> String {
         //TODO: remove hardcoded mint selection

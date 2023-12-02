@@ -21,6 +21,22 @@ class Output: Codable {
     }
 }
 
+class Promise {
+    let amount: Int
+    let promise: String
+    let id: String
+    let blindingFactor:String
+    let secret: String
+    
+    init(amount: Int, promise: String, id: String, blindingFactor: String, secret: String) {
+        self.amount = amount
+        self.promise = promise
+        self.id = id
+        self.blindingFactor = blindingFactor
+        self.secret = secret
+    }
+}
+
 class Proof: Codable {
     let id: String
     let amount: Int

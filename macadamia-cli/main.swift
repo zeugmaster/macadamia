@@ -17,6 +17,9 @@ func start() {
     wallet.updateMints { mints in
         print("downloaded \(mints.count) mint(s)")
     }
+    
+    let seed = "7aab38b466db2bdef68fbe4068fa7a2034602832c95252bcf9c0bacdd4132249c9b3e881390568333b32ebff738c4daa9793252cfd9fb840d38f81f277f6738f"
+    print(childPrivateKeyForDerivationPath(seed: seed, derivationPath: "m/1/1'/1"))
   
     print("""
             Welcome to macadamia. Would you like to
