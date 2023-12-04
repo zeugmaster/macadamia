@@ -14,13 +14,10 @@ func start() {
     
     let wallet = Wallet()
   
-    wallet.updateMints { mints in
-        print("downloaded \(mints.count) mint(s)")
+    wallet.updateMints { result in
+        
     }
-    
-    let seed = "7aab38b466db2bdef68fbe4068fa7a2034602832c95252bcf9c0bacdd4132249c9b3e881390568333b32ebff738c4daa9793252cfd9fb840d38f81f277f6738f"
-    print(childPrivateKeyForDerivationPath(seed: seed, derivationPath: "m/1/1'/1"))
-  
+        
     print("""
             Welcome to macadamia. Would you like to
             - mint
@@ -53,7 +50,7 @@ func start() {
     #warning("make sure to call dispatchGroup.leave() in every scenario")
     
     func startMint() {
-        wallet.mint(amount: numberInput()) { prResult in
+        wallet.mint(amount: numberInput(), mint: wallet.database.mints[0]) { prResult in
             print(prResult)
             print("press enter when invoice is payed")
             _ = readLine()
@@ -64,7 +61,7 @@ func start() {
     }
     
     func send() {
-        wallet.sendTokens(amount: numberInput()) { result in
+        wallet.sendTokens(mint: wallet.database.mints[0], amount: numberInput()) { result in
             switch result {
             case.success(let tokenString):
                 print("here is your token: \(tokenString)")

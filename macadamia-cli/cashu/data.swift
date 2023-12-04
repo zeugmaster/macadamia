@@ -7,86 +7,83 @@
 
 import Foundation
 
-struct Database: Codable {
-    var tokens = [Token_JSON]()
-}
-
-class TokenStore {
-    private var database:Database
+public class Database: Codable {
     
-    private func getFileURL() -> URL {
+    var proofs:[Proof]
+    var pendingProofs:[Proof]
+    var mints:[Mint]
+    var pendingOutputs:[Output]
+    
+    init(proofs: [Proof], pendingProofs: [Proof], mints: [Mint], pendingOutputs: [Output]) {
+        self.proofs = proofs
+        self.pendingProofs = pendingProofs
+        self.mints = mints
+        self.pendingOutputs = pendingOutputs
+    }
+    
+    private static func getFilePath() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0].appendingPathComponent("Database.json")
     }
     
-    init() {
-        self.database = Database()
-        //check wether db file is present
-        if FileManager.default.fileExists(atPath: getFileURL().path()) {
-            self.database = load()!
-        } else {
-            print("No database file yet")
+    static func loadFromFile() -> Database {
+        do {
+            let data = try Data(contentsOf: Database.getFilePath())
+            let db = try JSONDecoder().decode(Database.self, from: data)
+            return db
+        } catch {
+            return Database(proofs: [], pendingProofs:[], mints: [], pendingOutputs: []) //sketchy
         }
     }
     
-    func addToken(token:Token_JSON) {
-        self.database.tokens.append(token)
-        self.save(data: self.database)
+    func saveToFile() {
+        var encoder = JSONEncoder()
+        do {
+            encoder.outputFormatting = .prettyPrinted
+            let data = try encoder.encode(self)
+            try data.write(to: Database.getFilePath())
+        } catch {
+            print("whoops, failed to write db to file")
+        }
     }
     
-    //TODO: mint selection & rework to allow for management of PENDING proofs
-    func retrieveProofsForAmount(amount:Int) -> [Proof]? {
-        //check if we have enough total in the db
-        var accumulatedAmount: Int = 0
-        var selectedProofs: [Proof] = []
-        var proofsToRemove: [(tokenIndex: Int, proofIndex: Int)] = []
-
-        outerLoop: for (tokenIndex, token) in database.tokens.enumerated() {
-            for (proofIndex, proof) in token.proofs.enumerated() {
-                accumulatedAmount += proof.amount
-                selectedProofs.append(proof)
-                proofsToRemove.append((tokenIndex, proofIndex))
-
-                if accumulatedAmount >= amount {
-                    // Remove the selected proofs from the database
-                    for removal in proofsToRemove.reversed() {
-                        database.tokens[removal.tokenIndex].proofs.remove(at: removal.proofIndex)
-                    }
-                    break outerLoop
+    func retrieveProofs(mint:Mint, amount:Int) -> [Proof]? {
+        //load all mint keysets
+        print("looking for proofs from \(mint.url) with total amount: \(amount)")
+        var sum = 0
+        var collected = [Proof]()
+        for proof in self.proofs {
+            for ks in mint.keySets {
+                if ks.keysetID == proof.id {
+                    collected.append(proof)
+                    sum += proof.amount
+                    break // no need to check for the other keyset_ids
                 }
             }
+            if sum >= amount {
+                return collected
+            }
         }
-        guard accumulatedAmount >= amount else {
-            print("Target amount of \(amount) was not reached. Only accumulated \(accumulatedAmount).")
-            // Optionally handle the case where the target amount is not met
-            return nil
-        }
-        print("Target amount reached or exceeded with a total of \(accumulatedAmount).")
-        //save state without selected proofs, effectively removing them from database
-        save(data: self.database)
-        return selectedProofs
+        return nil
     }
-    private func save(data: Database) {
-        let url = getFileURL()
-        do {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            let encoded = try encoder.encode(data)
-            try encoded.write(to: url)
-            print("wrote data to URL: \(url)")
-        } catch {
-            print("Failed to write JSON data: \(error.localizedDescription)")
+    
+    func removeProofsFromValid(proofsToRemove:[Proof]) {
+        let new = proofs.filter { item1 in
+                !proofsToRemove.contains { item2 in
+                item1 == item2
+            }
         }
+        self.proofs = new
     }
-    //FIXME: when retrieving proofs, token info remains, even without proofs in it, in which case loading crashes
-    private func load() -> Database? {
-        let url = getFileURL()
-        do {
-            let data = try Data(contentsOf: url)
-            let decoded = try JSONDecoder().decode(Database.self, from: data)
-            return decoded
-        } catch {
-            print("Failed to read JSON data: \(error.localizedDescription)")
+    
+    func mintForKeysetID(id:String) -> Mint? {
+        if let foundMint = self.mints.first(where: { mint in
+            mint.keySets.contains(where: { keyset in
+                keyset.keysetID == id
+            })
+        }) {
+            return foundMint
+        } else {
             return nil
         }
     }

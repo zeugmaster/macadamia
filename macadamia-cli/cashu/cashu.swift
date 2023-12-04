@@ -2,10 +2,6 @@ import Foundation
 import CryptoKit
 import secp256k1
 
-struct Mint {
-    let url: URL
-    let keySet: Dictionary<String,String>
-}
 struct PaymentRequest: Codable {
     let pr: String
     let hash: String
@@ -25,47 +21,42 @@ struct Token_JSON: Codable {
 }
 
 class Wallet {
-    var knownMints = [Mint]()
-    var tokenStore = TokenStore()
+    var database = Database.loadFromFile()
     
-    init() {
-        
-    }
-
-    //FIXME: not being able to decode json from one mint (e.g. because its offline) crashes program
-    func updateMints(completion: @escaping ([Mint]) -> Void) {
+    
+    func updateMints(completion: @escaping (Result<Void,Error>) -> Void) {
         //load from database
         // TODO: replace hardcoded static mints
-        let mintURLs = [URL(string: "https://8333.space:3338")!]
+        if self.database.mints.isEmpty {
+            let m = Mint(url: URL(string: "https://mint.zeugmaster.com:3338")!, keySets: [])
+            self.database.mints.append(m)
+        }
         
-        knownMints = []
-        @Sendable func fetchAllData() async {
-            for url in mintURLs {
-                do {
-                    let (data, _) = try await URLSession.shared.data(from: url.appending(path: "keys"))
-                    // Use the fetched data
-                    let json = try JSONSerialization.jsonObject(with: data, options: []) as! [String: String]
-                    knownMints.append(Mint(url: url, keySet: json))
-                } catch {
-                    // TODO: needs real error handling
-                    print("Mint keyset download: Error fetching data: \(error)")
+        for mint in database.mints {
+            Network.loadCurrentKeyset(fromMint: mint) { result in
+                switch result {
+                case .success(let dict):
+                    let id = Mint.calculateKeysetID(keyset: dict)
+                    let keyset = Keyset(keysetID: id, keys: dict)
+                    mint.keySets = [keyset]
+                    print("successfully downloaded keyset with ID: \(id)")
+                case .failure(let error):
+                    print("could not load keyset for \(mint) because of \(error)")
                 }
             }
-            completion(knownMints)
-        }
-        Task {
-            await fetchAllData()
         }
     }
+    
     //MARK: - Mint
     //FIXME: this is propably unnecessary complexity using two completion handlers
     func mint(amount:Int,
+              mint:Mint,
               prCompletion: @escaping (Result<PaymentRequest,Error>) -> Void,
               mintCompletion: @escaping (Result<String,Error>) -> Void) {
         //1. make GET req to the mint to receive lightning invoice
         // TODO: change to async await
         //TODO: remove hardcoded mint selection
-        let urlString = knownMints[0].url.absoluteString + "/mint?amount=\(String(amount))"
+        let urlString = mint.url.absoluteString + "/mint?amount=\(String(amount))"
         let url = URL(string: urlString)!
         print(url)
         let task = URLSession.shared.dataTask(with: url) {payload, response, error in
@@ -76,11 +67,12 @@ class Wallet {
                 
                 //WAIT FOR INVOICE PAYED
                 //2. after invoice is paid, send blinded outputs for signing and subsequent unblinding
-                self.requestBlindedPromises(amount: amount, payReq: paymentRequest) { promises in
+                self.requestBlindedPromises(mint: mint, amount: amount, payReq: paymentRequest) { promises in
                     if promises.isEmpty == false {
                         //TODO: remove hardcoded mint selection
-                        let proofs = unblindPromises(promises: promises, mintPublicKeys: self.knownMints[0].keySet)
-                        self.tokenStore.addToken(token: Token_JSON(mint: self.knownMints[0].url.absoluteString, proofs: proofs))
+                        let proofs = unblindPromises(promises: promises, mintPublicKeys: mint.keySets[0].keys!)
+                        self.database.proofs.append(contentsOf: proofs)
+                        self.database.saveToFile()
                         mintCompletion(.success("yay"))
                     } else {
                         print("empty promises lol")
@@ -95,10 +87,10 @@ class Wallet {
     }
     
     //MARK: - Send
-    func sendTokens(amount:Int, completion: @escaping (Result<String,Error>) -> Void) {
+    func sendTokens(mint:Mint, amount:Int, completion: @escaping (Result<String,Error>) -> Void) {
         // 1. retrieve tokens from database. if amounts match, serialize right away
         // if amounts dont match: split, serialize token for sending, add the rest back to db
-        if let proofs = self.tokenStore.retrieveProofsForAmount(amount: amount) {
+        if let proofs = self.database.retrieveProofs(mint: mint, amount: amount) {
             var totalInProofs = 0
             for proof in proofs {
                 totalInProofs += proof.amount
@@ -106,6 +98,7 @@ class Wallet {
             print(proofs)
             if totalInProofs == amount {
                 let tokenstring = serializeProofs(proofs: proofs)
+                self.database.removeProofsFromValid(proofsToRemove: proofs)
                 completion(.success(tokenstring))
             } else if totalInProofs > amount {
                 print("need to split for send ...")
@@ -115,7 +108,7 @@ class Wallet {
                 //request split
                 //TODO: sort array of amounts in ascending order to prevent privacy leak
                 let outputs = generateOutputs(amounts: toSend+rest)
-                requestSplit(forProofs: proofs, withOutputs: outputs) { result in
+                requestSplit(mint: mint, forProofs: proofs, withOutputs: outputs) { result in
                     switch result {
                     case .success(var combinedProofs):
                         //assign correctly to toSend and rest
@@ -129,7 +122,7 @@ class Wallet {
                         //serialize toSend and save rest
                         let token = self.serializeProofs(proofs: sendProofs)
                         //FIXME: hardcoded mint must be replaced
-                        self.tokenStore.addToken(token: Token_JSON(mint: "well", proofs: combinedProofs))
+                        self.database.proofs.append(contentsOf: combinedProofs)
                         completion(.success(token))
                         //run completion handler accordingly
                     case .failure(let splitError):
@@ -151,12 +144,16 @@ class Wallet {
                 amounts.append(p.amount)
             }
             let newOutputs = generateOutputs(amounts: amounts)
-            //TODO: remove hardcoded mint selection
-            requestSplit(forProofs: tokenlist[0].proofs, withOutputs: newOutputs) { result in
+            
+            //TODO: just taking the first proof.id breaks multimint token logic, needs fixing
+            let mint = self.database.mintForKeysetID(id: tokenlist[0].proofs[0].id)
+            //same problem as above
+            requestSplit(mint: mint!, forProofs: tokenlist[0].proofs, withOutputs: newOutputs) { result in
                 switch result {
                 case .success(let newProofs):
                     //TODO: remove hardcoded mint selection
-                    self.tokenStore.addToken(token: Token_JSON(mint: self.knownMints[0].url.absoluteString, proofs: newProofs))
+                    self.database.proofs.append(contentsOf: newProofs)
+                    self.database.saveToFile()
                     completion(.success(()))
                     print("saved new proofs to db")
                 case .failure(let error):
@@ -165,7 +162,8 @@ class Wallet {
                 }
             }
         } else {
-            
+            print("could not deserialise token")
+            //completion(.failure())
         }
     }
     
@@ -178,7 +176,7 @@ class Wallet {
         let proofs:[Proof]
         let outputs:[Output_JSON]
     }
-    private func requestSplit(forProofs:[Proof], withOutputs:[Output], completion: @escaping (Result<[Proof], Error>) -> Void) {
+    private func requestSplit(mint:Mint, forProofs:[Proof], withOutputs:[Output], completion: @escaping (Result<[Proof], Error>) -> Void) {
         //construct mint request payload and make http post req
         //transform outputs to outputs_JSON
         var outputs_json = [Output_JSON]()
@@ -195,7 +193,7 @@ class Wallet {
         let pretty = try! prettyEncoder.encode(splitReq)
         print(String(data: pretty, encoding: .utf8)!)
         //TODO: remove hardcoded mint selection
-        let url = URL(string: self.knownMints[0].url.absoluteString + "/split")!
+        let url = URL(string: mint.url.absoluteString + "/split")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -210,7 +208,7 @@ class Wallet {
                 let promises = self.transformPromises(promises: promisesJSON.promises, originalOutputs: withOutputs)
                 print(promisesJSON)
                 //TODO: remove hardcoded mint selection
-                let proofs = unblindPromises(promises: promises, mintPublicKeys: self.knownMints[0].keySet)
+                let proofs = unblindPromises(promises: promises, mintPublicKeys: mint.keySets[0].keys!)
                 completion(.success(proofs))
             } else {
                 print("could not decode promises from JSON: \(String(data: data!, encoding: .utf8) ?? "no data")")
@@ -224,7 +222,7 @@ class Wallet {
         
     }
     
-    func requestBlindedPromises(amount:Int, payReq:PaymentRequest, completion: @escaping ([Promise]) -> Void) {
+    func requestBlindedPromises(mint:Mint, amount:Int, payReq:PaymentRequest, completion: @escaping ([Promise]) -> Void) {
         //generates outputs (blindedMessages) to use when requesting
         let currentMintOutputs = generateOutputs(amounts: splitIntoBase2Numbers(n: amount))
         var outputArray: [[String: Any]] = []
@@ -239,7 +237,7 @@ class Wallet {
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: containerDict, options: [])
             //TODO: remove hardcoded mint selection
-            if let url = URL(string: knownMints[0].url.absoluteString + "/mint?hash=" + payReq.hash) {
+            if let url = URL(string: mint.url.absoluteString + "/mint?hash=" + payReq.hash) {
                 //print(url)
                 var request = URLRequest(url: url)
                 request.httpMethod = "POST"
@@ -291,7 +289,8 @@ class Wallet {
 
     func serializeProofs(proofs: [Proof]) -> String {
         //TODO: remove hardcoded mint selection
-        let token = Token_JSON(mint: knownMints[0].url.absoluteString, proofs: proofs)
+        let mint = database.mintForKeysetID(id: proofs[0].id)!
+        let token = Token_JSON(mint: mint.url.absoluteString, proofs: proofs)
         let tokenContainer = Token_Container(token: [token], memo: "...fiat esse delendam.")
         let jsonData = try! JSONEncoder().encode(tokenContainer)
         let jsonString = String(data: jsonData, encoding: .utf8)!

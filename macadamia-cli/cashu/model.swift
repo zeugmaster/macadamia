@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CryptoKit
 
 class Output: Codable {
     let amount: Int
@@ -37,7 +38,15 @@ class Promise {
     }
 }
 
-class Proof: Codable {
+class Proof: Codable, Equatable {
+    static func == (lhs: Proof, rhs: Proof) -> Bool {
+        if lhs.C == rhs.C {
+            return true
+        } else {
+            return false
+        }
+    }
+    
     let id: String
     let amount: Int
     let secret: String
@@ -49,4 +58,35 @@ class Proof: Codable {
         self.secret = secret
         self.C = C
     }
+}
+
+//TODO: one mint can have one URL, but multiple <Keysets> with keys and keyset_ids
+class Mint: Codable {
+    let url: URL
+    var keySets: [Keyset]
+    
+    
+    init(url: URL, keySets: [Keyset]) {
+        self.url = url
+        self.keySets = keySets
+    }
+    
+    static func calculateKeysetID(keyset:Dictionary<String,String>) -> String {
+        let sortedValues = keyset.sorted { (firstElement, secondElement) -> Bool in
+            guard let firstKey = UInt(firstElement.key), let secondKey = UInt(secondElement.key) else {
+                return false
+            }
+            return firstKey < secondKey
+        }.map { $0.value }
+        //print(sortedValues)
+        
+        let concat = sortedValues.joined()
+        let hashData = Data(SHA256.hash(data: concat.data(using: .utf8)!))
+        let id = hashData.base64EncodedString().prefix(12)
+        return String(id)
+    }
+}
+struct Keyset: Codable {
+    let keysetID: String
+    let keys: Dictionary<String, String>? //me might need ID while not having access to old keys
 }
