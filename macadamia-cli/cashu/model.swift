@@ -38,7 +38,8 @@ class Promise {
     }
 }
 
-class Proof: Codable, Equatable {
+class Proof: Codable, Equatable, CustomStringConvertible {
+    
     static func == (lhs: Proof, rhs: Proof) -> Bool {
         if lhs.C == rhs.C {
             return true
@@ -51,6 +52,10 @@ class Proof: Codable, Equatable {
     let amount: Int
     let secret: String
     let C: String
+    
+    var description: String {
+        return "Proof: ...\(C.suffix(6)) secret: ...\(secret.suffix(8)) amount: \(amount)"
+    }
     
     init(id: String, amount: Int, secret: String, C: String) {
         self.id = id

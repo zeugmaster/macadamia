@@ -25,7 +25,9 @@ func generateOutputs(amounts:[Int]) -> [Output] {
                               output: String(bytes: output.dataRepresentation),
                               secret: secretString,
                               blindingFactor: String(bytes: blindingFactor.dataRepresentation)))
+        print("created output with B_: \(String(bytes: output.dataRepresentation)), r: \(String(bytes: blindingFactor.dataRepresentation)), secret: \(secretString), amount: \(n)")
     }
+    
     return outputs
 }
 
@@ -33,10 +35,11 @@ func generateOutputs(amounts:[Int]) -> [Output] {
 func unblindPromises(promises:[Promise],
                      mintPublicKeys:Dictionary<String,String>) -> [Proof] {
     var proofs = [Proof]()
+    print(promises)
     for promise in promises {
         let pubBytes = try! mintPublicKeys[String(promise.amount)]!.bytes
         let mintPubKey = try! secp256k1.Signing.PublicKey(dataRepresentation: pubBytes, format: .compressed)
-        let pK = try! secp256k1.Signing.PublicKey(dataRepresentation: promise.promise.bytes, format: .compressed)
+        let pK = try! secp256k1.Signing.PrivateKey(dataRepresentation: promise.blindingFactor.bytes)
         let product = try! mintPubKey.multiply(pK.dataRepresentation.bytes)
         let neg = negatePublicKey(key: product)
 

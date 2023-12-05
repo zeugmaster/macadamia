@@ -28,7 +28,7 @@ class Wallet {
         //load from database
         // TODO: replace hardcoded static mints
         if self.database.mints.isEmpty {
-            let m = Mint(url: URL(string: "https://mint.zeugmaster.com:3338")!, keySets: [])
+            let m = Mint(url: URL(string: "https://8333.space:3338")!, keySets: [])
             self.database.mints.append(m)
         }
         
@@ -91,14 +91,15 @@ class Wallet {
         // 1. retrieve tokens from database. if amounts match, serialize right away
         // if amounts dont match: split, serialize token for sending, add the rest back to db
         if let proofs = self.database.retrieveProofs(mint: mint, amount: amount) {
+            print("total proofs collected: \(proofs)")
             var totalInProofs = 0
             for proof in proofs {
                 totalInProofs += proof.amount
             }
-            print(proofs)
             if totalInProofs == amount {
                 let tokenstring = serializeProofs(proofs: proofs)
                 self.database.removeProofsFromValid(proofsToRemove: proofs)
+                self.database.saveToFile()
                 completion(.success(tokenstring))
             } else if totalInProofs > amount {
                 print("need to split for send ...")
@@ -111,6 +112,7 @@ class Wallet {
                 requestSplit(mint: mint, forProofs: proofs, withOutputs: outputs) { result in
                     switch result {
                     case .success(var combinedProofs):
+                        print("total returned after split: \(combinedProofs)")
                         //assign correctly to toSend and rest
                         var sendProofs = [Proof]()
                         for n in toSend {
@@ -119,10 +121,13 @@ class Wallet {
                                 combinedProofs.remove(at: index)
                             }
                         }
+                        self.database.removeProofsFromValid(proofsToRemove: proofs)
                         //serialize toSend and save rest
                         let token = self.serializeProofs(proofs: sendProofs)
-                        //FIXME: hardcoded mint must be replaced
+                        print("change proofs, written to db: \(combinedProofs)")
+                        print("sent proofs: \(sendProofs)")
                         self.database.proofs.append(contentsOf: combinedProofs)
+                        self.database.saveToFile()
                         completion(.success(token))
                         //run completion handler accordingly
                     case .failure(let splitError):
@@ -205,7 +210,7 @@ class Wallet {
                 return
             }
             if let promisesJSON = try? JSONDecoder().decode(Promise_JSON_List.self, from: data!) {
-                let promises = self.transformPromises(promises: promisesJSON.promises, originalOutputs: withOutputs)
+                let promises = self.transformPromises(promises: promisesJSON.promises, originalOutputs: withOutputs)!
                 print(promisesJSON)
                 //TODO: remove hardcoded mint selection
                 let proofs = unblindPromises(promises: promises, mintPublicKeys: mint.keySets[0].keys!)
@@ -251,7 +256,7 @@ class Wallet {
                     }
                     
                     if let jsonObject = try? JSONDecoder().decode(Promise_JSON_List.self, from: data!) {
-                        completion(self.transformPromises(promises: jsonObject.promises, originalOutputs: currentMintOutputs))
+                        completion(self.transformPromises(promises: jsonObject.promises, originalOutputs: currentMintOutputs)!)
                     } else {
                         print("could not decode promises from JSON: \(String(data: data!, encoding: .utf8) ?? "no data")")
                     }
@@ -274,15 +279,21 @@ class Wallet {
         let promises: [Promise_JSON]
     }
     // TODO: not a very elegant solution, refactor
-    func transformPromises(promises:[Promise_JSON], originalOutputs:[Output]) -> [Promise] {
+    func transformPromises(promises:[Promise_JSON], originalOutputs:[Output]) -> [Promise]? {
         var transformed = [Promise]()
-        for promise in promises {
-            let pK = try! secp256k1.Signing.PublicKey(dataRepresentation: promise.C_.bytes, format: .compressed)
-            let blindingFactor = originalOutputs.first(where: { $0.amount == promise.amount})!.blindingFactor
-            let secret = originalOutputs.first(where: { $0.amount == promise.amount})!.secret
-            
-            let p = Promise(amount: promise.amount, promise:String(bytes: pK.dataRepresentation) , id: promise.id, blindingFactor: blindingFactor, secret: secret)
-            transformed.append(p)
+        
+        if promises.count != originalOutputs.count {
+            print("transformPromises: couldn't attach r, x. supplied arrays have different lengths")
+            return nil
+        }
+        
+        for index in 0..<promises.count {
+            let amount = promises[index].amount
+            let p = promises[index].C_
+            let id = promises[index].id
+            let r = originalOutputs[index].blindingFactor
+            let x = originalOutputs[index].secret
+            transformed.append(Promise(amount: amount, promise: p, id: id, blindingFactor: r, secret: x))
         }
         return transformed
     }
