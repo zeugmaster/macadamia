@@ -14,11 +14,14 @@ public class Database: Codable {
     var mints:[Mint]
     var pendingOutputs:[Output]
     
-    init(proofs: [Proof], pendingProofs: [Proof], mints: [Mint], pendingOutputs: [Output]) {
+    var mnemonic:String?
+    
+    init(proofs: [Proof] = [], pendingProofs: [Proof] = [], mints: [Mint] = [], pendingOutputs: [Output] = [], mnemonic: String? = nil) {
         self.proofs = proofs
         self.pendingProofs = pendingProofs
         self.mints = mints
         self.pendingOutputs = pendingOutputs
+        self.mnemonic = mnemonic
     }
     
     private static func getFilePath() -> URL {
@@ -32,12 +35,12 @@ public class Database: Codable {
             let db = try JSONDecoder().decode(Database.self, from: data)
             return db
         } catch {
-            return Database(proofs: [], pendingProofs:[], mints: [], pendingOutputs: []) //sketchy
+            return Database()
         }
     }
     
     func saveToFile() {
-        var encoder = JSONEncoder()
+        let encoder = JSONEncoder()
         do {
             encoder.outputFormatting = .prettyPrinted
             let data = try encoder.encode(self)

@@ -1,28 +1,19 @@
 import Foundation
 import CryptoKit
 import secp256k1
-
-struct PaymentRequest: Codable {
-    let pr: String
-    let hash: String
-}
-
-struct Output_JSON: Codable {
-    let amount: Int
-    let B_: String
-}
-struct Token_Container: Codable {
-    let token: [Token_JSON]
-    let memo: String?
-}
-struct Token_JSON: Codable {
-    let mint: String
-    var proofs: [Proof]
-}
+import BIP39
 
 class Wallet {
     var database = Database.loadFromFile()
     
+    init(database: Database = Database.loadFromFile()) {
+        self.database = database
+        
+        if self.database.mnemonic == nil {
+            self.database.mnemonic = Mnemonic().phrase.joined(separator: " ")
+            self.database.saveToFile()
+        }
+    }
     
     func updateMints(completion: @escaping (Result<Void,Error>) -> Void) {
         //load from database
