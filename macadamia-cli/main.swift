@@ -18,9 +18,6 @@ func start() {
         
     }
     
-    let lnInvoice = "lnbc1234560n1pjk7kyrpp53m3grlnj3pt3qflt4xlh0792wp57ns76tca0ml73snkpl6wwj2yscqpjsp59nhdpp03gh7650efsjg4ukjrt7n89czadql9kjwf585sss95eg7q9q7sqqqqqqqqqqqqqqqqqqqsqqqqqysgqdqs09jk2etvd3kx7mm0mqz9gxqyjw5qrzjqwryaup9lh50kkranzgcdnn2fgvx390wgj5jd07rwr3vxeje0glcllezhk2zechxl5qqqqlgqqqqqeqqjq478hj38clvjzc4jvnsuu3w4xdrp28mmlha86rt7jz4v54qxd5vzrd8aqy8vlz654rz9w9x8uyw7taurpg6fcj85e4excxwuug9y5m5qpcfuxa7"
-    print(PaymentRequest.satAmountFromEncodedPR(pr: lnInvoice))
-    
     print("""
             Welcome to macadamia. Would you like to
             - mint
@@ -41,7 +38,7 @@ func start() {
         case "receive":
             receive()
         case "melt":
-            print("not yet supported")
+            melt()
         case "balance":
             print("not supported yet")
         default:
@@ -49,9 +46,7 @@ func start() {
             askInput()
         }
     }
-    
-    #warning("make sure to call dispatchGroup.leave() in every scenario")
-    
+        
     func startMint() {
         wallet.mint(amount: numberInput(), mint: wallet.database.mints[0]) { prResult in
             print(prResult)
@@ -80,6 +75,22 @@ func start() {
         let token = readLine()!
         wallet.receiveTokens(tokenString: token) { result in
             print(result)
+            dispatchGroup.leave()
+        }
+    }
+    
+    func melt() {
+        print("enter the bolt11 invoice and press enter")
+        let invoice = readLine()!
+        //check validity
+        wallet.melt(mint: wallet.database.mints[0], invoice: invoice) { meltReqResult in
+            switch meltReqResult {
+            case .success():
+                print("yyyyeeeeaaaahhh")
+            case .failure(let error):
+                print("something went wrong: \(error)")
+            }
+            dispatchGroup.leave()
         }
     }
     

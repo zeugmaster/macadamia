@@ -164,8 +164,37 @@ class Wallet {
     }
     
     //MARK: - Melt
-    func melt(amount:Int, completion: @escaping (Result<Void,Error>) -> Void) {
+    func melt(mint:Mint, invoice:String, completion: @escaping (Result<Void,Error>) -> Void) {
+        // 1. check fee (maybe again)
+        // 2. determine invoice amnt
+        // 3. retrieve proofs from db for amount + fee
+        // 4. TODO: implement change proofs for melting, FIX HORRIBLE NESTING
         
+        Network.checkFee(mint: mint, invoice: invoice) { checkFeeResult in
+            switch checkFeeResult {
+            case .success(let fee):
+                if let invoiceAmount = PaymentRequest.satAmountFromEncodedPR(pr: invoice) {
+                    let total = invoiceAmount + fee
+                    if let proofs = self.database.retrieveProofs(mint: mint, amount: total) {
+                        Network.meltRequest(mint: mint, meltRequest: MeltRequest(proofs: proofs, pr: invoice)) { meltRequestResult in
+                            switch meltRequestResult {
+                            case .success():
+                                completion(.success(()))
+                            case .failure(let meltError):
+                                completion(.failure(meltError))
+                            }
+                        }
+                    } else {
+                        print("did not receive (enough) proofs for melting tokens")
+                    }
+                } else {
+                    //FIXME: needs correct error type
+                    completion(.failure(NetworkError.decodingError))
+                }
+            case .failure(let error):
+                print(error)
+            }
+        }
     }
     
     struct SplitRequest_JSON: Codable {

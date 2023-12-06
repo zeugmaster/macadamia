@@ -126,6 +126,15 @@ struct PaymentRequest: Codable {
     }
 }
 
+struct MeltRequest: Codable {
+    let proofs: [Proof]
+    let pr: String
+}
+struct MeltRequestResponse: Codable {
+    let paid: Bool
+    let preimage: String?
+}
+
 struct Output_JSON: Codable {
     let amount: Int
     let B_: String
