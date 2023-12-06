@@ -12,6 +12,7 @@
 		3709F1F52AFD52760091DE8D /* crypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F22AFD52760091DE8D /* crypto.swift */; };
 		3709F1F62AFD52760091DE8D /* cashu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F32AFD52760091DE8D /* cashu.swift */; };
 		3709F1F72AFD52760091DE8D /* Base64FS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F42AFD52760091DE8D /* Base64FS.swift */; };
+		371D1BB32B2112F7009C6B29 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 371D1BB22B2112F7009C6B29 /* BigNumber */; };
 		3783B0EA2B03CB7B0063E3FB /* data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3783B0E92B03CB7B0063E3FB /* data.swift */; };
 		37A44A862B1B2C16007A8D0D /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 37A44A852B1B2C16007A8D0D /* BIP39 */; };
 		37A44A892B1B2C40007A8D0D /* BIP32 in Frameworks */ = {isa = PBXBuildFile; productRef = 37A44A882B1B2C40007A8D0D /* BIP32 */; };
@@ -48,6 +49,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				371D1BB32B2112F7009C6B29 /* BigNumber in Frameworks */,
 				37A44A892B1B2C40007A8D0D /* BIP32 in Frameworks */,
 				37A44A862B1B2C16007A8D0D /* BIP39 in Frameworks */,
 				3709F1F12AFD52040091DE8D /* secp256k1 in Frameworks */,
@@ -116,6 +118,7 @@
 				3709F1F02AFD52040091DE8D /* secp256k1 */,
 				37A44A852B1B2C16007A8D0D /* BIP39 */,
 				37A44A882B1B2C40007A8D0D /* BIP32 */,
+				371D1BB22B2112F7009C6B29 /* BigNumber */,
 			);
 			productName = "macadamia-cli";
 			productReference = 3709F1E52AFD51D90091DE8D /* macadamia-cli */;
@@ -149,6 +152,7 @@
 				3709F1EF2AFD52040091DE8D /* XCRemoteSwiftPackageReference "secp256k1.swift" */,
 				37A44A842B1B2C16007A8D0D /* XCRemoteSwiftPackageReference "BIP39" */,
 				37A44A872B1B2C40007A8D0D /* XCRemoteSwiftPackageReference "BIP32" */,
+				371D1BB12B2112F7009C6B29 /* XCRemoteSwiftPackageReference "Swift-BigInt" */,
 			);
 			productRefGroup = 3709F1E62AFD51D90091DE8D /* Products */;
 			projectDirPath = "";
@@ -351,6 +355,14 @@
 				version = 0.14.0;
 			};
 		};
+		371D1BB12B2112F7009C6B29 /* XCRemoteSwiftPackageReference "Swift-BigInt" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mkrd/Swift-BigInt.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 		37A44A842B1B2C16007A8D0D /* XCRemoteSwiftPackageReference "BIP39" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/pengpengliu/BIP39";
@@ -374,6 +386,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3709F1EF2AFD52040091DE8D /* XCRemoteSwiftPackageReference "secp256k1.swift" */;
 			productName = secp256k1;
+		};
+		371D1BB22B2112F7009C6B29 /* BigNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 371D1BB12B2112F7009C6B29 /* XCRemoteSwiftPackageReference "Swift-BigInt" */;
+			productName = BigNumber;
 		};
 		37A44A852B1B2C16007A8D0D /* BIP39 */ = {
 			isa = XCSwiftPackageProductDependency;

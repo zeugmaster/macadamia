@@ -8,6 +8,15 @@
 import Foundation
 import CryptoKit
 
+struct Promise_JSON: Codable {
+    let id: String
+    let amount: Int
+    let C_: String
+}
+struct Promise_JSON_List: Codable {
+    let promises: [Promise_JSON]
+}
+
 class Output: Codable {
     let amount: Int
     let output: String
@@ -63,6 +72,11 @@ class Proof: Codable, Equatable, CustomStringConvertible {
         self.secret = secret
         self.C = C
     }
+}
+
+struct SplitRequest_JSON: Codable {
+    let proofs:[Proof]
+    let outputs:[Output_JSON]
 }
 
 //TODO: one mint can have one URL, but multiple <Keysets> with keys and keyset_ids

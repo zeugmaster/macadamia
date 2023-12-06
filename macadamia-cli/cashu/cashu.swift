@@ -99,7 +99,7 @@ class Wallet {
                 let rest = splitIntoBase2Numbers(n: totalInProofs-amount)
                 //request split
                 //TODO: sort array of amounts in ascending order to prevent privacy leak
-                let outputs = generateOutputs(amounts: toSend+rest)
+                let outputs = generateDeterministicOutputs(amounts: toSend+rest, keyset: mint.keySets[0])
                 requestSplit(mint: mint, forProofs: proofs, withOutputs: outputs) { result in
                     switch result {
                     case .success(var combinedProofs):
@@ -139,10 +139,13 @@ class Wallet {
             for p in tokenlist[0].proofs {
                 amounts.append(p.amount)
             }
-            let newOutputs = generateOutputs(amounts: amounts)
+            
+            let mint = self.database.mintForKeysetID(id: tokenlist[0].proofs[0].id)
+            let keyset = mint!.keySets[0]
+            let newOutputs = generateDeterministicOutputs(amounts: amounts, keyset: keyset)
             
             //TODO: just taking the first proof.id breaks multimint token logic, needs fixing
-            let mint = self.database.mintForKeysetID(id: tokenlist[0].proofs[0].id)
+            
             //same problem as above
             requestSplit(mint: mint!, forProofs: tokenlist[0].proofs, withOutputs: newOutputs) { result in
                 switch result {
@@ -179,6 +182,8 @@ class Wallet {
                         Network.meltRequest(mint: mint, meltRequest: MeltRequest(proofs: proofs, pr: invoice)) { meltRequestResult in
                             switch meltRequestResult {
                             case .success():
+                                self.database.removeProofsFromValid(proofsToRemove: proofs)
+                                self.database.saveToFile()
                                 completion(.success(()))
                             case .failure(let meltError):
                                 completion(.failure(meltError))
@@ -197,10 +202,16 @@ class Wallet {
         }
     }
     
-    struct SplitRequest_JSON: Codable {
-        let proofs:[Proof]
-        let outputs:[Output_JSON]
+    //MARK: - Restore
+    func restoreWithMnemonic(mnemonic:String, completion: @escaping (Result<Void,Error>) -> Void) {
+        // reset database
+        // create x new outputs deterministically
+        // send to mint
+        // decode response
+        // check match outputs with returned promises
+        // if return promises < generated outputs, restore should be done (?)
     }
+    
     private func requestSplit(mint:Mint, forProofs:[Proof], withOutputs:[Output], completion: @escaping (Result<[Proof], Error>) -> Void) {
         //construct mint request payload and make http post req
         //transform outputs to outputs_JSON
@@ -249,7 +260,7 @@ class Wallet {
     
     func requestBlindedPromises(mint:Mint, amount:Int, payReq:PaymentRequest, completion: @escaping ([Promise]) -> Void) {
         //generates outputs (blindedMessages) to use when requesting
-        let currentMintOutputs = generateOutputs(amounts: splitIntoBase2Numbers(n: amount))
+        let currentMintOutputs = generateDeterministicOutputs(amounts: splitIntoBase2Numbers(n: amount), keyset: mint.keySets[0])
         var outputArray: [[String: Any]] = []
         for o in currentMintOutputs {
             var dict: [String: Any] = [:]
@@ -290,14 +301,7 @@ class Wallet {
         }
     }
 
-    struct Promise_JSON: Codable {
-        let id: String
-        let amount: Int
-        let C_: String
-    }
-    struct Promise_JSON_List: Codable {
-        let promises: [Promise_JSON]
-    }
+    
     // TODO: not a very elegant solution, refactor
     func transformPromises(promises:[Promise_JSON], originalOutputs:[Output]) -> [Promise]? {
         var transformed = [Promise]()
@@ -317,7 +321,9 @@ class Wallet {
         }
         return transformed
     }
-
+    
+    
+    //MARK: - HELPERS
     func serializeProofs(proofs: [Proof]) -> String {
         //TODO: remove hardcoded mint selection
         let mint = database.mintForKeysetID(id: proofs[0].id)!

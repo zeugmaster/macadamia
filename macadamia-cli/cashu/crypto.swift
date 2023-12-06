@@ -9,9 +9,10 @@ import CryptoKit
 import secp256k1
 import BIP32
 import BIP39
+import BigNumber
 
 // Step 1 (Alice)
-func generateOutputs(amounts:[Int]) -> [Output] {
+func generateDeterministicOutputs(amounts:[Int], keyset:Keyset) -> [Output] {
     var outputs = [Output]()
     
     for n in amounts {
@@ -25,7 +26,7 @@ func generateOutputs(amounts:[Int]) -> [Output] {
                               output: String(bytes: output.dataRepresentation),
                               secret: secretString,
                               blindingFactor: String(bytes: blindingFactor.dataRepresentation)))
-        print("created output with B_: \(String(bytes: output.dataRepresentation)), r: \(String(bytes: blindingFactor.dataRepresentation)), secret: \(secretString), amount: \(n)")
+        //print("created output with B_: \(String(bytes: output.dataRepresentation)), r: \(String(bytes: blindingFactor.dataRepresentation)), secret: \(secretString), amount: \(n)")
     }
     
     return outputs
@@ -118,4 +119,11 @@ func childPrivateKeyForDerivationPath(seed:String, derivationPath:String) -> Str
     }
 
     return String(bytes: current.key)
+}
+
+func convertKeysetID(keysetID: String) -> Int? {
+    let data = [UInt8](Data(base64Encoded: keysetID)!)
+    let big = BInt(bytes: data)
+    let result = big % (Int(pow(2.0, 31.0)) - 1)
+    return Int(result)
 }

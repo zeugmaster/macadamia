@@ -66,10 +66,10 @@ enum Network {
         
         let task = URLSession.shared.dataTask(with: request) { data, httpResponse, error in
             if data != nil && error == nil {
-                let response = try! JSONDecoder().decode(MeltRequestResponse.self, from: data!)
-                if response.paid {
+                if let response = try? JSONDecoder().decode(MeltRequestResponse.self, from: data!), response.paid {
                     completion(.success(()))
                 } else {
+                    print(String(data: data!, encoding: .utf8)!)
                     completion(.failure(NetworkError.meltError))
                 }
             } else {

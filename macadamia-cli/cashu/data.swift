@@ -15,13 +15,15 @@ public class Database: Codable {
     var pendingOutputs:[Output]
     
     var mnemonic:String?
+    var secretDerivationCounter:Int
     
-    init(proofs: [Proof] = [], pendingProofs: [Proof] = [], mints: [Mint] = [], pendingOutputs: [Output] = [], mnemonic: String? = nil) {
+    init(proofs: [Proof] = [], pendingProofs: [Proof] = [], mints: [Mint] = [], pendingOutputs: [Output] = [], mnemonic: String? = nil, sdc:Int = 0) {
         self.proofs = proofs
         self.pendingProofs = pendingProofs
         self.mints = mints
         self.pendingOutputs = pendingOutputs
         self.mnemonic = mnemonic
+        self.secretDerivationCounter = sdc
     }
     
     private static func getFilePath() -> URL {

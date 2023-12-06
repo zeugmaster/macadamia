@@ -71,6 +71,15 @@
         "revision" : "0f5f60ee9ad739c9603c3546c726a109d2c24cbd",
         "version" : "0.14.0"
       }
+    },
+    {
+      "identity" : "swift-bigint",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mkrd/Swift-BigInt.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "b07e961f4c999671cf8c2dc80e740899e8946013"
+      }
     }
   ],
   "version" : 2

@@ -18,6 +18,8 @@ func start() {
         
     }
     
+    print(convertKeysetID(keysetID: "I2yN+iRYfkzT"))
+    
     print("""
             Welcome to macadamia. Would you like to
             - mint
