@@ -10,7 +10,9 @@ class Wallet {
         self.database = database
         
         if self.database.mnemonic == nil {
-            self.database.mnemonic = Mnemonic().phrase.joined(separator: " ")
+            let randomMnemonic = Mnemonic()
+            self.database.mnemonic = randomMnemonic.phrase.joined(separator: " ")
+            self.database.seed = String(bytes: randomMnemonic.seed)
             self.database.saveToFile()
         }
     }
@@ -63,6 +65,7 @@ class Wallet {
                         //TODO: remove hardcoded mint selection
                         let proofs = unblindPromises(promises: promises, mintPublicKeys: mint.keySets[0].keys!)
                         self.database.proofs.append(contentsOf: proofs)
+                        self.database.secretDerivationCounter += promises.count //sloppy, should count outputs
                         self.database.saveToFile()
                         mintCompletion(.success("yay"))
                     } else {
@@ -99,7 +102,12 @@ class Wallet {
                 let rest = splitIntoBase2Numbers(n: totalInProofs-amount)
                 //request split
                 //TODO: sort array of amounts in ascending order to prevent privacy leak
-                let outputs = generateDeterministicOutputs(amounts: toSend+rest, keyset: mint.keySets[0])
+                let combined = toSend + rest
+                let outputs = generateDeterministicOutputs(startIndex:self.database.secretDerivationCounter,
+                                                           seed: self.database.seed!,
+                                                           amounts: combined,
+                                                           keyset: mint.keySets[0])
+                
                 requestSplit(mint: mint, forProofs: proofs, withOutputs: outputs) { result in
                     switch result {
                     case .success(var combinedProofs):
@@ -118,14 +126,15 @@ class Wallet {
                         print("change proofs, written to db: \(combinedProofs)")
                         print("sent proofs: \(sendProofs)")
                         self.database.proofs.append(contentsOf: combinedProofs)
+                        self.database.secretDerivationCounter += outputs.count
                         self.database.saveToFile()
+                                                
                         completion(.success(token))
-                        //run completion handler accordingly
                     case .failure(let splitError):
                         completion(.failure(splitError))
                     }
                 }
-            } //TODO: add guard for unlikely case of too few tokens being returned
+            } //no need to check for too few proofs, function can only return enough or none at all
         } else {
             print("did not retrieve any proofs")
         }
@@ -142,7 +151,10 @@ class Wallet {
             
             let mint = self.database.mintForKeysetID(id: tokenlist[0].proofs[0].id)
             let keyset = mint!.keySets[0]
-            let newOutputs = generateDeterministicOutputs(amounts: amounts, keyset: keyset)
+            let newOutputs = generateDeterministicOutputs(startIndex:self.database.secretDerivationCounter, 
+                                                          seed: self.database.seed!,
+                                                          amounts: amounts,
+                                                          keyset: keyset)
             
             //TODO: just taking the first proof.id breaks multimint token logic, needs fixing
             
@@ -152,6 +164,7 @@ class Wallet {
                 case .success(let newProofs):
                     //TODO: remove hardcoded mint selection
                     self.database.proofs.append(contentsOf: newProofs)
+                    self.database.secretDerivationCounter += newProofs.count
                     self.database.saveToFile()
                     completion(.success(()))
                     print("saved new proofs to db")
@@ -210,6 +223,8 @@ class Wallet {
         // decode response
         // check match outputs with returned promises
         // if return promises < generated outputs, restore should be done (?)
+        
+        
     }
     
     private func requestSplit(mint:Mint, forProofs:[Proof], withOutputs:[Output], completion: @escaping (Result<[Proof], Error>) -> Void) {
@@ -260,7 +275,10 @@ class Wallet {
     
     func requestBlindedPromises(mint:Mint, amount:Int, payReq:PaymentRequest, completion: @escaping ([Promise]) -> Void) {
         //generates outputs (blindedMessages) to use when requesting
-        let currentMintOutputs = generateDeterministicOutputs(amounts: splitIntoBase2Numbers(n: amount), keyset: mint.keySets[0])
+        let currentMintOutputs = generateDeterministicOutputs(startIndex:self.database.secretDerivationCounter,
+                                                              seed: self.database.seed!,
+                                                              amounts: splitIntoBase2Numbers(n: amount),
+                                                              keyset: mint.keySets[0])
         var outputArray: [[String: Any]] = []
         for o in currentMintOutputs {
             var dict: [String: Any] = [:]

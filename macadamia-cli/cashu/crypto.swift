@@ -12,21 +12,28 @@ import BIP39
 import BigNumber
 
 // Step 1 (Alice)
-func generateDeterministicOutputs(amounts:[Int], keyset:Keyset) -> [Output] {
+func generateDeterministicOutputs(startIndex:Int, seed:String, amounts:[Int], keyset:Keyset) -> [Output] {
     var outputs = [Output]()
-    
-    for n in amounts {
-        let key = SymmetricKey(size: .bits128)
-        let keyData = key.withUnsafeBytes {Data($0)}
-        let secretString = Base64FS.encodeString(str: keyData.base64EncodedString())
-        let Y = hashToCurve(message: secretString)
-        let blindingFactor = try! secp256k1.Signing.PrivateKey()
-        let output = try! Y.combine([blindingFactor.publicKey])
-        outputs.append(Output(amount: n,
+    let keysetInt = convertKeysetID(keysetID: keyset.keysetID)!
+    for i in 0..<amounts.count {
+        let index = startIndex + i
+        
+        let secretPath = "m/129372'/0'/\(keysetInt)'/\(index)'/0"
+        let blindingFactorPath = "m/129372'/0'/\(keysetInt)'/\(index)'/1"
+        
+        print("using paths: x= \(secretPath) r= \(blindingFactorPath)")
+        
+        let x = childPrivateKeyForDerivationPath(seed: seed, derivationPath: secretPath)!
+        let Y = hashToCurve(message: x)
+        
+        let r = try! secp256k1.Signing.PrivateKey(dataRepresentation: childPrivateKeyForDerivationPath(seed: seed, derivationPath: blindingFactorPath)!.bytes)
+        let output = try! Y.combine([r.publicKey])
+        outputs.append(Output(amount: amounts[i],
                               output: String(bytes: output.dataRepresentation),
-                              secret: secretString,
-                              blindingFactor: String(bytes: blindingFactor.dataRepresentation)))
+                              secret: x,
+                              blindingFactor: String(bytes: r.dataRepresentation)))
         //print("created output with B_: \(String(bytes: output.dataRepresentation)), r: \(String(bytes: blindingFactor.dataRepresentation)), secret: \(secretString), amount: \(n)")
+        
     }
     
     return outputs

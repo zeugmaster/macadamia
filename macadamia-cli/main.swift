@@ -17,9 +17,7 @@ func start() {
     wallet.updateMints { result in
         
     }
-    
-    print(convertKeysetID(keysetID: "I2yN+iRYfkzT"))
-    
+        
     print("""
             Welcome to macadamia. Would you like to
             - mint

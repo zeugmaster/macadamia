@@ -107,7 +107,7 @@ class Mint: Codable {
 }
 struct Keyset: Codable {
     let keysetID: String
-    let keys: Dictionary<String, String>? //me might need ID while not having access to old keys
+    let keys: Dictionary<String, String>? //we might need ID while not having access to old keys
 }
 
 struct PaymentRequest: Codable {
