@@ -23,14 +23,14 @@ public class Database: Codable {
          mints: [Mint] = [],
          pendingOutputs: [Output] = [],
          mnemonic: String? = nil,
-         sdc:Int = 0) {
+         secretDerivationCounter:Int = 0) {
         
         self.proofs = proofs
         self.pendingProofs = pendingProofs
         self.mints = mints
         self.pendingOutputs = pendingOutputs
         self.mnemonic = mnemonic
-        self.secretDerivationCounter = sdc
+        self.secretDerivationCounter = secretDerivationCounter
     }
     
     private static func getFilePath() -> URL {

@@ -39,6 +39,34 @@ func generateDeterministicOutputs(startIndex:Int, seed:String, amounts:[Int], ke
     return outputs
 }
 
+func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keyset:Keyset) -> (outputs: [Output_JSON], blindingFactors: [String], secrets:[String]) {
+    var outputs = [Output_JSON]()
+    var blindingFactors = [String]()
+    var secrets = [String]()
+    let keysetInt = convertKeysetID(keysetID: keyset.keysetID)!
+    for i in 0..<amounts.count {
+        let index = counter + i
+        
+        let secretPath = "m/129372'/0'/\(keysetInt)'/\(index)'/0"
+        let blindingFactorPath = "m/129372'/0'/\(keysetInt)'/\(index)'/1"
+        
+        print("using paths: x= \(secretPath) r= \(blindingFactorPath)")
+        
+        let x = childPrivateKeyForDerivationPath(seed: seed, derivationPath: secretPath)!
+        let Y = hashToCurve(message: x)
+        
+        let r = try! secp256k1.Signing.PrivateKey(dataRepresentation: childPrivateKeyForDerivationPath(seed: seed, derivationPath: blindingFactorPath)!.bytes)
+        let output = try! Y.combine([r.publicKey])
+        
+        outputs.append(Output_JSON(amount: amounts[i], B_: String(bytes: output.dataRepresentation)))
+        
+        blindingFactors.append(String(bytes: r.dataRepresentation))
+        secrets.append(x)
+    }
+    
+    return (outputs, blindingFactors, secrets)
+}
+
 // Step 3 (Alice)
 func unblindPromises(promises:[Promise],
                      mintPublicKeys:Dictionary<String,String>) -> [Proof] {

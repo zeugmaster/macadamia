@@ -23,7 +23,8 @@ func start() {
             - mint
             - send
             - receive
-            - melt or
+            - melt 
+            - restore or
             - balance?
             """)
     askInput()
@@ -41,6 +42,8 @@ func start() {
             melt()
         case "balance":
             print("not supported yet")
+        case "restore":
+            restore()
         default:
             print("invalid input. please try again")
             askInput()
@@ -89,6 +92,19 @@ func start() {
                 print("yyyyeeeeaaaahhh")
             case .failure(let error):
                 print("something went wrong: \(error)")
+            }
+            dispatchGroup.leave()
+        }
+    }
+    
+    func restore() {
+        print("please enter new mnemonic:")
+        let input = readLine()!
+        Task {
+            do {
+                try await wallet.restoreWithMnemonic(mnemonic: input)
+            } catch {
+                print(error)
             }
             dispatchGroup.leave()
         }

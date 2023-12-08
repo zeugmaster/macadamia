@@ -4,6 +4,11 @@ import secp256k1
 import BIP39
 
 class Wallet {
+    
+    enum WalletError: Error {
+        case invalidMnemonicError
+    }
+    
     var database = Database.loadFromFile()
     
     init(database: Database = Database.loadFromFile()) {
@@ -215,15 +220,39 @@ class Wallet {
         }
     }
     
+    // valid mnemo for testing = mango quality holiday shuffle cereal moment hood lonely render woman come limit
+    
     //MARK: - Restore
-    func restoreWithMnemonic(mnemonic:String, completion: @escaping (Result<Void,Error>) -> Void) {
+    func restoreWithMnemonic(mnemonic:String) async throws {
         // reset database
-        // create x new outputs deterministically
-        // send to mint
-        // decode response
+        
+        guard let newMnemonic = try? BIP39.Mnemonic(phrase: mnemonic.components(separatedBy: .whitespacesAndNewlines)) else {
+            throw WalletError.invalidMnemonicError
+        }
+        
+        self.database = Database(mnemonic: mnemonic, secretDerivationCounter: 0)
+        self.database.seed = String(bytes: newMnemonic.seed)
+        
+        self.database.saveToFile()
+        
+        let keyset = Keyset(keysetID: "I2yN+iRYfkzT", keys: nil)
+        let currentCounter = 0
+        let (outputs, blindingFactors, secrets) = generateDeterministicOutputs(counter: currentCounter,
+                                                                               seed: self.database.seed!,
+                                                                               amounts: Array(repeating: 1, count: 10),
+                                                                               keyset: keyset)
+        
+        do {
+            let promises = try await Network.restoreRequest(mintURL: URL(string: "https://8333.space:3338")!, outputs: outputs)
+            print(promises)
+        } catch {
+            print("something went wrong")
+        }
+        
         // check match outputs with returned promises
         // if return promises < generated outputs, restore should be done (?)
         
+        //use async sequence to create n outputs per keysets and .cancel when m /restore requests come back empty
         
     }
     

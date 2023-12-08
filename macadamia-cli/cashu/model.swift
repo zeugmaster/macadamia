@@ -148,7 +148,9 @@ struct MeltRequestResponse: Codable {
     let paid: Bool
     let preimage: String?
 }
-
+struct PostMintRequest: Codable {
+    let outputs: [Output_JSON]
+}
 struct Output_JSON: Codable {
     let amount: Int
     let B_: String
@@ -162,3 +164,7 @@ struct Token_JSON: Codable {
     var proofs: [Proof]
 }
 
+struct RestoreRequestResponse:Decodable {
+    let outputs:[Output_JSON]
+    let promises:[Promise_JSON]
+}

@@ -21,7 +21,9 @@ enum NetworkError: Error {
 }
 
 enum Network {
-    //MARK: - Download Keyset (call for [allMints]
+    
+    //MARK: - Download Keyset  /keys
+    //TODO: load all keysets, mark one as current
     static func loadCurrentKeyset(fromMint mint:Mint, completion: @escaping (Result<Dictionary<String,String>,Error>) -> Void) {
         let task = URLSession.shared.dataTask(with: URLRequest(url: mint.url.appending(path: "keys"))) { data, response, error in
             if data != nil {
@@ -79,7 +81,7 @@ enum Network {
         task.resume()
     }
     
-    //MARK: - CHECK FEE
+    //MARK: - CHECK FEE /checkfee
     static func checkFee(mint:Mint, invoice:String, completion: @escaping (Result<Int,Error>) -> Void) {
         
         let jsonPayload: [String: String] = [
@@ -116,8 +118,39 @@ enum Network {
     }
 
     //MARK: - RESTORE
-    func restoreRequest() {
+    static func restoreRequest(mintURL:URL, outputs:[Output_JSON]) async throws -> RestoreRequestResponse {
         // POST
+        
+        //construct payload
+        let restoreRequest = PostMintRequest(outputs: outputs)
+        
+        guard let body = try? JSONEncoder().encode(restoreRequest) else {
+            throw NetworkError.encodingError
+        }
+        
+        //make request
+        var httpRequest = URLRequest(url: mintURL.appending(path: "restore"))
+        httpRequest.httpMethod = "POST"
+        httpRequest.httpBody = body
+        httpRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let (data, response) = try await URLSession.shared.data(for: httpRequest)
+        //print(response)
+        print(String(data: data, encoding: .utf8))
+        
+        let jsonObject = try! JSONSerialization.jsonObject(with: body, options: [])
+        let prettyData = try! JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted)
+        if let prettyString = String(data: prettyData, encoding: .utf8) {
+            print(prettyString)
+        }
+        
+        guard let decoded = try? JSONDecoder().decode(RestoreRequestResponse.self ,from: data) else {
+            let error = parseHTTPErrorResponse(data: data, response: response)
+            throw error
+        }
+        
+        // return decoded result
+        return decoded
     }
 
     func decodeRestoreRequestResponse() {
@@ -127,8 +160,9 @@ enum Network {
     //MARK: - swap requests??
 
     //MARK: - Error handling
-    func parseErrorResponse() {
-        
+    static func parseHTTPErrorResponse(data:Data?, response:URLResponse) -> Error {
+        //TODO: add real error parsing
+        return NetworkError.unknownError
     }
 }
 
