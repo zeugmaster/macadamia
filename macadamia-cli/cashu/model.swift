@@ -196,3 +196,12 @@ struct RestoreRequestResponse:Decodable {
     let outputs:[Output_JSON]
     let promises:[Promise_JSON]
 }
+
+extension String {
+    func makeURLSafe() -> String {
+        return self
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+}

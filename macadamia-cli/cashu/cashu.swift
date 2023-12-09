@@ -26,13 +26,13 @@ class Wallet {
         
         //add default mint
         if self.database.mints.isEmpty {
-            let url = URL(string: "https://8333.space:3338")!
+            let url = URL(string: "https://mint.zeugmaster.com:3338")!
             let m = Mint(url: url, activeKeyset: nil, allKeysets: nil)
             self.database.mints.append(m)
             
             let url2 = URL(string: "https://testnut.cashu.space")!
             let m2 = Mint(url: url2, activeKeyset: nil, allKeysets: nil)
-            self.database.mints.append(m2)
+            //.database.mints.append(m2)
         }
         
         //1. get current keyset and compute legace ID
@@ -42,12 +42,12 @@ class Wallet {
             mint.activeKeyset = Keyset(legacyID: Mint.calculateKeysetID(keyset: activeKeyset),
                                        hexKeysetID: Mint.calculateHexKeysetID(keyset: activeKeyset),
                                        keys: activeKeyset)
-            print("downloaded keyset from \(mint.url): \(mint.activeKeyset!.hexKeysetID)")
             
             guard let allKeysetIDs = try? await Network.loadAllKeysetIDs(mintURL: mint.url) else {
                 print("could not get all keyset IDs")
                 break
             }
+            print(allKeysetIDs)
             mint.allKeysets = []
             for id in allKeysetIDs.keysets {
                 guard let keyset = try? await Network.loadKeyset(mintURL: mint.url, keysetID: id) else {
@@ -59,10 +59,7 @@ class Wallet {
                 mint.allKeysets!.append(Keyset(legacyID: old,
                                                hexKeysetID: hex,
                                                keys: keyset))
-                print("downloaded keyset with id \(id), calculated: \(hex), \(old)")
             }
-            print("done!")
-            print(mint.allKeysets?.last?.keys)
             self.database.saveToFile()
         }
         
@@ -250,35 +247,40 @@ class Wallet {
     
     //MARK: - Restore
     func restoreWithMnemonic(mnemonic:String) async throws {
-        // reset database
         
+        // reset database
         guard let newMnemonic = try? BIP39.Mnemonic(phrase: mnemonic.components(separatedBy: .whitespacesAndNewlines)) else {
             throw WalletError.invalidMnemonicError
         }
         
         self.database = Database(mnemonic: mnemonic, secretDerivationCounter: 0)
         self.database.seed = String(bytes: newMnemonic.seed)
-        
-        self.database.saveToFile()
-        
-        let keyset = Keyset(legacyID: "I2yN+iRYfkzT", hexKeysetID: "0f0f0f0", keys: nil)
-        let currentCounter = 0
-        let (outputs, blindingFactors, secrets) = generateDeterministicOutputs(counter: currentCounter,
-                                                                               seed: self.database.seed!,
-                                                                               amounts: Array(repeating: 1, count: 10),
-                                                                               keyset: keyset)
-        
-        do {
-            let promises = try await Network.restoreRequest(mintURL: URL(string: "https://8333.space:3338")!, outputs: outputs)
-            print(promises)
-        } catch {
-            print("something went wrong")
+        self.database.mints.append(Mint(url: URL(string: "https://mint.zeugmaster.com:3338")!, activeKeyset: nil, allKeysets: nil))
+        try await updateMints()
+        self.database.saveToFile() //overrides existing
+        print(database.seed)
+        for mint in database.mints {
+            for keyset in mint.allKeysets! {
+                var emtpyResponses = 0
+                var currentCounter = 0
+                while emtpyResponses < 2 {
+                    let (outputs, blindingFactors, secrets) = generateDeterministicOutputs(counter: currentCounter,
+                                                                                           seed: self.database.seed!,
+                                                                                           amounts: Array(repeating: 1, count: 10),
+                                                                                           keysetID: keyset.legacyID) //TODO: need to cycle both types
+                    let restoreRespone = try await Network.restoreRequest(mintURL: mint.url, outputs: outputs)
+                    print(restoreRespone)
+                    
+                    //currentcounter needs to be correct
+                    currentCounter += outputs.count
+                    if restoreRespone.promises.isEmpty { emtpyResponses += 1 }
+                    
+                    //filter, process, unblind and save
+                }
+                
+                
+            }
         }
-        
-        // check match outputs with returned promises
-        // if return promises < generated outputs, restore should be done (?)
-        
-        //use async sequence to create n outputs per keysets and .cancel when m /restore requests come back empty
         
     }
     

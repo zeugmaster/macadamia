@@ -33,7 +33,14 @@ enum Network {
     
     static func loadKeyset(mintURL:URL, keysetID:String?) async throws -> Dictionary<String,String> {
         var url = mintURL.appending(path: "keys")
-        if keysetID != nil { url.append(path: keysetID!) }
+        if keysetID != nil {
+            if keysetID!.count == "8wktXIto+zu/".count {
+                url.append(path: keysetID!.makeURLSafe())
+            } else {
+                url.append(path: keysetID!)
+            }
+        }
+        print(url)
         let (data, respose) = try await URLSession.shared.data(from: url)
         //TODO: check response for errors
         guard let dict = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: String] else {
@@ -142,7 +149,7 @@ enum Network {
         
         let (data, response) = try await URLSession.shared.data(for: httpRequest)
         //print(response)
-        print(String(data: data, encoding: .utf8))
+        //print(String(data: data, encoding: .utf8))
         
         let jsonObject = try! JSONSerialization.jsonObject(with: body, options: [])
         let prettyData = try! JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted)
