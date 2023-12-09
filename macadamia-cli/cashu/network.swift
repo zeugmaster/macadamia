@@ -22,18 +22,24 @@ enum NetworkError: Error {
 
 enum Network {
     
-    //MARK: - Download Keyset  /keys
-    //TODO: load all keysets, mark one as current
-    static func loadCurrentKeyset(fromMint mint:Mint, completion: @escaping (Result<Dictionary<String,String>,Error>) -> Void) {
-        let task = URLSession.shared.dataTask(with: URLRequest(url: mint.url.appending(path: "keys"))) { data, response, error in
-            if data != nil {
-                let dict = try! JSONSerialization.jsonObject(with: data!, options: []) as! [String: String]
-                completion(.success(dict))
-            } else if error != nil {
-                completion(.failure(error!))
-            }
+    static func loadAllKeysetIDs(mintURL:URL) async throws -> KeysetIDResponse {
+        let (data, response) = try await URLSession.shared.data(from: mintURL.appending(path: "keysets"))
+        //TODO: check response for errors
+        guard let decodedResponse = try? JSONDecoder().decode(KeysetIDResponse.self, from: data) else {
+            throw NetworkError.decodingError
         }
-        task.resume()
+        return decodedResponse
+    }
+    
+    static func loadKeyset(mintURL:URL, keysetID:String?) async throws -> Dictionary<String,String> {
+        var url = mintURL.appending(path: "keys")
+        if keysetID != nil { url.append(path: keysetID!) }
+        let (data, respose) = try await URLSession.shared.data(from: url)
+        //TODO: check response for errors
+        guard let dict = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: String] else {
+            throw NetworkError.decodingError
+        }
+        return dict
     }
 
     //MARK: - MINT

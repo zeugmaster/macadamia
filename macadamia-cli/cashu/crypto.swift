@@ -14,7 +14,7 @@ import BigNumber
 // Step 1 (Alice)
 func generateDeterministicOutputs(startIndex:Int, seed:String, amounts:[Int], keyset:Keyset) -> [Output] {
     var outputs = [Output]()
-    let keysetInt = convertKeysetID(keysetID: keyset.keysetID)!
+    let keysetInt = convertKeysetID(keysetID: keyset.legacyID)!
     for i in 0..<amounts.count {
         let index = startIndex + i
         
@@ -43,7 +43,7 @@ func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keyse
     var outputs = [Output_JSON]()
     var blindingFactors = [String]()
     var secrets = [String]()
-    let keysetInt = convertKeysetID(keysetID: keyset.keysetID)!
+    let keysetInt = convertKeysetID(keysetID: keyset.hexKeysetID)!
     for i in 0..<amounts.count {
         let index = counter + i
         
@@ -158,6 +158,13 @@ func childPrivateKeyForDerivationPath(seed:String, derivationPath:String) -> Str
 
 func convertKeysetID(keysetID: String) -> Int? {
     let data = [UInt8](Data(base64Encoded: keysetID)!)
+    let big = BInt(bytes: data)
+    let result = big % (Int(pow(2.0, 31.0)) - 1)
+    return Int(result)
+}
+
+func convertHexKeysetID(keysetID: String) -> Int? {
+    let data = try! [UInt8](Data(keysetID.bytes))
     let big = BInt(bytes: data)
     let result = big % (Int(pow(2.0, 31.0)) - 1)
     return Int(result)

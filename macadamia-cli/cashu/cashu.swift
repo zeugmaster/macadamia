@@ -22,27 +22,53 @@ class Wallet {
         }
     }
     
-    func updateMints(completion: @escaping (Result<Void,Error>) -> Void) {
-        //load from database
-        // TODO: replace hardcoded static mints
+    func updateMints() async throws {
+        
+        //add default mint
         if self.database.mints.isEmpty {
-            let m = Mint(url: URL(string: "https://8333.space:3338")!, keySets: [])
+            let url = URL(string: "https://8333.space:3338")!
+            let m = Mint(url: url, activeKeyset: nil, allKeysets: nil)
             self.database.mints.append(m)
+            
+            let url2 = URL(string: "https://testnut.cashu.space")!
+            let m2 = Mint(url: url2, activeKeyset: nil, allKeysets: nil)
+            self.database.mints.append(m2)
         }
         
-        for mint in database.mints {
-            Network.loadCurrentKeyset(fromMint: mint) { result in
-                switch result {
-                case .success(let dict):
-                    let id = Mint.calculateKeysetID(keyset: dict)
-                    let keyset = Keyset(keysetID: id, keys: dict)
-                    mint.keySets = [keyset]
-                    print("successfully downloaded keyset with ID: \(id)")
-                case .failure(let error):
-                    print("could not load keyset for \(mint) because of \(error)")
-                }
+        //1. get current keyset and compute legace ID
+        
+        for mint in self.database.mints {
+            let activeKeyset = try await Network.loadKeyset(mintURL: mint.url, keysetID: nil)
+            mint.activeKeyset = Keyset(legacyID: Mint.calculateKeysetID(keyset: activeKeyset),
+                                       hexKeysetID: Mint.calculateHexKeysetID(keyset: activeKeyset),
+                                       keys: activeKeyset)
+            print("downloaded keyset from \(mint.url): \(mint.activeKeyset!.hexKeysetID)")
+            
+            guard let allKeysetIDs = try? await Network.loadAllKeysetIDs(mintURL: mint.url) else {
+                print("could not get all keyset IDs")
+                break
             }
+            mint.allKeysets = []
+            for id in allKeysetIDs.keysets {
+                guard let keyset = try? await Network.loadKeyset(mintURL: mint.url, keysetID: id) else {
+                    print("could not get keyset with \(id) of mint \(mint.url)")
+                    break
+                }
+                let old = Mint.calculateKeysetID(keyset: keyset)
+                let hex = Mint.calculateHexKeysetID(keyset: keyset)
+                mint.allKeysets!.append(Keyset(legacyID: old,
+                                               hexKeysetID: hex,
+                                               keys: keyset))
+                print("downloaded keyset with id \(id), calculated: \(hex), \(old)")
+            }
+            print("done!")
+            print(mint.allKeysets?.last?.keys)
+            self.database.saveToFile()
         }
+        
+        //2. load all keyset IDS
+        
+        
     }
     
     //MARK: - Mint
@@ -68,7 +94,7 @@ class Wallet {
                 self.requestBlindedPromises(mint: mint, amount: amount, payReq: paymentRequest) { promises in
                     if promises.isEmpty == false {
                         //TODO: remove hardcoded mint selection
-                        let proofs = unblindPromises(promises: promises, mintPublicKeys: mint.keySets[0].keys!)
+                        let proofs = unblindPromises(promises: promises, mintPublicKeys: mint.activeKeyset!.keys!)
                         self.database.proofs.append(contentsOf: proofs)
                         self.database.secretDerivationCounter += promises.count //sloppy, should count outputs
                         self.database.saveToFile()
@@ -111,7 +137,7 @@ class Wallet {
                 let outputs = generateDeterministicOutputs(startIndex:self.database.secretDerivationCounter,
                                                            seed: self.database.seed!,
                                                            amounts: combined,
-                                                           keyset: mint.keySets[0])
+                                                           keyset: mint.activeKeyset!)
                 
                 requestSplit(mint: mint, forProofs: proofs, withOutputs: outputs) { result in
                     switch result {
@@ -155,8 +181,8 @@ class Wallet {
             }
             
             let mint = self.database.mintForKeysetID(id: tokenlist[0].proofs[0].id)
-            let keyset = mint!.keySets[0]
-            let newOutputs = generateDeterministicOutputs(startIndex:self.database.secretDerivationCounter, 
+            let keyset = mint!.activeKeyset!
+            let newOutputs = generateDeterministicOutputs(startIndex:self.database.secretDerivationCounter,
                                                           seed: self.database.seed!,
                                                           amounts: amounts,
                                                           keyset: keyset)
@@ -194,7 +220,7 @@ class Wallet {
         Network.checkFee(mint: mint, invoice: invoice) { checkFeeResult in
             switch checkFeeResult {
             case .success(let fee):
-                if let invoiceAmount = PaymentRequest.satAmountFromEncodedPR(pr: invoice) {
+                if let invoiceAmount = PaymentRequest.satAmountFromInvoice(pr: invoice) {
                     let total = invoiceAmount + fee
                     if let proofs = self.database.retrieveProofs(mint: mint, amount: total) {
                         Network.meltRequest(mint: mint, meltRequest: MeltRequest(proofs: proofs, pr: invoice)) { meltRequestResult in
@@ -235,7 +261,7 @@ class Wallet {
         
         self.database.saveToFile()
         
-        let keyset = Keyset(keysetID: "I2yN+iRYfkzT", keys: nil)
+        let keyset = Keyset(legacyID: "I2yN+iRYfkzT", hexKeysetID: "0f0f0f0", keys: nil)
         let currentCounter = 0
         let (outputs, blindingFactors, secrets) = generateDeterministicOutputs(counter: currentCounter,
                                                                                seed: self.database.seed!,
@@ -288,7 +314,7 @@ class Wallet {
                 let promises = self.transformPromises(promises: promisesJSON.promises, originalOutputs: withOutputs)!
                 print(promisesJSON)
                 //TODO: remove hardcoded mint selection
-                let proofs = unblindPromises(promises: promises, mintPublicKeys: mint.keySets[0].keys!)
+                let proofs = unblindPromises(promises: promises, mintPublicKeys: mint.activeKeyset!.keys!)
                 completion(.success(proofs))
             } else {
                 print("could not decode promises from JSON: \(String(data: data!, encoding: .utf8) ?? "no data")")
@@ -307,7 +333,7 @@ class Wallet {
         let currentMintOutputs = generateDeterministicOutputs(startIndex:self.database.secretDerivationCounter,
                                                               seed: self.database.seed!,
                                                               amounts: splitIntoBase2Numbers(n: amount),
-                                                              keyset: mint.keySets[0])
+                                                              keyset: mint.activeKeyset!)
         var outputArray: [[String: Any]] = []
         for o in currentMintOutputs {
             var dict: [String: Any] = [:]

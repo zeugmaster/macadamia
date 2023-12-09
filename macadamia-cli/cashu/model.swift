@@ -8,6 +8,10 @@
 import Foundation
 import CryptoKit
 
+struct KeysetIDResponse: Codable {
+    let keysets: [String]
+}
+
 struct Promise_JSON: Codable {
     let id: String
     let amount: Int
@@ -82,12 +86,13 @@ struct SplitRequest_JSON: Codable {
 //TODO: one mint can have one URL, but multiple <Keysets> with keys and keyset_ids
 class Mint: Codable {
     let url: URL
-    var keySets: [Keyset]
+    var activeKeyset: Keyset?
+    var allKeysets: [Keyset]?
     
-    
-    init(url: URL, keySets: [Keyset]) {
+    init(url: URL, activeKeyset: Keyset?, allKeysets: [Keyset]?) {
         self.url = url
-        self.keySets = keySets
+        self.activeKeyset = activeKeyset
+        self.allKeysets = allKeysets
     }
     
     static func calculateKeysetID(keyset:Dictionary<String,String>) -> String {
@@ -101,12 +106,35 @@ class Mint: Codable {
         
         let concat = sortedValues.joined()
         let hashData = Data(SHA256.hash(data: concat.data(using: .utf8)!))
-        let id = hashData.base64EncodedString().prefix(12)
-        return String(id)
+        
+        let id = String(hashData.base64EncodedString().prefix(12))
+        
+        return id
+    }
+    
+    static func calculateHexKeysetID(keyset:Dictionary<String,String>) -> String {
+        let sortedValues = keyset.sorted { (firstElement, secondElement) -> Bool in
+            guard let firstKey = UInt(firstElement.key), let secondKey = UInt(secondElement.key) else {
+                return false
+            }
+            return firstKey < secondKey
+        }.map { $0.value }
+        //print(sortedValues)
+        var concatData = [UInt8]()
+        for stringKey in sortedValues {
+            try! concatData.append(contentsOf: stringKey.bytes)
+        }
+        
+        let hashData = Data(SHA256.hash(data: concatData))
+        let result = String(bytes: hashData).prefix(14)
+        
+        return "00" + result
     }
 }
+
 struct Keyset: Codable {
-    let keysetID: String
+    let legacyID: String
+    let hexKeysetID: String
     let keys: Dictionary<String, String>? //we might need ID while not having access to old keys
 }
 
@@ -114,7 +142,7 @@ struct PaymentRequest: Codable {
     let pr: String
     let hash: String
     
-    static func satAmountFromEncodedPR(pr:String) -> Int? {
+    static func satAmountFromInvoice(pr:String) -> Int? {
         guard let range = pr.range(of: "1", options: .backwards) else {
             return nil
         }

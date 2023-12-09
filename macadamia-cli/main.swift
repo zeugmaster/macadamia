@@ -14,9 +14,12 @@ func start() {
     
     let wallet = Wallet()
   
-    wallet.updateMints { result in
-        
+    Task {
+        try await wallet.updateMints()
     }
+    
+    print(convertKeysetID(keysetID: "bCPftxOiyYyz"))
+    print(convertHexKeysetID(keysetID: "007c3ce974db912b"))
         
     print("""
             Welcome to macadamia. Would you like to
