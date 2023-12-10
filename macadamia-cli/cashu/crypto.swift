@@ -50,7 +50,7 @@ func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keyse
         let secretPath = "m/129372'/0'/\(keysetInt)'/\(index)'/0"
         let blindingFactorPath = "m/129372'/0'/\(keysetInt)'/\(index)'/1"
         
-        print("using paths: x= \(secretPath) r= \(blindingFactorPath)")
+        //print("using paths: x= \(secretPath) r= \(blindingFactorPath)")
         
         let x = childPrivateKeyForDerivationPath(seed: seed, derivationPath: secretPath)!
         let Y = hashToCurve(message: x)

@@ -258,32 +258,71 @@ class Wallet {
         self.database.mints.append(Mint(url: URL(string: "https://mint.zeugmaster.com:3338")!, activeKeyset: nil, allKeysets: nil))
         try await updateMints()
         self.database.saveToFile() //overrides existing
-        print(database.seed)
         for mint in database.mints {
             for keyset in mint.allKeysets! {
-                var emtpyResponses = 0
-                var currentCounter = 0
-                while emtpyResponses < 2 {
-                    let (outputs, blindingFactors, secrets) = generateDeterministicOutputs(counter: currentCounter,
-                                                                                           seed: self.database.seed!,
-                                                                                           amounts: Array(repeating: 1, count: 10),
-                                                                                           keysetID: keyset.legacyID) //TODO: need to cycle both types
-                    let restoreRespone = try await Network.restoreRequest(mintURL: mint.url, outputs: outputs)
-                    print(restoreRespone)
-                    
-                    //currentcounter needs to be correct
-                    currentCounter += outputs.count
-                    if restoreRespone.promises.isEmpty { emtpyResponses += 1 }
-                    
-                    //filter, process, unblind and save
-                }
-                
-                
+                let responsetuple = await restoreProofs(mint: mint, keysetID: keyset.legacyID, seed: self.database.seed!)
+                self.database.proofs.append(contentsOf: responsetuple.proofs)
+                self.database.secretDerivationCounter = responsetuple.lastMatchCounter
+                self.database.saveToFile()
+                print(responsetuple)
             }
         }
-        
     }
     
+    private func restoreProofs(mint:Mint, keysetID:String, seed:String, batchSize:Int = 10) async -> (proofs:[Proof], totalRestored:Int, lastMatchCounter:Int) {
+        
+        guard let mintPubkeys = mint.allKeysets?.first(where: {$0.legacyID == keysetID || $0.hexKeysetID == keysetID})?.keys else {
+            print("ERROR: could not find public keys for keyset: \(keysetID)")
+            return ([], 0, 0) //FIXME: should be error handling instead
+        }
+        var proofs = [Proof]()
+        var emtpyResponses = 0
+        var currentCounter = 0
+        var batchLastMatchIndex = 0
+        let emptyRuns = 2
+        while emtpyResponses < emptyRuns {
+            print(keysetID)
+            let (outputs, blindingFactors, secrets) = generateDeterministicOutputs(counter: currentCounter,
+                                                                                   seed: self.database.seed!,
+                                                                                   amounts: Array(repeating: 1, count: batchSize),
+                                                                                   keysetID: keysetID)
+            
+            guard let restoreRespone = try? await Network.restoreRequest(mintURL: mint.url, outputs: outputs) else {
+                print("unable to decode restoreResponse from Mint")
+                return ([], 0, 0)
+            }
+            print(restoreRespone)
+            currentCounter += batchSize
+            //currentcounter needs to be correct
+            batchLastMatchIndex = outputs.lastIndex(where: { oldOutput in
+                restoreRespone.outputs.contains(where: {newOut in oldOutput.B_ == newOut.B_})
+            }) ?? 0
+            
+            if restoreRespone.promises.isEmpty {
+                emtpyResponses += 1
+            } else {
+                //reset counter to ensure they are CONSECUTIVE empty responses
+                emtpyResponses = 0
+            }
+            var rs = [String]()
+            var xs = [String]()
+            for i in 0..<outputs.count {
+                if restoreRespone.outputs.contains(where: {$0.B_ == outputs[i].B_}) {
+                    rs.append(blindingFactors[i])
+                    xs.append(secrets[i])
+                }
+            }
+            
+            let batchProofs = unblindPromises(promises: restoreRespone.promises, blindingFactors: rs, secrets: xs, mintPublicKeys: mintPubkeys)
+            proofs.append(contentsOf: batchProofs)
+            print("current counter: \(currentCounter), emptyruns: \(emptyRuns), batchlastmatch:\(batchLastMatchIndex)")
+        }
+        currentCounter -= emptyRuns * batchSize
+        currentCounter += batchLastMatchIndex
+        
+        return (proofs, currentCounter, proofs.count)
+    }
+        
     private func requestSplit(mint:Mint, forProofs:[Proof], withOutputs:[Output], completion: @escaping (Result<[Proof], Error>) -> Void) {
         //construct mint request payload and make http post req
         //transform outputs to outputs_JSON

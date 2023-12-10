@@ -154,7 +154,7 @@ enum Network {
         let jsonObject = try! JSONSerialization.jsonObject(with: body, options: [])
         let prettyData = try! JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted)
         if let prettyString = String(data: prettyData, encoding: .utf8) {
-            print(prettyString)
+            //print(prettyString)
         }
         
         guard let decoded = try? JSONDecoder().decode(RestoreRequestResponse.self ,from: data) else {
