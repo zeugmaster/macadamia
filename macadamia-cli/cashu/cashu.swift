@@ -30,9 +30,6 @@ class Wallet {
             let m = Mint(url: url, activeKeyset: nil, allKeysets: nil)
             self.database.mints.append(m)
             
-            let url2 = URL(string: "https://testnut.cashu.space")!
-            let m2 = Mint(url: url2, activeKeyset: nil, allKeysets: nil)
-            //.database.mints.append(m2)
         }
         
         //1. get current keyset and compute legace ID
@@ -88,10 +85,11 @@ class Wallet {
                 
                 //WAIT FOR INVOICE PAYED
                 //2. after invoice is paid, send blinded outputs for signing and subsequent unblinding
-                self.requestBlindedPromises(mint: mint, amount: amount, payReq: paymentRequest) { promises in
+                self.requestBlindedPromises(mint: mint, amount: amount, payReq: paymentRequest) { (promises, bfs, secrets) in
                     if promises.isEmpty == false {
                         //TODO: remove hardcoded mint selection
-                        let proofs = unblindPromises(promises: promises, mintPublicKeys: mint.activeKeyset!.keys!)
+                        
+                        let proofs = unblindPromises(promises: promises, blindingFactors: bfs, secrets: secrets, mintPublicKeys: mint.activeKeyset!.keys!)
                         self.database.proofs.append(contentsOf: proofs)
                         self.database.secretDerivationCounter += promises.count //sloppy, should count outputs
                         self.database.saveToFile()
@@ -131,12 +129,8 @@ class Wallet {
                 //request split
                 //TODO: sort array of amounts in ascending order to prevent privacy leak
                 let combined = toSend + rest
-                let outputs = generateDeterministicOutputs(startIndex:self.database.secretDerivationCounter,
-                                                           seed: self.database.seed!,
-                                                           amounts: combined,
-                                                           keyset: mint.activeKeyset!)
-                
-                requestSplit(mint: mint, forProofs: proofs, withOutputs: outputs) { result in
+                let (outputs, blindingfactors, secrets) = generateDeterministicOutputs(counter: self.database.secretDerivationCounter, seed: self.database.seed!, amounts: combined, keysetID: mint.activeKeyset!.legacyID)
+                requestSplit(mint: mint, forProofs: proofs, withOutputs: outputs,blindingFactors: blindingfactors, secrets: secrets) { result in
                     switch result {
                     case .success(var combinedProofs):
                         print("total returned after split: \(combinedProofs)")
@@ -179,15 +173,14 @@ class Wallet {
             
             let mint = self.database.mintForKeysetID(id: tokenlist[0].proofs[0].id)
             let keyset = mint!.activeKeyset!
-            let newOutputs = generateDeterministicOutputs(startIndex:self.database.secretDerivationCounter,
-                                                          seed: self.database.seed!,
+            let (newOutputs, bfs, secrets) = generateDeterministicOutputs(counter: self.database.secretDerivationCounter,
+                                                          seed: database.seed!,
                                                           amounts: amounts,
-                                                          keyset: keyset)
-            
+                                                          keysetID: keyset.legacyID)
             //TODO: just taking the first proof.id breaks multimint token logic, needs fixing
             
             //same problem as above
-            requestSplit(mint: mint!, forProofs: tokenlist[0].proofs, withOutputs: newOutputs) { result in
+            requestSplit(mint: mint!, forProofs: tokenlist[0].proofs, withOutputs: newOutputs, blindingFactors: bfs, secrets: secrets) { result in
                 switch result {
                 case .success(let newProofs):
                     //TODO: remove hardcoded mint selection
@@ -323,15 +316,14 @@ class Wallet {
         return (proofs, currentCounter, proofs.count)
     }
         
-    private func requestSplit(mint:Mint, forProofs:[Proof], withOutputs:[Output], completion: @escaping (Result<[Proof], Error>) -> Void) {
-        //construct mint request payload and make http post req
-        //transform outputs to outputs_JSON
-        var outputs_json = [Output_JSON]()
-        for o in withOutputs {
-            outputs_json.append(Output_JSON(amount: o.amount, B_: o.output))
-        }
+    private func requestSplit(mint:Mint,
+                              forProofs:[Proof],
+                              withOutputs:[Output_JSON],
+                              blindingFactors:[String],
+                              secrets:[String],
+                              completion: @escaping (Result<[Proof], Error>) -> Void) {
         
-        let splitReq = SplitRequest_JSON(proofs: forProofs, outputs: outputs_json)
+        let splitReq = SplitRequest_JSON(proofs: forProofs, outputs: withOutputs)
         let payload = try! JSONEncoder().encode(splitReq)
         
         let prettyEncoder = JSONEncoder()
@@ -352,10 +344,9 @@ class Wallet {
                 return
             }
             if let promisesJSON = try? JSONDecoder().decode(Promise_JSON_List.self, from: data!) {
-                let promises = self.transformPromises(promises: promisesJSON.promises, originalOutputs: withOutputs)!
                 print(promisesJSON)
                 //TODO: remove hardcoded mint selection
-                let proofs = unblindPromises(promises: promises, mintPublicKeys: mint.activeKeyset!.keys!)
+                let proofs = unblindPromises(promises: promisesJSON.promises, blindingFactors: blindingFactors, secrets: secrets, mintPublicKeys: mint.activeKeyset!.keys!)
                 completion(.success(proofs))
             } else {
                 print("could not decode promises from JSON: \(String(data: data!, encoding: .utf8) ?? "no data")")
@@ -369,74 +360,35 @@ class Wallet {
         
     }
     
-    func requestBlindedPromises(mint:Mint, amount:Int, payReq:PaymentRequest, completion: @escaping ([Promise]) -> Void) {
-        //generates outputs (blindedMessages) to use when requesting
-        let currentMintOutputs = generateDeterministicOutputs(startIndex:self.database.secretDerivationCounter,
-                                                              seed: self.database.seed!,
-                                                              amounts: splitIntoBase2Numbers(n: amount),
-                                                              keyset: mint.activeKeyset!)
-        var outputArray: [[String: Any]] = []
-        for o in currentMintOutputs {
-            var dict: [String: Any] = [:]
-            dict["amount"] = o.amount
-            // Ensure this is the correct string representation
-            dict["B_"] = o.output
-            outputArray.append(dict)
-        }
-        let containerDict = ["outputs": outputArray]
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: containerDict, options: [])
-            //TODO: remove hardcoded mint selection
-            if let url = URL(string: mint.url.absoluteString + "/mint?hash=" + payReq.hash) {
-                //print(url)
-                var request = URLRequest(url: url)
-                request.httpMethod = "POST"
-                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                request.httpBody = jsonData
+    func requestBlindedPromises(mint:Mint, amount:Int, payReq:PaymentRequest, completion: @escaping (([Promise_JSON], blindingFactors:[String], secrets:[String])) -> Void) {
 
-                let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-                    if let error = error {
-                        print("Error: \(error)")
-                        return
-                    }
-                    
-                    if let jsonObject = try? JSONDecoder().decode(Promise_JSON_List.self, from: data!) {
-                        completion(self.transformPromises(promises: jsonObject.promises, originalOutputs: currentMintOutputs)!)
-                    } else {
-                        print("could not decode promises from JSON: \(String(data: data!, encoding: .utf8) ?? "no data")")
-                    }
-                }
-                task.resume()
-            } else {
-                print("URL for blinded output req invalid")
+        let (outputArray, bfs, secrets)  = generateDeterministicOutputs(counter: self.database.secretDerivationCounter, seed: self.database.seed!, amounts: splitIntoBase2Numbers(n: amount), keysetID: mint.activeKeyset!.legacyID)
+        let mintrequest = PostMintRequest(outputs: outputArray)
+        guard let payload = try? JSONEncoder().encode(mintrequest) else {
+            print("could not construct payload")
+            return
+        }
+        guard let url = URL(string: mint.url.absoluteString + "/mint?hash=" + payReq.hash) else {
+            print("could not construct URL for PostMintRequest")
+            return
+        }
+        var httpReq = URLRequest(url: url)
+        httpReq.httpMethod = "POST"
+        httpReq.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        httpReq.httpBody = payload
+        
+        let task = URLSession.shared.dataTask(with: httpReq) { data, response, error in
+            if error != nil {
+                print(error!)
             }
-        } catch {
-            print("Error serializing JSON: \(error)")
+            if let decoded = try? JSONDecoder().decode(Promise_JSON_List.self, from: data!) {
+            completion((decoded.promises, bfs, secrets))
+            }
+            
         }
+        task.resume()
     }
 
-    
-    // TODO: not a very elegant solution, refactor
-    func transformPromises(promises:[Promise_JSON], originalOutputs:[Output]) -> [Promise]? {
-        var transformed = [Promise]()
-        
-        if promises.count != originalOutputs.count {
-            print("transformPromises: couldn't attach r, x. supplied arrays have different lengths")
-            return nil
-        }
-        
-        for index in 0..<promises.count {
-            let amount = promises[index].amount
-            let p = promises[index].C_
-            let id = promises[index].id
-            let r = originalOutputs[index].blindingFactor
-            let x = originalOutputs[index].secret
-            transformed.append(Promise(amount: amount, promise: p, id: id, blindingFactor: r, secret: x))
-        }
-        return transformed
-    }
-    
-    
     //MARK: - HELPERS
     func serializeProofs(proofs: [Proof]) -> String {
         //TODO: remove hardcoded mint selection
