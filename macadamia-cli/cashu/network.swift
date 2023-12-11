@@ -81,10 +81,6 @@ enum Network {
         // POST
     }
 
-    func decodeSplitRequestResponse(_ data:Data) {
-        
-    }
-
     //MARK: - MELT
     static func meltRequest(mint:Mint, meltRequest:MeltRequest, completion: @escaping (Result<Void,Error>) -> Void) {
         // POST
@@ -141,14 +137,11 @@ enum Network {
         }
 
         task.resume()
-
     }
 
     //MARK: - RESTORE
     static func restoreRequest(mintURL:URL, outputs:[Output]) async throws -> RestoreRequestResponse {
         // POST
-        
-        //construct payload
         let restoreRequest = PostMintRequest(outputs: outputs)
         
         guard let body = try? JSONEncoder().encode(restoreRequest) else {
@@ -162,14 +155,6 @@ enum Network {
         httpRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let (data, response) = try await URLSession.shared.data(for: httpRequest)
-        //print(response)
-        //print(String(data: data, encoding: .utf8))
-        
-        let jsonObject = try! JSONSerialization.jsonObject(with: body, options: [])
-        let prettyData = try! JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted)
-        if let prettyString = String(data: prettyData, encoding: .utf8) {
-            //print(prettyString)
-        }
         
         guard let decoded = try? JSONDecoder().decode(RestoreRequestResponse.self ,from: data) else {
             let error = parseHTTPErrorResponse(data: data, response: response)
