@@ -133,8 +133,7 @@ class Mint: Codable {
 }
 
 struct Keyset: Codable {
-    let legacyID: String
-    let hexKeysetID: String
+    let id: String
     let keys: Dictionary<String, String>? //we might need ID while not having access to old keys
 }
 

@@ -66,7 +66,7 @@ public class Database: Codable {
         var collected = [Proof]()
         for proof in self.proofs {
             for ks in mint.allKeysets! {
-                if ks.legacyID == proof.id || ks.hexKeysetID == proof.id {
+                if ks.id == proof.id {
                     collected.append(proof)
                     sum += proof.amount
                     break // no need to check for the other keyset_ids
@@ -91,7 +91,7 @@ public class Database: Codable {
     func mintForKeysetID(id:String) -> Mint? {
         if let foundMint = self.mints.first(where: { mint in
             mint.allKeysets!.contains(where: { keyset in
-                keyset.legacyID == id || keyset.hexKeysetID == id
+                keyset.id == id
             })
         }) {
             return foundMint

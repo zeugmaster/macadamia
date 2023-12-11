@@ -31,37 +31,33 @@ class Wallet {
             self.database.mints.append(m)
             
         }
-        
-        //1. get current keyset and compute legace ID
-        
+                
         for mint in self.database.mints {
-            let activeKeyset = try await Network.loadKeyset(mintURL: mint.url, keysetID: nil)
-            mint.activeKeyset = Keyset(legacyID: Mint.calculateKeysetID(keyset: activeKeyset),
-                                       hexKeysetID: Mint.calculateHexKeysetID(keyset: activeKeyset),
-                                       keys: activeKeyset)
-            
             guard let allKeysetIDs = try? await Network.loadAllKeysetIDs(mintURL: mint.url) else {
                 print("could not get all keyset IDs")
-                break
+                continue
             }
+            guard let activeKeysetDict = try? await Network.loadKeyset(mintURL: mint.url, keysetID: nil) else {
+                print("could not load current keyset of mint \(mint.url)")
+                continue
+            }
+            
             print(allKeysetIDs)
             mint.allKeysets = []
             for id in allKeysetIDs.keysets {
-                guard let keyset = try? await Network.loadKeyset(mintURL: mint.url, keysetID: id) else {
+                guard let keysetDict = try? await Network.loadKeyset(mintURL: mint.url, keysetID: id) else {
                     print("could not get keyset with \(id) of mint \(mint.url)")
-                    break
+                    continue
                 }
-                let old = Mint.calculateKeysetID(keyset: keyset)
-                let hex = Mint.calculateHexKeysetID(keyset: keyset)
-                mint.allKeysets!.append(Keyset(legacyID: old,
-                                               hexKeysetID: hex,
-                                               keys: keyset))
+                let keyset = Keyset(id: id, keys: keysetDict)
+                mint.allKeysets!.append(keyset)
+                if keysetDict == activeKeysetDict {
+                    mint.activeKeyset = keyset
+                }
             }
-            self.database.saveToFile()
+            //print(mint.activeKeyset)
         }
-        
-        //2. load all keyset IDS
-        
+        self.database.saveToFile()
         
     }
     
@@ -129,7 +125,7 @@ class Wallet {
                 //request split
                 //TODO: sort array of amounts in ascending order to prevent privacy leak
                 let combined = toSend + rest
-                let (outputs, blindingfactors, secrets) = generateDeterministicOutputs(counter: self.database.secretDerivationCounter, seed: self.database.seed!, amounts: combined, keysetID: mint.activeKeyset!.legacyID)
+                let (outputs, blindingfactors, secrets) = generateDeterministicOutputs(counter: self.database.secretDerivationCounter, seed: self.database.seed!, amounts: combined, keysetID: mint.activeKeyset!.id)
                 requestSplit(mint: mint, forProofs: proofs, withOutputs: outputs,blindingFactors: blindingfactors, secrets: secrets) { result in
                     switch result {
                     case .success(var combinedProofs):
@@ -176,7 +172,7 @@ class Wallet {
             let (newOutputs, bfs, secrets) = generateDeterministicOutputs(counter: self.database.secretDerivationCounter,
                                                           seed: database.seed!,
                                                           amounts: amounts,
-                                                          keysetID: keyset.legacyID)
+                                                          keysetID: keyset.id)
             //TODO: just taking the first proof.id breaks multimint token logic, needs fixing
             
             //same problem as above
@@ -253,7 +249,7 @@ class Wallet {
         self.database.saveToFile() //overrides existing
         for mint in database.mints {
             for keyset in mint.allKeysets! {
-                let responsetuple = await restoreProofs(mint: mint, keysetID: keyset.legacyID, seed: self.database.seed!)
+                let responsetuple = await restoreProofs(mint: mint, keysetID: keyset.id, seed: self.database.seed!)
                 self.database.proofs.append(contentsOf: responsetuple.proofs)
                 self.database.secretDerivationCounter = responsetuple.lastMatchCounter
                 self.database.saveToFile()
@@ -264,7 +260,7 @@ class Wallet {
     
     private func restoreProofs(mint:Mint, keysetID:String, seed:String, batchSize:Int = 10) async -> (proofs:[Proof], totalRestored:Int, lastMatchCounter:Int) {
         
-        guard let mintPubkeys = mint.allKeysets?.first(where: {$0.legacyID == keysetID || $0.hexKeysetID == keysetID})?.keys else {
+        guard let mintPubkeys = mint.allKeysets?.first(where: {$0.id == keysetID})?.keys else {
             print("ERROR: could not find public keys for keyset: \(keysetID)")
             return ([], 0, 0) //FIXME: should be error handling instead
         }
@@ -293,6 +289,7 @@ class Wallet {
             
             if restoreRespone.promises.isEmpty {
                 emtpyResponses += 1
+                continue
             } else {
                 //reset counter to ensure they are CONSECUTIVE empty responses
                 emtpyResponses = 0
@@ -362,7 +359,7 @@ class Wallet {
     
     func requestBlindedPromises(mint:Mint, amount:Int, payReq:PaymentRequest, completion: @escaping (([Promise_JSON], blindingFactors:[String], secrets:[String])) -> Void) {
 
-        let (outputArray, bfs, secrets)  = generateDeterministicOutputs(counter: self.database.secretDerivationCounter, seed: self.database.seed!, amounts: splitIntoBase2Numbers(n: amount), keysetID: mint.activeKeyset!.legacyID)
+        let (outputArray, bfs, secrets)  = generateDeterministicOutputs(counter: self.database.secretDerivationCounter, seed: self.database.seed!, amounts: splitIntoBase2Numbers(n: amount), keysetID: mint.activeKeyset!.id)
         let mintrequest = PostMintRequest(outputs: outputArray)
         guard let payload = try? JSONEncoder().encode(mintrequest) else {
             print("could not construct payload")

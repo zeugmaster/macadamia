@@ -40,7 +40,6 @@ enum Network {
                 url.append(path: keysetID!)
             }
         }
-        print(url)
         let (data, respose) = try await URLSession.shared.data(from: url)
         //TODO: check response for errors
         guard let dict = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: String] else {
