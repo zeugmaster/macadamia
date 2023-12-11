@@ -11,8 +11,8 @@
 		3709F1F12AFD52040091DE8D /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 3709F1F02AFD52040091DE8D /* secp256k1 */; };
 		3709F1F52AFD52760091DE8D /* crypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F22AFD52760091DE8D /* crypto.swift */; };
 		3709F1F62AFD52760091DE8D /* cashu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F32AFD52760091DE8D /* cashu.swift */; };
-		3709F1F72AFD52760091DE8D /* Base64FS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F1F42AFD52760091DE8D /* Base64FS.swift */; };
 		371D1BB32B2112F7009C6B29 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 371D1BB22B2112F7009C6B29 /* BigNumber */; };
+		372034AC2B27794600C4F955 /* Base64FS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034AB2B27794600C4F955 /* Base64FS.swift */; };
 		3783B0EA2B03CB7B0063E3FB /* data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3783B0E92B03CB7B0063E3FB /* data.swift */; };
 		37A44A862B1B2C16007A8D0D /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 37A44A852B1B2C16007A8D0D /* BIP39 */; };
 		37A44A892B1B2C40007A8D0D /* BIP32 in Frameworks */ = {isa = PBXBuildFile; productRef = 37A44A882B1B2C40007A8D0D /* BIP32 */; };
@@ -37,7 +37,7 @@
 		3709F1E82AFD51D90091DE8D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		3709F1F22AFD52760091DE8D /* crypto.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = crypto.swift; sourceTree = "<group>"; };
 		3709F1F32AFD52760091DE8D /* cashu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cashu.swift; sourceTree = "<group>"; };
-		3709F1F42AFD52760091DE8D /* Base64FS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Base64FS.swift; sourceTree = "<group>"; };
+		372034AB2B27794600C4F955 /* Base64FS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Base64FS.swift; sourceTree = "<group>"; };
 		3783B0E92B03CB7B0063E3FB /* data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = data.swift; sourceTree = "<group>"; };
 		37A44A8A2B1B9162007A8D0D /* macadamia-cli.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "macadamia-cli.entitlements"; sourceTree = "<group>"; };
 		37C727362B19EAB500052093 /* network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = network.swift; sourceTree = "<group>"; };
@@ -93,7 +93,7 @@
 				37C727362B19EAB500052093 /* network.swift */,
 				37C727382B19EAC900052093 /* model.swift */,
 				3709F1F22AFD52760091DE8D /* crypto.swift */,
-				3709F1F42AFD52760091DE8D /* Base64FS.swift */,
+				372034AB2B27794600C4F955 /* Base64FS.swift */,
 			);
 			path = cashu;
 			sourceTree = "<group>";
@@ -170,11 +170,11 @@
 			files = (
 				3709F1F62AFD52760091DE8D /* cashu.swift in Sources */,
 				3709F1F52AFD52760091DE8D /* crypto.swift in Sources */,
+				372034AC2B27794600C4F955 /* Base64FS.swift in Sources */,
 				3709F1E92AFD51D90091DE8D /* main.swift in Sources */,
 				3783B0EA2B03CB7B0063E3FB /* data.swift in Sources */,
 				37C727372B19EAB500052093 /* network.swift in Sources */,
 				37C727392B19EAC900052093 /* model.swift in Sources */,
-				3709F1F72AFD52760091DE8D /* Base64FS.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

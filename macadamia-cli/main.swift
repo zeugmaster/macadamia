@@ -54,12 +54,21 @@ func start() {
     }
         
     func startMint() {
-        wallet.mint(amount: numberInput(), mint: wallet.database.mints[0]) { prResult in
-            print(prResult)
+//        wallet.mint(amount: numberInput(), mint: wallet.database.mints[0]) { prResult in
+//            print(prResult)
+//            print("press enter when invoice is payed")
+//            _ = readLine()
+//        } mintCompletion: { mintResult in
+//            //print(mintResult)
+//            dispatchGroup.leave()
+//        }
+        Task {
+            let chosenAmount = numberInput()
+            let pr = try await wallet.getQuote(from:wallet.database.mints[0], for:chosenAmount)
+            print(pr)
             print("press enter when invoice is payed")
             _ = readLine()
-        } mintCompletion: { mintResult in
-            //print(mintResult)
+            try await wallet.requestMint(from: wallet.database.mints[0], for: pr, with: chosenAmount)
             dispatchGroup.leave()
         }
     }

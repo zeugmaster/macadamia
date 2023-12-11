@@ -12,44 +12,28 @@ struct KeysetIDResponse: Codable {
     let keysets: [String]
 }
 
-struct Promise_JSON: Codable {
+struct Promise: Codable {
     let id: String
     let amount: Int
     let C_: String
 }
-struct Promise_JSON_List: Codable {
-    let promises: [Promise_JSON]
+struct SignatureRequestResponse: Codable {
+    let promises: [Promise]
 }
-
-class Output: Codable {
-    let amount: Int
-    let output: String
-    let secret: String
-    let blindingFactor: String
-    
-    init(amount: Int, output: String, secret: String, blindingFactor: String) {
-        self.amount = amount
-        self.output = output
-        self.secret = secret
-        self.blindingFactor = blindingFactor
-    }
-}
-
-class Promise {
-    let amount: Int
-    let promise: String
-    let id: String
-    let blindingFactor:String
-    let secret: String
-    
-    init(amount: Int, promise: String, id: String, blindingFactor: String, secret: String) {
-        self.amount = amount
-        self.promise = promise
-        self.id = id
-        self.blindingFactor = blindingFactor
-        self.secret = secret
-    }
-}
+//
+//class Output: Codable {
+//    let amount: Int
+//    let output: String
+//    let secret: String
+//    let blindingFactor: String
+//    
+//    init(amount: Int, output: String, secret: String, blindingFactor: String) {
+//        self.amount = amount
+//        self.output = output
+//        self.secret = secret
+//        self.blindingFactor = blindingFactor
+//    }
+//}
 
 class Proof: Codable, Equatable, CustomStringConvertible {
     
@@ -80,7 +64,7 @@ class Proof: Codable, Equatable, CustomStringConvertible {
 
 struct SplitRequest_JSON: Codable {
     let proofs:[Proof]
-    let outputs:[Output_JSON]
+    let outputs:[Output]
 }
 
 //TODO: one mint can have one URL, but multiple <Keysets> with keys and keyset_ids
@@ -137,7 +121,7 @@ struct Keyset: Codable {
     let keys: Dictionary<String, String>? //we might need ID while not having access to old keys
 }
 
-struct PaymentRequest: Codable {
+struct QuoteRequestResponse: Codable {
     let pr: String
     let hash: String
     
@@ -176,9 +160,9 @@ struct MeltRequestResponse: Codable {
     let preimage: String?
 }
 struct PostMintRequest: Codable {
-    let outputs: [Output_JSON]
+    let outputs: [Output]
 }
-struct Output_JSON: Codable {
+struct Output: Codable {
     let amount: Int
     let B_: String
 }
@@ -192,8 +176,8 @@ struct Token_JSON: Codable {
 }
 
 struct RestoreRequestResponse:Decodable {
-    let outputs:[Output_JSON]
-    let promises:[Promise_JSON]
+    let outputs:[Output]
+    let promises:[Promise]
 }
 
 extension String {

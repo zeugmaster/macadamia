@@ -59,7 +59,7 @@ public class Database: Codable {
         }
     }
     
-    func retrieveProofs(mint:Mint, amount:Int) -> [Proof]? {
+    func retrieveProofs(from mint:Mint, amount:Int) -> [Proof]? {
         //load all mint keysets
         print("looking for proofs from \(mint.url) with total amount: \(amount)")
         var sum = 0

@@ -12,8 +12,9 @@ import BIP39
 import BigNumber
 
 // Step 1 (Alice)
-func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keysetID:String) -> (outputs: [Output_JSON], blindingFactors: [String], secrets:[String]) {
-    var outputs = [Output_JSON]()
+//TODO: needs to be able to throw
+func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keysetID:String) -> (outputs: [Output], blindingFactors: [String], secrets:[String]) {
+    var outputs = [Output]()
     var blindingFactors = [String]()
     var secrets = [String]()
     let keysetInt = convertKeysetID(keysetID: keysetID)!
@@ -31,7 +32,7 @@ func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keyse
         let r = try! secp256k1.Signing.PrivateKey(dataRepresentation: childPrivateKeyForDerivationPath(seed: seed, derivationPath: blindingFactorPath)!.bytes)
         let output = try! Y.combine([r.publicKey])
         
-        outputs.append(Output_JSON(amount: amounts[i], B_: String(bytes: output.dataRepresentation)))
+        outputs.append(Output(amount: amounts[i], B_: String(bytes: output.dataRepresentation)))
         
         blindingFactors.append(String(bytes: r.dataRepresentation))
         secrets.append(x)
@@ -40,29 +41,9 @@ func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keyse
     return (outputs, blindingFactors, secrets)
 }
 
-// Step 3 (Alice) //TODO: remove
+// Step 3 (Alice) 
+//TODO: DEFINITELY needs to be able to throw
 func unblindPromises(promises:[Promise],
-                     mintPublicKeys:Dictionary<String,String>) -> [Proof] {
-    var proofs = [Proof]()
-    print(promises)
-    for promise in promises {
-        let pubBytes = try! mintPublicKeys[String(promise.amount)]!.bytes
-        let mintPubKey = try! secp256k1.Signing.PublicKey(dataRepresentation: pubBytes, format: .compressed)
-        let pK = try! secp256k1.Signing.PrivateKey(dataRepresentation: promise.blindingFactor.bytes)
-        let product = try! mintPubKey.multiply(pK.dataRepresentation.bytes)
-        let neg = negatePublicKey(key: product)
-
-        // C = C_ - A.mult(r)
-        let p = try! secp256k1.Signing.PublicKey(dataRepresentation: promise.promise.bytes, format: .compressed)
-        let unblindedPromise = try! p.combine([neg])
-        
-        proofs.append(Proof(id: promise.id, amount: promise.amount, secret: promise.secret, C: String(bytes: unblindedPromise.dataRepresentation)))
-    }
-    
-    return proofs
-}
-
-func unblindPromises(promises:[Promise_JSON],
                      blindingFactors:[String],
                      secrets:[String],
                      mintPublicKeys:Dictionary<String,String>) -> [Proof] {

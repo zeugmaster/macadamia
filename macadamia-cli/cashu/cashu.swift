@@ -9,7 +9,7 @@ class Wallet {
         case invalidMnemonicError
     }
     
-    var database = Database.loadFromFile()
+    var database = Database.loadFromFile() //TODO: set to private
     
     init(database: Database = Database.loadFromFile()) {
         self.database = database
@@ -41,7 +41,6 @@ class Wallet {
                 print("could not load current keyset of mint \(mint.url)")
                 continue
             }
-            
             print(allKeysetIDs)
             mint.allKeysets = []
             for id in allKeysetIDs.keysets {
@@ -55,7 +54,6 @@ class Wallet {
                     mint.activeKeyset = keyset
                 }
             }
-            //print(mint.activeKeyset)
         }
         self.database.saveToFile()
         
@@ -65,7 +63,7 @@ class Wallet {
     //FIXME: this is propably unnecessary complexity using two completion handlers
     func mint(amount:Int,
               mint:Mint,
-              prCompletion: @escaping (Result<PaymentRequest,Error>) -> Void,
+              prCompletion: @escaping (Result<QuoteRequestResponse,Error>) -> Void,
               mintCompletion: @escaping (Result<String,Error>) -> Void) {
         //1. make GET req to the mint to receive lightning invoice
         // TODO: change to async await
@@ -75,7 +73,7 @@ class Wallet {
         print(url)
         let task = URLSession.shared.dataTask(with: url) {payload, response, error in
             if error == nil {
-                let paymentRequest = try! JSONDecoder().decode(PaymentRequest.self, from: payload!)
+                let paymentRequest = try! JSONDecoder().decode(QuoteRequestResponse.self, from: payload!)
                 // TODO: needs to handle case where JSON could not be decoded
                 prCompletion(.success(paymentRequest))
                 
@@ -102,11 +100,27 @@ class Wallet {
         task.resume()
     }
     
+    func getQuote(from mint:Mint,for amount:Int) async throws -> QuoteRequestResponse {
+        let quote = try await Network.requestQuote(for: amount, from: mint)
+        return quote
+    }
+    
+    func requestMint(from mint:Mint, for quote:QuoteRequestResponse, with amount:Int) async throws {
+        let (outputs, bfs, secrets) = generateDeterministicOutputs(counter: self.database.secretDerivationCounter, seed: self.database.seed!, amounts: splitIntoBase2Numbers(n: amount), keysetID: mint.activeKeyset!.id)
+        let promises = try await Network.requestSignature(mint: mint, outputs: outputs, amount: amount, invoiceHash: quote.hash)
+        let proofs = unblindPromises(promises: promises, blindingFactors: bfs, secrets: secrets, mintPublicKeys: mint.activeKeyset!.keys!)
+        database.proofs.append(contentsOf: proofs)
+        database.secretDerivationCounter += proofs.count
+        database.saveToFile()
+    }
+    
+    //func getQuote(amount:Int, mint:Mint) async throws -> PostMintRequest
+    
     //MARK: - Send
     func sendTokens(mint:Mint, amount:Int, completion: @escaping (Result<String,Error>) -> Void) {
         // 1. retrieve tokens from database. if amounts match, serialize right away
         // if amounts dont match: split, serialize token for sending, add the rest back to db
-        if let proofs = self.database.retrieveProofs(mint: mint, amount: amount) {
+        if let proofs = self.database.retrieveProofs(from: mint, amount: amount) {
             print("total proofs collected: \(proofs)")
             var totalInProofs = 0
             for proof in proofs {
@@ -206,9 +220,9 @@ class Wallet {
         Network.checkFee(mint: mint, invoice: invoice) { checkFeeResult in
             switch checkFeeResult {
             case .success(let fee):
-                if let invoiceAmount = PaymentRequest.satAmountFromInvoice(pr: invoice) {
+                if let invoiceAmount = QuoteRequestResponse.satAmountFromInvoice(pr: invoice) {
                     let total = invoiceAmount + fee
-                    if let proofs = self.database.retrieveProofs(mint: mint, amount: total) {
+                    if let proofs = self.database.retrieveProofs(from: mint, amount: total) {
                         Network.meltRequest(mint: mint, meltRequest: MeltRequest(proofs: proofs, pr: invoice)) { meltRequestResult in
                             switch meltRequestResult {
                             case .success():
@@ -315,7 +329,7 @@ class Wallet {
         
     private func requestSplit(mint:Mint,
                               forProofs:[Proof],
-                              withOutputs:[Output_JSON],
+                              withOutputs:[Output],
                               blindingFactors:[String],
                               secrets:[String],
                               completion: @escaping (Result<[Proof], Error>) -> Void) {
@@ -340,7 +354,7 @@ class Wallet {
                 print("Error: \(error)")
                 return
             }
-            if let promisesJSON = try? JSONDecoder().decode(Promise_JSON_List.self, from: data!) {
+            if let promisesJSON = try? JSONDecoder().decode(SignatureRequestResponse.self, from: data!) {
                 print(promisesJSON)
                 //TODO: remove hardcoded mint selection
                 let proofs = unblindPromises(promises: promisesJSON.promises, blindingFactors: blindingFactors, secrets: secrets, mintPublicKeys: mint.activeKeyset!.keys!)
@@ -353,11 +367,11 @@ class Wallet {
     }
     
     //TODO: to use or not to use
-    func requestMint(amount:Int, completion: @escaping (PaymentRequest?) -> Void) {
+    func requestMint(amount:Int, completion: @escaping (QuoteRequestResponse?) -> Void) {
         
     }
     
-    func requestBlindedPromises(mint:Mint, amount:Int, payReq:PaymentRequest, completion: @escaping (([Promise_JSON], blindingFactors:[String], secrets:[String])) -> Void) {
+    func requestBlindedPromises(mint:Mint, amount:Int, payReq:QuoteRequestResponse, completion: @escaping (([Promise], blindingFactors:[String], secrets:[String])) -> Void) {
 
         let (outputArray, bfs, secrets)  = generateDeterministicOutputs(counter: self.database.secretDerivationCounter, seed: self.database.seed!, amounts: splitIntoBase2Numbers(n: amount), keysetID: mint.activeKeyset!.id)
         let mintrequest = PostMintRequest(outputs: outputArray)
@@ -378,7 +392,7 @@ class Wallet {
             if error != nil {
                 print(error!)
             }
-            if let decoded = try? JSONDecoder().decode(Promise_JSON_List.self, from: data!) {
+            if let decoded = try? JSONDecoder().decode(SignatureRequestResponse.self, from: data!) {
             completion((decoded.promises, bfs, secrets))
             }
             

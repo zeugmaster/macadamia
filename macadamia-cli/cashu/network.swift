@@ -21,12 +21,12 @@ enum NetworkError: Error {
 }
 
 enum Network {
-    
+    //MARK: - Keysets
     static func loadAllKeysetIDs(mintURL:URL) async throws -> KeysetIDResponse {
         let (data, response) = try await URLSession.shared.data(from: mintURL.appending(path: "keysets"))
         //TODO: check response for errors
         guard let decodedResponse = try? JSONDecoder().decode(KeysetIDResponse.self, from: data) else {
-            throw NetworkError.decodingError
+            throw parseHTTPErrorResponse(data: data, response: response)
         }
         return decodedResponse
     }
@@ -40,21 +40,40 @@ enum Network {
                 url.append(path: keysetID!)
             }
         }
-        let (data, respose) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await URLSession.shared.data(from: url)
         //TODO: check response for errors
         guard let dict = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: String] else {
-            throw NetworkError.decodingError
+            throw parseHTTPErrorResponse(data: data, response: response)
         }
         return dict
     }
 
     //MARK: - MINT
-    func mintRequest() {
-        //GET + POST
+    static func requestQuote(for amount:Int, from mint:Mint) async throws -> QuoteRequestResponse {
+        let urlString = mint.url.absoluteString + "/mint?amount=\(String(amount))"
+        let url = URL(string: urlString)!
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard let decoded = try? JSONDecoder().decode(QuoteRequestResponse.self, from: data) else {
+            throw parseHTTPErrorResponse(data: data, response: response)
+        }
+        return decoded
     }
-
-    func decodeMintRequestResponse() {
-        
+    
+    static func requestSignature(mint:Mint, outputs:[Output], amount:Int, invoiceHash:String) async throws -> [Promise] {
+        //POST
+        let url = URL(string: mint.url.absoluteString + "/mint?hash=" + invoiceHash)!
+        guard let payload = try? JSONEncoder().encode(PostMintRequest(outputs: outputs)) else {
+            throw NetworkError.encodingError
+        }
+        var httpReq = URLRequest(url: url)
+        httpReq.httpMethod = "POST"
+        httpReq.httpBody = payload
+        httpReq.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        let (data, response) = try await URLSession.shared.data(for: httpReq)
+        guard let decoded = try? JSONDecoder().decode(SignatureRequestResponse.self, from: data) else {
+            throw parseHTTPErrorResponse(data: data, response: response)
+        }
+        return decoded.promises
     }
 
     //MARK: - SPLIT
@@ -125,12 +144,8 @@ enum Network {
 
     }
 
-    func decodeMeltRequestResponse() {
-        
-    }
-
     //MARK: - RESTORE
-    static func restoreRequest(mintURL:URL, outputs:[Output_JSON]) async throws -> RestoreRequestResponse {
+    static func restoreRequest(mintURL:URL, outputs:[Output]) async throws -> RestoreRequestResponse {
         // POST
         
         //construct payload
@@ -165,15 +180,14 @@ enum Network {
         return decoded
     }
 
-    func decodeRestoreRequestResponse() {
-        
-    }
-
-    //MARK: - swap requests??
+    //MARK: - inter mint swap requests (?)
 
     //MARK: - Error handling
     static func parseHTTPErrorResponse(data:Data?, response:URLResponse) -> Error {
         //TODO: add real error parsing
+        print("PARSING ERROR:")
+        print("Data returned from http request:" + (String(data: data!, encoding: .utf8) ?? "could not turn data to string"))
+        print("http response: " + String(describing: response))
         return NetworkError.unknownError
     }
 }
