@@ -14,6 +14,7 @@ class Wallet {
         case insufficientFunds(mint:Mint)
         case invalidInvoiceError
         case invalidSplitAmounts
+        case restoreError(detail:String)
     }
     
     var database = Database.loadFromFile() //TODO: set to private
@@ -125,6 +126,13 @@ class Wallet {
         self.database.saveToFile()
     }
     
+    //MARK: State check
+    func check(mint:Mint, proofs:[Proof]) async throws -> (spendable:[Bool], pending:[Bool]) {
+        if proofs.isEmpty {return ([], [])}
+        let result = try await Network.check(mint: mint, proofs: proofs)
+        return (result.spendable, result.pending)
+    }
+    
     //MARK: - Melt
     func melt(mint:Mint, invoice:String) async throws -> Bool {
         let invoiceAmount = try QuoteRequestResponse.satAmountFromInvoice(pr: invoice)
@@ -155,16 +163,23 @@ class Wallet {
         
         self.database = Database(mnemonic: mnemonic, secretDerivationCounter: 0)
         self.database.seed = String(bytes: newMnemonic.seed)
-        self.database.mints.append(Mint(url: URL(string: "https://mint.zeugmaster.com:3338")!, activeKeyset: nil, allKeysets: nil))
+        self.database.mints.append(Mint(url: URL(string: "https://8333.space:3338")!, activeKeyset: nil, allKeysets: nil))
         try await updateMints()
         self.database.saveToFile() //overrides existing
         for mint in database.mints {
             for keyset in mint.allKeysets! {
-                let responsetuple = await restoreProofs(mint: mint, keysetID: keyset.id, seed: self.database.seed!)
-                self.database.proofs.append(contentsOf: responsetuple.proofs)
-                self.database.secretDerivationCounter = responsetuple.lastMatchCounter
+                let (proofs, totalRestored, lastMatchCounter) = await restoreProofs(mint: mint, keysetID: keyset.id, seed: self.database.seed!)
+                self.database.secretDerivationCounter = lastMatchCounter
+                let (spendable, pending) = try await check(mint: mint, proofs: proofs)
+                guard spendable.count == proofs.count else {
+                    throw WalletError.restoreError(detail: "could not filter: proofs, spendable need matching lenght")
+                }
+                var spendableProofs = [Proof]()
+                for i in 0..<spendable.count {
+                    if spendable[i] { spendableProofs.append(proofs[i]) }
+                }
+                self.database.proofs.append(contentsOf: spendableProofs)
                 self.database.saveToFile()
-                print(responsetuple)
             }
         }
     }

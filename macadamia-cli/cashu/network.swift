@@ -93,6 +93,20 @@ enum Network {
         }
         return decoded.promises
     }
+    
+    //MARK: - STATE CHECK
+    static func check(mint:Mint, proofs:[Proof]) async throws -> StateCheckResponse {
+        let url = mint.url.appending(path: "check")
+        guard let payload = try? JSONEncoder().encode(["proofs":proofs]) else {
+            throw NetworkError.encodingError
+        }
+        let httpReq = URLRequest.post(url: url, body: payload)
+        let (data, response) = try await URLSession.shared.data(for: httpReq)
+        guard let decoded = try? JSONDecoder().decode(StateCheckResponse.self, from: data) else {
+            throw parseHTTPErrorResponse(data: data, response: response)
+        }
+        return decoded
+    }
 
     //MARK: - MELT    
     static func melt(mint:Mint, meltRequest:MeltRequest) async throws -> MeltRequestResponse {

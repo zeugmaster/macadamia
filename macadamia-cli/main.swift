@@ -27,6 +27,7 @@ func start() {
             - send
             - receive
             - melt 
+            - check
             - restore or
             - balance?
             """)
@@ -47,6 +48,8 @@ func start() {
             print("not supported yet")
         case "restore":
             restore()
+        case "check":
+            check()
         default:
             print("invalid input. please try again")
             askInput()
@@ -102,6 +105,19 @@ func start() {
                 print(error)
             }
         }
+    }
+    
+    func check() {
+        Task {
+            do {
+                let result =  try await wallet.check(mint:wallet.database.mints[0], proofs:wallet.database.proofs)
+                print(result)
+                print(wallet.database.proofs)
+            } catch {
+                print(error)
+            }
+        }
+        //dispatchGroup.leave()
     }
     
     func restore() {

@@ -160,10 +160,13 @@ struct Token_JSON: Codable {
     let mint: String
     var proofs: [Proof]
 }
-
 struct RestoreRequestResponse:Decodable {
     let outputs:[Output]
     let promises:[Promise]
+}
+struct StateCheckResponse: Codable {
+    let spendable:[Bool]
+    let pending:[Bool]
 }
 
 extension String {
