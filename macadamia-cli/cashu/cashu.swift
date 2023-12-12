@@ -12,6 +12,8 @@ class Wallet {
         case unknownMintError //TODO: should not be treated like an error
         case missingMintKeyset
         case insufficientFunds(mint:Mint)
+        case invalidInvoiceError
+        case invalidSplitAmounts
     }
     
     var database = Database.loadFromFile() //TODO: set to private
@@ -87,30 +89,12 @@ class Wallet {
             self.database.saveToFile()
             return try serializeProofs(proofs: proofs)
         } else if amount < sum {
-            let toSend = splitIntoBase2Numbers(n: amount)
-            let rest = splitIntoBase2Numbers(n: sum-amount)
-            let combined = (toSend+rest).sorted()
-            let (outputs, bfs, secrets) = generateDeterministicOutputs(counter: database.secretDerivationCounter,
-                                                                       seed: database.seed!,
-                                                                       amounts: combined,
-                                                                       keysetID: mint.activeKeyset!.id)
-            let newPromises = try await Network.split(for: mint, proofs: proofs, outputs: outputs)
-            guard let keys = mint.activeKeyset?.keys else {
-                throw WalletError.missingMintKeyset
-            }
-            var newProofs = unblindPromises(promises: newPromises, blindingFactors: bfs, secrets: secrets, mintPublicKeys: keys)
-            var sendProofs = [Proof]()
-            for n in toSend {
-                if let index = newProofs.firstIndex(where: {$0.amount == n}) {
-                    sendProofs.append(newProofs[index])
-                    newProofs.remove(at: index)
-                }
-            }
+            let (new, change) = try await split(mint: mint, totalProofs: proofs, at: amount)
             database.removeProofsFromValid(proofsToRemove: proofs)
-            database.proofs.append(contentsOf: newProofs)
-            database.secretDerivationCounter += outputs.count
+            database.proofs.append(contentsOf: change)
+            database.secretDerivationCounter += (new.count + change.count)
             database.saveToFile()
-            return try serializeProofs(proofs: sendProofs)
+            return try serializeProofs(proofs: new)
         } else {
             throw WalletError.unknownMintError
         }
@@ -142,40 +126,24 @@ class Wallet {
     }
     
     //MARK: - Melt
-    func melt(mint:Mint, invoice:String, completion: @escaping (Result<Void,Error>) -> Void) {
-        // 1. check fee (maybe again)
-        // 2. determine invoice amnt
-        // 3. retrieve proofs from db for amount + fee
-        // 4. TODO: implement change proofs for melting, FIX HORRIBLE NESTING
-        
-        Network.checkFee(mint: mint, invoice: invoice) { checkFeeResult in
-            switch checkFeeResult {
-            case .success(let fee):
-                if let invoiceAmount = QuoteRequestResponse.satAmountFromInvoice(pr: invoice) {
-                    let total = invoiceAmount + fee
-                    if let (proofs, sum) = try? self.database.retrieveProofs(from: mint, amount: total) {
-                        Network.meltRequest(mint: mint, meltRequest: MeltRequest(proofs: proofs, pr: invoice)) { meltRequestResult in
-                            switch meltRequestResult {
-                            case .success():
-                                self.database.removeProofsFromValid(proofsToRemove: proofs)
-                                self.database.saveToFile()
-                                completion(.success(()))
-                            case .failure(let meltError):
-                                completion(.failure(meltError))
-                            }
-                        }
-                    } else {
-                        print("did not receive (enough) proofs for melting tokens")
-                    }
-                } else {
-                    //FIXME: needs correct error type
-                    completion(.failure(NetworkError.decodingError))
-                }
-            case .failure(let error):
-                print(error)
-            }
+    func melt(mint:Mint, invoice:String) async throws -> Bool {
+        let invoiceAmount = try QuoteRequestResponse.satAmountFromInvoice(pr: invoice)
+        let fee = try await Network.checkFee(mint: mint, invoice: invoice)
+        let (proofs, _) = try database.retrieveProofs(from: mint, amount: invoiceAmount)
+        let (new, change) = try await split(mint: mint, totalProofs: proofs, at: invoiceAmount+fee)
+        database.removeProofsFromValid(proofsToRemove: proofs)
+        let meltReqResponse = try await Network.melt(mint: mint, meltRequest: MeltRequest(proofs: new, pr: invoice))
+        database.proofs.append(contentsOf: change)
+        if meltReqResponse.paid {
+            database.saveToFile()
+            return true
+        } else {
+            database.proofs.append(contentsOf: new) //putting the proofs back
+            database.saveToFile()
+            return false
         }
     }
+    
         
     //MARK: - Restore
     func restoreWithMnemonic(mnemonic:String) async throws {
@@ -257,6 +225,33 @@ class Wallet {
     }
 
     //MARK: - HELPERS
+    private func split(mint:Mint, totalProofs:[Proof], at amount:Int) async throws -> (new:[Proof], change:[Proof]) {
+        let sum = totalProofs.reduce(0) { $0 + $1.amount }
+        guard sum >= amount else {
+            throw WalletError.invalidSplitAmounts
+        }
+        let toSend = splitIntoBase2Numbers(n: amount)
+        let rest = splitIntoBase2Numbers(n: sum-amount)
+        let combined = (toSend+rest).sorted()
+        guard let keys = mint.activeKeyset?.keys else {
+            throw WalletError.missingMintKeyset
+        }
+        let (outputs, bfs, secrets) = generateDeterministicOutputs(counter: database.secretDerivationCounter,
+                                                                   seed: database.seed!,
+                                                                   amounts: combined,
+                                                                   keysetID: mint.activeKeyset!.id)
+        let newPromises = try await Network.split(for: mint, proofs: totalProofs, outputs: outputs)
+        var newProofs = unblindPromises(promises: newPromises, blindingFactors: bfs, secrets: secrets, mintPublicKeys: keys)
+        var sendProofs = [Proof]()
+        for n in toSend {
+            if let index = newProofs.firstIndex(where: {$0.amount == n}) {
+                sendProofs.append(newProofs[index])
+                newProofs.remove(at: index)
+            }
+        }
+        return (sendProofs, newProofs)
+    }
+    
     private func serializeProofs(proofs: [Proof]) throws -> String {
         guard let mint = database.mintForKeysetID(id: proofs[0].id) else {
             throw WalletError.tokenSerializationError(detail: "no mint found for keyset id: \(proofs[0].id)")
@@ -281,7 +276,7 @@ class Wallet {
         return tokenContainer.token
     }
 
-    func splitIntoBase2Numbers(n: Int) -> [Int] {
+    private func splitIntoBase2Numbers(n: Int) -> [Int] {
         var remaining = n
         var result: [Int] = []
         while remaining > 0 {

@@ -92,17 +92,15 @@ func start() {
     }
     
     func melt() {
-        print("enter the bolt11 invoice and press enter")
-        let invoice = readLine()!
-        //check validity
-        wallet.melt(mint: wallet.database.mints[0], invoice: invoice) { meltReqResult in
-            switch meltReqResult {
-            case .success():
-                print("yyyyeeeeaaaahhh")
-            case .failure(let error):
-                print("something went wrong: \(error)")
+        Task {
+            print("enter the bolt11 invoice and press enter")
+            let invoice = readLine()!
+            do {
+                let paid = try await wallet.melt(mint: wallet.database.mints[0], invoice: invoice)
+                print(paid)
+            } catch {
+                print(error)
             }
-            dispatchGroup.leave()
         }
     }
     
@@ -119,7 +117,7 @@ func start() {
         }
     }
     
-    func numberInput() -> Int {
+    @Sendable func numberInput() -> Int {
         var amount = 0
         while amount == 0 {
             print("Please enter amount: ", terminator: "")

@@ -94,62 +94,37 @@ enum Network {
         return decoded.promises
     }
 
-    //MARK: - MELT
-    static func meltRequest(mint:Mint, meltRequest:MeltRequest, completion: @escaping (Result<Void,Error>) -> Void) {
-        // POST
+    //MARK: - MELT    
+    static func melt(mint:Mint, meltRequest:MeltRequest) async throws -> MeltRequestResponse {
         guard let payload = try? JSONEncoder().encode(meltRequest) else {
-            completion(.failure(NetworkError.encodingError))
-            return
+            throw NetworkError.encodingError
         }
-        var request = URLRequest(url: mint.url.appending(path: "melt"))
-        request.httpMethod = "POST"
-        request.httpBody = payload
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let task = URLSession.shared.dataTask(with: request) { data, httpResponse, error in
-            if data != nil && error == nil {
-                if let response = try? JSONDecoder().decode(MeltRequestResponse.self, from: data!), response.paid {
-                    completion(.success(()))
-                } else {
-                    print(String(data: data!, encoding: .utf8)!)
-                    completion(.failure(NetworkError.meltError))
-                }
-            } else {
-                completion(.failure(error ?? NetworkError.decodingError))
-            }
+        var httpReq = URLRequest(url: mint.url.appending(path: "melt"))
+        httpReq.httpMethod = "POST"
+        httpReq.httpBody = payload
+        httpReq.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        let (data, response) = try await URLSession.shared.data(for: httpReq)
+        guard let decoded = try? JSONDecoder().decode(MeltRequestResponse.self, from: data) else {
+            throw parseHTTPErrorResponse(data: data, response: response)
         }
-        task.resume()
+        return decoded
     }
     
     //MARK: - CHECK FEE /checkfee
-    static func checkFee(mint:Mint, invoice:String, completion: @escaping (Result<Int,Error>) -> Void) {
-        
+    static func checkFee(mint:Mint, invoice:String) async throws -> Int {
         let jsonPayload: [String: String] = [
             "pr": invoice
         ]
-
         guard let jsonData = try? JSONSerialization.data(withJSONObject: jsonPayload, options: []) else {
-            print("whoops")
-            return
+            throw NetworkError.encodingError
         }
-        
-        var request = URLRequest(url: mint.url.appending(path: "checkfees"))
-        request.httpMethod = "POST"
-        request.httpBody = jsonData
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            if data != nil {
-                if let result = try? JSONSerialization.jsonObject(with: data!) as? [String:Int] {
-                    completion(.success(result["fee"]!))
-                } else {
-                    print("failed to decode fee as integer from response data")
-                    completion(.failure(NetworkError.decodingError))
-                }
-            }
+        let httpReq = URLRequest.post(url: mint.url.appending(path: "checkfees"), body: jsonData)
+        let (data, httpResponse) = try await URLSession.shared.data(for: httpReq)
+        guard let decoded = try? JSONSerialization.jsonObject(with: data) as? [String:Int],
+              let fee = decoded["fee"] else {
+            throw parseHTTPErrorResponse(data: data, response: httpResponse)
         }
-
-        task.resume()
+        return fee
     }
 
     //MARK: - RESTORE
@@ -190,3 +165,12 @@ enum Network {
     }
 }
 
+extension URLRequest {
+    static func post(url:URL, body:Data) -> URLRequest {
+        var httpRequest = URLRequest(url: url)
+        httpRequest.httpMethod = "POST"
+        httpRequest.httpBody = body
+        httpRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        return httpRequest
+    }
+}
