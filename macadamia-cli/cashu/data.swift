@@ -78,7 +78,7 @@ public class Database: Codable {
         }
         throw Wallet.WalletError.insufficientFunds(mint: mint)
     }
-    
+
     func removeProofsFromValid(proofsToRemove:[Proof]) {
         let new = proofs.filter { item1 in
                 !proofsToRemove.contains { item2 in

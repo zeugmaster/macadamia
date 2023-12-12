@@ -45,7 +45,7 @@ func start() {
         case "melt":
             melt()
         case "balance":
-            print("not supported yet")
+            balance()
         case "restore":
             restore()
         case "check":
@@ -92,6 +92,10 @@ func start() {
             }
             dispatchGroup.leave()
         }
+    }
+    
+    func balance() {
+        print(wallet.balance(mint: nil))
     }
     
     func melt() {

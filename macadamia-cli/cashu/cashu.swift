@@ -67,6 +67,21 @@ class Wallet {
         
     }
     
+    //MARK: - BALANCE CHECK
+    func balance(mint:Mint?) -> Int {
+        var sum:Int = 0
+        if mint == nil {
+            sum = database.proofs.reduce(0) { $0 + $1.amount }
+        } else {
+            for proof in database.proofs {
+                if mint!.allKeysets!.contains(where: {$0.id == proof.id}) {
+                    sum += proof.amount
+                }
+            }
+        }
+        return sum
+    }
+    
     //MARK: - Mint
     func getQuote(from mint:Mint,for amount:Int) async throws -> QuoteRequestResponse {
         let quote = try await Network.requestQuote(for: amount, from: mint)
