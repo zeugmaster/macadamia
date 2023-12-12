@@ -77,8 +77,21 @@ enum Network {
     }
 
     //MARK: - SPLIT
-    func splitRequest() {
+    static func split(for mint:Mint, proofs:[Proof], outputs:[Output]) async throws -> [Promise] {
         // POST
+        let url = mint.url.appending(path: "/split")
+        guard let payload = try? JSONEncoder().encode(SplitRequest_JSON(proofs: proofs, outputs: outputs)) else {
+            throw NetworkError.encodingError
+        }
+        var httpReq = URLRequest(url: url)
+        httpReq.httpMethod = "POST"
+        httpReq.httpBody = payload
+        httpReq.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        let (data, response) = try await URLSession.shared.data(for: httpReq)
+        guard let decoded = try? JSONDecoder().decode(SignatureRequestResponse.self, from: data) else {
+            throw parseHTTPErrorResponse(data: data, response: response)
+        }
+        return decoded.promises
     }
 
     //MARK: - MELT

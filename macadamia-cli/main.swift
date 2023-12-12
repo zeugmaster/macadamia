@@ -54,14 +54,6 @@ func start() {
     }
         
     func startMint() {
-//        wallet.mint(amount: numberInput(), mint: wallet.database.mints[0]) { prResult in
-//            print(prResult)
-//            print("press enter when invoice is payed")
-//            _ = readLine()
-//        } mintCompletion: { mintResult in
-//            //print(mintResult)
-//            dispatchGroup.leave()
-//        }
         Task {
             let chosenAmount = numberInput()
             let pr = try await wallet.getQuote(from:wallet.database.mints[0], for:chosenAmount)
@@ -74,11 +66,12 @@ func start() {
     }
     
     func send() {
-        wallet.sendTokens(mint: wallet.database.mints[0], amount: numberInput()) { result in
-            switch result {
-            case.success(let tokenString):
-                print("here is your token: \(tokenString)")
-            case .failure(let error):
+        Task {
+            let amount = numberInput()
+            do {
+                let token = try await wallet.sendTokens(from:wallet.database.mints[0], amount:amount)
+                print("here is your token: \(token)")
+            } catch {
                 print(error)
             }
             dispatchGroup.leave()
@@ -88,8 +81,12 @@ func start() {
     func receive() {
         print("paste your token")
         let token = readLine()!
-        wallet.receiveTokens(tokenString: token) { result in
-            print(result)
+        Task {
+            do {
+                try await wallet.receiveToken(tokenString: token)
+            } catch {
+                print("whoops! error: \(error)")
+            }
             dispatchGroup.leave()
         }
     }

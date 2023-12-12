@@ -59,7 +59,7 @@ public class Database: Codable {
         }
     }
     
-    func retrieveProofs(from mint:Mint, amount:Int) -> [Proof]? {
+    func retrieveProofs(from mint:Mint, amount:Int) throws -> (proofs:[Proof], sum:Int) {
         //load all mint keysets
         print("looking for proofs from \(mint.url) with total amount: \(amount)")
         var sum = 0
@@ -73,10 +73,10 @@ public class Database: Codable {
                 }
             }
             if sum >= amount {
-                return collected
+                return (collected, sum)
             }
         }
-        return nil
+        throw Wallet.WalletError.insufficientFunds(mint: mint)
     }
     
     func removeProofsFromValid(proofsToRemove:[Proof]) {

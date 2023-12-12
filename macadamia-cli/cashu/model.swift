@@ -20,20 +20,6 @@ struct Promise: Codable {
 struct SignatureRequestResponse: Codable {
     let promises: [Promise]
 }
-//
-//class Output: Codable {
-//    let amount: Int
-//    let output: String
-//    let secret: String
-//    let blindingFactor: String
-//    
-//    init(amount: Int, output: String, secret: String, blindingFactor: String) {
-//        self.amount = amount
-//        self.output = output
-//        self.secret = secret
-//        self.blindingFactor = blindingFactor
-//    }
-//}
 
 class Proof: Codable, Equatable, CustomStringConvertible {
     
