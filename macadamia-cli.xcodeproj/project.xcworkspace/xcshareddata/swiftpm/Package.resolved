@@ -1,0 +1,86 @@
+{
+  "pins" : [
+    {
+      "identity" : "base58",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/anquii/Base58.git",
+      "state" : {
+        "revision" : "7e4a1e4e6813c750ed2f9e80a0494c608eebb2ca",
+        "version" : "1.0.1"
+      }
+    },
+    {
+      "identity" : "base58check",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/anquii/Base58Check.git",
+      "state" : {
+        "revision" : "f35a770ff7f3fd553cc44057f492c0107cc7b481",
+        "version" : "1.0.1"
+      }
+    },
+    {
+      "identity" : "bigint",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/attaswift/BigInt.git",
+      "state" : {
+        "revision" : "0ed110f7555c34ff468e72e1686e59721f2b0da6",
+        "version" : "5.3.0"
+      }
+    },
+    {
+      "identity" : "bip32",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/zeugmaster/BIP32.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "0eb12768a95dff9de91cb023ae4275029c52f1f7"
+      }
+    },
+    {
+      "identity" : "bip39",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pengpengliu/BIP39",
+      "state" : {
+        "branch" : "master",
+        "revision" : "e79bd90275e50643cf8f97208ffa536d0def3ec7"
+      }
+    },
+    {
+      "identity" : "cryptoswiftwrapper",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/anquii/CryptoSwiftWrapper.git",
+      "state" : {
+        "revision" : "0d57e806de368b5d2364fabb7c789b48661ec90c",
+        "version" : "1.4.3"
+      }
+    },
+    {
+      "identity" : "ripemd160",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/anquii/RIPEMD160.git",
+      "state" : {
+        "revision" : "15679c6fe1f3ae32ec1bad63bcc45aa422954f01",
+        "version" : "1.0.0"
+      }
+    },
+    {
+      "identity" : "secp256k1.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GigaBitcoin/secp256k1.swift.git",
+      "state" : {
+        "revision" : "0f5f60ee9ad739c9603c3546c726a109d2c24cbd",
+        "version" : "0.14.0"
+      }
+    },
+    {
+      "identity" : "swift-bigint",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mkrd/Swift-BigInt.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "b07e961f4c999671cf8c2dc80e740899e8946013"
+      }
+    }
+  ],
+  "version" : 2
+}
