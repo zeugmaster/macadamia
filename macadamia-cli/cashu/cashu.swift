@@ -31,40 +31,59 @@ class Wallet {
     }
     
     func updateMints() async throws {
-        
         //add default mint
         if self.database.mints.isEmpty {
             let url = URL(string: "https://8333.space:3338")!
-            let m = Mint(url: url, activeKeyset: nil, allKeysets: nil)
-            self.database.mints.append(m)
-            
+            try await addMint(with: url)
         }
                 
         for mint in self.database.mints {
-            guard let allKeysetIDs = try? await Network.loadAllKeysetIDs(mintURL: mint.url) else {
-                print("could not get all keyset IDs")
-                continue
-            }
-            guard let activeKeysetDict = try? await Network.loadKeyset(mintURL: mint.url, keysetID: nil) else {
-                print("could not load current keyset of mint \(mint.url)")
-                continue
-            }
-            print(allKeysetIDs)
-            mint.allKeysets = []
-            for id in allKeysetIDs.keysets {
-                guard let keysetDict = try? await Network.loadKeyset(mintURL: mint.url, keysetID: id) else {
-                    print("could not get keyset with \(id) of mint \(mint.url)")
-                    continue
-                }
-                let keyset = Keyset(id: id, keys: keysetDict)
-                mint.allKeysets!.append(keyset)
-                if keysetDict == activeKeysetDict {
-                    mint.activeKeyset = keyset
-                }
-            }
+            try await refreshMintDetails(mint: mint)
         }
         self.database.saveToFile()
-        
+    }
+    
+    func addMint(with url:URL) async throws {
+        guard database.mints.contains(where: {$0.url == url}) == false else {
+            return
+        }
+        let allKeysetIDs = try await Network.loadAllKeysetIDs(mintURL: url)
+        let activeKeysetDict = try await Network.loadKeyset(mintURL: url, keysetID: nil)
+        let mintInfo = try await Network.mintInfo(mintURL: url)
+        var keysets = [Keyset]()
+        var activeKeyset:Keyset?
+        for id in allKeysetIDs.keysets {
+            let keysetDict = try await Network.loadKeyset(mintURL: url, keysetID: id)
+            let keyset = Keyset(id: id, keys: keysetDict, derivationCounter: 0)
+            keysets.append(keyset)
+            if keysetDict == activeKeysetDict {
+                activeKeyset = keyset
+            }
+        }
+        guard activeKeyset != nil else {
+            throw WalletError.missingMintKeyset
+        }
+        database.mints.append(Mint(url: url,
+                                   activeKeyset: activeKeyset!,
+                                   allKeysets: keysets,
+                                   info: mintInfo))
+    }
+    
+    private func refreshMintDetails(mint:Mint) async throws {
+        let allKeysetIDs = try await Network.loadAllKeysetIDs(mintURL: mint.url)
+        let activeKeysetDict = try await Network.loadKeyset(mintURL: mint.url, keysetID: nil)
+        for id in allKeysetIDs.keysets {
+            if mint.allKeysets.contains(where: {$0.id == id}) {
+                continue //if the keyset is already known, skip to the next
+            }
+            //if it is NOT KNOWN, download it, add it, set its derivationCounter to 0
+            let keysetDict = try await Network.loadKeyset(mintURL: mint.url, keysetID: id)
+            let keyset = Keyset(id: id, keys: keysetDict, derivationCounter: 0)
+            mint.allKeysets.append(keyset)
+            if keysetDict == activeKeysetDict {
+                mint.activeKeyset = keyset
+            }
+        }
     }
     
     //MARK: - BALANCE CHECK
@@ -74,7 +93,7 @@ class Wallet {
             sum = database.proofs.reduce(0) { $0 + $1.amount }
         } else {
             for proof in database.proofs {
-                if mint!.allKeysets!.contains(where: {$0.id == proof.id}) {
+                if mint!.allKeysets.contains(where: {$0.id == proof.id}) {
                     sum += proof.amount
                 }
             }
@@ -89,11 +108,11 @@ class Wallet {
     }
     
     func requestMint(from mint:Mint, for quote:QuoteRequestResponse, with amount:Int) async throws {
-        let (outputs, bfs, secrets) = generateDeterministicOutputs(counter: self.database.secretDerivationCounter, seed: self.database.seed!, amounts: splitIntoBase2Numbers(n: amount), keysetID: mint.activeKeyset!.id)
+        let (outputs, bfs, secrets) = generateDeterministicOutputs(counter: mint.activeKeyset.derivationCounter, seed: self.database.seed!, amounts: splitIntoBase2Numbers(n: amount), keysetID: mint.activeKeyset.id)
         let promises = try await Network.requestSignature(mint: mint, outputs: outputs, amount: amount, invoiceHash: quote.hash)
-        let proofs = unblindPromises(promises: promises, blindingFactors: bfs, secrets: secrets, mintPublicKeys: mint.activeKeyset!.keys!)
+        let proofs = unblindPromises(promises: promises, blindingFactors: bfs, secrets: secrets, mintPublicKeys: mint.activeKeyset.keys)
         database.proofs.append(contentsOf: proofs)
-        database.secretDerivationCounter += proofs.count
+        mint.activeKeyset.derivationCounter += proofs.count
         database.saveToFile()
     }
     
@@ -108,7 +127,7 @@ class Wallet {
             let (new, change) = try await split(mint: mint, totalProofs: proofs, at: amount)
             database.removeProofsFromValid(proofsToRemove: proofs)
             database.proofs.append(contentsOf: change)
-            database.secretDerivationCounter += (new.count + change.count)
+            mint.activeKeyset.derivationCounter += (new.count + change.count)
             database.saveToFile()
             return try serializeProofs(proofs: new)
         } else {
@@ -126,18 +145,15 @@ class Wallet {
         guard let mint = self.database.mintForKeysetID(id: tokenlist[0].proofs[0].id) else {
             throw WalletError.unknownMintError
         }
-        guard let keyset = mint.activeKeyset,
-              keyset.keys != nil else {
-            throw WalletError.missingMintKeyset
-        }
-        let (newOutputs, bfs, secrets) = generateDeterministicOutputs(counter: self.database.secretDerivationCounter,
+        let keyset = mint.activeKeyset
+        let (newOutputs, bfs, secrets) = generateDeterministicOutputs(counter: mint.activeKeyset.derivationCounter,
                                                       seed: database.seed!,
                                                       amounts: amounts,
                                                       keysetID: keyset.id)
         let newPromises = try await Network.split(for: mint, proofs: tokenlist[0].proofs, outputs: newOutputs)
-        let newProofs = unblindPromises(promises: newPromises, blindingFactors: bfs, secrets: secrets, mintPublicKeys: keyset.keys!)
+        let newProofs = unblindPromises(promises: newPromises, blindingFactors: bfs, secrets: secrets, mintPublicKeys: keyset.keys)
         self.database.proofs.append(contentsOf: newProofs)
-        self.database.secretDerivationCounter += newProofs.count
+        mint.activeKeyset.derivationCounter += newProofs.count
         self.database.saveToFile()
     }
     
@@ -176,15 +192,15 @@ class Wallet {
             throw WalletError.invalidMnemonicError
         }
         
-        self.database = Database(mnemonic: mnemonic, secretDerivationCounter: 0)
+        self.database = Database(mnemonic: mnemonic)
         self.database.seed = String(bytes: newMnemonic.seed)
-        self.database.mints.append(Mint(url: URL(string: "https://8333.space:3338")!, activeKeyset: nil, allKeysets: nil))
+        try await addMint(with: URL(string: "https://8333.space:3338")!)
         try await updateMints()
         self.database.saveToFile() //overrides existing
         for mint in database.mints {
-            for keyset in mint.allKeysets! {
+            for keyset in mint.allKeysets {
                 let (proofs, totalRestored, lastMatchCounter) = await restoreProofs(mint: mint, keysetID: keyset.id, seed: self.database.seed!)
-                self.database.secretDerivationCounter = lastMatchCounter
+                keyset.derivationCounter = lastMatchCounter
                 let (spendable, pending) = try await check(mint: mint, proofs: proofs)
                 guard spendable.count == proofs.count else {
                     throw WalletError.restoreError(detail: "could not filter: proofs, spendable need matching lenght")
@@ -201,7 +217,7 @@ class Wallet {
     
     private func restoreProofs(mint:Mint, keysetID:String, seed:String, batchSize:Int = 10) async -> (proofs:[Proof], totalRestored:Int, lastMatchCounter:Int) {
         
-        guard let mintPubkeys = mint.allKeysets?.first(where: {$0.id == keysetID})?.keys else {
+        guard let mintPubkeys = mint.allKeysets.first(where: {$0.id == keysetID})?.keys else {
             print("ERROR: could not find public keys for keyset: \(keysetID)")
             return ([], 0, 0) //FIXME: should be error handling instead
         }
@@ -263,13 +279,11 @@ class Wallet {
         let toSend = splitIntoBase2Numbers(n: amount)
         let rest = splitIntoBase2Numbers(n: sum-amount)
         let combined = (toSend+rest).sorted()
-        guard let keys = mint.activeKeyset?.keys else {
-            throw WalletError.missingMintKeyset
-        }
-        let (outputs, bfs, secrets) = generateDeterministicOutputs(counter: database.secretDerivationCounter,
+        let keys = mint.activeKeyset.keys
+        let (outputs, bfs, secrets) = generateDeterministicOutputs(counter: mint.activeKeyset.derivationCounter,
                                                                    seed: database.seed!,
                                                                    amounts: combined,
-                                                                   keysetID: mint.activeKeyset!.id)
+                                                                   keysetID: mint.activeKeyset.id)
         let newPromises = try await Network.split(for: mint, proofs: totalProofs, outputs: outputs)
         var newProofs = unblindPromises(promises: newPromises, blindingFactors: bfs, secrets: secrets, mintPublicKeys: keys)
         var sendProofs = [Proof]()

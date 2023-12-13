@@ -56,13 +56,15 @@ struct SplitRequest_JSON: Codable {
 //TODO: one mint can have one URL, but multiple <Keysets> with keys and keyset_ids
 class Mint: Codable {
     let url: URL
-    var activeKeyset: Keyset?
-    var allKeysets: [Keyset]?
+    var activeKeyset: Keyset
+    var allKeysets: [Keyset]
+    var info:MintInfo
     
-    init(url: URL, activeKeyset: Keyset?, allKeysets: [Keyset]?) {
+    init(url: URL, activeKeyset: Keyset, allKeysets: [Keyset], info: MintInfo) {
         self.url = url
         self.activeKeyset = activeKeyset
         self.allKeysets = allKeysets
+        self.info = info
     }
     
     static func calculateKeysetID(keyset:Dictionary<String,String>) -> String {
@@ -102,9 +104,25 @@ class Mint: Codable {
     }
 }
 
-struct Keyset: Codable {
+struct MintInfo: Codable {
+    let name: String
+    let pubkey: String
+    let version: String
+    let contact: [[String]] //FIXME: array in array?
+    let nuts: [String]
+    let parameter:Dictionary<String,Bool>
+}
+
+class Keyset: Codable {
     let id: String
-    let keys: Dictionary<String, String>? //we might need ID while not having access to old keys
+    let keys: Dictionary<String, String>
+    var derivationCounter:Int
+    
+    init(id: String, keys: Dictionary<String, String>, derivationCounter: Int) {
+        self.id = id
+        self.keys = keys
+        self.derivationCounter = derivationCounter
+    }
 }
 
 struct QuoteRequestResponse: Codable {

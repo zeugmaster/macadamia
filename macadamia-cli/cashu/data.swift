@@ -16,21 +16,18 @@ public class Database: Codable {
     
     var mnemonic:String?
     var seed:String?
-    var secretDerivationCounter:Int
     
     init(proofs: [Proof] = [], 
          pendingProofs: [Proof] = [],
          mints: [Mint] = [],
          pendingOutputs: [Output] = [],
-         mnemonic: String? = nil,
-         secretDerivationCounter:Int = 0) {
+         mnemonic: String? = nil) {
         
         self.proofs = proofs
         self.pendingProofs = pendingProofs
         self.mints = mints
         self.pendingOutputs = pendingOutputs
         self.mnemonic = mnemonic
-        self.secretDerivationCounter = secretDerivationCounter
     }
     
     private static func getFilePath() -> URL {
@@ -65,7 +62,7 @@ public class Database: Codable {
         var sum = 0
         var collected = [Proof]()
         for proof in self.proofs {
-            for ks in mint.allKeysets! {
+            for ks in mint.allKeysets {
                 if ks.id == proof.id {
                     collected.append(proof)
                     sum += proof.amount
@@ -90,7 +87,7 @@ public class Database: Codable {
     
     func mintForKeysetID(id:String) -> Mint? {
         if let foundMint = self.mints.first(where: { mint in
-            mint.allKeysets!.contains(where: { keyset in
+            mint.allKeysets.contains(where: { keyset in
                 keyset.id == id
             })
         }) {
