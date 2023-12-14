@@ -11,6 +11,19 @@
 		372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
 		372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */; };
+		379212262B29E6580081F161 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792121F2B29E6580081F161 /* model.swift */; };
+		379212272B29E6580081F161 /* data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212202B29E6580081F161 /* data.swift */; };
+		379212282B29E6580081F161 /* network.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212212B29E6580081F161 /* network.swift */; };
+		379212292B29E6580081F161 /* crypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212222B29E6580081F161 /* crypto.swift */; };
+		3792122A2B29E6580081F161 /* Base64FS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212232B29E6580081F161 /* Base64FS.swift */; };
+		3792122B2B29E6580081F161 /* cashu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212242B29E6580081F161 /* cashu.swift */; };
+		3792122E2B29E7520081F161 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 3792122D2B29E7520081F161 /* BigNumber */; };
+		379212312B29E7900081F161 /* BIP32 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212302B29E7900081F161 /* BIP32 */; };
+		379212342B29E7B30081F161 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212332B29E7B30081F161 /* BIP39 */; };
+		379212382B2A365F0081F161 /* ContactsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212372B2A365F0081F161 /* ContactsView.swift */; };
+		3792123A2B2A36830081F161 /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212392B2A36830081F161 /* WalletView.swift */; };
+		3792123C2B2A36970081F161 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792123B2B2A36970081F161 /* SettingsView.swift */; };
+		3792123E2B2AFFC40081F161 /* MintRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792123D2B2AFFC40081F161 /* MintRequestView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +32,17 @@
 		372034BB2B29E1BC00C4F955 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		372034BD2B29E1BD00C4F955 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		3792121F2B29E6580081F161 /* model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = model.swift; sourceTree = "<group>"; };
+		379212202B29E6580081F161 /* data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = data.swift; sourceTree = "<group>"; };
+		379212212B29E6580081F161 /* network.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = network.swift; sourceTree = "<group>"; };
+		379212222B29E6580081F161 /* crypto.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = crypto.swift; sourceTree = "<group>"; };
+		379212232B29E6580081F161 /* Base64FS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Base64FS.swift; sourceTree = "<group>"; };
+		379212242B29E6580081F161 /* cashu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cashu.swift; sourceTree = "<group>"; };
+		379212252B29E6580081F161 /* macadamia-cli.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; name = "macadamia-cli.entitlements"; path = "macadamia-cli/macadamia-cli.entitlements"; sourceTree = SOURCE_ROOT; };
+		379212372B2A365F0081F161 /* ContactsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsView.swift; sourceTree = "<group>"; };
+		379212392B2A36830081F161 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
+		3792123B2B2A36970081F161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		3792123D2B2AFFC40081F161 /* MintRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintRequestView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -26,6 +50,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
+				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
+				379212312B29E7900081F161 /* BIP32 in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,6 +80,12 @@
 			children = (
 				372034B92B29E1BC00C4F955 /* macadamiaApp.swift */,
 				372034BB2B29E1BC00C4F955 /* ContentView.swift */,
+				3792123D2B2AFFC40081F161 /* MintRequestView.swift */,
+				379212392B2A36830081F161 /* WalletView.swift */,
+				3792123B2B2A36970081F161 /* SettingsView.swift */,
+				379212372B2A365F0081F161 /* ContactsView.swift */,
+				3792121E2B29E6580081F161 /* cashu */,
+				379212252B29E6580081F161 /* macadamia-cli.entitlements */,
 				372034BD2B29E1BD00C4F955 /* Assets.xcassets */,
 				372034BF2B29E1BD00C4F955 /* Preview Content */,
 			);
@@ -66,6 +99,20 @@
 			);
 			path = "Preview Content";
 			sourceTree = "<group>";
+		};
+		3792121E2B29E6580081F161 /* cashu */ = {
+			isa = PBXGroup;
+			children = (
+				379212242B29E6580081F161 /* cashu.swift */,
+				3792121F2B29E6580081F161 /* model.swift */,
+				379212202B29E6580081F161 /* data.swift */,
+				379212212B29E6580081F161 /* network.swift */,
+				379212222B29E6580081F161 /* crypto.swift */,
+				379212232B29E6580081F161 /* Base64FS.swift */,
+			);
+			name = cashu;
+			path = "macadamia-cli/cashu";
+			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */
 
@@ -83,6 +130,11 @@
 			dependencies = (
 			);
 			name = macadamia;
+			packageProductDependencies = (
+				3792122D2B29E7520081F161 /* BigNumber */,
+				379212302B29E7900081F161 /* BIP32 */,
+				379212332B29E7B30081F161 /* BIP39 */,
+			);
 			productName = macadamia;
 			productReference = 372034B62B29E1BC00C4F955 /* macadamia.app */;
 			productType = "com.apple.product-type.application";
@@ -111,6 +163,11 @@
 				Base,
 			);
 			mainGroup = 372034AD2B29E1BC00C4F955;
+			packageReferences = (
+				3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */,
+				3792122F2B29E7900081F161 /* XCRemoteSwiftPackageReference "BIP32" */,
+				379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */,
+			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -138,7 +195,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */,
+				3792123A2B2A36830081F161 /* WalletView.swift in Sources */,
+				379212262B29E6580081F161 /* model.swift in Sources */,
+				3792122B2B29E6580081F161 /* cashu.swift in Sources */,
+				3792122A2B29E6580081F161 /* Base64FS.swift in Sources */,
+				379212282B29E6580081F161 /* network.swift in Sources */,
 				372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */,
+				379212382B2A365F0081F161 /* ContactsView.swift in Sources */,
+				3792123E2B2AFFC40081F161 /* MintRequestView.swift in Sources */,
+				379212292B29E6580081F161 /* crypto.swift in Sources */,
+				379212272B29E6580081F161 /* data.swift in Sources */,
+				3792123C2B2A36970081F161 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -275,21 +342,26 @@
 				DEVELOPMENT_TEAM = AN6VRTK6TB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = macadamia;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = zeugmaster.macadamia;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zeugmaster.macadamia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -304,21 +376,26 @@
 				DEVELOPMENT_TEAM = AN6VRTK6TB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = macadamia;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = zeugmaster.macadamia;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zeugmaster.macadamia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -344,6 +421,51 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mkrd/Swift-BigInt.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+		3792122F2B29E7900081F161 /* XCRemoteSwiftPackageReference "BIP32" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/anquii/BIP32";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pengpengliu/BIP39";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3792122D2B29E7520081F161 /* BigNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */;
+			productName = BigNumber;
+		};
+		379212302B29E7900081F161 /* BIP32 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3792122F2B29E7900081F161 /* XCRemoteSwiftPackageReference "BIP32" */;
+			productName = BIP32;
+		};
+		379212332B29E7B30081F161 /* BIP39 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */;
+			productName = BIP39;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 372034AE2B29E1BC00C4F955 /* Project object */;
 }

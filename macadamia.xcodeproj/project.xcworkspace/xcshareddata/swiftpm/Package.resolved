@@ -30,10 +30,10 @@
     {
       "identity" : "bip32",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/zeugmaster/BIP32.git",
+      "location" : "https://github.com/anquii/BIP32",
       "state" : {
         "branch" : "main",
-        "revision" : "0eb12768a95dff9de91cb023ae4275029c52f1f7"
+        "revision" : "2cbe4288f3abea9d2e36a8f094d9bae91a733113"
       }
     },
     {

@@ -59,6 +59,7 @@ class Wallet {
             if keysetDict == activeKeysetDict {
                 activeKeyset = keyset
             }
+            print(id)
         }
         guard activeKeyset != nil else {
             throw WalletError.missingMintKeyset
