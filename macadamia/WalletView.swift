@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct WalletView: View {
+    @StateObject var viewModel = WalletViewModel()
+    
     static let buttonPadding:CGFloat = 1
     var body: some View {
         NavigationStack {
@@ -16,7 +18,7 @@ struct WalletView: View {
                 HStack(alignment:.bottom) {
                     Spacer()
                     Spacer()
-                    Text("2100")
+                    Text(viewModel.totalBalance)
                         .monospaced()
                         .bold()
                         .dynamicTypeSize(.accessibility5)
@@ -103,4 +105,21 @@ struct WalletView: View {
 
 #Preview {
     WalletView()
+}
+
+class WalletViewModel:ObservableObject {
+    //@Published var totalBalanceString = "2101"
+    var wallet = Wallet.shared
+    
+    init(wallet: Wallet = Wallet.shared) {
+        self.wallet = wallet
+        Task {
+            try await wallet.updateMints()
+        }
+    }
+    
+    var totalBalance: String {
+        return "\(wallet.balance(mint: nil))"
+    }
+    
 }

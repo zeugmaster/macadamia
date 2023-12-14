@@ -54,7 +54,18 @@ struct SplitRequest_JSON: Codable {
 }
 
 //TODO: one mint can have one URL, but multiple <Keysets> with keys and keyset_ids
-class Mint: Codable, Identifiable {
+class Mint: Codable, Identifiable, Hashable {
+    
+    static func == (lhs: Mint, rhs: Mint) -> Bool {
+        lhs.url == rhs.url
+    }
+    
+    func hash(into hasher: inout Hasher) {
+            hasher.combine(url) // Combine all properties that contribute to the object's uniqueness
+            // If needed, combine more properties:
+            // hasher.combine(name)
+        }
+    
     let url: URL
     var activeKeyset: Keyset
     var allKeysets: [Keyset]

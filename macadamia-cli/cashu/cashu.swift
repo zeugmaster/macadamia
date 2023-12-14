@@ -5,6 +5,8 @@ import BIP39
 
 class Wallet {
     
+    static let shared = Wallet()
+    
     enum WalletError: Error {
         case invalidMnemonicError
         case tokenDeserializationError
@@ -19,14 +21,13 @@ class Wallet {
     
     var database = Database.loadFromFile() //TODO: set to private
     
-    init(database: Database = Database.loadFromFile()) {
-        self.database = database
-        
+    private init() {        
         if self.database.mnemonic == nil {
             let randomMnemonic = Mnemonic()
             self.database.mnemonic = randomMnemonic.phrase.joined(separator: " ")
             self.database.seed = String(bytes: randomMnemonic.seed)
             self.database.saveToFile()
+            print("wallet initialized")
         }
     }
     
@@ -193,7 +194,8 @@ class Wallet {
             throw WalletError.invalidMnemonicError
         }
         
-        self.database = Database(mnemonic: mnemonic)
+        self.database = Database.loadFromFile()
+        database.mnemonic = mnemonic
         self.database.seed = String(bytes: newMnemonic.seed)
         try await addMint(with: URL(string: "https://8333.space:3338")!)
         try await updateMints()

@@ -17,7 +17,7 @@ public class Database: Codable {
     var mnemonic:String?
     var seed:String?
     
-    init(proofs: [Proof] = [], 
+    private init(proofs: [Proof] = [], 
          pendingProofs: [Proof] = [],
          mints: [Mint] = [],
          pendingOutputs: [Output] = [],
