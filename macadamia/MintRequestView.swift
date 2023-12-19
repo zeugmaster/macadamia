@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct MintRequestView: View {
-    
-    @StateObject var viewmodel = MintRequestViewModel()
+    @ObservedObject var viewmodel: MintRequestViewModel
+    @Binding var navigationPath:NavigationPath
     
     var body: some View {
         Form {
@@ -32,29 +32,32 @@ struct MintRequestView: View {
         .navigationTitle("Mint")
         .navigationBarTitleDisplayMode(.inline)
         Spacer()
-        NavigationLink(destination: MintRequestInvoiceView(viewmodel: viewmodel)) {
+        Button(action: {
+            navigationPath.append("Second")
+        }, label: {
             Text("Request \(Image(systemName: "bolt.fill")) Invoice")
                 .frame(maxWidth: .infinity)
                 .padding()
                 .bold()
                 .foregroundColor(.white)
-        }
+        })
         .buttonStyle(.bordered)
         .padding()
         .toolbar(.hidden, for: .tabBar)
         .disabled(viewmodel.numberString.isEmpty || viewmodel.amount == 0)
     }
 }
-
-#Preview {
-    MintRequestView()
-}
+//
+//#Preview {
+//    MintRequestView()
+//}
 
 
 //MARK: -
 
 struct MintRequestInvoiceView: View {
     @ObservedObject var viewmodel:MintRequestViewModel
+    @Binding var navigationPath:NavigationPath
     
     var body: some View {
         VStack {
@@ -86,19 +89,21 @@ struct MintRequestInvoiceView: View {
             }
                 
             Spacer()
-            NavigationLink(destination: MintRequestCompletionView(viewModel: viewmodel)) {
+            Button(action: {
+                navigationPath.append("Third")
+            }, label: {
                 Text("I have paid the \(Image(systemName: "bolt.fill")) Invoice")
                     .frame(maxWidth: .infinity)
                     .padding()
                     .bold()
                     .foregroundColor(.white)
-            }
+            })
             .buttonStyle(.bordered)
             .padding()
             .toolbar(.hidden, for: .tabBar)
-            .disabled(viewmodel.loadingInvoice)
         }
         .onAppear(perform: {
+            #warning("needs safer flow")
             viewmodel.requestQuote()
         })
     }
@@ -106,18 +111,31 @@ struct MintRequestInvoiceView: View {
 
 struct MintRequestCompletionView: View {
     @ObservedObject var viewModel: MintRequestViewModel
+    @Binding var navigationPath:NavigationPath
     
     var body: some View {
         Text(viewModel.mintRequestState).onAppear(perform: {
             viewModel.requestMinting()
         })
-            
+        Spacer()
+        Button(action: {
+            navigationPath.removeLast(3)
+        }, label: {
+            Text("Back to Wallet")
+                .frame(maxWidth: .infinity)
+                .padding()
+                .bold()
+                .foregroundColor(.white)
+        })
+        .buttonStyle(.bordered)
+        .padding()
+        .toolbar(.hidden, for: .tabBar)
     }
 }
-
-#Preview {
-    MintRequestInvoiceView(viewmodel: MintRequestViewModel())
-}
+//
+//#Preview {
+//    MintRequestInvoiceView(viewmodel: MintRequestViewModel())
+//}
 
 
 @MainActor
@@ -148,8 +166,6 @@ class MintRequestViewModel: ObservableObject {
     }
     
     func requestQuote() {
-        print("lezgo")
-        
         loadingInvoice = true
         selectedMint = wallet.database.mints.first(where: {$0.url.absoluteString.contains(selectedMintString)})!
         

@@ -9,10 +9,12 @@ import SwiftUI
 
 struct WalletView: View {
     @StateObject var viewModel = WalletViewModel()
+    @StateObject var mintRequestViewModel = MintRequestViewModel()
+    @State var navigationPath = NavigationPath()
     
     static let buttonPadding:CGFloat = 1
     var body: some View {
-        NavigationStack {
+        NavigationStack(path:$navigationPath) {
             VStack {
                 Spacer(minLength: 100)
                 HStack(alignment:.bottom) {
@@ -71,7 +73,9 @@ struct WalletView: View {
                .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                 HStack {
                    // First button
-                    NavigationLink(destination: MintRequestView()) {
+                    Button(action: {
+                        navigationPath.append("First")
+                    }) {
                         Text("Mint")
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -98,6 +102,18 @@ struct WalletView: View {
                .padding(EdgeInsets(top: 0, leading: 20, bottom: 40, trailing: 20))
                
                 //Spacer()
+            }
+            .navigationDestination(for: String.self) { tag in
+                switch tag {
+                case "First":
+                    MintRequestView(viewmodel: mintRequestViewModel, navigationPath: $navigationPath)
+                case "Second":
+                    MintRequestInvoiceView(viewmodel: mintRequestViewModel, navigationPath: $navigationPath)
+                case "Third":
+                    MintRequestCompletionView(viewModel:mintRequestViewModel, navigationPath: $navigationPath)
+                default:
+                    EmptyView()
+                }
             }
         }
     }

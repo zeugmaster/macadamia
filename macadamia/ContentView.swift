@@ -17,14 +17,14 @@ struct ContentView: View {
                     Label("Wallet", systemImage: "bitcoinsign.circle")
                 }
             
-            
             // Second tab content
             ContactsView()
                 .tabItem {
                     Image(systemName: "person.2")
                     Text("nostr")
                 }
-                .badge(1)
+                .badge("!")
+                
             // Third tab content
             SettingsView()
                 .tabItem {
@@ -40,26 +40,3 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
-
-//extension ContentView {
-//    @MainActor class ViewModel: ObservableObject {
-//        var wallet:Wallet
-//        
-////        @Published var balance:Int
-//        
-//        init(wallet: Wallet) {
-//            self.wallet = wallet
-//        }
-//        
-//        func prepare() {
-//            Task {
-//                do {
-//                    try await wallet.updateMints()
-//                } catch {
-//                    
-//                }
-//            }
-//            
-//        }
-//    }
-//}
