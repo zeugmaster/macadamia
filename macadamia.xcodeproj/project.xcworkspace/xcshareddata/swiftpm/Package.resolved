@@ -55,6 +55,15 @@
       }
     },
     {
+      "identity" : "nostr-sdk-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/zeugmaster/nostr-sdk-ios.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "751f36841fad9b2ec922f3aec098bec14b2aae54"
+      }
+    },
+    {
       "identity" : "ripemd160",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/anquii/RIPEMD160.git",

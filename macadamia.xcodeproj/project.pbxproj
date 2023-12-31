@@ -25,6 +25,9 @@
 		3792123A2B2A36830081F161 /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212392B2A36830081F161 /* WalletView.swift */; };
 		3792123C2B2A36970081F161 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792123B2B2A36970081F161 /* SettingsView.swift */; };
 		3792123E2B2AFFC40081F161 /* MintRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792123D2B2AFFC40081F161 /* MintRequestView.swift */; };
+		379BDF552B4217E3008FD0E7 /* nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF532B4217E3008FD0E7 /* nostr.swift */; };
+		379BDF562B4217E3008FD0E7 /* NostrContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF542B4217E3008FD0E7 /* NostrContentView.swift */; };
+		379BDF592B421855008FD0E7 /* NostrSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 379BDF582B421855008FD0E7 /* NostrSDK */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +48,8 @@
 		379212392B2A36830081F161 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
 		3792123B2B2A36970081F161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3792123D2B2AFFC40081F161 /* MintRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintRequestView.swift; sourceTree = "<group>"; };
+		379BDF532B4217E3008FD0E7 /* nostr.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = nostr.swift; path = "macadamia-cli/nostr.swift"; sourceTree = SOURCE_ROOT; };
+		379BDF542B4217E3008FD0E7 /* NostrContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NostrContentView.swift; path = "macadamia-cli/NostrContentView.swift"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				379BDF592B421855008FD0E7 /* NostrSDK in Frameworks */,
 				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
 				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
 				379212312B29E7900081F161 /* BIP32 in Frameworks */,
@@ -86,6 +92,8 @@
 				3792123D2B2AFFC40081F161 /* MintRequestView.swift */,
 				3792123B2B2A36970081F161 /* SettingsView.swift */,
 				379212372B2A365F0081F161 /* ContactsView.swift */,
+				379BDF532B4217E3008FD0E7 /* nostr.swift */,
+				379BDF542B4217E3008FD0E7 /* NostrContentView.swift */,
 				3780EEE52B2B5C3F00971AE7 /* QRView.swift */,
 				3792121E2B29E6580081F161 /* cashu */,
 				379212252B29E6580081F161 /* macadamia-cli.entitlements */,
@@ -137,6 +145,7 @@
 				3792122D2B29E7520081F161 /* BigNumber */,
 				379212302B29E7900081F161 /* BIP32 */,
 				379212332B29E7B30081F161 /* BIP39 */,
+				379BDF582B421855008FD0E7 /* NostrSDK */,
 			);
 			productName = macadamia;
 			productReference = 372034B62B29E1BC00C4F955 /* macadamia.app */;
@@ -170,6 +179,7 @@
 				3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */,
 				3792122F2B29E7900081F161 /* XCRemoteSwiftPackageReference "BIP32" */,
 				379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */,
+				379BDF572B421855008FD0E7 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -199,12 +209,14 @@
 			files = (
 				372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */,
 				3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */,
+				379BDF552B4217E3008FD0E7 /* nostr.swift in Sources */,
 				3792123A2B2A36830081F161 /* WalletView.swift in Sources */,
 				379212262B29E6580081F161 /* model.swift in Sources */,
 				3792122B2B29E6580081F161 /* cashu.swift in Sources */,
 				3792122A2B29E6580081F161 /* Base64FS.swift in Sources */,
 				379212282B29E6580081F161 /* network.swift in Sources */,
 				372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */,
+				379BDF562B4217E3008FD0E7 /* NostrContentView.swift in Sources */,
 				379212382B2A365F0081F161 /* ContactsView.swift in Sources */,
 				3792123E2B2AFFC40081F161 /* MintRequestView.swift in Sources */,
 				379212292B29E6580081F161 /* crypto.swift in Sources */,
@@ -451,6 +463,14 @@
 				kind = branch;
 			};
 		};
+		379BDF572B421855008FD0E7 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/zeugmaster/nostr-sdk-ios.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -468,6 +488,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */;
 			productName = BIP39;
+		};
+		379BDF582B421855008FD0E7 /* NostrSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 379BDF572B421855008FD0E7 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */;
+			productName = NostrSDK;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
