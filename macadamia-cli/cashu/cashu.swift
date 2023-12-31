@@ -110,9 +110,18 @@ class Wallet {
     }
     
     func requestMint(from mint:Mint, for quote:QuoteRequestResponse, with amount:Int) async throws {
-        let (outputs, bfs, secrets) = generateDeterministicOutputs(counter: mint.activeKeyset.derivationCounter, seed: self.database.seed!, amounts: splitIntoBase2Numbers(n: amount), keysetID: mint.activeKeyset.id)
-        let promises = try await Network.requestSignature(mint: mint, outputs: outputs, amount: amount, invoiceHash: quote.hash)
-        let proofs = unblindPromises(promises: promises, blindingFactors: bfs, secrets: secrets, mintPublicKeys: mint.activeKeyset.keys)
+        let (outputs, bfs, secrets) = generateDeterministicOutputs(counter: mint.activeKeyset.derivationCounter,
+                                                                   seed: self.database.seed!,
+                                                                   amounts: splitIntoBase2Numbers(n: amount),
+                                                                   keysetID: mint.activeKeyset.id)
+        let promises = try await Network.requestSignature(mint: mint, 
+                                                          outputs: outputs,
+                                                          amount: amount,
+                                                          invoiceHash: quote.hash)
+        let proofs = unblindPromises(promises: promises, 
+                                     blindingFactors: bfs,
+                                     secrets: secrets,
+                                     mintPublicKeys: mint.activeKeyset.keys)
         database.proofs.append(contentsOf: proofs)
         mint.activeKeyset.derivationCounter += proofs.count
         database.saveToFile()
@@ -147,13 +156,18 @@ class Wallet {
         guard let mint = self.database.mintForKeysetID(id: tokenlist[0].proofs[0].id) else {
             throw WalletError.unknownMintError
         }
+        
         let keyset = mint.activeKeyset
         let (newOutputs, bfs, secrets) = generateDeterministicOutputs(counter: mint.activeKeyset.derivationCounter,
-                                                      seed: database.seed!,
-                                                      amounts: amounts,
-                                                      keysetID: keyset.id)
+                                                                      seed: database.seed!,
+                                                                      amounts: amounts,
+                                                                      keysetID: keyset.id)
+        
         let newPromises = try await Network.split(for: mint, proofs: tokenlist[0].proofs, outputs: newOutputs)
-        let newProofs = unblindPromises(promises: newPromises, blindingFactors: bfs, secrets: secrets, mintPublicKeys: keyset.keys)
+        let newProofs = unblindPromises(promises: newPromises, 
+                                        blindingFactors: bfs,
+                                        secrets: secrets,
+                                        mintPublicKeys: keyset.keys)
         self.database.proofs.append(contentsOf: newProofs)
         mint.activeKeyset.derivationCounter += newProofs.count
         self.database.saveToFile()
