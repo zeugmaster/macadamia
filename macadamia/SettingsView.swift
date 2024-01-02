@@ -6,8 +6,11 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct SettingsView: View {
+    
+    let sourceRepoURL = URL(string: "https://github.com/zeugmaster/macadamia")!
     
     var appVersion:String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
@@ -31,7 +34,17 @@ struct SettingsView: View {
                         Text("nostr")
                     }
                 Section {
-                    NavigationLink(destination: Text("Acknowledgments")) { Text("View source on Github") }
+                    HStack {
+                        Text("View source on Github")
+                        Spacer()
+                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                            .foregroundStyle(.secondary)
+                    }
+                    .onTapGesture {
+                        if UIApplication.shared.canOpenURL(sourceRepoURL) {
+                            UIApplication.shared.open(sourceRepoURL)
+                        }
+                    }
                     NavigationLink(destination: Text("Acknowledgments")) { Text("Acknowledgments") }
                 } header: {
                     Text("Information")
