@@ -70,7 +70,9 @@ struct MintRequestInvoiceView: View {
                     .foregroundColor(.secondary)
                     .monospaced()
                     .multilineTextAlignment(.center)
-                Button(action: viewmodel.copyToClipboard) {
+                Button {
+                    viewmodel.copyToClipboard()
+                } label: {
                     Image(systemName: "list.clipboard")
                         .dynamicTypeSize(.xxxLarge)
                 }
@@ -89,15 +91,15 @@ struct MintRequestInvoiceView: View {
             }
                 
             Spacer()
-            Button(action: {
+            Button {
                 navigationPath.append("Third")
-            }, label: {
+            } label: {
                 Text("I have paid the \(Image(systemName: "bolt.fill")) Invoice")
                     .frame(maxWidth: .infinity)
                     .padding()
                     .bold()
                     .foregroundColor(.white)
-            })
+            }
             .buttonStyle(.bordered)
             .padding()
             .toolbar(.hidden, for: .tabBar)
@@ -132,7 +134,7 @@ struct MintRequestCompletionView: View {
         .toolbar(.hidden, for: .tabBar)
     }
 }
-//
+
 //#Preview {
 //    MintRequestInvoiceView(viewmodel: MintRequestViewModel())
 //}

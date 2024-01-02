@@ -106,11 +106,14 @@ struct WalletView: View {
             .navigationDestination(for: String.self) { tag in
                 switch tag {
                 case "First":
-                    MintRequestView(viewmodel: mintRequestViewModel, navigationPath: $navigationPath)
+                    MintRequestView(viewmodel: mintRequestViewModel, 
+                                    navigationPath: $navigationPath)
                 case "Second":
-                    MintRequestInvoiceView(viewmodel: mintRequestViewModel, navigationPath: $navigationPath)
+                    MintRequestInvoiceView(viewmodel: mintRequestViewModel, 
+                                           navigationPath: $navigationPath)
                 case "Third":
-                    MintRequestCompletionView(viewModel:mintRequestViewModel, navigationPath: $navigationPath)
+                    MintRequestCompletionView(viewModel:mintRequestViewModel, 
+                                              navigationPath: $navigationPath)
                 default:
                     EmptyView()
                 }

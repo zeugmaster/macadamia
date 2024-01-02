@@ -18,7 +18,7 @@ struct ContentView: View {
                 }
             
             // Second tab content
-            NostrContentView()
+            NostrInboxView()
                 .tabItem {
                     Image(systemName: "person.2")
                     Text("nostr")

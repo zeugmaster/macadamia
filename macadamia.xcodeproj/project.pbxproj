@@ -21,13 +21,14 @@
 		3792122E2B29E7520081F161 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 3792122D2B29E7520081F161 /* BigNumber */; };
 		379212312B29E7900081F161 /* BIP32 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212302B29E7900081F161 /* BIP32 */; };
 		379212342B29E7B30081F161 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212332B29E7B30081F161 /* BIP39 */; };
-		379212382B2A365F0081F161 /* ContactsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212372B2A365F0081F161 /* ContactsView.swift */; };
 		3792123A2B2A36830081F161 /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212392B2A36830081F161 /* WalletView.swift */; };
 		3792123C2B2A36970081F161 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792123B2B2A36970081F161 /* SettingsView.swift */; };
 		3792123E2B2AFFC40081F161 /* MintRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792123D2B2AFFC40081F161 /* MintRequestView.swift */; };
-		379BDF552B4217E3008FD0E7 /* nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF532B4217E3008FD0E7 /* nostr.swift */; };
-		379BDF562B4217E3008FD0E7 /* NostrContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF542B4217E3008FD0E7 /* NostrContentView.swift */; };
 		379BDF592B421855008FD0E7 /* NostrSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 379BDF582B421855008FD0E7 /* NostrSDK */; };
+		379BDF5D2B42C554008FD0E7 /* NostrContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF5B2B42C554008FD0E7 /* NostrContentView.swift */; };
+		379BDF5E2B42C554008FD0E7 /* nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF5C2B42C554008FD0E7 /* nostr.swift */; };
+		379BDF602B430765008FD0E7 /* RelayManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */; };
+		379BDF622B430775008FD0E7 /* MintManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF612B430775008FD0E7 /* MintManagerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,12 +45,13 @@
 		379212232B29E6580081F161 /* Base64FS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Base64FS.swift; sourceTree = "<group>"; };
 		379212242B29E6580081F161 /* cashu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cashu.swift; sourceTree = "<group>"; };
 		379212252B29E6580081F161 /* macadamia-cli.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; name = "macadamia-cli.entitlements"; path = "macadamia-cli/macadamia-cli.entitlements"; sourceTree = SOURCE_ROOT; };
-		379212372B2A365F0081F161 /* ContactsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsView.swift; sourceTree = "<group>"; };
 		379212392B2A36830081F161 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
 		3792123B2B2A36970081F161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3792123D2B2AFFC40081F161 /* MintRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintRequestView.swift; sourceTree = "<group>"; };
-		379BDF532B4217E3008FD0E7 /* nostr.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = nostr.swift; path = "macadamia-cli/nostr.swift"; sourceTree = SOURCE_ROOT; };
-		379BDF542B4217E3008FD0E7 /* NostrContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NostrContentView.swift; path = "macadamia-cli/NostrContentView.swift"; sourceTree = SOURCE_ROOT; };
+		379BDF5B2B42C554008FD0E7 /* NostrContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NostrContentView.swift; sourceTree = "<group>"; };
+		379BDF5C2B42C554008FD0E7 /* nostr.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = nostr.swift; sourceTree = "<group>"; };
+		379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayManagerView.swift; sourceTree = "<group>"; };
+		379BDF612B430775008FD0E7 /* MintManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintManagerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,10 +92,8 @@
 				372034BB2B29E1BC00C4F955 /* ContentView.swift */,
 				379212392B2A36830081F161 /* WalletView.swift */,
 				3792123D2B2AFFC40081F161 /* MintRequestView.swift */,
-				3792123B2B2A36970081F161 /* SettingsView.swift */,
-				379212372B2A365F0081F161 /* ContactsView.swift */,
-				379BDF532B4217E3008FD0E7 /* nostr.swift */,
-				379BDF542B4217E3008FD0E7 /* NostrContentView.swift */,
+				379BDF632B430F32008FD0E7 /* Settings */,
+				379BDF5A2B42C4C4008FD0E7 /* nostr */,
 				3780EEE52B2B5C3F00971AE7 /* QRView.swift */,
 				3792121E2B29E6580081F161 /* cashu */,
 				379212252B29E6580081F161 /* macadamia-cli.entitlements */,
@@ -124,6 +124,25 @@
 			name = cashu;
 			path = "macadamia-cli/cashu";
 			sourceTree = SOURCE_ROOT;
+		};
+		379BDF5A2B42C4C4008FD0E7 /* nostr */ = {
+			isa = PBXGroup;
+			children = (
+				379BDF5B2B42C554008FD0E7 /* NostrContentView.swift */,
+				379BDF5C2B42C554008FD0E7 /* nostr.swift */,
+			);
+			path = nostr;
+			sourceTree = "<group>";
+		};
+		379BDF632B430F32008FD0E7 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				3792123B2B2A36970081F161 /* SettingsView.swift */,
+				379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */,
+				379BDF612B430775008FD0E7 /* MintManagerView.swift */,
+			);
+			name = Settings;
+			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
@@ -208,20 +227,21 @@
 			buildActionMask = 2147483647;
 			files = (
 				372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */,
+				379BDF602B430765008FD0E7 /* RelayManagerView.swift in Sources */,
 				3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */,
-				379BDF552B4217E3008FD0E7 /* nostr.swift in Sources */,
 				3792123A2B2A36830081F161 /* WalletView.swift in Sources */,
 				379212262B29E6580081F161 /* model.swift in Sources */,
 				3792122B2B29E6580081F161 /* cashu.swift in Sources */,
 				3792122A2B29E6580081F161 /* Base64FS.swift in Sources */,
 				379212282B29E6580081F161 /* network.swift in Sources */,
 				372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */,
-				379BDF562B4217E3008FD0E7 /* NostrContentView.swift in Sources */,
-				379212382B2A365F0081F161 /* ContactsView.swift in Sources */,
 				3792123E2B2AFFC40081F161 /* MintRequestView.swift in Sources */,
 				379212292B29E6580081F161 /* crypto.swift in Sources */,
+				379BDF5D2B42C554008FD0E7 /* NostrContentView.swift in Sources */,
 				379212272B29E6580081F161 /* data.swift in Sources */,
 				3792123C2B2A36970081F161 /* SettingsView.swift in Sources */,
+				379BDF622B430775008FD0E7 /* MintManagerView.swift in Sources */,
+				379BDF5E2B42C554008FD0E7 /* nostr.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

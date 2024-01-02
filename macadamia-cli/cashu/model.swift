@@ -113,6 +113,18 @@ class Mint: Codable, Identifiable, Hashable {
         
         return "00" + result
     }
+    
+    ///Pings the mint for it's info to check wether it is online or not
+    func checkAvailability() async -> Bool {
+        do {
+            // if the network doesn't throw an error we can assume the mint is online
+            let mintInfo = try await Network.mintInfo(mintURL: self.url)
+            //and return true
+            return true
+        } catch {
+            return false
+        }
+    }
 }
 
 struct MintInfo: Codable {

@@ -4,7 +4,7 @@ import NostrSDK
 import Combine
 import OSLog
 
-struct NostrContentView: View {
+struct NostrInboxView: View {
     @ObservedObject var viewmodel = ContentViewModel()
     var body: some View {
         VStack {
@@ -41,7 +41,9 @@ struct NostrContentView: View {
                             }
                         }
                     } header: {
-                        Text("Randos")
+                        if !viewmodel.randos.isEmpty {
+                            Text("Not in your contacts")
+                        }
                     }
                 }
             }

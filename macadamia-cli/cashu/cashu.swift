@@ -69,6 +69,7 @@ class Wallet {
                                    activeKeyset: activeKeyset!,
                                    allKeysets: keysets,
                                    info: mintInfo))
+        database.saveToFile()
     }
     
     private func refreshMintDetails(mint:Mint) async throws {
