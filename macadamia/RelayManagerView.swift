@@ -10,19 +10,41 @@ import NostrSDK
 
 
 struct RelayManagerView: View {
-    @ObservedObject var viewModel = RelayManagerViewModel()
+    @ObservedObject var vm = RelayManagerViewModel()
     
     var body: some View {
         List {
             Section {
-                ForEach(viewModel.relayList, id: \.url) { relay in
-                    Text(relay.url.absoluteString)
+                ForEach(vm.relayList, id: \.self) { relayURL in
+                    Text(relayURL)
                 }
-                .onDelete(perform: viewModel.removeRelay(at:))
-                TextField("enter new relay URL", text: $viewModel.newRelayURLString)
+                .onDelete(perform: { offsets in
+                    vm.removeRelay(at: offsets)
+                })
+                TextField("enter new relay URL", text: $vm.newRelayURLString)
+                    .onSubmit {vm.addRelay() }
+                    .autocorrectionDisabled(true)
+                    .textInputAutocapitalization(.never)
             } footer: {
                 Text("Swipe to delete. Changes will be in effect as soon as you restart the app. Relay URLs must have the correct prefix and format.")
             }
+        }
+        .alert(vm.currentAlert?.title ?? "Error", isPresented: $vm.showAlert) {
+            Button(role: .cancel) {
+                
+            } label: {
+                Text(vm.currentAlert?.primaryButtonText ?? "OK")
+            }
+            if vm.currentAlert?.onAffirm != nil &&
+                vm.currentAlert?.affirmText != nil {
+                Button(role: .destructive) {
+                    vm.currentAlert!.onAffirm!()
+                } label: {
+                    Text(vm.currentAlert!.affirmText!)
+                }
+            }
+        } message: {
+            Text(vm.currentAlert?.alertDescription ?? "")
         }
     }
 }
@@ -31,56 +53,53 @@ struct RelayManagerView: View {
     RelayManagerView()
 }
 
-
+@MainActor
 class RelayManagerViewModel: ObservableObject {
-    @Published var relayList = [Relay]()
+    @Published var relayList = [String]()
     @Published var error:Error?
     @Published var newRelayURLString = ""
     
+    @Published var showAlert:Bool = false
+    var currentAlert:AlertDetail?
+        
     init() {
-        do {
-            relayList = try [Relay(url: URL(string: "wss://test.test")!),
-                             Relay(url: URL(string: "wss://yabba.dabba")!),
-                             Relay(url: URL(string: "wss://doooo.oo")!)]
-        } catch {
-            print("unable")
-        }
+        relayList = NostrService.shared.dataManager.relayURLlist
     }
     
-    func addRelayWithUrlString(urlString:String) {
+    func addRelay() {
         // needs to check for uniqueness and URL format
+        
+        if !(newRelayURLString.hasPrefix("wss://") || newRelayURLString.hasPrefix("ws://")) {
+            displayAlert(alert: AlertDetail(title: "Missing prefix",
+                                           description: "URLs for nostr relays are websocket URLs and should start with wss:// or ws://"))
+        } else if relayList.contains(newRelayURLString) {
+            displayAlert(alert: AlertDetail(title: "Already added.",
+                                           description: "This URL is already in the list of relays, please choose another one."))
+        } else {
+            relayList.append(newRelayURLString)
+            NostrService.shared.dataManager.addRelay(with: newRelayURLString)
+        }
+        
+        newRelayURLString = ""
     }
     
     func removeRelay(at offsets:IndexSet) {
-        relayList.remove(atOffsets: offsets)
+        displayAlert(alert: AlertDetail(title: "Are you sure?",
+                                       description: "Do you really want to remove this nostr Relay?",
+                                        primaryButtonText: "Cancel",
+                                       affirmText: "Yes",
+                                        onAffirm: {
+            //should not be more than one index
+            offsets.forEach { index in
+                NostrService.shared.dataManager.removeRelay(with: self.relayList[index])
+                self.relayList.remove(atOffsets: offsets)
+            }
+        }))
+    }
+    
+    private func displayAlert(alert:AlertDetail) {
+        currentAlert = alert
+        showAlert = true
     }
 }
 
-
-// for future implementation of safer swipe-to-delete
-/*
- struct CustomSwipeListView: View {
-     @State private var items = ["Item 1", "Item 2", "Item 3"]
-
-     var body: some View {
-         List {
-             ForEach(items, id: \.self) { item in
-                 Text(item)
-                     .swipeActions {
-                         Button(role: .destructive) {
-                             // Handle the delete action
-                             if let index = items.firstIndex(of: item) {
-                                 items.remove(at: index)
-                             }
-                         } label: {
-                             Label("Delete", systemImage: "trash")
-                         }
-                     }
-                     // Optionally, configure the swipe actions to not perform on a full swipe
-                     .swipeActions(edge: .trailing, allowsFullSwipe: false)
-             }
-         }
-     }
- }
-
- */

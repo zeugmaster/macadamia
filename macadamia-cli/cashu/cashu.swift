@@ -72,6 +72,11 @@ class Wallet {
         database.saveToFile()
     }
     
+    func removeMint(with url:URL) {
+        database.mints.removeAll(where: { $0.url == url })
+        database.saveToFile()
+    }
+    
     private func refreshMintDetails(mint:Mint) async throws {
         let allKeysetIDs = try await Network.loadAllKeysetIDs(mintURL: mint.url)
         let activeKeysetDict = try await Network.loadKeyset(mintURL: mint.url, keysetID: nil)
@@ -90,7 +95,7 @@ class Wallet {
     }
     
     //MARK: - BALANCE CHECK
-    func balance(mint:Mint?) -> Int {
+    func balance(mint:Mint? = nil) -> Int {
         var sum:Int = 0
         if mint == nil {
             sum = database.proofs.reduce(0) { $0 + $1.amount }

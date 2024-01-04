@@ -23,7 +23,6 @@ struct ContentView: View {
                     Image(systemName: "person.2")
                     Text("nostr")
                 }
-                .badge("!")
                 
             // Third tab content
             SettingsView()

@@ -10,10 +10,10 @@ import NostrSDK
 import OSLog
 import Combine
 
-#warning("change to appropriate subsystem")
-var logger = Logger(subsystem: "zeugmaster.nostr-test", category: "nostr")
 
-class Profile: Equatable, CustomStringConvertible, ObservableObject {
+var logger = Logger(subsystem: "zeugmaster.macadamia", category: "nostr")
+
+class Profile: Equatable, CustomStringConvertible, Codable {
     var description: String {
         let description = "\(npub.prefix(12)) name: \(name ?? "nil")"
         return description
@@ -52,15 +52,9 @@ enum ContactServiceError: Error {
     case relayQueryError
 }
 
-class ContactService: EventCreating {
+class NostrService: EventCreating {
     
-    let relayURLs = ["wss://relay.damus.io",
-                     "wss://nostr.wine",
-                     "wss://filter.nostr.wine/npub1f742zec57c6qk9ajfr8wyjn0s4vrfzh4hesyj2yqplvj5wrfydxsjprpa3?broadcast=true&global=all",
-                     "wss://purplepag.es",
-                     "wss://nos.lol",
-                     "wss://zeugmaster.com",
-                     "wss://relay.snort.social"]
+    static let shared = NostrService()
     
     private var eventsCancellable: AnyCancellable?
     private var stateCancellable: AnyCancellable?
@@ -69,10 +63,11 @@ class ContactService: EventCreating {
             
     var relays = [Relay]()
     var relayStates = Dictionary<String,Relay.State>()
-    var userProfile:Profile?
+//    var userProfile:Profile?
     
-    var keyManager = KeyManager()
-    var relayListManager = RelayListManager()
+    // both should only be initialzed once to prevent unexpected behaviour and conflicting states
+    private var keyManager = KeyManager()
+    var dataManager = NostrDataManager()
     
     //MARK: - Key handling
     func setPrivateKey(privateKey:String) throws {
@@ -80,13 +75,30 @@ class ContactService: EventCreating {
     }
     
     //MARK: - Initializer
-    init() throws {
+    private init() {
         logger.debug("Initializing ContactService instance")
-                
-        relays = try relayURLs.map({ urlString in
-            //TODO: check for proper URL initialization
-            try Relay(url: URL(string: urlString)!)
-        })
+        
+        do {
+            relays = try dataManager.relayURLlist.map({ urlString in
+                //TODO: check for proper URL initialization
+                try Relay(url: URL(string: urlString)!)
+            })
+        } catch {
+            
+        }
+    }
+    
+    ///Provides the user profile either from saved keypair or cache or nil if none are set
+    var userProfile:Profile? {
+        get {
+            if dataManager.userProfile != nil {
+                return dataManager.userProfile
+            } else if let pubkey = keyManager.keypair?.publicKey {
+                return Profile(pubkey: pubkey.hex, npub: pubkey.npub)
+            } else {
+                return nil
+            }
+        }
     }
     
     ///Try to establish a websocket connection to relay
@@ -155,7 +167,7 @@ class ContactService: EventCreating {
         }
     }
     
-    func loadInfo(for profiles:[Profile]) async throws {
+    func loadInfo(for profiles:[Profile], of user:Profile? = nil) async throws {
         
         guard keyManager.keypair?.publicKey.hex != nil else {
             throw ContactServiceError.noPrivateKeyError
@@ -166,7 +178,10 @@ class ContactService: EventCreating {
         }
         
         // create an array of all the pubkeys so we can query the relays all at once
-        let pubkeys = profiles.map { $0.pubkey }
+        var pubkeys = profiles.map { $0.pubkey }
+        if let user = user {
+            pubkeys.append(user.pubkey)
+        }
         
         // kind 0 for profile metadata
         let filter = Filter(authors: pubkeys, kinds: [0])
@@ -184,6 +199,14 @@ class ContactService: EventCreating {
             profile.pictureURL = pe?.userMetadata?.pictureURL
             if let name = pe?.userMetadata?.name, name.count > 0 {
                 profile.name = name
+            }
+        }
+        
+        if let user = user {
+            let upe = unique.first(where: { $0.pubkey == user.pubkey })
+            user.pictureURL = upe?.userMetadata?.pictureURL
+            if let name = upe?.userMetadata?.name, name.count > 0 {
+                user.name = name
             }
         }
     }
@@ -308,9 +331,7 @@ class ContactService: EventCreating {
                 print("could not post to \(relay) because of \(error)")
             }
         }
-        
     }
-    
 }
 
 class KeyManager {
@@ -385,8 +406,109 @@ class KeyManager {
     }
 }
 
-class RelayListManager {
+class NostrDataManager: Codable {
     
+    private var _relayURLlist = [String]()
+    private var _userProfile:Profile?
+    
+    #warning("replace with generic relay urls")
+    private var defaultRelaysURLs = ["wss://relay.damus.io",
+                                     "wss://nostr.wine",
+                                     "wss://filter.nostr.wine/npub1f742zec57c6qk9ajfr8wyjn0s4vrfzh4hesyj2yqplvj5wrfydxsjprpa3?broadcast=true&global=all",
+                                     "wss://purplepag.es",
+                                     "wss://nos.lol",
+                                     "wss://zeugmaster.com",
+                                     "wss://relay.snort.social"]
+    
+    init() {
+        // load from file
+        guard let ndm = readDataFromFile() else {
+            //use init values
+            
+            _relayURLlist = defaultRelaysURLs
+            _userProfile = nil
+            return
+        }
+        
+        _relayURLlist = ndm._relayURLlist
+        _userProfile = ndm.userProfile
+    }
+    
+    var relayURLlist:[String] {
+        get {
+            return _relayURLlist
+        }
+    }
+    
+    var userProfile:Profile? {
+        get {
+            return _userProfile
+        }
+    }
+    
+    func addRelay(with urlString:String) {
+        _relayURLlist.append(urlString)
+        saveDataToFile()
+    }
+    
+    func removeRelay(with urlString:String) {
+        _relayURLlist.removeAll(where: { $0 == urlString })
+        saveDataToFile()
+    }
+    
+    func updateUserProfile(with profile:Profile) {
+        _userProfile = profile
+        saveDataToFile()
+    }
+    
+    func resetUserProfile() {
+        _userProfile = nil
+        saveDataToFile()
+    }
+    
+    func resetAll() {
+        _relayURLlist = defaultRelaysURLs
+        _userProfile = nil
+        
+        do {
+            try FileManager.default.removeItem(at: filePath)
+        } catch {
+            logger.warning("""
+                            Filemanager could not remove file from path
+                            \(self.filePath.absoluteString). error: \(error)
+                           """)
+        }
+        
+    }
+    
+    private func saveDataToFile() {
+        do {
+            let data = try JSONEncoder().encode(self)
+            try data.write(to: filePath)
+            logger.debug("Successfully wrote nostr date to disk.")
+        } catch {
+            logger.error("Unable to write nostr data to disk. error: \(error, privacy: .public)")
+        }
+    }
+    
+    private func readDataFromFile() -> NostrDataManager? {
+        do  {
+            let data = try Data(contentsOf: filePath)
+            logger.debug("Successfully read nostr data from disk. Path: \(self.filePath.absoluteString)")
+            let ndm = try JSONDecoder().decode(NostrDataManager.self, from: data)
+            return ndm
+        } catch {
+            logger.warning("Could not read nostr data from disk. (might not be set yet. \(error)")
+            return nil
+        }
+    }
+    
+    private var filePath:URL {
+        get {
+            let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+            return paths[0].appendingPathComponent("nostr-data.json")
+        }
+    }
 }
 
 extension Array where Element == NostrEvent {

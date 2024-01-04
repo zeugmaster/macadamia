@@ -7,12 +7,6 @@
 
 import SwiftUI
 
-let previewList = [Mint(url: URL(string: "https://8333.space:3338")!, activeKeyset: Keyset(id: "", keys: ["":""], derivationCounter: 0), allKeysets: [], info: MintInfo(name: "", pubkey: "", version: "", contact: [[]], nuts: [], parameter: ["":false])),
-                   Mint(url: URL(string: "https://test.space:3338")!, activeKeyset: Keyset(id: "", keys: ["":""], derivationCounter: 0), allKeysets: [], info: MintInfo(name: "", pubkey: "", version: "", contact: [[]], nuts: [], parameter: ["":false])),
-                   Mint(url: URL(string: "https://zeugmaster.com:3338")!, activeKeyset: Keyset(id: "", keys: ["":""], derivationCounter: 0), allKeysets: [], info: MintInfo(name: "", pubkey: "", version: "", contact: [[]], nuts: [], parameter: ["":false]))]
-
-
-
 struct MintManagerView: View {
     @ObservedObject var vm = MintManagerViewModel()
     
@@ -32,6 +26,8 @@ struct MintManagerView: View {
                 })
                 TextField("enter new Mint URL", text: $vm.newMintURLString)
                     .onSubmit {vm.addMintWithUrlString() }
+                    .autocorrectionDisabled(true)
+                    .textInputAutocapitalization(.never)
             } footer: {
                 Text("Swipe to delete. Make sure to add correct prefix and port numbers to mint URLs.")
             }
@@ -73,6 +69,9 @@ class MintManagerViewModel: ObservableObject {
     
     func addMintWithUrlString() {
         // needs to check for uniqueness and URL format
+        
+        
+        
         guard let url = URL(string: newMintURLString),
             newMintURLString.contains("https://") else {
             newMintURLString = ""
@@ -100,7 +99,7 @@ class MintManagerViewModel: ObservableObject {
             }
         }
         
-        print(newMintURLString)
+        
     }
     
     func removeMint(at offsets: IndexSet) {
@@ -113,10 +112,19 @@ class MintManagerViewModel: ObservableObject {
                                             primaryButtonText: "Cancel",
                                            affirmText: "Yes",
                                             onAffirm: {
-                print("LFFFG")
-                self.mintList.remove(atOffsets: offsets)
-                //TODO: REMOVE FROM ACTUAL DATABASE
+                // should actually never be more than one index at a time
+                offsets.forEach { index in
+                    let url = self.mintList[index].url
+                    self.mintList.remove(at: index)
+                    self.wallet.removeMint(with: url)
+                }
             }))
+        } else {
+            offsets.forEach { index in
+                let url = self.mintList[index].url
+                self.mintList.remove(at: index)
+                self.wallet.removeMint(with: url)
+            }
         }
     }
     

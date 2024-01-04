@@ -138,7 +138,7 @@ class WalletViewModel:ObservableObject {
     }
     
     var totalBalance: String {
-        return "\(wallet.balance(mint: nil))"
+        return "\(wallet.balance())"
     }
     
 }

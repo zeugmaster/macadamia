@@ -159,8 +159,8 @@ class MintRequestViewModel: ObservableObject {
     }
     
     func fetchMintInfo() {
+        mintList = []
         for mint in wallet.database.mints {
-            mintList = []
             let readable = mint.url.absoluteString.dropFirst(8)
             mintList.append(String(readable))
         }

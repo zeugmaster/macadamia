@@ -28,8 +28,6 @@ func generateQRCode(from string: String) -> UIImage? {
     return nil
 }
 
-
-
 struct QRCodeView: View {
     let qrCode: UIImage?
 

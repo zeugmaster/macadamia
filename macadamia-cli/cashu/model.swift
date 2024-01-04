@@ -118,7 +118,7 @@ class Mint: Codable, Identifiable, Hashable {
     func checkAvailability() async -> Bool {
         do {
             // if the network doesn't throw an error we can assume the mint is online
-            let mintInfo = try await Network.mintInfo(mintURL: self.url)
+            let _ = try await Network.mintInfo(mintURL: self.url)
             //and return true
             return true
         } catch {
