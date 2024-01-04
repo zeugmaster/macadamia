@@ -29,8 +29,9 @@
 		379BDF5E2B42C554008FD0E7 /* nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF5C2B42C554008FD0E7 /* nostr.swift */; };
 		379BDF602B430765008FD0E7 /* RelayManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */; };
 		379BDF622B430775008FD0E7 /* MintManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF612B430775008FD0E7 /* MintManagerView.swift */; };
-		379BDF652B447138008FD0E7 /* Alerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF642B447138008FD0E7 /* Alerts.swift */; };
+		379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF642B447138008FD0E7 /* UIHelpers.swift */; };
 		379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF662B4696B6008FD0E7 /* MnemonicView.swift */; };
+		379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF682B46F31E008FD0E7 /* SendView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,8 +55,9 @@
 		379BDF5C2B42C554008FD0E7 /* nostr.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = nostr.swift; sourceTree = "<group>"; };
 		379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayManagerView.swift; sourceTree = "<group>"; };
 		379BDF612B430775008FD0E7 /* MintManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintManagerView.swift; sourceTree = "<group>"; };
-		379BDF642B447138008FD0E7 /* Alerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alerts.swift; sourceTree = "<group>"; };
+		379BDF642B447138008FD0E7 /* UIHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIHelpers.swift; sourceTree = "<group>"; };
 		379BDF662B4696B6008FD0E7 /* MnemonicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MnemonicView.swift; sourceTree = "<group>"; };
+		379BDF682B46F31E008FD0E7 /* SendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,8 +98,9 @@
 				372034BB2B29E1BC00C4F955 /* ContentView.swift */,
 				379212392B2A36830081F161 /* WalletView.swift */,
 				3792123D2B2AFFC40081F161 /* MintRequestView.swift */,
-				379BDF642B447138008FD0E7 /* Alerts.swift */,
+				379BDF642B447138008FD0E7 /* UIHelpers.swift */,
 				3780EEE52B2B5C3F00971AE7 /* QRView.swift */,
+				379BDF682B46F31E008FD0E7 /* SendView.swift */,
 				379BDF632B430F32008FD0E7 /* Settings */,
 				379BDF5A2B42C4C4008FD0E7 /* nostr */,
 				3792121E2B29E6580081F161 /* cashu */,
@@ -239,11 +242,12 @@
 				379212262B29E6580081F161 /* model.swift in Sources */,
 				3792122B2B29E6580081F161 /* cashu.swift in Sources */,
 				3792122A2B29E6580081F161 /* Base64FS.swift in Sources */,
+				379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */,
 				379212282B29E6580081F161 /* network.swift in Sources */,
 				379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */,
 				372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */,
 				3792123E2B2AFFC40081F161 /* MintRequestView.swift in Sources */,
-				379BDF652B447138008FD0E7 /* Alerts.swift in Sources */,
+				379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */,
 				379212292B29E6580081F161 /* crypto.swift in Sources */,
 				379BDF5D2B42C554008FD0E7 /* NostrContentView.swift in Sources */,
 				379212272B29E6580081F161 /* data.swift in Sources */,

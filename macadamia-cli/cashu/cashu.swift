@@ -134,12 +134,12 @@ class Wallet {
     }
     
     //MARK: Send
-    func sendTokens(from mint:Mint, amount:Int) async throws -> String {
+    func sendTokens(from mint:Mint, amount:Int, memo:String?) async throws -> String {
         let (proofs, sum) = try database.retrieveProofs(from: mint, amount: amount)
         if amount == sum {
             self.database.removeProofsFromValid(proofsToRemove: proofs)
             self.database.saveToFile()
-            return try serializeProofs(proofs: proofs)
+            return try serializeProofs(proofs: proofs, memo: memo)
         } else if amount < sum {
             let (new, change) = try await split(mint: mint, totalProofs: proofs, at: amount)
             database.removeProofsFromValid(proofsToRemove: proofs)
@@ -319,12 +319,12 @@ class Wallet {
         return (sendProofs, newProofs)
     }
     
-    private func serializeProofs(proofs: [Proof]) throws -> String {
+    private func serializeProofs(proofs: [Proof], memo:String? = nil) throws -> String {
         guard let mint = database.mintForKeysetID(id: proofs[0].id) else {
             throw WalletError.tokenSerializationError(detail: "no mint found for keyset id: \(proofs[0].id)")
         }
         let token = Token_JSON(mint: mint.url.absoluteString, proofs: proofs)
-        let tokenContainer = Token_Container(token: [token], memo: "...fiat esse delendam.")
+        let tokenContainer = Token_Container(token: [token], memo: memo)
         let jsonData = try JSONEncoder().encode(tokenContainer)
         let jsonString = String(data: jsonData, encoding: .utf8)!
         let safeString = Base64FS.encodeString(str: jsonString)

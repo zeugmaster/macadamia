@@ -46,7 +46,7 @@ struct WalletView: View {
                 HStack {
                    // First button
                    Button(action: {
-                       print("send")
+                       
                    }) {
                        Text("Receive")
                            .frame(maxWidth: .infinity)
@@ -54,12 +54,13 @@ struct WalletView: View {
                            .bold()
                            .foregroundColor(.white)
                            .cornerRadius(10)
-                   }.buttonStyle(.bordered)
-                        .padding(WalletView.buttonPadding)
+                   }
+                   .buttonStyle(.bordered)
+                   .padding(WalletView.buttonPadding)
                    
                    // Second button
                    Button(action: {
-                       print("receive")
+                       navigationPath.append("Send")
                    }) {
                        Text("Send")
                            .frame(maxWidth: .infinity)
@@ -114,6 +115,8 @@ struct WalletView: View {
                 case "Third":
                     MintRequestCompletionView(viewModel:mintRequestViewModel, 
                                               navigationPath: $navigationPath)
+                case "Send":
+                    SendView()
                 default:
                     EmptyView()
                 }
