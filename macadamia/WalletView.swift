@@ -91,7 +91,7 @@ struct WalletView: View {
                    
                    // Second button
                    Button(action: {
-                       print("receive")
+                       navigationPath.append("Melt")
                    }) {
                        Text("Melt")
                            .frame(maxWidth: .infinity)
@@ -121,6 +121,8 @@ struct WalletView: View {
                     SendView()
                 case "Receive":
                     ReceiveView()
+                case "Melt":
+                    MeltView()
                 default:
                     EmptyView()
                 }

@@ -189,6 +189,11 @@ class Wallet {
     }
     
     //MARK: - Melt
+    /// Sends a request to the mint to melt proofs with the amount of the invoice plus a calculated fee.
+    /// - Parameters:
+    ///   - mint: the mint
+    ///   - invoice: a Lightning Network invoice the mint is supposed to pay
+    /// - Returns: a Boolean to indicate wether the invoice was paid successfully or not (e.g. due to a timeout)
     func melt(mint:Mint, invoice:String) async throws -> Bool {
         let invoiceAmount = try QuoteRequestResponse.satAmountFromInvoice(pr: invoice)
         let fee = try await Network.checkFee(mint: mint, invoice: invoice)

@@ -13,6 +13,8 @@
 		372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */; };
 		3743CE582B47798800F862AB /* NostrSendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE572B47798800F862AB /* NostrSendView.swift */; };
 		3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE592B485BF800F862AB /* ReceiveView.swift */; };
+		3743CE5E2B48A94D00F862AB /* MeltView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE5D2B48A94D00F862AB /* MeltView.swift */; };
+		3743CE612B48AD3900F862AB /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = 3743CE602B48AD3900F862AB /* CodeScanner */; };
 		3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3780EEE52B2B5C3F00971AE7 /* QRView.swift */; };
 		379212262B29E6580081F161 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792121F2B29E6580081F161 /* model.swift */; };
 		379212272B29E6580081F161 /* data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212202B29E6580081F161 /* data.swift */; };
@@ -44,6 +46,8 @@
 		372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3743CE572B47798800F862AB /* NostrSendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrSendView.swift; sourceTree = "<group>"; };
 		3743CE592B485BF800F862AB /* ReceiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiveView.swift; sourceTree = "<group>"; };
+		3743CE5D2B48A94D00F862AB /* MeltView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeltView.swift; sourceTree = "<group>"; };
+		3743CE622B48AFA000F862AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		3780EEE52B2B5C3F00971AE7 /* QRView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRView.swift; sourceTree = "<group>"; };
 		3792121F2B29E6580081F161 /* model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = model.swift; sourceTree = "<group>"; };
 		379212202B29E6580081F161 /* data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = data.swift; sourceTree = "<group>"; };
@@ -73,6 +77,7 @@
 				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
 				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
 				379212312B29E7900081F161 /* BIP32 in Frameworks */,
+				3743CE612B48AD3900F862AB /* CodeScanner in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -98,6 +103,7 @@
 		372034B82B29E1BC00C4F955 /* macadamia */ = {
 			isa = PBXGroup;
 			children = (
+				3743CE622B48AFA000F862AB /* Info.plist */,
 				372034B92B29E1BC00C4F955 /* macadamiaApp.swift */,
 				372034BB2B29E1BC00C4F955 /* ContentView.swift */,
 				379212392B2A36830081F161 /* WalletView.swift */,
@@ -106,6 +112,7 @@
 				3780EEE52B2B5C3F00971AE7 /* QRView.swift */,
 				379BDF682B46F31E008FD0E7 /* SendView.swift */,
 				3743CE592B485BF800F862AB /* ReceiveView.swift */,
+				3743CE5D2B48A94D00F862AB /* MeltView.swift */,
 				3743CE572B47798800F862AB /* NostrSendView.swift */,
 				379BDF632B430F32008FD0E7 /* Settings */,
 				379BDF5A2B42C4C4008FD0E7 /* nostr */,
@@ -180,6 +187,7 @@
 				379212302B29E7900081F161 /* BIP32 */,
 				379212332B29E7B30081F161 /* BIP39 */,
 				379BDF582B421855008FD0E7 /* NostrSDK */,
+				3743CE602B48AD3900F862AB /* CodeScanner */,
 			);
 			productName = macadamia;
 			productReference = 372034B62B29E1BC00C4F955 /* macadamia.app */;
@@ -214,6 +222,7 @@
 				3792122F2B29E7900081F161 /* XCRemoteSwiftPackageReference "BIP32" */,
 				379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */,
 				379BDF572B421855008FD0E7 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */,
+				3743CE5F2B48AD3900F862AB /* XCRemoteSwiftPackageReference "CodeScanner" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -257,6 +266,7 @@
 				379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */,
 				379212292B29E6580081F161 /* crypto.swift in Sources */,
 				3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */,
+				3743CE5E2B48A94D00F862AB /* MeltView.swift in Sources */,
 				379BDF5D2B42C554008FD0E7 /* NostrContentView.swift in Sources */,
 				379212272B29E6580081F161 /* data.swift in Sources */,
 				3792123C2B2A36970081F161 /* SettingsView.swift in Sources */,
@@ -398,8 +408,10 @@
 				DEVELOPMENT_TEAM = AN6VRTK6TB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = macadamia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = macadamia;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
+				INFOPLIST_KEY_NSCameraUsageDescription = "macadamia uses your device's camera to read the QR-codes of lightning invoices.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -432,8 +444,10 @@
 				DEVELOPMENT_TEAM = AN6VRTK6TB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = macadamia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = macadamia;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
+				INFOPLIST_KEY_NSCameraUsageDescription = "macadamia uses your device's camera to read the QR-codes of lightning invoices.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -479,6 +493,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		3743CE5F2B48AD3900F862AB /* XCRemoteSwiftPackageReference "CodeScanner" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/twostraws/CodeScanner.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.3.3;
+			};
+		};
 		3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/mkrd/Swift-BigInt.git";
@@ -514,6 +536,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		3743CE602B48AD3900F862AB /* CodeScanner */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3743CE5F2B48AD3900F862AB /* XCRemoteSwiftPackageReference "CodeScanner" */;
+			productName = CodeScanner;
+		};
 		3792122D2B29E7520081F161 /* BigNumber */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */;

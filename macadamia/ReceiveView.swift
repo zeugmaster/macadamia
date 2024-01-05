@@ -23,7 +23,7 @@ struct ReceiveView: View {
                         HStack {
                             Text("Amount: ")
                             Spacer()
-                            Text(String(vm.tokenAmount ?? 0))
+                            Text(String(vm.tokenAmount ?? 0) + " sats")
                         }
                         .foregroundStyle(.secondary)
                         if vm.tokenMemo != nil {
