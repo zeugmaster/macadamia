@@ -13,7 +13,7 @@ class Wallet {
         case tokenSerializationError(detail:String)
         case unknownMintError //TODO: should not be treated like an error
         case missingMintKeyset
-        case insufficientFunds(mint:Mint)
+        case insufficientFunds(mintURL:String)
         case invalidInvoiceError
         case invalidSplitAmounts
         case restoreError(detail:String)
@@ -44,6 +44,8 @@ class Wallet {
         self.database.saveToFile()
     }
     
+    /// Add a mint to the database of known mints
+    /// - Parameter url: The URL of the mint
     func addMint(with url:URL) async throws {
         guard database.mints.contains(where: {$0.url == url}) == false else {
             return
@@ -146,7 +148,7 @@ class Wallet {
             database.proofs.append(contentsOf: change)
             mint.activeKeyset.derivationCounter += (new.count + change.count)
             database.saveToFile()
-            return try serializeProofs(proofs: new)
+            return try serializeProofs(proofs: new, memo: memo)
         } else {
             throw WalletError.unknownMintError
         }

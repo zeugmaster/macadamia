@@ -1,17 +1,21 @@
 //
-//  SendView.swift
+//  NostrSendView.swift
 //  macadamia
 //
-//  Created by Dario Lass on 04.01.24.
+//  Created by Dario Lass on 05.01.24.
 //
 
 import SwiftUI
 
-struct SendView: View {
+
+struct NostrSendView: View {
     
-    @ObservedObject var vm = SendViewModel()
-    
+    @ObservedObject var vm:NostrSendViewModel
     @State private var isCopied = false
+    
+    init(nsvm:NostrSendViewModel) {
+        self.vm = nsvm
+    }
     
     var body: some View {
         Form {
@@ -36,39 +40,6 @@ struct SendView: View {
                 Text("Tap to add a note to the recipient.")
             }
             
-            if vm.token != nil {
-                Section {
-                    Text(vm.token!)
-                        .lineLimit(1)
-                        .monospaced()
-                        .foregroundStyle(.secondary)
-                    Button {
-                        copyToClipboard()
-                    } label: {
-                        HStack {
-                            if isCopied {
-                                Text("Copied!")
-                                        .transition(.opacity)
-                                } else {
-                                    Text("Copy to clipboard")
-                                        .transition(.opacity)
-                                }
-                            Spacer()
-                            Image(systemName: "list.clipboard")
-                        }
-                    }
-                    
-                    Button {
-                        vm.showingShareSheet = true
-                    } label: {
-                        HStack {
-                            Text("Share")
-                            Spacer()
-                            Image(systemName: "square.and.arrow.up")
-                        }
-                    }
-                }
-            }
             
         }
         .navigationTitle("Send")
@@ -94,27 +65,36 @@ struct SendView: View {
         Spacer()
         
         Button(action: {
-            vm.generateToken()
+            vm.initiateSend()
         }, label: {
-            Text("Generate Token")
+            if vm.loading {
+                Text("Sending...")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            } else if vm.success {
+                Text("Done!")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .foregroundColor(.green)
+            } else {
+                Group {
+                    Text("Send to ")
+                    + Text(vm.recipientDisplayName).underline()
+                    + Text(" via Nostr")
+                }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .bold()
-                .foregroundColor(.white)
+            }
         })
-    
+        .foregroundColor(.white)
         .buttonStyle(.bordered)
         .padding()
+        .bold()
         .toolbar(.hidden, for: .tabBar)
-        .disabled(vm.numberString.isEmpty || vm.amount == 0)
-        .sheet(isPresented: $vm.showingShareSheet, content: {
-            ShareSheet(items: ["test string cashuA"])
-        })
-
+        .disabled(vm.numberString.isEmpty || vm.amount == 0 || vm.loading || vm.success)
     }
     
     func copyToClipboard() {
-        vm.copyToClipboard()
         withAnimation {
             isCopied = true
         }
@@ -125,19 +105,12 @@ struct SendView: View {
             }
         }
     }
-    
-}
-
-#Preview {
-    SendView()
 }
 
 @MainActor
-class SendViewModel: ObservableObject {
+class NostrSendViewModel: ObservableObject {
     
-    @Published var recipientProfile:Profile?
-    
-    @Published var showingShareSheet = false
+    @Published var recipientProfile:Profile
     @Published var tokenMemo = ""
     
     @Published var numberString: String = ""
@@ -145,13 +118,27 @@ class SendViewModel: ObservableObject {
     @Published var selectedMintString:String = ""
     
     @Published var loading = false
-    @Published var succes = false
+    @Published var success = false
     
     @Published var showAlert:Bool = false
     var currentAlert:AlertDetail?
-    var wallet = Wallet.shared
     
-    @Published var token:String?
+    var wallet = Wallet.shared
+    var nostrService = NostrService.shared
+    
+    init(recipientProfile:Profile) {
+        self.recipientProfile = recipientProfile
+    }
+    
+    var recipientDisplayName:String {
+        get {
+            if let name = recipientProfile.name {
+                return name
+            } else {
+                return String(recipientProfile.pubkey.prefix(10))
+            }
+        }
+    }
     
     func fetchMintInfo() {
         mintList = []
@@ -166,7 +153,7 @@ class SendViewModel: ObservableObject {
         return Int(numberString) ?? 0
     }
     
-    func generateToken() {
+    func initiateSend() {
         print(selectedMintString)
         guard let mint = wallet.database.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) else {
             displayAlert(alert: AlertDetail(title: "Invalid Mint"))
@@ -174,19 +161,37 @@ class SendViewModel: ObservableObject {
         }
         Task {
             do {
-                self.token = try await wallet.sendTokens(from:mint, amount: amount, memo:tokenMemo)
+                self.loading = true
+                let token = try await wallet.sendTokens(from:mint, amount: amount, memo:tokenMemo)
+                let message = """
+Here is some eCash! You can redeem it using any cashu wallet.
+
+\(token)
+"""
+                try nostrService.sendMessage(to: recipientProfile, content: message)
+                self.loading = false
+                self.success = true
+                self.numberString = ""
+                self.tokenMemo = ""
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    withAnimation {
+                        self.success = false
+                    }
+                }
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error", description: String(describing: error)))
+                self.loading = false
             }
         }
-    }
-    
-    func copyToClipboard() {
-        UIPasteboard.general.string = token
     }
     
     private func displayAlert(alert:AlertDetail) {
         currentAlert = alert
         showAlert = true
     }
+}
+
+
+#Preview {
+    NostrSendView(nsvm: NostrSendViewModel(recipientProfile: Profile(pubkey: "f0f0f0f0f0f0", npub: "npub1ß203w98ourtß23894ut", name: "nakamoto")))
 }

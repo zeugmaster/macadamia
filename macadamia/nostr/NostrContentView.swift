@@ -27,7 +27,7 @@ struct NostrInboxView: View {
                     Section {
                         ForEach(vm.contacts, id: \.pubkey) { profile in
                             TableRowView(profile: profile) {
-                                vm.initiateSend(to: profile)
+                                
                             } redeemButtonAction: {
                                 vm.redeemAllFromProfile(profile: profile)
                             }
@@ -126,11 +126,7 @@ struct TableRowView: View {
             }, label: {
                 Image(systemName: "square.and.arrow.down")
             })
-            Button(action: {
-                sendButtonAction()
-            }, label: {
-                Image(systemName: "paperplane")
-            })
+            NavigationLink("\(Image(systemName: "arrow"))", destination: NostrSendView(nsvm: NostrSendViewModel(recipientProfile: profile)))
         }
         .buttonStyle(.bordered)
     }
@@ -191,11 +187,8 @@ class ContentViewModel: ObservableObject {
     
     init() {
         
-        contacts = Demo.contacts
-        userProfile = Demo.user
-//
         nostrService = NostrService.shared
-//        userProfile = nostrService.userProfile
+        userProfile = nostrService.userProfile
         
         if userProfile != nil {
             textfieldOpacity = 0.01
@@ -239,12 +232,6 @@ class ContentViewModel: ObservableObject {
         }))
     }
     
-    func editProfileKey() {
-        let temp = userProfile
-        userProfile = nil
-        textfieldOpacity = 1.0
-    }
-    
     func loadFollowListWithInfo() {
         
         Task {
@@ -256,18 +243,8 @@ class ContentViewModel: ObservableObject {
                 randos = messages.uniqueSenders().filter { !contacts.contains($0)}
             } catch {
                 displayAlert(alert: AlertDetail(title: "Refresh failed",
-                                                description: error.localizedDescription))
+                                                description: String(describing: error)))
             }
-        }
-    }
-    
-    func initiateSend(to profile:Profile) {
-        // bring up view to send tokens to profile
-        print("initiate send")
-        do {
-//            try contactService?.sendMessage(to: profile)
-        } catch {
-            print(error)
         }
     }
     

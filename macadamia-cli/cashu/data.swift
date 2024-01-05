@@ -73,7 +73,7 @@ public class Database: Codable {
                 return (collected, sum)
             }
         }
-        throw Wallet.WalletError.insufficientFunds(mint: mint)
+        throw Wallet.WalletError.insufficientFunds(mintURL: mint.url.absoluteString)
     }
 
     func removeProofsFromValid(proofsToRemove:[Proof]) {

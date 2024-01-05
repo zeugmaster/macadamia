@@ -311,7 +311,7 @@ class NostrService: EventCreating {
     }
 
     
-    func sendMessage(to contact:Profile) throws {
+    func sendMessage(to contact:Profile, content:String) throws {
         
         guard keyManager.keypair != nil else {
             throw ContactServiceError.noPrivateKeyError
@@ -320,7 +320,7 @@ class NostrService: EventCreating {
             throw ContactServiceError.invalidKeyError
         }
         
-        let message = try directMessage(withContent: "This is a test.",
+        let message = try directMessage(withContent: content,
                                     toRecipient: pubkey,
                                     signedBy: keyManager.keypair!)
         

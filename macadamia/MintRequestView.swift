@@ -194,7 +194,7 @@ class MintRequestViewModel: ObservableObject {
                 try await wallet.requestMint(from:selectedMint!,for:quote!,with:amount)
                 mintRequestState = "Success"
             } catch {
-                mintRequestState = error.localizedDescription
+                mintRequestState = String(describing: error)
             }
         }
     }

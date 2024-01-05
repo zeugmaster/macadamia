@@ -11,6 +11,8 @@
 		372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
 		372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */; };
+		3743CE582B47798800F862AB /* NostrSendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE572B47798800F862AB /* NostrSendView.swift */; };
+		3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE592B485BF800F862AB /* ReceiveView.swift */; };
 		3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3780EEE52B2B5C3F00971AE7 /* QRView.swift */; };
 		379212262B29E6580081F161 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792121F2B29E6580081F161 /* model.swift */; };
 		379212272B29E6580081F161 /* data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212202B29E6580081F161 /* data.swift */; };
@@ -40,6 +42,8 @@
 		372034BB2B29E1BC00C4F955 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		372034BD2B29E1BD00C4F955 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		3743CE572B47798800F862AB /* NostrSendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrSendView.swift; sourceTree = "<group>"; };
+		3743CE592B485BF800F862AB /* ReceiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiveView.swift; sourceTree = "<group>"; };
 		3780EEE52B2B5C3F00971AE7 /* QRView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRView.swift; sourceTree = "<group>"; };
 		3792121F2B29E6580081F161 /* model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = model.swift; sourceTree = "<group>"; };
 		379212202B29E6580081F161 /* data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = data.swift; sourceTree = "<group>"; };
@@ -101,6 +105,8 @@
 				379BDF642B447138008FD0E7 /* UIHelpers.swift */,
 				3780EEE52B2B5C3F00971AE7 /* QRView.swift */,
 				379BDF682B46F31E008FD0E7 /* SendView.swift */,
+				3743CE592B485BF800F862AB /* ReceiveView.swift */,
+				3743CE572B47798800F862AB /* NostrSendView.swift */,
 				379BDF632B430F32008FD0E7 /* Settings */,
 				379BDF5A2B42C4C4008FD0E7 /* nostr */,
 				3792121E2B29E6580081F161 /* cashu */,
@@ -236,6 +242,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */,
+				3743CE582B47798800F862AB /* NostrSendView.swift in Sources */,
 				379BDF602B430765008FD0E7 /* RelayManagerView.swift in Sources */,
 				3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */,
 				3792123A2B2A36830081F161 /* WalletView.swift in Sources */,
@@ -249,6 +256,7 @@
 				3792123E2B2AFFC40081F161 /* MintRequestView.swift in Sources */,
 				379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */,
 				379212292B29E6580081F161 /* crypto.swift in Sources */,
+				3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */,
 				379BDF5D2B42C554008FD0E7 /* NostrContentView.swift in Sources */,
 				379212272B29E6580081F161 /* data.swift in Sources */,
 				3792123C2B2A36970081F161 /* SettingsView.swift in Sources */,
