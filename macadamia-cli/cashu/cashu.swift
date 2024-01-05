@@ -156,7 +156,7 @@ class Wallet {
     
     //MARK: - Receive
     func receiveToken(tokenString:String) async throws {
-        let tokenlist = try self.deserializeToken(token: tokenString)
+        let tokenlist = try self.deserializeToken(token: tokenString).token
         var amounts = [Int]()
         for p in tokenlist[0].proofs {
             amounts.append(p.amount)
@@ -333,16 +333,16 @@ class Wallet {
         return "cashuA" + safeString
     }
     
-    private func deserializeToken(token: String) throws -> [Token_JSON] {
+    func deserializeToken(token: String) throws -> Token_Container {
         //TODO: check for more cases where invalid
         let noPrefix = token.dropFirst(6)
-        let jsonString = Base64FS.decodeString(str: String(noPrefix))
+        let jsonString = try Base64FS.decodeString(str: String(noPrefix))
         print(jsonString)
         let jsonData = jsonString.data(using: .utf8)!
         guard let tokenContainer:Token_Container = try? JSONDecoder().decode(Token_Container.self, from: jsonData) else {
             throw WalletError.tokenDeserializationError
         }
-        return tokenContainer.token
+        return tokenContainer
     }
 
     private func splitIntoBase2Numbers(n: Int) -> [Int] {

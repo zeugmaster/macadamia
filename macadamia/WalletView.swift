@@ -20,7 +20,7 @@ struct WalletView: View {
                 HStack(alignment:.bottom) {
                     Spacer()
                     Spacer()
-                    Text(viewModel.totalBalance)
+                    Text(String(viewModel.balance))
                         .monospaced()
                         .bold()
                         .dynamicTypeSize(.accessibility5)
@@ -32,7 +32,9 @@ struct WalletView: View {
                         .foregroundStyle(.secondary)
                         Spacer()
                 }
-                
+                .onAppear(perform: {
+                    viewModel.update()
+                })
                 Spacer()
                 List {
                     Label("210 sats ecash", systemImage: "arrow.down.right")
@@ -46,7 +48,7 @@ struct WalletView: View {
                 HStack {
                    // First button
                    Button(action: {
-                       
+                       navigationPath.append("Receive")
                    }) {
                        Text("Receive")
                            .frame(maxWidth: .infinity)
@@ -117,6 +119,8 @@ struct WalletView: View {
                                               navigationPath: $navigationPath)
                 case "Send":
                     SendView()
+                case "Receive":
+                    ReceiveView()
                 default:
                     EmptyView()
                 }
@@ -133,6 +137,9 @@ class WalletViewModel:ObservableObject {
     //@Published var totalBalanceString = "2101"
     var wallet = Wallet.shared
     
+    @Published var balance = 0
+    @Published var pendingBalance = 0
+    
     init(wallet: Wallet = Wallet.shared) {
         self.wallet = wallet
         Task {
@@ -140,8 +147,8 @@ class WalletViewModel:ObservableObject {
         }
     }
     
-    var totalBalance: String {
-        return "\(wallet.balance())"
+    func update() {
+        balance = wallet.balance()
     }
     
 }

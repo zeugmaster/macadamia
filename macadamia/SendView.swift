@@ -10,8 +10,9 @@ import SwiftUI
 struct SendView: View {
     
     @ObservedObject var vm = SendViewModel()
-    
     @State private var isCopied = false
+    
+    @FocusState var amountFieldInFocus:Bool
     
     var body: some View {
         Form {
@@ -20,6 +21,7 @@ struct SendView: View {
                     TextField("enter amount", text: $vm.numberString)
                         .keyboardType(.numberPad)
                         .monospaced()
+                        .focused($amountFieldInFocus)
                     Text("sats")
                 }
                 Picker("Mint", selection:$vm.selectedMintString) {
@@ -90,6 +92,9 @@ struct SendView: View {
         } message: {
             Text(vm.currentAlert?.alertDescription ?? "")
         }
+        .onAppear(perform: {
+            amountFieldInFocus = true
+        })
         
         Spacer()
         
@@ -102,13 +107,12 @@ struct SendView: View {
                 .bold()
                 .foregroundColor(.white)
         })
-    
         .buttonStyle(.bordered)
         .padding()
         .toolbar(.hidden, for: .tabBar)
         .disabled(vm.numberString.isEmpty || vm.amount == 0)
         .sheet(isPresented: $vm.showingShareSheet, content: {
-            ShareSheet(items: ["test string cashuA"])
+            ShareSheet(items: [vm.token ?? "No token provided"])
         })
 
     }

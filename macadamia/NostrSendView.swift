@@ -181,6 +181,7 @@ Here is some eCash! You can redeem it using any cashu wallet.
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error", description: String(describing: error)))
                 self.loading = false
+                self.success = false
             }
         }
     }

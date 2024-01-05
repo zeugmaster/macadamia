@@ -6,6 +6,11 @@
 
 import Foundation
 
+enum Base64DecodingError: Error {
+    case invalidCharacter
+    case decodingError(String)
+}
+
 public class Base64FS {
     
     private static let padding: UInt8 = 61 // Padding = "="
@@ -210,29 +215,23 @@ public class Base64FS {
         return result
     }
     
-    public static func decode(data: [UInt8]) -> [UInt8] {
-        
+    public static func decode(data: [UInt8]) throws -> [UInt8] {
         var result: [UInt8] = []
-        
         let size = data.count
-        // We loop over the 4 letters at a time
-        // We know it is padded, so we dont need to check for size
+
         for i in stride(from: 0, to: size, by: 4) {
-            
-            // Get the 4 letters, then get back to their non-index values
-            let first = safeAlphabetToIndex[data[i]]!
-            let second = safeAlphabetToIndex[data[i + 1]]!
-            let third = safeAlphabetToIndex[data[i + 2]]!
-            let forth = safeAlphabetToIndex[data[i + 3]]!
-            
-            // Get the 3 binary letters from the four 6-bit ones
+            guard let first = safeAlphabetToIndex[data[i]],
+                  let second = safeAlphabetToIndex[data[i + 1]],
+                  let third = safeAlphabetToIndex[data[i + 2]],
+                  let forth = safeAlphabetToIndex[data[i + 3]] else {
+                throw Base64DecodingError.invalidCharacter
+            }
+
             let l1 = first << 2 | ((second & 0b110000) >> 4)
             let l2 = ((second & 0b1111) << 4) | ((third & 0b111100) >> 2)
             let l3 = ((third & 0b11) << 6) | forth
-            
-            // Return the letters if they arent empty
+
             result.append(l1)
-            
             if l3 != 0 {
                 result.append(l2)
                 result.append(l3)
@@ -240,16 +239,17 @@ public class Base64FS {
                 result.append(l2)
             }
         }
-        
+
         return result
     }
+
     
-    public static func decodeString(str: String) -> String {
+    public static func decodeString(str: String) throws -> String {
         
         // Get the ascii representation and return
         let data = str.data(using: .ascii)!
         
-        let decData = decode(data: [UInt8](data))
+        let decData = try decode(data: [UInt8](data))
         
         let retStr = String(data: Data(decData), encoding: .ascii)!
         
