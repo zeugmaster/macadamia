@@ -122,7 +122,8 @@ class Wallet {
                                                                    seed: self.database.seed!,
                                                                    amounts: splitIntoBase2Numbers(n: amount),
                                                                    keysetID: mint.activeKeyset.id)
-        let promises = try await Network.requestSignature(mint: mint, 
+        mint.activeKeyset.derivationCounter += outputs.count
+        let promises = try await Network.requestSignature(mint: mint,
                                                           outputs: outputs,
                                                           amount: amount,
                                                           invoiceHash: quote.hash)
@@ -131,7 +132,6 @@ class Wallet {
                                      secrets: secrets,
                                      mintPublicKeys: mint.activeKeyset.keys)
         database.proofs.append(contentsOf: proofs)
-        mint.activeKeyset.derivationCounter += proofs.count
         database.saveToFile()
     }
     
@@ -146,7 +146,7 @@ class Wallet {
             let (new, change) = try await split(mint: mint, totalProofs: proofs, at: amount)
             database.removeProofsFromValid(proofsToRemove: proofs)
             database.proofs.append(contentsOf: change)
-            mint.activeKeyset.derivationCounter += (new.count + change.count)
+//            mint.activeKeyset.derivationCounter += (new.count + change.count) //FIXME: might be placed wrong or redundant
             database.saveToFile()
             return try serializeProofs(proofs: new, memo: memo)
         } else {
@@ -170,14 +170,13 @@ class Wallet {
                                                                       seed: database.seed!,
                                                                       amounts: amounts,
                                                                       keysetID: keyset.id)
-        
+        mint.activeKeyset.derivationCounter += newOutputs.count
         let newPromises = try await Network.split(for: mint, proofs: tokenlist[0].proofs, outputs: newOutputs)
         let newProofs = unblindPromises(promises: newPromises, 
                                         blindingFactors: bfs,
                                         secrets: secrets,
                                         mintPublicKeys: keyset.keys)
         self.database.proofs.append(contentsOf: newProofs)
-        mint.activeKeyset.derivationCounter += newProofs.count
         self.database.saveToFile()
     }
     
@@ -197,15 +196,29 @@ class Wallet {
     func melt(mint:Mint, invoice:String) async throws -> Bool {
         let invoiceAmount = try QuoteRequestResponse.satAmountFromInvoice(pr: invoice)
         let fee = try await Network.checkFee(mint: mint, invoice: invoice)
-        let (proofs, _) = try database.retrieveProofs(from: mint, amount: invoiceAmount)
+        
+        let (proofs, _) = try database.retrieveProofs(from: mint, amount: invoiceAmount+fee)
+        // if this fails error is thrown and execution ends proofs are discarded and original remains in DB
+        
         let (new, change) = try await split(mint: mint, totalProofs: proofs, at: invoiceAmount+fee)
+        // if this fails copied proofs are discarded but originals remain ->
+        // if executes -> make sure new AND change proofs are written back to DB
+        print("-------------->" + String(describing: proofs))
         database.removeProofsFromValid(proofsToRemove: proofs)
-        let meltReqResponse = try await Network.melt(mint: mint, meltRequest: MeltRequest(proofs: new, pr: invoice))
         database.proofs.append(contentsOf: change)
-        if meltReqResponse.paid {
-            database.saveToFile()
-            return true
-        } else {
+        database.saveToFile()
+        
+        do {
+            let meltReqResponse = try await Network.melt(mint: mint, meltRequest: MeltRequest(proofs: new, pr: invoice))
+            // TODO: doesn't properly handle errors
+            if meltReqResponse.paid {
+                return true
+            } else {
+                database.proofs.append(contentsOf: new) //putting the proofs back
+                database.saveToFile()
+                return false
+            }
+        } catch {
             database.proofs.append(contentsOf: new) //putting the proofs back
             database.saveToFile()
             return false
@@ -314,6 +327,8 @@ class Wallet {
                                                                    seed: database.seed!,
                                                                    amounts: combined,
                                                                    keysetID: mint.activeKeyset.id)
+        mint.activeKeyset.derivationCounter += outputs.count
+        database.saveToFile()
         let newPromises = try await Network.split(for: mint, proofs: totalProofs, outputs: outputs)
         var newProofs = unblindPromises(promises: newPromises, blindingFactors: bfs, secrets: secrets, mintPublicKeys: keys)
         var sendProofs = [Proof]()

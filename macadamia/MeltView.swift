@@ -23,6 +23,9 @@ struct MeltView: View {
                     TextField("tap to enter LN invoice", text: $vm.invoice)
                         .monospaced()
                         .foregroundStyle(.secondary)
+                        .onSubmit() {
+                            vm.checkFee()
+                        }
                     if !vm.invoice.isEmpty {
                         HStack {
                             Text("Amount: ")
@@ -30,6 +33,14 @@ struct MeltView: View {
                             Text(String(vm.invoiceAmount ?? 0) + " sats")
                         }
                         .foregroundStyle(.secondary)
+                        if vm.fee != nil {
+                            HStack {
+                                Text("Lightning Fee: ")
+                                Spacer()
+                                Text(String(vm.fee ?? 0) + " sats")
+                            }
+                            .foregroundStyle(.secondary)
+                        }
                     }
                     Picker("Mint", selection:$vm.selectedMintString) {
                         ForEach(vm.mintList, id: \.self) {
@@ -103,6 +114,8 @@ class MeltViewModel: ObservableObject {
     @Published var success = false
 //    @Published var invoiceAmount:Int?
     
+    @Published var fee:Int?
+    
     @Published var mintList:[String] = [""]
     @Published var selectedMintString:String = ""
     
@@ -114,16 +127,24 @@ class MeltViewModel: ObservableObject {
         guard let value = try? result.get() else {
             return
         }
-        guard value.string.hasPrefix("lnbc") else {
+        guard value.string.lowercased().hasPrefix("lnbc") else {
             displayAlert(alert: AlertDetail(title: "Invalid QR",
                                            description: "The QR code you scanned does not seem to be of a valid Lighning Network invoice. Please try again."))
             return
         }
-        invoice = value.string
+        invoice = value.string.lowercased()
+        checkFee()
     }
     
     var invoiceAmount:Int? {
         try? QuoteRequestResponse.satAmountFromInvoice(pr: invoice)
+    }
+    
+    func checkFee() {
+        Task {
+            let selectedMint = wallet.database.mints.first(where: {$0.url.absoluteString.contains(selectedMintString)})!
+            fee = try? await Network.checkFee(mint: selectedMint, invoice: invoice)
+        }
     }
     
     func fetchMintInfo() {

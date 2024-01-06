@@ -10,6 +10,7 @@ import secp256k1
 import BIP32
 import BIP39
 import BigNumber
+import OSLog
 
 // Step 1 (Alice)
 //TODO: needs to be able to throw
@@ -24,8 +25,6 @@ func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keyse
         let secretPath = "m/129372'/0'/\(keysetInt)'/\(index)'/0"
         let blindingFactorPath = "m/129372'/0'/\(keysetInt)'/\(index)'/1"
         
-        //print("using paths: x= \(secretPath) r= \(blindingFactorPath)")
-        
         let x = childPrivateKeyForDerivationPath(seed: seed, derivationPath: secretPath)!
         let Y = hashToCurve(message: x)
         
@@ -36,6 +35,7 @@ func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keyse
         
         blindingFactors.append(String(bytes: r.dataRepresentation))
         secrets.append(x)
+        Logger(subsystem: "com.zeugmaster.macadamia", category: "wallet").debug("Created secrets with derivation path \(secretPath, privacy: .public)")
     }
     
     return (outputs, blindingFactors, secrets)

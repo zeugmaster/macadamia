@@ -5,10 +5,10 @@
 //  Created by Dario Lass on 14.11.23.
 //
 
+import OSLog
 import Foundation
 
 public class Database: Codable {
-    
     var proofs:[Proof]
     var pendingProofs:[Proof]
     var mints:[Mint]
@@ -51,14 +51,18 @@ public class Database: Codable {
             encoder.outputFormatting = .prettyPrinted
             let data = try encoder.encode(self)
             try data.write(to: Database.getFilePath())
+            Logger(subsystem: "com.zeugmaster.macadamia", category: "wallet").debug("Saved wallet database to file.")
         } catch {
             print("whoops, failed to write db to file")
         }
     }
     
+    func addProofsToValid(proofs:[Proof]) {
+        
+    }
+    
     func retrieveProofs(from mint:Mint, amount:Int) throws -> (proofs:[Proof], sum:Int) {
         //load all mint keysets
-        print("looking for proofs from \(mint.url) with total amount: \(amount)")
         var sum = 0
         var collected = [Proof]()
         for proof in self.proofs {
@@ -70,6 +74,7 @@ public class Database: Codable {
                 }
             }
             if sum >= amount {
+                Logger(subsystem: "com.zeugmaster.macadamia", category: "wallet").debug("copied proofs from valid: \(collected, privacy: .public)")
                 return (collected, sum)
             }
         }
@@ -77,6 +82,7 @@ public class Database: Codable {
     }
 
     func removeProofsFromValid(proofsToRemove:[Proof]) {
+        Logger(subsystem: "com.zeugmaster.macadamia", category: "wallet").debug("Removing proofs from valid: \(proofsToRemove, privacy: .public)")
         let new = proofs.filter { item1 in
                 !proofsToRemove.contains { item2 in
                 item1 == item2
