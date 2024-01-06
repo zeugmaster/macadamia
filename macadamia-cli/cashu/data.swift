@@ -12,7 +12,7 @@ public class Database: Codable {
     var proofs:[Proof]
     var pendingProofs:[Proof]
     var mints:[Mint]
-    var pendingOutputs:[Output]
+//    var pendingOutputs:[Output]
     
     var mnemonic:String?
     var seed:String?
@@ -20,13 +20,11 @@ public class Database: Codable {
     private init(proofs: [Proof] = [], 
          pendingProofs: [Proof] = [],
          mints: [Mint] = [],
-         pendingOutputs: [Output] = [],
          mnemonic: String? = nil) {
         
         self.proofs = proofs
         self.pendingProofs = pendingProofs
         self.mints = mints
-        self.pendingOutputs = pendingOutputs
         self.mnemonic = mnemonic
     }
     
@@ -55,6 +53,16 @@ public class Database: Codable {
         } catch {
             print("whoops, failed to write db to file")
         }
+    }
+    
+    ///Removes all proofs, pass phrase, seed from database except for the list of known mints
+    func reset() {
+        Logger(subsystem: "com.zeugmaster.macadamia", category: "wallet").debug("Resetting database...")
+        proofs = []
+        pendingProofs = []
+        mnemonic = nil
+        seed = nil
+        saveToFile()
     }
     
     func addProofsToValid(proofs:[Proof]) {

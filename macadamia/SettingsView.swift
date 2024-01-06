@@ -19,12 +19,12 @@ struct SettingsView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 Section {
                     NavigationLink(destination: MintManagerView()) { Text("Mints") }
                     NavigationLink(destination: MnemonicView()) { Text("Show Seed Phrase") }
-                    NavigationLink(destination: Text("Restore")) { Text("Restore") }
+                    NavigationLink(destination: RestoreView()) { Text("Restore") }
                 } header: {
                     Text("cashu")
                 }
@@ -54,9 +54,11 @@ struct SettingsView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding()
                 }
+                .toolbar(.visible, for: .tabBar)
             }
             .navigationTitle("Settings")
         }
+        
     }
 }
 

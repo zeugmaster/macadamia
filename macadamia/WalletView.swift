@@ -103,8 +103,6 @@ struct WalletView: View {
                         .padding(WalletView.buttonPadding)
                }
                .padding(EdgeInsets(top: 0, leading: 20, bottom: 40, trailing: 20))
-               
-                //Spacer()
             }
             .navigationDestination(for: String.self) { tag in
                 switch tag {

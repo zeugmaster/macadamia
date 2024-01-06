@@ -29,7 +29,7 @@ struct MintManagerView: View {
                     .autocorrectionDisabled(true)
                     .textInputAutocapitalization(.never)
             } footer: {
-                Text("Swipe to delete. Make sure to add correct prefix and port numbers to mint URLs.")
+                Text("Swipe to delete. Make sure to add correct prefix and port numbers to mint URLs. Pressing RETURN  will add the mint URL")
             }
         }
         .alert(vm.currentAlert?.title ?? "Error", isPresented: $vm.showAlert) {

@@ -132,6 +132,7 @@ struct MintRequestCompletionView: View {
         .buttonStyle(.bordered)
         .padding()
         .toolbar(.hidden, for: .tabBar)
+        .navigationBarBackButtonHidden(viewModel.success)
     }
 }
 
@@ -149,6 +150,8 @@ class MintRequestViewModel: ObservableObject {
     @Published var invoiceString = "loading..."
     @Published var errorToDisplay:Error?
     @Published var mintRequestState = "loading..."
+    
+    @Published var success = false
     
     private var wallet = Wallet.shared
     private var selectedMint:Mint?
@@ -193,6 +196,7 @@ class MintRequestViewModel: ObservableObject {
             do {
                 try await wallet.requestMint(from:selectedMint!,for:quote!,with:amount)
                 mintRequestState = "Success"
+                success = true
             } catch {
                 mintRequestState = String(describing: error)
             }

@@ -203,7 +203,7 @@ class Wallet {
         let (new, change) = try await split(mint: mint, totalProofs: proofs, at: invoiceAmount+fee)
         // if this fails copied proofs are discarded but originals remain ->
         // if executes -> make sure new AND change proofs are written back to DB
-        print("-------------->" + String(describing: proofs))
+//        print("-------------->" + String(describing: proofs))
         database.removeProofsFromValid(proofsToRemove: proofs)
         database.proofs.append(contentsOf: change)
         database.saveToFile()
@@ -229,24 +229,30 @@ class Wallet {
     //MARK: - Restore
     func restoreWithMnemonic(mnemonic:String) async throws {
         
-        // reset database
+        // if the new (old) mnemonic is invalid, return before causing any permanent damage
         guard let newMnemonic = try? BIP39.Mnemonic(phrase: mnemonic.components(separatedBy: .whitespacesAndNewlines)) else {
             throw WalletError.invalidMnemonicError
         }
         
-        self.database = Database.loadFromFile()
+        database = Database.loadFromFile()
         database.mnemonic = mnemonic
-        self.database.seed = String(bytes: newMnemonic.seed)
-        try await addMint(with: URL(string: "https://8333.space:3338")!)
+        database.seed = String(bytes: newMnemonic.seed)
         try await updateMints()
-        self.database.saveToFile() //overrides existing
+        database.saveToFile() //overrides existing
+        
         for mint in database.mints {
             for keyset in mint.allKeysets {
-                let (proofs, totalRestored, lastMatchCounter) = await restoreProofs(mint: mint, keysetID: keyset.id, seed: self.database.seed!)
+                let (proofs, _, lastMatchCounter) = await restoreProofs(mint: mint, keysetID: keyset.id, seed: self.database.seed!)
+                print("last match counter: \(lastMatchCounter)")
                 keyset.derivationCounter = lastMatchCounter
-                let (spendable, pending) = try await check(mint: mint, proofs: proofs)
+                // - "Very graceful /s"
+                // - "no. but very efficient."
+                if keyset.id == mint.activeKeyset.id {
+                    mint.activeKeyset.derivationCounter = lastMatchCounter
+                }
+                let (spendable, _) = try await check(mint: mint, proofs: proofs) // ignores pending but should not
                 guard spendable.count == proofs.count else {
-                    throw WalletError.restoreError(detail: "could not filter: proofs, spendable need matching lenght")
+                    throw WalletError.restoreError(detail: "could not filter: proofs, spendable need matching count")
                 }
                 var spendableProofs = [Proof]()
                 for i in 0..<spendable.count {
@@ -282,7 +288,6 @@ class Wallet {
             }
             print(restoreRespone)
             currentCounter += batchSize
-            //currentcounter needs to be correct
             batchLastMatchIndex = outputs.lastIndex(where: { oldOutput in
                 restoreRespone.outputs.contains(where: {newOut in oldOutput.B_ == newOut.B_})
             }) ?? 0
