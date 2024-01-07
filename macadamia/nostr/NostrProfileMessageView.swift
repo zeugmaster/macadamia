@@ -10,9 +10,9 @@ import SwiftUI
 
 struct NostrProfileMessageView: View {
     
-    @ObservedObject var vm:NostrProfileViewModel
+    @ObservedObject var vm:NostrProfileMessageViewModel
     
-    init(vm: NostrProfileViewModel) {
+    init(vm: NostrProfileMessageViewModel) {
         self.vm = vm
     }
     
@@ -70,11 +70,11 @@ struct NostrProfileMessageView: View {
 }
 
 #Preview {
-    NostrProfileMessageView(vm: NostrProfileViewModel(profile: Demo.user, tokenMessages:["cashuAaosdfhpwiuohafjsöfoivüoiüoierfüoiasügoiqhjüweroighjüowif"]))
+    NostrProfileMessageView(vm: NostrProfileMessageViewModel(profile: Demo.user, tokenMessages:["cashuAaosdfhpwiuohafjsöfoivüoiüoierfüoiasügoiqhjüweroighjüowif"]))
 }
 
 @MainActor
-class NostrProfileViewModel: ObservableObject {
+class NostrProfileMessageViewModel: ObservableObject {
     var profile:Profile
     @Published var tokenMessages:[String]?
     

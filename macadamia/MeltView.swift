@@ -49,6 +49,17 @@ struct MeltView: View {
                     }.onAppear(perform: {
                         vm.fetchMintInfo()
                     })
+                    .onChange(of: vm.selectedMintString) { oldValue, newValue in
+                        vm.updateBalance()
+                    }
+                    HStack {
+                        Text("Balance: ")
+                        Spacer()
+                        Text(String(vm.selectedMintBalance))
+                            .monospaced()
+                        Text("sats")
+                    }
+                    .foregroundStyle(.secondary)
                 } footer: {
                     Text("The invoice will be payed by the mint you select.")
                 }
@@ -118,6 +129,7 @@ class MeltViewModel: ObservableObject {
     
     @Published var mintList:[String] = [""]
     @Published var selectedMintString:String = ""
+    @Published var selectedMintBalance = 0
     
     @Published var showAlert:Bool = false
     var currentAlert:AlertDetail?
@@ -134,6 +146,12 @@ class MeltViewModel: ObservableObject {
         }
         invoice = value.string.lowercased()
         checkFee()
+    }
+    
+    func updateBalance() {
+        if let mint = wallet.database.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) {
+            selectedMintBalance = wallet.balance(mint: mint)
+        }
     }
     
     var invoiceAmount:Int? {

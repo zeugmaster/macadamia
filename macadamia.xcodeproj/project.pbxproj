@@ -16,6 +16,8 @@
 		3743CE5E2B48A94D00F862AB /* MeltView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE5D2B48A94D00F862AB /* MeltView.swift */; };
 		3743CE612B48AD3900F862AB /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = 3743CE602B48AD3900F862AB /* CodeScanner */; };
 		3743CE642B494C3D00F862AB /* RestoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE632B494C3D00F862AB /* RestoreView.swift */; };
+		3743CE662B49B7D600F862AB /* NostrProfileMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE652B49B7D600F862AB /* NostrProfileMessageView.swift */; };
+		3743CE682B4AA67600F862AB /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE672B4AA67600F862AB /* TransactionDetailView.swift */; };
 		3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3780EEE52B2B5C3F00971AE7 /* QRView.swift */; };
 		379212262B29E6580081F161 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792121F2B29E6580081F161 /* model.swift */; };
 		379212272B29E6580081F161 /* data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212202B29E6580081F161 /* data.swift */; };
@@ -50,6 +52,8 @@
 		3743CE5D2B48A94D00F862AB /* MeltView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeltView.swift; sourceTree = "<group>"; };
 		3743CE622B48AFA000F862AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		3743CE632B494C3D00F862AB /* RestoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreView.swift; sourceTree = "<group>"; };
+		3743CE652B49B7D600F862AB /* NostrProfileMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrProfileMessageView.swift; sourceTree = "<group>"; };
+		3743CE672B4AA67600F862AB /* TransactionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
 		3780EEE52B2B5C3F00971AE7 /* QRView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRView.swift; sourceTree = "<group>"; };
 		3792121F2B29E6580081F161 /* model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = model.swift; sourceTree = "<group>"; };
 		379212202B29E6580081F161 /* data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = data.swift; sourceTree = "<group>"; };
@@ -115,7 +119,7 @@
 				379BDF682B46F31E008FD0E7 /* SendView.swift */,
 				3743CE592B485BF800F862AB /* ReceiveView.swift */,
 				3743CE5D2B48A94D00F862AB /* MeltView.swift */,
-				3743CE572B47798800F862AB /* NostrSendView.swift */,
+				3743CE672B4AA67600F862AB /* TransactionDetailView.swift */,
 				379BDF632B430F32008FD0E7 /* Settings */,
 				379BDF5A2B42C4C4008FD0E7 /* nostr */,
 				3792121E2B29E6580081F161 /* cashu */,
@@ -152,6 +156,8 @@
 			isa = PBXGroup;
 			children = (
 				379BDF5B2B42C554008FD0E7 /* NostrContentView.swift */,
+				3743CE652B49B7D600F862AB /* NostrProfileMessageView.swift */,
+				3743CE572B47798800F862AB /* NostrSendView.swift */,
 				379BDF5C2B42C554008FD0E7 /* nostr.swift */,
 			);
 			path = nostr;
@@ -264,11 +270,13 @@
 				3792122A2B29E6580081F161 /* Base64FS.swift in Sources */,
 				379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */,
 				379212282B29E6580081F161 /* network.swift in Sources */,
+				3743CE682B4AA67600F862AB /* TransactionDetailView.swift in Sources */,
 				379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */,
 				372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */,
 				3792123E2B2AFFC40081F161 /* MintRequestView.swift in Sources */,
 				379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */,
 				379212292B29E6580081F161 /* crypto.swift in Sources */,
+				3743CE662B49B7D600F862AB /* NostrProfileMessageView.swift in Sources */,
 				3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */,
 				3743CE5E2B48A94D00F862AB /* MeltView.swift in Sources */,
 				379BDF5D2B42C554008FD0E7 /* NostrContentView.swift in Sources */,

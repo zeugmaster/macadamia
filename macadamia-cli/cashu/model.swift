@@ -210,6 +210,42 @@ struct StateCheckResponse: Codable {
     let pending:[Bool]
 }
 
+enum TransactionType:String,Codable {
+    case lightning = "TransactionTypeLightning"
+    case cashu = "TransactionTypeCashu"
+}
+class Transaction:Codable, Identifiable {
+    let timeStamp:String
+    let unixTimestamp:Double
+    let amount:Int //positive values for incoming, negative for outgoing
+    let type:TransactionType
+    var pending:Bool
+    
+    let invoice:String?
+    let token:String?
+    let proofs:[Proof]?
+    
+    init(timeStamp: String,
+         unixTimestamp:Double,
+         amount: Int,
+         type: TransactionType,
+         pending:Bool = false,
+         invoice: String? = nil,
+         token: String? = nil,
+         proofs: [Proof]? = nil) {
+        
+        self.timeStamp = timeStamp
+        self.unixTimestamp = unixTimestamp
+        self.amount = amount
+        self.type = type
+        self.pending = pending
+        self.invoice = invoice
+        self.token = token
+        self.proofs = proofs
+    }
+}
+
+
 extension String {
     func makeURLSafe() -> String {
         return self

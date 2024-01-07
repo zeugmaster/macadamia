@@ -34,6 +34,8 @@ struct NostrInboxView: View {
                         }
                     } header: {
                         Text("Contacts")
+                    } footer: {
+                        Text("Tap an account to send or receive eCash.")
                     }
                 }
                 if !vm.randos.isEmpty {
@@ -121,12 +123,8 @@ struct TableRowView: View {
                     .lineLimit(1)
             }
             Spacer()
-            Button(action: {
-                redeemButtonAction()
-            }, label: {
-                Image(systemName: "square.and.arrow.down")
-            })
-            NavigationLink("\(Image(systemName: "arrow"))", destination: NostrSendView(nsvm: NostrSendViewModel(recipientProfile: profile)))
+            
+            NavigationLink("", destination: NostrProfileMessageView(vm: NostrProfileMessageViewModel(profile: profile)))
         }
         .buttonStyle(.bordered)
     }
@@ -157,8 +155,6 @@ struct UserProfileView: View {
                     .lineLimit(1)
             }
             Spacer()
-//            Image(systemName: "rectangle.and.pencil.and.ellipsis")
-//                .foregroundStyle(.secondary)
         }
     }
 }
@@ -189,6 +185,9 @@ class ContentViewModel: ObservableObject {
         
         nostrService = NostrService.shared
         userProfile = nostrService.userProfile
+        
+//        userProfile = Demo.user
+//        contacts = Demo.contacts
         
         if userProfile != nil {
             textfieldOpacity = 0.01

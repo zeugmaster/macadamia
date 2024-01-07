@@ -132,26 +132,49 @@ class Wallet {
                                      secrets: secrets,
                                      mintPublicKeys: mint.activeKeyset.keys)
         database.proofs.append(contentsOf: proofs)
+        let t = Transaction(timeStamp: ISO8601DateFormatter().string(from: Date()),
+                            unixTimestamp: Date().timeIntervalSince1970,
+                            amount: amount,
+                            type: .lightning,
+                            invoice: quote.pr)
+        database.transactions.insert(t, at: 0)
         database.saveToFile()
     }
     
     //MARK: Send
+    //FIXME: terrible redundancy and lackluster control flow
     func sendTokens(from mint:Mint, amount:Int, memo:String?) async throws -> String {
         let (proofs, sum) = try database.retrieveProofs(from: mint, amount: amount)
+        
+        let proofsToSend:[Proof]
+        
         if amount == sum {
             self.database.removeProofsFromValid(proofsToRemove: proofs)
             self.database.saveToFile()
-            return try serializeProofs(proofs: proofs, memo: memo)
+            proofsToSend = proofs
         } else if amount < sum {
             let (new, change) = try await split(mint: mint, totalProofs: proofs, at: amount)
-            database.removeProofsFromValid(proofsToRemove: proofs)
             database.proofs.append(contentsOf: change)
-//            mint.activeKeyset.derivationCounter += (new.count + change.count) //FIXME: might be placed wrong or redundant
-            database.saveToFile()
-            return try serializeProofs(proofs: new, memo: memo)
+            proofsToSend = new
         } else {
             throw WalletError.unknownMintError
         }
+        
+        database.removeProofsFromValid(proofsToRemove: proofs)
+        database.saveToFile()
+        
+        let token = try serializeProofs(proofs: proofsToSend, memo: memo)
+        
+        let t = Transaction(timeStamp: ISO8601DateFormatter().string(from: Date()),
+                            unixTimestamp: Date().timeIntervalSince1970,
+                            amount: amount * -1,
+                            type: .cashu,
+                            pending: true,
+                            token: token,
+                            proofs: proofsToSend)
+        database.transactions.insert(t, at: 0)
+        
+        return token
     }
     
     //MARK: - Receive
@@ -177,12 +200,19 @@ class Wallet {
                                         secrets: secrets,
                                         mintPublicKeys: keyset.keys)
         self.database.proofs.append(contentsOf: newProofs)
+        let t = Transaction(timeStamp: ISO8601DateFormatter().string(from: Date()),
+                            unixTimestamp: Date().timeIntervalSince1970,
+                            amount: newProofs.reduce(0){ $0 + $1.amount },
+                            type: .cashu,
+                            token: tokenString,
+                            proofs: newProofs)
+        database.transactions.insert(t, at: 0)
         self.database.saveToFile()
     }
     
     //MARK: State check
     func check(mint:Mint, proofs:[Proof]) async throws -> (spendable:[Bool], pending:[Bool]) {
-        if proofs.isEmpty {return ([], [])}
+        if proofs.isEmpty { return ([], []) }
         let result = try await Network.check(mint: mint, proofs: proofs)
         return (result.spendable, result.pending)
     }
@@ -212,6 +242,12 @@ class Wallet {
             let meltReqResponse = try await Network.melt(mint: mint, meltRequest: MeltRequest(proofs: new, pr: invoice))
             // TODO: doesn't properly handle errors
             if meltReqResponse.paid {
+                let t = Transaction(timeStamp: ISO8601DateFormatter().string(from: Date()),
+                                    unixTimestamp: Date().timeIntervalSince1970,
+                                    amount: (invoiceAmount+fee) * -1,
+                                    type: .lightning,
+                                    invoice: invoice)
+                database.transactions.insert(t, at: 0)
                 return true
             } else {
                 database.proofs.append(contentsOf: new) //putting the proofs back
@@ -368,6 +404,19 @@ class Wallet {
             throw WalletError.tokenDeserializationError
         }
         return tokenContainer
+    }
+    
+    func checkTokenStatePending(token:String) async throws -> Bool {
+        // FIXME: needs much safer unwrapping
+        let proofs = try deserializeToken(token: token).token.first!.proofs
+        let mint = database.mintForKeysetID(id: proofs.first!.id)!
+        let result = try await Network.check(mint: mint, proofs: proofs)
+        print(result)
+        if result.spendable.contains(true) {
+            return true
+        } else {
+            return false
+        }
     }
 
     private func splitIntoBase2Numbers(n: Int) -> [Int] {

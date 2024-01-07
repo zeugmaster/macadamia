@@ -34,6 +34,17 @@ struct ReceiveView: View {
                         }
                         Text("Mint: \(vm.mintURL ?? "")")
                             .foregroundStyle(.secondary)
+                        if vm.unknownMint {
+                            Button {
+                                vm.addUnkownMint()
+                            } label: {
+                                HStack {
+                                    Text("Unknown mint. Add it?")
+                                    Spacer()
+                                    Image(systemName: "plus")
+                                }
+                            }
+                        }
                         Button {
                             vm.reset()
                         } label: {
@@ -120,6 +131,7 @@ class ReceiveViewModel: ObservableObject {
     @Published var loading = false
     @Published var success = false
     @Published var tokenAmount:Int?
+    @Published var unknownMint = false
     
     @Published var showAlert:Bool = false
     var currentAlert:AlertDetail?
@@ -136,6 +148,8 @@ class ReceiveViewModel: ObservableObject {
         tokenMemo = deserialized.memo
         mintURL = deserialized.token.first?.mint
         tokenAmount = amountForToken(token: deserialized)
+        
+        unknownMint = !wallet.database.mints.contains(where: { $0.url.absoluteString.contains(mintURL ?? "unknown") })
     }
     
     func amountForToken(token:Token_Container) -> Int {
@@ -144,6 +158,16 @@ class ReceiveViewModel: ObservableObject {
             total += proof.amount
         }
         return total
+    }
+    
+    func addUnkownMint() {
+        Task {
+            guard let mintURL = mintURL, let url = URL(string: mintURL) else {
+                return
+            }
+            try await wallet.addMint(with:url)
+            unknownMint = false
+        }
     }
     
     func redeem() {

@@ -12,18 +12,21 @@ public class Database: Codable {
     var proofs:[Proof]
     var pendingProofs:[Proof]
     var mints:[Mint]
-//    var pendingOutputs:[Output]
+    
+    var transactions:[Transaction]
     
     var mnemonic:String?
     var seed:String?
     
     private init(proofs: [Proof] = [], 
          pendingProofs: [Proof] = [],
+         transactions:[Transaction] = [],
          mints: [Mint] = [],
          mnemonic: String? = nil) {
         
         self.proofs = proofs
         self.pendingProofs = pendingProofs
+        self.transactions = transactions
         self.mints = mints
         self.mnemonic = mnemonic
     }
@@ -62,6 +65,7 @@ public class Database: Codable {
         pendingProofs = []
         mnemonic = nil
         seed = nil
+        transactions = []
         saveToFile()
     }
     

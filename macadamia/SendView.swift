@@ -28,9 +28,21 @@ struct SendView: View {
                     ForEach(vm.mintList, id: \.self) {
                         Text($0)
                     }
-                }.onAppear(perform: {
+                }
+                .onAppear(perform: {
                     vm.fetchMintInfo()
                 })
+                .onChange(of: vm.selectedMintString) { oldValue, newValue in
+                    vm.updateBalance()
+                }
+                HStack {
+                    Text("Balance: ")
+                    Spacer()
+                    Text(String(vm.selectedMintBalance))
+                        .monospaced()
+                    Text("sats")
+                }
+                .foregroundStyle(.secondary)
             }
             Section {
                 TextField("enter note", text: $vm.tokenMemo)
@@ -147,6 +159,7 @@ class SendViewModel: ObservableObject {
     @Published var numberString: String = ""
     @Published var mintList:[String] = [""]
     @Published var selectedMintString:String = ""
+    @Published var selectedMintBalance = 0
     
     @Published var loading = false
     @Published var succes = false
@@ -164,6 +177,12 @@ class SendViewModel: ObservableObject {
             mintList.append(String(readable))
         }
         selectedMintString = mintList[0]
+    }
+    
+    func updateBalance() {
+        if let mint = wallet.database.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) {
+            selectedMintBalance = wallet.balance(mint: mint)
+        }
     }
     
     var amount: Int {
