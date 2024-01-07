@@ -20,28 +20,48 @@ struct NostrProfileMessageView: View {
         NavigationStack {
             List {
                 Section {
-                    UserProfileView(profile: vm.profile)
+                    HStack {
+                        if let url = vm.profile.pictureURL {
+                            AsyncImage(url: url) { image in
+                                image.resizable()
+                            } placeholder: {
+                                ProgressView()
+                            }
+                            .frame(width: 40, height: 40)
+                            .clipShape(Circle())
+                        } else {
+                            Image(systemName: "person.fill") // Fallback system image
+                                .frame(width: 40, height: 40)
+                        }
+                        if vm.profile.name != nil {
+                            Text(vm.profile.name!)
+                                .lineLimit(1)
+                        } else {
+                            Text(vm.profile.npub.prefix(14))
+                                .lineLimit(1)
+                        }
+                    }
                 } header: {
                     Text("Your nostr contact")
                 }
-                if vm.tokenMessages != nil {
-                    if !vm.tokenMessages!.isEmpty {
-                        Section {
-                            ForEach(vm.tokenMessages!, id: \.self) { token in
-                                Button {
-                                    vm.redeem(token: token)
-                                } label: {
-                                    Text(token)
-                                        .monospaced()
-                                        .lineLimit(1)
-                                }
+                if !vm.tokens.isEmpty {
+                    Section {
+                        ForEach(vm.tokens, id: \.self) { token in
+                            Button {
+                                vm.redeem(token: token)
+                            } label: {
+                                Text(token)
+                                    .monospaced()
+                                    .lineLimit(1)
                             }
-                        } header: {
-                            Text("Pending token messages")
-                        } footer: {
-                            Text("Tap to redeem.")
                         }
+                    } header: {
+                        Text("Pending token messages")
+                    } footer: {
+                        Text("Tap to redeem.")
                     }
+                    .animation(.default, value: vm.tokens)
+                    .id(vm.profile.tokenMessages)
                 }
                 Section {
                     NavigationLink("Send eCash",
@@ -65,19 +85,21 @@ struct NostrProfileMessageView: View {
             } message: {
                 Text(vm.currentAlert?.alertDescription ?? "")
             }
+            .onAppear(perform: {
+                vm.updateTokens()
+            })
         }
     }
 }
 
-#Preview {
-    NostrProfileMessageView(vm: NostrProfileMessageViewModel(profile: Demo.user, tokenMessages:["cashuAaosdfhpwiuohafjsöfoivüoiüoierfüoiasügoiqhjüweroighjüowif"]))
-}
+//#Preview {
+//    NostrProfileMessageView(vm: NostrProfileMessageViewModel(profile: Demo.user, tokenMessages:["cashuAaosdfhpwiuohafjsöfoivüoiüoierfüoiasügoiqhjüweroighjüowif"]))
+//}
 
 @MainActor
 class NostrProfileMessageViewModel: ObservableObject {
-    var profile:Profile
-    @Published var tokenMessages:[String]?
-    
+    @Published var profile:Profile
+    @Published var tokens = [String]()
     @Published var showAlert:Bool = false
     var currentAlert:AlertDetail?
     
@@ -85,19 +107,55 @@ class NostrProfileMessageViewModel: ObservableObject {
     
     init(profile: Profile, tokenMessages: [String]? = nil) {
         self.profile = profile
-        self.tokenMessages = tokenMessages
     }
     
+    // "janky" would be a gross understatement
     func redeem(token:String) {
         Task {
             do {
                 try await wallet.receiveToken(tokenString: token)
-                tokenMessages?.removeAll(where: {$0 == token})
+                for idx in 0..<tokens.count {
+                    if tokens[idx] == token {
+                        tokens[idx] = "Success!"
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            self.tokens.remove(at: idx)
+                        }
+                    }
+                }
+                profile.tokenMessages?.removeAll(where: {$0 == token})
+            } catch let error as WalletError {
+                switch error {
+                case .unknownMintError:
+                    guard let mintURL = try? wallet.deserializeToken(token: token).token.first?.mint else {
+                        return
+                    }
+                    displayAlert(alert: AlertDetail(title: "Add unknown mint?",
+                                                    description: "This token is from a mint you don't have in your list yet. Would you like to add \(mintURL) and then try again to redeem?",
+                                                    primaryButtonText: "No",
+                                                    affirmText: "Yes",
+                                                    onAffirm: {
+                        Task {
+                            do {
+                                try await self.wallet.addMint(with: URL(string: mintURL)!)
+                            } catch {
+                                self.displayAlert(alert: AlertDetail(title: "Failed"))
+                            }
+                        }
+                    }))
+                default:
+                    displayAlert(alert: AlertDetail(title: "Could not redeem",
+                                                   description: String(describing: error)))
+                }
             } catch {
                 displayAlert(alert: AlertDetail(title: "Could not redeem",
                                                description: String(describing: error)))
             }
         }
+    }
+    
+    
+    func updateTokens() {
+        tokens = profile.tokenMessages ?? []
     }
     
     private func displayAlert(alert:AlertDetail) {

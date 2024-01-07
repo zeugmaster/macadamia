@@ -105,12 +105,11 @@ enum Network {
     }
     
     //MARK: - STATE CHECK
-    static func check(mint:Mint, proofs:[Proof]) async throws -> StateCheckResponse {
-        let url = mint.url.appending(path: "check")
+    static func check(mintURL:URL, proofs:[Proof]) async throws -> StateCheckResponse {
         guard let payload = try? JSONEncoder().encode(["proofs":proofs]) else {
             throw NetworkError.encodingError
         }
-        let httpReq = URLRequest.post(url: url, body: payload)
+        let httpReq = URLRequest.post(url: mintURL.appending(path: "check"), body: payload)
         let (data, response) = try await URLSession.shared.data(for: httpReq)
         guard let decoded = try? JSONDecoder().decode(StateCheckResponse.self, from: data) else {
             throw parseHTTPErrorResponse(data: data, response: response)

@@ -14,8 +14,8 @@ struct SettingsView: View {
     
     var appVersion:String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown"
-        return "Version \(version) (\(build))"
+        let _ = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown"
+        return "Version \(version)"
     }
     
     var body: some View {

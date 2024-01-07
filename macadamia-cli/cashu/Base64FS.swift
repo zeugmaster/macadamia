@@ -7,7 +7,7 @@
 import Foundation
 
 enum Base64DecodingError: Error {
-    case invalidCharacter
+    case invalidCharacter(String)
     case decodingError(String)
 }
 
@@ -215,16 +215,49 @@ public class Base64FS {
         return result
     }
     
+//    public static func decode(data: [UInt8]) throws -> [UInt8] {
+//        var result: [UInt8] = []
+//        let size = data.count
+//
+//        for i in stride(from: 0, to: size, by: 4) {
+//            guard let first = safeAlphabetToIndex[data[i]],
+//                  let second = safeAlphabetToIndex[data[i + 1]],
+//                  let third = safeAlphabetToIndex[data[i + 2]],
+//                  let forth = safeAlphabetToIndex[data[i + 3]] else {
+//                throw Base64DecodingError.invalidCharacter("")
+//            }
+//
+//            let l1 = first << 2 | ((second & 0b110000) >> 4)
+//            let l2 = ((second & 0b1111) << 4) | ((third & 0b111100) >> 2)
+//            let l3 = ((third & 0b11) << 6) | forth
+//
+//            result.append(l1)
+//            if l3 != 0 {
+//                result.append(l2)
+//                result.append(l3)
+//            } else if l2 != 0 {
+//                result.append(l2)
+//            }
+//        }
+//
+//        return result
+//    }
+    
     public static func decode(data: [UInt8]) throws -> [UInt8] {
         var result: [UInt8] = []
         let size = data.count
 
+        // Ensure the input length is a multiple of 4
+        guard size % 4 == 0 else {
+            throw Base64DecodingError.decodingError("Input length must be a multiple of 4.")
+        }
+
         for i in stride(from: 0, to: size, by: 4) {
             guard let first = safeAlphabetToIndex[data[i]],
                   let second = safeAlphabetToIndex[data[i + 1]],
-                  let third = safeAlphabetToIndex[data[i + 2]],
-                  let forth = safeAlphabetToIndex[data[i + 3]] else {
-                throw Base64DecodingError.invalidCharacter
+                  let third = data[i + 2] == padding ? 0 : safeAlphabetToIndex[data[i + 2]],
+                  let forth = data[i + 3] == padding ? 0 : safeAlphabetToIndex[data[i + 3]] else {
+                throw Base64DecodingError.invalidCharacter("Invalid character in input.")
             }
 
             let l1 = first << 2 | ((second & 0b110000) >> 4)
@@ -232,11 +265,11 @@ public class Base64FS {
             let l3 = ((third & 0b11) << 6) | forth
 
             result.append(l1)
-            if l3 != 0 {
+            if data[i + 2] != padding {
                 result.append(l2)
-                result.append(l3)
-            } else if l2 != 0 {
-                result.append(l2)
+                if data[i + 3] != padding {
+                    result.append(l3)
+                }
             }
         }
 

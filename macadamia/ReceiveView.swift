@@ -165,7 +165,12 @@ class ReceiveViewModel: ObservableObject {
             guard let mintURL = mintURL, let url = URL(string: mintURL) else {
                 return
             }
-            try await wallet.addMint(with:url)
+            do {
+                try await wallet.addMint(with:url)
+            } catch {
+                displayAlert(alert: AlertDetail(title: "Could not add mint", description: String(describing: error)))
+            }
+            
             unknownMint = false
         }
     }

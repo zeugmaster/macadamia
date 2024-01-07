@@ -28,18 +28,26 @@ class Profile: Equatable, CustomStringConvertible, Codable {
     var name:String?
     var pictureURL:URL?
     
-    init(pubkey: String, npub: String, name: String? = nil, pictureURL: URL? = nil) {
+    var tokenMessages:[String]?
+    
+    init(pubkey: String, npub: String, name: String? = nil, pictureURL: URL? = nil, tokenMessages:[String]? = nil) {
         self.pubkey = pubkey
         self.npub = npub
         self.name = name
         self.pictureURL = pictureURL
+        self.tokenMessages = tokenMessages
     }
     
 }
 
-struct Message {
+class Message {
     let senderPubkey:String
-    let decryptedContent:String
+    var decryptedContent:String
+    
+    init(senderPubkey: String, decryptedContent: String) {
+        self.senderPubkey = senderPubkey
+        self.decryptedContent = decryptedContent
+    }
 }
 
 enum ContactServiceError: Error {
@@ -63,7 +71,6 @@ class NostrService: EventCreating {
             
     var relays = [Relay]()
     var relayStates = Dictionary<String,Relay.State>()
-//    var userProfile:Profile?
     
     // both should only be initialzed once to prevent unexpected behaviour and conflicting states
     private var keyManager = KeyManager()

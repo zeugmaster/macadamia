@@ -154,7 +154,7 @@ struct QuoteRequestResponse: Codable {
     
     static func satAmountFromInvoice(pr:String) throws -> Int {
         guard let range = pr.range(of: "1", options: .backwards) else {
-            throw Wallet.WalletError.invalidInvoiceError
+            throw WalletError.invalidInvoiceError
         }
         let endIndex = range.lowerBound
         let hrp = String(pr[..<endIndex])
@@ -162,18 +162,18 @@ struct QuoteRequestResponse: Codable {
             var num = hrp.dropFirst(4)
             let multiplier = num.popLast()
             guard var n = Double(num) else {
-                throw Wallet.WalletError.invalidInvoiceError
+                throw WalletError.invalidInvoiceError
             }
             switch multiplier {
             case "m": n *= 100000
             case "u": n *= 100
             case "n": n *= 0.1
             case "p": n *= 0.0001
-            default: throw Wallet.WalletError.invalidInvoiceError
+            default: throw WalletError.invalidInvoiceError
             }
             return n >= 1 ? Int(n) : 0
         } else {
-            throw Wallet.WalletError.invalidInvoiceError
+            throw WalletError.invalidInvoiceError
         }
     }
 }

@@ -11,7 +11,28 @@ struct NostrInboxView: View {
             List {
                 Section {
                     if vm.userProfile != nil {
-                        UserProfileView(profile: vm.userProfile!)
+                        HStack {
+                            
+                            if let url = vm.userProfile!.pictureURL {
+                                AsyncImage(url: url) { image in
+                                    image.resizable()
+                                } placeholder: {
+                                    ProgressView()
+                                }
+                                .frame(width: 40, height: 40)
+                                .clipShape(Circle())
+                            } else {
+                                Image(systemName: "person.fill") // Fallback system image
+                                    .frame(width: 40, height: 40)
+                            }
+                            if vm.userProfile!.name != nil {
+                                Text(vm.userProfile!.name!)
+                                    .lineLimit(1)
+                            } else {
+                                Text(vm.userProfile!.npub.prefix(14))
+                                    .lineLimit(1)
+                            }
+                        }
                     } else {
                         SecureField("enter NSEC", text: $vm.providedKey)
                             .onSubmit {
@@ -26,11 +47,30 @@ struct NostrInboxView: View {
                 if !vm.contacts.isEmpty {
                     Section {
                         ForEach(vm.contacts, id: \.pubkey) { profile in
-                            TableRowView(profile: profile) {
-                                
-                            } redeemButtonAction: {
-                                vm.redeemAllFromProfile(profile: profile)
+                            NavigationLink(destination: NostrProfileMessageView(vm: NostrProfileMessageViewModel(profile: profile))) {
+                                HStack {
+                                    if let url = profile.pictureURL {
+                                        AsyncImage(url: url) { image in
+                                            image.resizable()
+                                        } placeholder: {
+                                            ProgressView()
+                                        }
+                                        .frame(width: 40, height: 40)
+                                        .clipShape(Circle())
+                                    } else {
+                                        Image(systemName: "person.fill") // Fallback system image
+                                            .frame(width: 40, height: 40)
+                                    }
+                                    if profile.name != nil {
+                                        Text(profile.name!)
+                                            .lineLimit(1)
+                                    } else {
+                                        Text(profile.npub.prefix(14))
+                                            .lineLimit(1)
+                                    }
+                                }
                             }
+                            .badge(profile.tokenMessages?.count ?? 0)
                         }
                     } header: {
                         Text("Contacts")
@@ -41,16 +81,35 @@ struct NostrInboxView: View {
                 if !vm.randos.isEmpty {
                     Section {
                         ForEach(vm.randos, id: \.pubkey) { profile in
-                            TableRowView(profile: profile) {
-                                
-                            } redeemButtonAction: {
-                                
+                            NavigationLink(destination: NostrProfileMessageView(vm: NostrProfileMessageViewModel(profile: profile))) {
+                                HStack {
+                                    if let url = profile.pictureURL {
+                                        AsyncImage(url: url) { image in
+                                            image.resizable()
+                                        } placeholder: {
+                                            ProgressView()
+                                        }
+                                        .frame(width: 40, height: 40)
+                                        .clipShape(Circle())
+                                    } else {
+                                        Image(systemName: "person.fill") // Fallback system image
+                                            .frame(width: 40, height: 40)
+                                    }
+                                    if profile.name != nil {
+                                        Text(profile.name!)
+                                            .lineLimit(1)
+                                    } else {
+                                        Text(profile.npub.prefix(14))
+                                            .lineLimit(1)
+                                    }
+                                }
+                                .badge(profile.tokenMessages?.count ?? 0)
                             }
                         }
                     } header: {
-                        if !vm.randos.isEmpty {
-                            Text("Not in your contacts")
-                        }
+                        Text("Contacts")
+                    } footer: {
+                        Text("Tap an account to send or receive eCash.")
                     }
                 }
                 if vm.userProfile != nil {
@@ -65,13 +124,14 @@ struct NostrInboxView: View {
                     }
                 }
             }
-            .id(vm.didLoadAdditionalProfileInfo)
+            .id(vm.listRedraw)
             .refreshable {
                 vm.loadFollowListWithInfo()
             }
             .navigationTitle("Nostr Contacts")
             .onAppear {
                 vm.connectToRelay()
+                vm.listRedraw += 1
             }
             .alert(vm.currentAlert?.title ?? "Error", isPresented: $vm.showAlert) {
                 Button(role: .cancel) {
@@ -90,71 +150,6 @@ struct NostrInboxView: View {
             } message: {
                 Text(vm.currentAlert?.alertDescription ?? "")
             }
-        }
-    }
-}
-
-struct TableRowView: View {
-    
-    var profile:Profile
-    
-    var sendButtonAction:() -> ()
-    var redeemButtonAction:() -> ()
-    
-    var body: some View {
-        HStack {
-            if let url = profile.pictureURL {
-                AsyncImage(url: url) { image in
-                    image.resizable()
-                } placeholder: {
-                    ProgressView()
-                }
-                .frame(width: 40, height: 40)
-                .clipShape(Circle())
-            } else {
-                Image(systemName: "person.fill") // Fallback system image
-                    .frame(width: 40, height: 40)
-            }
-            if profile.name != nil {
-                Text(profile.name!)
-                    .lineLimit(1)
-            } else {
-                Text(profile.npub.prefix(14))
-                    .lineLimit(1)
-            }
-            Spacer()
-            
-            NavigationLink("", destination: NostrProfileMessageView(vm: NostrProfileMessageViewModel(profile: profile)))
-        }
-        .buttonStyle(.bordered)
-    }
-}
-
-struct UserProfileView: View {
-    var profile:Profile
-    
-    var body: some View {
-        HStack {
-            if let url = profile.pictureURL {
-                AsyncImage(url: url) { image in
-                    image.resizable()
-                } placeholder: {
-                    ProgressView()
-                }
-                .frame(width: 40, height: 40)
-                .clipShape(Circle())
-            } else {
-                Image(systemName: "person.fill") // Fallback system image
-                    .frame(width: 40, height: 40)
-            }
-            if profile.name != nil {
-                Text(profile.name!)
-                    .lineLimit(1)
-            } else {
-                Text(profile.npub.prefix(14))
-                    .lineLimit(1)
-            }
-            Spacer()
         }
     }
 }
@@ -178,22 +173,14 @@ class ContentViewModel: ObservableObject {
     var messages = [Message]()
     
     //needed to make updates to profile info reflected in UI
-    @Published var didLoadAdditionalProfileInfo = false
-    @Published var textfieldOpacity = 0.0
+    @Published var listRedraw = 0
+    
+    var wallet = Wallet.shared
     
     init() {
         
         nostrService = NostrService.shared
         userProfile = nostrService.userProfile
-        
-//        userProfile = Demo.user
-//        contacts = Demo.contacts
-        
-        if userProfile != nil {
-            textfieldOpacity = 0.01
-        } else {
-            textfieldOpacity = 1
-        }
     }
     
     func connectToRelay() {
@@ -236,10 +223,60 @@ class ContentViewModel: ObservableObject {
         Task {
             do {
                 contacts = try await nostrService.fetchContactList()
-                try await nostrService.loadInfo(for: contacts, of: userProfile)
-                didLoadAdditionalProfileInfo = true
+                //TODO: SORT
                 messages = try await nostrService.checkInbox()
-                randos = messages.uniqueSenders().filter { !contacts.contains($0)}
+                var allTokenMessages = messages.filter({ $0.decryptedContent.contains("cashuA") })
+                randos = allTokenMessages.uniqueSenders().filter { !contacts.contains($0)}
+                try await nostrService.loadInfo(for: contacts + randos, of: userProfile)
+                                
+                // truncate messeges to token
+                for message in allTokenMessages {
+                    guard let token = findSubstring(in: message.decryptedContent, withPrefix: "cashuA") else {
+                        continue
+                    }
+                    message.decryptedContent = token
+                }
+
+                // check against history & mint
+                let knownTokens = Set(wallet.database.transactions.compactMap({$0.token}))
+                allTokenMessages.removeAll { message in
+                    return knownTokens.contains(message.decryptedContent)
+                }
+                
+                var offsets = IndexSet()
+                for index in 0..<allTokenMessages.count {
+                    let spendable:Bool
+                    do {
+                        spendable = try await wallet.checkTokenStatePending(token:allTokenMessages[index].decryptedContent)
+                    } catch {
+                        spendable = false
+                    }
+                    if !spendable { offsets.insert(index) }
+                }
+                
+                allTokenMessages.remove(atOffsets: offsets)
+                
+                for p in contacts + randos {
+                    p.tokenMessages = allTokenMessages.filter({ $0.senderPubkey == p.pubkey }).map({ $0.decryptedContent })
+                }
+                
+                contacts.sort { (lhs, rhs) -> Bool in
+                    switch (lhs.name, rhs.name) {
+                    case let (lhsName?, rhsName?):
+                        if lhsName == rhsName {
+                            return lhs.npub < rhs.npub
+                        }
+                        return lhsName < rhsName
+                    case (nil, _):
+                        return false
+                    case (_, nil):
+                        return true
+                    }
+                }
+                
+                allTokenMessages.forEach( { print($0.decryptedContent) } )
+                
+                listRedraw += 1
             } catch {
                 displayAlert(alert: AlertDetail(title: "Refresh failed",
                                                 description: String(describing: error)))
@@ -247,32 +284,20 @@ class ContentViewModel: ObservableObject {
         }
     }
     
-    func redeemAllFromProfile(profile:Profile) {
-        //check messages and redeem
-        print("redeeeeem")
+    func findSubstring(in text: String, withPrefix prefix: String) -> String? {
+        let pattern = "\(prefix)\\S*"
+        let regex = try? NSRegularExpression(pattern: pattern, options: [])
+
+        let matches = regex?.matches(in: text, options: [], range: NSRange(text.startIndex..., in: text))
+        if let matchRange = matches?.first?.range {
+            return String(text[Range(matchRange, in: text)!])
+        }
+        
+        return nil
     }
     
     private func displayAlert(alert:AlertDetail) {
         currentAlert = alert
         showAlert = true
     }
-}
-
-struct Demo {
-    static let contacts = [Profile(pubkey: "0",
-                                npub: "npub1testtesttest0",
-                                name: "jack",
-                                pictureURL: URL(string: "https://imgproxy.snort.social/0tj5ONtCNGXTrkDxctGz0MsoEqd2ASXBiH7mqtgXRl0//aHR0cHM6Ly9ub3N0ci5idWlsZC9pL3Avbm9zdHIuYnVpbGRfNmI5OTA5YmNjZjBmNGZkYWY3YWFjZDliYzAxZTRjZTcwZGFiODZmN2Q5MDM5NWYyY2U5MjVlNmVhMDZlZDdjZC5qcGVn")),
-                        Profile(pubkey: "1",
-                                npub: "npub1testtesttest1",
-                                name: "Bob"),
-                        Profile(pubkey: "2",
-                                npub: "npub1testtesttest2",
-                                pictureURL: URL(string: "https://upload.wikimedia.org/wikipedia/en/5/52/Hal_Finney_%28computer_scientist%29.jpg"))]
-
-
-    static let user = Profile(pubkey: "hex92184751239874",
-                           npub: "npub1demousertesttesttest",
-                           name: "zeugmaster",
-                           pictureURL: URL(string: "https://imgproxy.snort.social/rRYAKvx4eBl_dyo2yXkM4mbfGmSLSiLgzUMat0JMEC4//aHR0cHM6Ly9wYnMudHdpbWcuY29tL3Byb2ZpbGVfaW1hZ2VzLzEyODMxMTE3NzU3NjQ5OTIwMDEva3Y5dkMwMlVfNDAweDQwMC5qcGc"))
 }

@@ -3,21 +3,23 @@ import CryptoKit
 import secp256k1
 import BIP39
 
+enum WalletError: Error {
+    case invalidMnemonicError
+    case tokenDeserializationError(String)
+    case tokenSerializationError(detail:String)
+    case unknownMintError //TODO: should not be treated like an error
+    case missingMintKeyset
+    case insufficientFunds(mintURL:String)
+    case invalidInvoiceError
+    case invalidSplitAmounts
+    case restoreError(detail:String)
+}
+
 class Wallet {
     
     static let shared = Wallet()
     
-    enum WalletError: Error {
-        case invalidMnemonicError
-        case tokenDeserializationError
-        case tokenSerializationError(detail:String)
-        case unknownMintError //TODO: should not be treated like an error
-        case missingMintKeyset
-        case insufficientFunds(mintURL:String)
-        case invalidInvoiceError
-        case invalidSplitAmounts
-        case restoreError(detail:String)
-    }
+    
     
     var database = Database.loadFromFile() //TODO: set to private
     
@@ -213,7 +215,7 @@ class Wallet {
     //MARK: State check
     func check(mint:Mint, proofs:[Proof]) async throws -> (spendable:[Bool], pending:[Bool]) {
         if proofs.isEmpty { return ([], []) }
-        let result = try await Network.check(mint: mint, proofs: proofs)
+        let result = try await Network.check(mintURL: mint.url.absoluteURL, proofs: proofs)
         return (result.spendable, result.pending)
     }
     
@@ -401,16 +403,21 @@ class Wallet {
         print(jsonString)
         let jsonData = jsonString.data(using: .utf8)!
         guard let tokenContainer:Token_Container = try? JSONDecoder().decode(Token_Container.self, from: jsonData) else {
-            throw WalletError.tokenDeserializationError
+            throw WalletError.tokenDeserializationError("")
         }
         return tokenContainer
     }
     
     func checkTokenStatePending(token:String) async throws -> Bool {
         // FIXME: needs much safer unwrapping
-        let proofs = try deserializeToken(token: token).token.first!.proofs
-        let mint = database.mintForKeysetID(id: proofs.first!.id)!
-        let result = try await Network.check(mint: mint, proofs: proofs)
+        guard let deserializedToken = try deserializeToken(token: token).token.first else {
+            throw WalletError.tokenDeserializationError("Token container does not contain a token.")
+        }
+        let proofs = deserializedToken.proofs
+        guard let mintURL = URL(string: deserializedToken.mint) else {
+            throw WalletError.tokenDeserializationError("could not decode mint URL from Token")
+        }
+        let result = try await Network.check(mintURL: mintURL, proofs: proofs)
         print(result)
         if result.spendable.contains(true) {
             return true
