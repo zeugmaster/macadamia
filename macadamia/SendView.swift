@@ -122,7 +122,7 @@ struct SendView: View {
         .buttonStyle(.bordered)
         .padding()
         .toolbar(.hidden, for: .tabBar)
-        .disabled(vm.numberString.isEmpty || vm.amount == 0)
+        .disabled(vm.numberString.isEmpty || vm.amount == 0 || vm.token != nil)
         .sheet(isPresented: $vm.showingShareSheet, content: {
             ShareSheet(items: [vm.token ?? "No token provided"])
         })

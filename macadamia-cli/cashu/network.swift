@@ -181,7 +181,15 @@ enum Network {
     //MARK: - Error handling
     static func parseHTTPErrorResponse(data:Data?, response:URLResponse) -> Error {
         //TODO: add real error parsing
-        print("PARSING ERROR:")
+        
+        if let data = data, let jsonDictionary = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+            // Use jsonDictionary as a [String: Any] dictionary
+            if let detail = jsonDictionary["detail"] {
+                return WalletError.mintError(detail: detail as? String ?? "none")
+            }
+        }
+        
+        print("PARSED ERROR:")
         print("Data returned from http request:" + (String(data: data!, encoding: .utf8) ?? "could not turn data to string"))
         print("http response: " + String(describing: response))
         return NetworkError.unknownError

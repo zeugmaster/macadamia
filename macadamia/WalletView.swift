@@ -140,6 +140,23 @@ struct WalletView: View {
                     EmptyView()
                 }
             }
+            .alert(vm.currentAlert?.title ?? "Error", isPresented: $vm.showAlert) {
+                Button(role: .cancel) {
+                    
+                } label: {
+                    Text(vm.currentAlert?.primaryButtonText ?? "OK")
+                }
+                if vm.currentAlert?.onAffirm != nil &&
+                    vm.currentAlert?.affirmText != nil {
+                    Button(role: .destructive) {
+                        vm.currentAlert!.onAffirm!()
+                    } label: {
+                        Text(vm.currentAlert!.affirmText!)
+                    }
+                }
+            } message: {
+                Text(vm.currentAlert?.alertDescription ?? "")
+            }
         }
     }
 }
@@ -192,28 +209,42 @@ class WalletViewModel:ObservableObject {
     @Published var transactions = [Transaction]()
     @Published var transactionListRefreshCounter = 0
     
+    @Published var showAlert:Bool = false
+    var currentAlert:AlertDetail?
+    
     func update() {
         Task {
             try await wallet.updateMints()
         }
         balance = wallet.balance()
-//        pendingBalance = wallet.database.pendingProofs.reduce(0) { $0 + $1.amount }
         transactions = wallet.database.transactions
-//        transactions = demoTransactions
     }
     
     func checkPending() {
         Task {
-            for transaction in self.transactions {
-                if transaction.pending && transaction.type == .cashu && transaction.token != nil {
-                    print("checking")
-                    transaction.pending = try await wallet.checkTokenStatePending(token: transaction.token!)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        self.transactionListRefreshCounter += 1
-                    }
+            do {
+                for transaction in self.transactions {
+                    if transaction.pending && transaction.type == .cashu && transaction.token != nil {
+                        transaction.pending = try await wallet.checkTokenStatePending(token: transaction.token!)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            self.transactionListRefreshCounter += 1
+                        }
+                   }
+                }
+            } catch {
+                let detail = String(String(describing: error).prefix(100)) + "..." //ooof
+                displayAlert(alert: AlertDetail(title: "Unable to update",
+                                                description: detail))
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    self.transactionListRefreshCounter += 1
                 }
             }
         }
+    }
+    
+    private func displayAlert(alert:AlertDetail) {
+        currentAlert = alert
+        showAlert = true
     }
     
 }

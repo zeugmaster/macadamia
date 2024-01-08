@@ -13,6 +13,7 @@ enum WalletError: Error {
     case invalidInvoiceError
     case invalidSplitAmounts
     case restoreError(detail:String)
+    case mintError(detail: String)
 }
 
 class Wallet {

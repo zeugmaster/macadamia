@@ -39,6 +39,7 @@
 		379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF642B447138008FD0E7 /* UIHelpers.swift */; };
 		379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF662B4696B6008FD0E7 /* MnemonicView.swift */; };
 		379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF682B46F31E008FD0E7 /* SendView.swift */; };
+		37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,7 +51,6 @@
 		3743CE572B47798800F862AB /* NostrSendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrSendView.swift; sourceTree = "<group>"; };
 		3743CE592B485BF800F862AB /* ReceiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiveView.swift; sourceTree = "<group>"; };
 		3743CE5D2B48A94D00F862AB /* MeltView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeltView.swift; sourceTree = "<group>"; };
-		3743CE622B48AFA000F862AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		3743CE632B494C3D00F862AB /* RestoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreView.swift; sourceTree = "<group>"; };
 		3743CE652B49B7D600F862AB /* NostrProfileMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrProfileMessageView.swift; sourceTree = "<group>"; };
 		3743CE672B4AA67600F862AB /* TransactionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
@@ -72,6 +72,7 @@
 		379BDF642B447138008FD0E7 /* UIHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIHelpers.swift; sourceTree = "<group>"; };
 		379BDF662B4696B6008FD0E7 /* MnemonicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MnemonicView.swift; sourceTree = "<group>"; };
 		379BDF682B46F31E008FD0E7 /* SendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendView.swift; sourceTree = "<group>"; };
+		37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,7 +110,7 @@
 		372034B82B29E1BC00C4F955 /* macadamia */ = {
 			isa = PBXGroup;
 			children = (
-				3743CE622B48AFA000F862AB /* Info.plist */,
+				37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */,
 				372034B92B29E1BC00C4F955 /* macadamiaApp.swift */,
 				372034BB2B29E1BC00C4F955 /* ContentView.swift */,
 				379212392B2A36830081F161 /* WalletView.swift */,
@@ -247,6 +248,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */,
 				372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */,
 				372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */,
 			);
@@ -414,6 +416,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
@@ -426,7 +429,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "macadamia uses your device's camera to read the QR-codes of lightning invoices.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -450,6 +453,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
@@ -462,7 +466,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "macadamia uses your device's camera to read the QR-codes of lightning invoices.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
