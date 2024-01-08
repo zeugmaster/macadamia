@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-
+let betaDisclaimerURL = URL(string: "https://macadamia.cash/beta.html")!
 
 struct WalletView: View {
     @ObservedObject var vm = WalletViewModel()
@@ -19,7 +19,23 @@ struct WalletView: View {
     var body: some View {
         NavigationStack(path:$navigationPath) {
             VStack {
-                Spacer(minLength: 100)
+                HStack {
+                    Button {
+                        if UIApplication.shared.canOpenURL(betaDisclaimerURL) {
+                            UIApplication.shared.open(betaDisclaimerURL)
+                        }
+                    } label: {
+                        Text("BETA")
+                            .padding(6)
+                            .overlay(
+                            RoundedRectangle(cornerRadius: 4) // Rounded rectangle shape
+                                .stroke(lineWidth: 1) // Thin outline with specified line width
+                        )
+                    }
+                    Spacer()
+                }
+                .padding(EdgeInsets(top: 20, leading: 40, bottom: 0, trailing: 0))
+                Spacer(minLength: 80)
                 HStack(alignment:.bottom) {
                     Spacer()
                     Spacer()

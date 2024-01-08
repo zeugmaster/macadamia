@@ -61,7 +61,6 @@
 		379212222B29E6580081F161 /* crypto.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = crypto.swift; sourceTree = "<group>"; };
 		379212232B29E6580081F161 /* Base64FS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Base64FS.swift; sourceTree = "<group>"; };
 		379212242B29E6580081F161 /* cashu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cashu.swift; sourceTree = "<group>"; };
-		379212252B29E6580081F161 /* macadamia-cli.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; name = "macadamia-cli.entitlements"; path = "macadamia-cli/macadamia-cli.entitlements"; sourceTree = SOURCE_ROOT; };
 		379212392B2A36830081F161 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
 		3792123B2B2A36970081F161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3792123D2B2AFFC40081F161 /* MintRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintRequestView.swift; sourceTree = "<group>"; };
@@ -124,7 +123,6 @@
 				379BDF632B430F32008FD0E7 /* Settings */,
 				379BDF5A2B42C4C4008FD0E7 /* nostr */,
 				3792121E2B29E6580081F161 /* cashu */,
-				379212252B29E6580081F161 /* macadamia-cli.entitlements */,
 				372034BD2B29E1BD00C4F955 /* Assets.xcassets */,
 				372034BF2B29E1BD00C4F955 /* Preview Content */,
 			);
