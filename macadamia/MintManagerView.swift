@@ -103,9 +103,6 @@ class MintManagerViewModel: ObservableObject {
     }
     
     func removeMint(at offsets: IndexSet) {
-        
-        //TODO: check mint balance
-        //https://mint.zeugmaster.com:3338
         if true {
             displayAlert(alert: AlertDetail(title: "Are you sure?",
                                            description: "This mint still has a balance. Are you sure you want to delete it?",

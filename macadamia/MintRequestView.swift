@@ -105,7 +105,6 @@ struct MintRequestInvoiceView: View {
             .toolbar(.hidden, for: .tabBar)
         }
         .onAppear(perform: {
-            #warning("needs safer flow")
             viewmodel.requestQuote()
         })
     }

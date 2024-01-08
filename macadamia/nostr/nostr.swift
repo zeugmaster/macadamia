@@ -418,13 +418,10 @@ class NostrDataManager: Codable {
     private var _relayURLlist = [String]()
     private var _userProfile:Profile?
     
-    #warning("replace with generic relay urls")
     private var defaultRelaysURLs = ["wss://relay.damus.io",
                                      "wss://nostr.wine",
-                                     "wss://filter.nostr.wine/npub1f742zec57c6qk9ajfr8wyjn0s4vrfzh4hesyj2yqplvj5wrfydxsjprpa3?broadcast=true&global=all",
                                      "wss://purplepag.es",
                                      "wss://nos.lol",
-                                     "wss://zeugmaster.com",
                                      "wss://relay.snort.social"]
     
     init() {

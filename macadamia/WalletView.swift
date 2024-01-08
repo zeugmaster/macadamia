@@ -35,7 +35,7 @@ struct WalletView: View {
                     Spacer()
                 }
                 .padding(EdgeInsets(top: 20, leading: 40, bottom: 0, trailing: 0))
-                Spacer(minLength: 80)
+                Spacer(minLength: 60)
                 HStack(alignment:.bottom) {
                     Spacer()
                     Spacer()

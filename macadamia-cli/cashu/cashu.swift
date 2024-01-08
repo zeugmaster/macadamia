@@ -55,7 +55,13 @@ class Wallet {
         }
         let allKeysetIDs = try await Network.loadAllKeysetIDs(mintURL: url)
         let activeKeysetDict = try await Network.loadKeyset(mintURL: url, keysetID: nil)
-        let mintInfo = try await Network.mintInfo(mintURL: url)
+        
+        // patch to allow for mintInfo that we can not yet decode
+        var mintInfo = try? await Network.mintInfo(mintURL: url)
+        if mintInfo == nil {
+            mintInfo = MintInfo(name: "", pubkey: "", version: "", contact: [[""]], nuts: [], parameter: [:])
+        }
+        
         var keysets = [Keyset]()
         var activeKeyset:Keyset?
         for id in allKeysetIDs.keysets {
@@ -73,7 +79,7 @@ class Wallet {
         database.mints.append(Mint(url: url,
                                    activeKeyset: activeKeyset!,
                                    allKeysets: keysets,
-                                   info: mintInfo))
+                                   info: mintInfo!))
         database.saveToFile()
     }
     

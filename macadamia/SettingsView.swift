@@ -11,6 +11,7 @@ import UIKit
 struct SettingsView: View {
     
     let sourceRepoURL = URL(string: "https://github.com/zeugmaster/macadamia")!
+    let mailURL = URL(string: "mailto:contact@macadamia.cash")!
     
     var appVersion:String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
@@ -45,14 +46,28 @@ struct SettingsView: View {
                             UIApplication.shared.open(sourceRepoURL)
                         }
                     }
-                    NavigationLink(destination: Text("Acknowledgments")) { Text("Acknowledgments") }
+                    HStack {
+                        Text("Contact the developer")
+                        Spacer()
+                        Image(systemName: "envelope")
+                            .foregroundStyle(.secondary)
+                    }
+                    .onTapGesture {
+                        if UIApplication.shared.canOpenURL(mailURL) {
+                            UIApplication.shared.open(mailURL)
+                        }
+                    }
                 } header: {
                     Text("Information")
                 } footer: {
-                    Text("macadamia, \(appVersion)")
-                        .font(.system(size: 16)) // Adjust the size as needed
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding()
+                    VStack {
+                        Text("macadamia, \(appVersion)")
+                        Text("Privacy is a human right.")
+                            .padding(4)
+                    }
+                    .font(.system(size: 16)) // Adjust the size as needed
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding()
                 }
                 .toolbar(.visible, for: .tabBar)
             }

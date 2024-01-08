@@ -223,7 +223,6 @@ class ContentViewModel: ObservableObject {
         Task {
             do {
                 contacts = try await nostrService.fetchContactList()
-                //TODO: SORT
                 messages = try await nostrService.checkInbox()
                 var allTokenMessages = messages.filter({ $0.decryptedContent.contains("cashuA") })
                 randos = allTokenMessages.uniqueSenders().filter { !contacts.contains($0)}
