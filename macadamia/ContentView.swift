@@ -12,11 +12,11 @@ struct ContentView: View {
     var body: some View {
         TabView {
             // First tab content
-            WalletView()
-                .tabItem {
-                    Label("Wallet", systemImage: "bitcoinsign.circle")
-                }
-            
+//            WalletView()
+//                .tabItem {
+//                    Label("Wallet", systemImage: "bitcoinsign.circle")
+//                }
+//            
             // Second tab content
             NostrInboxView()
                 .tabItem {
