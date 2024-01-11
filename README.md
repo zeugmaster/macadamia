@@ -12,5 +12,7 @@ macadamia support standard cashu operations such as:
 
 Additionally, macadamia supports sending and receiving/redeeming tokens sent over the __Nostr__ protocol!
 
+You can test it using [Testflight](https://testflight.apple.com/join/FteRYrAZ)
+
 ### WARNING: 
 This project is in the very early beta stages and propably contains bugs that can lead to a loss of funds. Please only experiment with amounts of sats you are ready to lose!
