@@ -2,7 +2,7 @@
 //  Alerts.swift
 //  macadamia
 //
-//  Created by Dario Lass on 02.01.24.
+//  Created by zeugmaster on 02.01.24.
 //
 
 import Foundation

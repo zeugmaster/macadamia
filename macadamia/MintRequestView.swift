@@ -2,7 +2,7 @@
 //  MintRequestView.swift
 //  macadamia
 //
-//  Created by Dario Lass on 14.12.23.
+//  Created by zeugmaster on 14.12.23.
 //
 
 import SwiftUI

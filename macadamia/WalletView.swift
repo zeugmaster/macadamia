@@ -2,7 +2,7 @@
 //  WalletView.swift
 //  macadamia
 //
-//  Created by Dario Lass on 13.12.23.
+//  Created by zeugmaster on 13.12.23.
 //
 
 import SwiftUI

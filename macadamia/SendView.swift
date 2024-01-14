@@ -2,7 +2,7 @@
 //  SendView.swift
 //  macadamia
 //
-//  Created by Dario Lass on 04.01.24.
+//  Created by zeugmaster on 04.01.24.
 //
 
 import SwiftUI

@@ -2,7 +2,7 @@
 //  TransactionDetailView.swift
 //  macadamia
 //
-//  Created by Dario Lass on 07.01.24.
+//  Created by zeugmaster on 07.01.24.
 //
 
 import SwiftUI

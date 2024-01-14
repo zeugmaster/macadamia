@@ -2,7 +2,7 @@
 //  SettingView.swift
 //  macadamia
 //
-//  Created by Dario Lass on 13.12.23.
+//  Created by zeugmaster on 13.12.23.
 //
 
 import SwiftUI
@@ -15,8 +15,8 @@ struct SettingsView: View {
     
     var appVersion:String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
-        let _ = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown"
-        return "Version \(version)"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown"
+        return "Version \(version) (\(build))"
     }
     
     var body: some View {

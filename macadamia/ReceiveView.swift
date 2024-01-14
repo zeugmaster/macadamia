@@ -2,7 +2,7 @@
 //  ReceiveView.swift
 //  macadamia
 //
-//  Created by Dario Lass on 05.01.24.
+//  Created by zeugmaster on 05.01.24.
 //
 
 import SwiftUI

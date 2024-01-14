@@ -2,7 +2,7 @@
 //  MintManagerView.swift
 //  macadamia
 //
-//  Created by Dario Lass on 01.01.24.
+//  Created by zeugmaster on 01.01.24.
 //
 
 import SwiftUI

@@ -2,7 +2,7 @@
 //  nostr.swift
 //  nostr-test
 //
-//  Created by Dario Lass on 21.12.23.
+//  Created by zeugmaster on 21.12.23.
 //
 
 import SwiftUI

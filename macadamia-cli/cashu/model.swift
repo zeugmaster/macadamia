@@ -2,7 +2,7 @@
 //  model.swift
 //  macadamia-cli
 //
-//  Created by Dario Lass on 01.12.23.
+//  Created by zeugmaster on 01.12.23.
 //
 
 import Foundation

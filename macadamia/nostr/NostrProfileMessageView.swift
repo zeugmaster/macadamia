@@ -2,7 +2,7 @@
 //  NostrRede.swift
 //  macadamia
 //
-//  Created by Dario Lass on 06.01.24.
+//  Created by zeugmaster on 06.01.24.
 //
 
 import SwiftUI
