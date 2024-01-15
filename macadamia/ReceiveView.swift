@@ -139,11 +139,17 @@ class ReceiveViewModel: ObservableObject {
     
     func paste() {
         let pasteString = UIPasteboard.general.string ?? ""
-        guard let deserialized = try? wallet.deserializeToken(token: pasteString) else {
+        
+        let deserialized:Token_Container
+        
+        do {
+            deserialized = try wallet.deserializeToken(token: pasteString)
+        } catch {
             displayAlert(alert: AlertDetail(title: "Invalid token",
-                                            description: "This token could not be read. Input: \(pasteString.prefix(20))..."))
+                                            description: "This token could not be read. Input: \(pasteString.prefix(20))... Error: \(String(describing: error))"))
             return
         }
+        
         token = pasteString
         tokenMemo = deserialized.memo
         mintURL = deserialized.token.first?.mint

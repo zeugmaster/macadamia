@@ -399,24 +399,38 @@ class Wallet {
         let tokenContainer = Token_Container(token: [token], memo: memo)
         let jsonData = try JSONEncoder().encode(tokenContainer)
         let jsonString = String(data: jsonData, encoding: .utf8)!
-        let safeString = Base64FS.encodeString(str: jsonString)
+        let safeString = jsonString.encodeBase64UrlSafe()
         return "cashuA" + safeString
     }
     
     func deserializeToken(token: String) throws -> Token_Container {
-        //TODO: check for more cases where invalid
-        let noPrefix = token.dropFirst(6)
-        let jsonString = try Base64FS.decodeString(str: String(noPrefix))
+        // TODO: check prefix is cashuA
+        var noPrefix = token
+        guard token.contains("cashuA") else {
+            throw WalletError.tokenDeserializationError("Token does not contain V3 prefix \"cashuA\"")
+        }
+        // needs to be in the right order to avoid only stripping cashu: and leaving //
+        if token.hasPrefix("cashu://") {
+            noPrefix = String(token.dropFirst("cashu://".count))
+        }
+        if token.hasPrefix("cashu:") {
+            noPrefix = String(token.dropFirst("cashu:".count))
+        }
+        noPrefix = String(token.dropFirst(6))
+        print(noPrefix)
+        guard let jsonString = noPrefix.decodeBase64UrlSafe() else {
+            throw WalletError.tokenDeserializationError("token could not be decoded from Base64")
+        }
         print(jsonString)
         let jsonData = jsonString.data(using: .utf8)!
-        guard let tokenContainer:Token_Container = try? JSONDecoder().decode(Token_Container.self, from: jsonData) else {
+        guard let tokenContainer:Token_Container = try? JSONDecoder().decode(Token_Container.self, 
+                                                                             from: jsonData) else {
             throw WalletError.tokenDeserializationError("")
         }
         return tokenContainer
     }
     
     func checkTokenStatePending(token:String) async throws -> Bool {
-        // FIXME: needs much safer unwrapping
         guard let deserializedToken = try deserializeToken(token: token).token.first else {
             throw WalletError.tokenDeserializationError("Token container does not contain a token.")
         }
