@@ -283,6 +283,7 @@ class Wallet {
         database.mnemonic = mnemonic
         database.seed = String(bytes: newMnemonic.seed)
         try await updateMints()
+        database.proofs = []
         database.saveToFile() //overrides existing
         
         for mint in database.mints {
@@ -309,7 +310,7 @@ class Wallet {
         }
     }
     
-    private func restoreProofs(mint:Mint, keysetID:String, seed:String, batchSize:Int = 10) async -> (proofs:[Proof], totalRestored:Int, lastMatchCounter:Int) {
+    private func restoreProofs(mint:Mint, keysetID:String, seed:String, batchSize:Int = 25) async -> (proofs:[Proof], totalRestored:Int, lastMatchCounter:Int) {
         
         guard let mintPubkeys = mint.allKeysets.first(where: {$0.id == keysetID})?.keys else {
             print("ERROR: could not find public keys for keyset: \(keysetID)")

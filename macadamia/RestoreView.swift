@@ -87,11 +87,11 @@ class RestoreViewModel:ObservableObject {
     var wallet = Wallet.shared
     
     func attemptRestore() {
-        guard wallet.database.mnemonic != mnemonic else {
-            displayAlert(alert: AlertDetail(title: "Already in use",
-                                           description: "The seed phrase you entered is the same as the one already in use for this wallet."))
-            return
-        }
+//        guard wallet.database.mnemonic != mnemonic else {
+//            displayAlert(alert: AlertDetail(title: "Already in use",
+//                                           description: "The seed phrase you entered is the same as the one already in use for this wallet."))
+//            return
+//        }
         Task {
             do {
                 loading = true
