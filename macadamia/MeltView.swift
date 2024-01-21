@@ -136,15 +136,18 @@ class MeltViewModel: ObservableObject {
     var wallet = Wallet.shared
     
     func processScanViewResult(result:Result<ScanResult,ScanError>) {
-        guard let value = try? result.get() else {
+        guard var text = try? result.get().string.lowercased() else {
             return
         }
-        guard value.string.lowercased().hasPrefix("lnbc") else {
+        if text.hasPrefix("lightning:") {
+            text.removeFirst("lightning:".count)
+        }
+        guard text.hasPrefix("lnbc") else {
             displayAlert(alert: AlertDetail(title: "Invalid QR",
                                            description: "The QR code you scanned does not seem to be of a valid Lighning Network invoice. Please try again."))
             return
         }
-        invoice = value.string.lowercased()
+        invoice = text
         checkFee()
     }
     
