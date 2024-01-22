@@ -11,7 +11,7 @@ import OSLog
 import Combine
 
 
-var logger = Logger(subsystem: "zeugmaster.macadamia", category: "nostr")
+fileprivate var logger = Logger(subsystem: "zeugmaster.macadamia", category: "nostr")
 
 class Profile: Equatable, CustomStringConvertible, Codable {
     var description: String {

@@ -2,6 +2,9 @@ import Foundation
 import CryptoKit
 import secp256k1
 import BIP39
+import OSLog
+
+fileprivate var logger = Logger(subsystem: "zeugmaster.macadamia", category: "cashu")
 
 enum WalletError: Error {
     case invalidMnemonicError
@@ -20,8 +23,6 @@ class Wallet {
     
     static let shared = Wallet()
     
-    
-    
     var database = Database.loadFromFile() //TODO: set to private
     
     private init() {        
@@ -35,12 +36,18 @@ class Wallet {
     }
     
     func updateMints() async throws {
+        
         //add default mint
         if self.database.mints.isEmpty {
-            let url = URL(string: "https://8333.space:3338")!
+            let url = URL(string: "https://mint.macadamia.cash")!
             try await addMint(with: url)
         }
-                
+        
+        //if the wallet was already initialized we add macadamia mint anyway and make it first on the list, default
+        if !database.mints.contains(where: {$0.url.absoluteString == "https://mint.macadamia.cash"}) {
+            try await addMint(with: URL(string: "https://mint.macadamia.cash")!, at: 0)
+        }
+
         for mint in self.database.mints {
             try await refreshMintDetails(mint: mint)
         }
@@ -49,7 +56,7 @@ class Wallet {
     
     /// Add a mint to the database of known mints
     /// - Parameter url: The URL of the mint
-    func addMint(with url:URL) async throws {
+    func addMint(with url:URL, at index:Int? = nil) async throws {
         guard database.mints.contains(where: {$0.url == url}) == false else {
             return
         }
@@ -76,10 +83,24 @@ class Wallet {
         guard activeKeyset != nil else {
             throw WalletError.missingMintKeyset
         }
-        database.mints.append(Mint(url: url,
-                                   activeKeyset: activeKeyset!,
-                                   allKeysets: keysets,
-                                   info: mintInfo!))
+        if index == nil {
+            database.mints.append(Mint(url: url,
+                                       activeKeyset: activeKeyset!,
+                                       allKeysets: keysets,
+                                       info: mintInfo!))
+        } else {
+            var i = index!
+            if !database.mints.indices.contains(i) {
+                logger.warning("Passed out of bounds index to function .addMint, adding mint at index 0 instead")
+                i = 0
+            }
+            database.mints.insert(Mint(url: url,
+                                       activeKeyset: activeKeyset!,
+                                       allKeysets: keysets,
+                                       info: mintInfo!),
+                                  at: i)
+        }
+        
         database.saveToFile()
     }
     
