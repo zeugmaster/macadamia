@@ -53,7 +53,6 @@ struct SplitRequest_JSON: Codable {
     let outputs:[Output]
 }
 
-//TODO: one mint can have one URL, but multiple <Keysets> with keys and keyset_ids
 class Mint: Codable, Identifiable, Hashable {
     
     static func == (lhs: Mint, rhs: Mint) -> Bool {

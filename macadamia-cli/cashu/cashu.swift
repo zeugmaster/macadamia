@@ -105,7 +105,18 @@ class Wallet {
     }
     
     func removeMint(with url:URL) {
-        database.mints.removeAll(where: { $0.url == url })
+        guard let mint = database.mints.first(where: { $0.url == url}) else {
+            return
+        }
+        do {
+            let (proofs, sum) = try database.retrieveProofs(from: mint, amount: nil)
+            database.removeProofsFromValid(proofsToRemove: proofs)
+            logger.debug("Wallet removed proofs of mint \"\(url.absoluteString)\" with a total sum of \(sum)")
+        } catch {
+            // nothing really to do here. if the mint didn't have proofs, nothing to remove
+            logger.info("Wallet did not find proofs for mint \"\(url.absoluteString)\" when deleting.")
+        }
+        database.mints.removeAll(where: { $0 == mint })
         database.saveToFile()
     }
     
