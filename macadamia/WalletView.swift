@@ -11,7 +11,6 @@ let betaDisclaimerURL = URL(string: "https://macadamia.cash/beta.html")!
 
 struct WalletView: View {
     @ObservedObject var vm = WalletViewModel()
-    @StateObject var mintRequestViewModel = MintRequestViewModel()
     @State var navigationPath = NavigationPath()
     
     static let buttonPadding:CGFloat = 1
@@ -107,15 +106,13 @@ struct WalletView: View {
                .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                 HStack {
                    // First button
-                    Button(action: {
-                        navigationPath.append("First")
-                    }) {
+                    NavigationLink(destination: MintView()) {
                         Text("Mint")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .bold()
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .bold()
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
                     }
                     .buttonStyle(.bordered)
                     .padding(WalletView.buttonPadding)
@@ -137,15 +134,6 @@ struct WalletView: View {
             }
             .navigationDestination(for: String.self) { tag in
                 switch tag {
-                case "First":
-                    MintRequestView(viewmodel: mintRequestViewModel, 
-                                    navigationPath: $navigationPath)
-                case "Second":
-                    MintRequestInvoiceView(viewmodel: mintRequestViewModel, 
-                                           navigationPath: $navigationPath)
-                case "Third":
-                    MintRequestCompletionView(viewModel:mintRequestViewModel, 
-                                              navigationPath: $navigationPath)
                 case "Send":
                     SendView()
                 case "Receive":
@@ -264,6 +252,3 @@ class WalletViewModel:ObservableObject {
     }
     
 }
-
-
-let demoTransactions = [Transaction(timeStamp: "25 utc", unixTimestamp: 100000000, amount: 21, type: .cashu, pending: true, token: "cashuAoihfpi3qhü483r312p847ß9834urüoq3ußr9t8"), Transaction(timeStamp: "", unixTimestamp: 1000000001, amount: 420, type: .lightning, invoice: "lnbc1oiwhjfp9qhfpohpqoiwjeürofiqwpofgihqpwvnalkn")]

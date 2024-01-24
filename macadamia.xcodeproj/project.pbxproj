@@ -31,7 +31,6 @@
 		379212342B29E7B30081F161 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212332B29E7B30081F161 /* BIP39 */; };
 		3792123A2B2A36830081F161 /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212392B2A36830081F161 /* WalletView.swift */; };
 		3792123C2B2A36970081F161 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792123B2B2A36970081F161 /* SettingsView.swift */; };
-		3792123E2B2AFFC40081F161 /* MintRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792123D2B2AFFC40081F161 /* MintRequestView.swift */; };
 		379BDF592B421855008FD0E7 /* NostrSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 379BDF582B421855008FD0E7 /* NostrSDK */; };
 		379BDF5D2B42C554008FD0E7 /* NostrContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF5B2B42C554008FD0E7 /* NostrContentView.swift */; };
 		379BDF5E2B42C554008FD0E7 /* nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF5C2B42C554008FD0E7 /* nostr.swift */; };
@@ -40,6 +39,7 @@
 		379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF642B447138008FD0E7 /* UIHelpers.swift */; };
 		379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF662B4696B6008FD0E7 /* MnemonicView.swift */; };
 		379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF682B46F31E008FD0E7 /* SendView.swift */; };
+		37B2C1582B60192100535DAF /* MintView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37B2C1572B60192100535DAF /* MintView.swift */; };
 		37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */; };
 /* End PBXBuildFile section */
 
@@ -65,7 +65,6 @@
 		379212242B29E6580081F161 /* cashu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cashu.swift; sourceTree = "<group>"; };
 		379212392B2A36830081F161 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
 		3792123B2B2A36970081F161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		3792123D2B2AFFC40081F161 /* MintRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintRequestView.swift; sourceTree = "<group>"; };
 		379BDF5B2B42C554008FD0E7 /* NostrContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NostrContentView.swift; sourceTree = "<group>"; };
 		379BDF5C2B42C554008FD0E7 /* nostr.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = nostr.swift; sourceTree = "<group>"; };
 		379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayManagerView.swift; sourceTree = "<group>"; };
@@ -73,6 +72,7 @@
 		379BDF642B447138008FD0E7 /* UIHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIHelpers.swift; sourceTree = "<group>"; };
 		379BDF662B4696B6008FD0E7 /* MnemonicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MnemonicView.swift; sourceTree = "<group>"; };
 		379BDF682B46F31E008FD0E7 /* SendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendView.swift; sourceTree = "<group>"; };
+		37B2C1572B60192100535DAF /* MintView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintView.swift; sourceTree = "<group>"; };
 		37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -116,7 +116,7 @@
 				372034B92B29E1BC00C4F955 /* macadamiaApp.swift */,
 				372034BB2B29E1BC00C4F955 /* ContentView.swift */,
 				379212392B2A36830081F161 /* WalletView.swift */,
-				3792123D2B2AFFC40081F161 /* MintRequestView.swift */,
+				37B2C1572B60192100535DAF /* MintView.swift */,
 				379BDF642B447138008FD0E7 /* UIHelpers.swift */,
 				3780EEE52B2B5C3F00971AE7 /* QRView.swift */,
 				379BDF682B46F31E008FD0E7 /* SendView.swift */,
@@ -275,9 +275,9 @@
 				379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */,
 				379212282B29E6580081F161 /* network.swift in Sources */,
 				3743CE682B4AA67600F862AB /* TransactionDetailView.swift in Sources */,
+				37B2C1582B60192100535DAF /* MintView.swift in Sources */,
 				379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */,
 				372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */,
-				3792123E2B2AFFC40081F161 /* MintRequestView.swift in Sources */,
 				379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */,
 				379212292B29E6580081F161 /* crypto.swift in Sources */,
 				3743CE662B49B7D600F862AB /* NostrProfileMessageView.swift in Sources */,
