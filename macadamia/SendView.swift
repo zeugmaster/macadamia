@@ -83,7 +83,6 @@ struct SendView: View {
                     }
                 }
             }
-            
         }
         .navigationTitle("Send")
         .navigationBarTitleDisplayMode(.inline)

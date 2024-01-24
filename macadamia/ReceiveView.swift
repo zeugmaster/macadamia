@@ -39,11 +39,16 @@ struct ReceiveView: View {
                                 vm.addUnkownMint()
                             } label: {
                                 HStack {
-                                    Text("Unknown mint. Add it?")
-                                    Spacer()
-                                    Image(systemName: "plus")
+                                    if vm.addingMint {
+                                        Text("Adding...")
+                                    } else {
+                                        Text("Unknown mint. Add it?")
+                                        Spacer()
+                                        Image(systemName: "plus")
+                                    }
                                 }
                             }
+                            .disabled(vm.addingMint)
                         }
                         Button {
                             vm.reset()
@@ -133,6 +138,8 @@ class ReceiveViewModel: ObservableObject {
     @Published var tokenAmount:Int?
     @Published var unknownMint = false
     
+    @Published var addingMint = false
+    
     @Published var showAlert:Bool = false
     var currentAlert:AlertDetail?
     var wallet = Wallet.shared
@@ -171,12 +178,14 @@ class ReceiveViewModel: ObservableObject {
             guard let mintURL = mintURL, let url = URL(string: mintURL) else {
                 return
             }
+            addingMint = true
             do {
                 try await wallet.addMint(with:url)
+                addingMint = false
             } catch {
                 displayAlert(alert: AlertDetail(title: "Could not add mint", description: String(describing: error)))
+                addingMint = false
             }
-            
             unknownMint = false
         }
     }
@@ -203,6 +212,7 @@ class ReceiveViewModel: ObservableObject {
         mintURL = nil
         tokenMemo = nil
         success = false
+        addingMint = false
     }
     
     private func displayAlert(alert:AlertDetail) {

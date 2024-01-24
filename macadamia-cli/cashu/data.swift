@@ -8,6 +8,8 @@
 import OSLog
 import Foundation
 
+fileprivate var logger = Logger(subsystem: "zeugmaster.macadamia", category: "database")
+
 public class Database: Codable {
     var proofs:[Proof]
     var pendingProofs:[Proof]
@@ -52,7 +54,7 @@ public class Database: Codable {
             encoder.outputFormatting = .prettyPrinted
             let data = try encoder.encode(self)
             try data.write(to: Database.getFilePath())
-            Logger(subsystem: "com.zeugmaster.macadamia", category: "wallet").debug("Saved wallet database to file.")
+            logger.debug("Saved wallet database to file.")
         } catch {
             print("whoops, failed to write db to file")
         }
@@ -60,7 +62,7 @@ public class Database: Codable {
     
     ///Removes all proofs, pass phrase, seed from database except for the list of known mints
     func reset() {
-        Logger(subsystem: "com.zeugmaster.macadamia", category: "wallet").debug("Resetting database...")
+        logger.debug("Resetting database...")
         proofs = []
         pendingProofs = []
         mnemonic = nil
@@ -73,8 +75,8 @@ public class Database: Codable {
         
     }
     
-    func retrieveProofs(from mint:Mint, amount:Int) throws -> (proofs:[Proof], sum:Int) {
-        //load all mint keysets
+    func retrieveProofs(from mint: Mint, amount: Int?) throws -> (proofs: [Proof], sum: Int) {
+        // Load all mint keysets
         var sum = 0
         var collected = [Proof]()
         for proof in self.proofs {
@@ -82,19 +84,25 @@ public class Database: Codable {
                 if ks.id == proof.id {
                     collected.append(proof)
                     sum += proof.amount
-                    break // no need to check for the other keyset_ids
+                    break // No need to check for the other keyset_ids
                 }
             }
-            if sum >= amount {
-                Logger(subsystem: "com.zeugmaster.macadamia", category: "wallet").debug("copied proofs from valid: \(collected, privacy: .public)")
+            // Check if the sum meets the required amount if amount is not nil
+            if let amount = amount, sum >= amount {
+                logger.debug("Copied proofs from valid: \(collected, privacy: .public)")
                 return (collected, sum)
             }
         }
+        // If amount is nil, return all collected proofs
+        if amount == nil {
+            return (collected, sum)
+        }
+        // If the function hasn't returned yet, it means the required amount was not met
         throw WalletError.insufficientFunds(mintURL: mint.url.absoluteString)
     }
 
     func removeProofsFromValid(proofsToRemove:[Proof]) {
-        Logger(subsystem: "com.zeugmaster.macadamia", category: "wallet").debug("Removing proofs from valid: \(proofsToRemove, privacy: .public)")
+        logger.debug("Removing proofs from valid: \(proofsToRemove, privacy: .public)")
         let new = proofs.filter { item1 in
                 !proofsToRemove.contains { item2 in
                 item1 == item2
