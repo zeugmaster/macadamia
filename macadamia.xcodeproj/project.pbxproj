@@ -20,12 +20,6 @@
 		3743CE682B4AA67600F862AB /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE672B4AA67600F862AB /* TransactionDetailView.swift */; };
 		376F43B22B4FEC0D00E55B0F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 376F43B12B4FEC0D00E55B0F /* README.md */; };
 		3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3780EEE52B2B5C3F00971AE7 /* QRView.swift */; };
-		379212262B29E6580081F161 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792121F2B29E6580081F161 /* model.swift */; };
-		379212272B29E6580081F161 /* data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212202B29E6580081F161 /* data.swift */; };
-		379212282B29E6580081F161 /* network.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212212B29E6580081F161 /* network.swift */; };
-		379212292B29E6580081F161 /* crypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212222B29E6580081F161 /* crypto.swift */; };
-		3792122A2B29E6580081F161 /* Base64FS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212232B29E6580081F161 /* Base64FS.swift */; };
-		3792122B2B29E6580081F161 /* cashu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212242B29E6580081F161 /* cashu.swift */; };
 		3792122E2B29E7520081F161 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 3792122D2B29E7520081F161 /* BigNumber */; };
 		379212312B29E7900081F161 /* BIP32 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212302B29E7900081F161 /* BIP32 */; };
 		379212342B29E7B30081F161 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212332B29E7B30081F161 /* BIP39 */; };
@@ -40,6 +34,12 @@
 		379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF662B4696B6008FD0E7 /* MnemonicView.swift */; };
 		379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF682B46F31E008FD0E7 /* SendView.swift */; };
 		37B2C1582B60192100535DAF /* MintView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37B2C1572B60192100535DAF /* MintView.swift */; };
+		37DD6E272B618B1400AC5676 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DD6E212B618B1400AC5676 /* model.swift */; };
+		37DD6E282B618B1400AC5676 /* data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DD6E222B618B1400AC5676 /* data.swift */; };
+		37DD6E292B618B1400AC5676 /* network.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DD6E232B618B1400AC5676 /* network.swift */; };
+		37DD6E2A2B618B1400AC5676 /* crypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DD6E242B618B1400AC5676 /* crypto.swift */; };
+		37DD6E2B2B618B1400AC5676 /* Base64FS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DD6E252B618B1400AC5676 /* Base64FS.swift */; };
+		37DD6E2C2B618B1400AC5676 /* cashu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DD6E262B618B1400AC5676 /* cashu.swift */; };
 		37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */; };
 /* End PBXBuildFile section */
 
@@ -57,12 +57,6 @@
 		3743CE672B4AA67600F862AB /* TransactionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
 		376F43B12B4FEC0D00E55B0F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		3780EEE52B2B5C3F00971AE7 /* QRView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRView.swift; sourceTree = "<group>"; };
-		3792121F2B29E6580081F161 /* model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = model.swift; sourceTree = "<group>"; };
-		379212202B29E6580081F161 /* data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = data.swift; sourceTree = "<group>"; };
-		379212212B29E6580081F161 /* network.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = network.swift; sourceTree = "<group>"; };
-		379212222B29E6580081F161 /* crypto.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = crypto.swift; sourceTree = "<group>"; };
-		379212232B29E6580081F161 /* Base64FS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Base64FS.swift; sourceTree = "<group>"; };
-		379212242B29E6580081F161 /* cashu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cashu.swift; sourceTree = "<group>"; };
 		379212392B2A36830081F161 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
 		3792123B2B2A36970081F161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		379BDF5B2B42C554008FD0E7 /* NostrContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NostrContentView.swift; sourceTree = "<group>"; };
@@ -73,6 +67,12 @@
 		379BDF662B4696B6008FD0E7 /* MnemonicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MnemonicView.swift; sourceTree = "<group>"; };
 		379BDF682B46F31E008FD0E7 /* SendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendView.swift; sourceTree = "<group>"; };
 		37B2C1572B60192100535DAF /* MintView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintView.swift; sourceTree = "<group>"; };
+		37DD6E212B618B1400AC5676 /* model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = model.swift; sourceTree = "<group>"; };
+		37DD6E222B618B1400AC5676 /* data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = data.swift; sourceTree = "<group>"; };
+		37DD6E232B618B1400AC5676 /* network.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = network.swift; sourceTree = "<group>"; };
+		37DD6E242B618B1400AC5676 /* crypto.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = crypto.swift; sourceTree = "<group>"; };
+		37DD6E252B618B1400AC5676 /* Base64FS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Base64FS.swift; sourceTree = "<group>"; };
+		37DD6E262B618B1400AC5676 /* cashu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cashu.swift; sourceTree = "<group>"; };
 		37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -124,8 +124,8 @@
 				3743CE5D2B48A94D00F862AB /* MeltView.swift */,
 				3743CE672B4AA67600F862AB /* TransactionDetailView.swift */,
 				379BDF632B430F32008FD0E7 /* Settings */,
+				37DD6E202B618B1400AC5676 /* cashu */,
 				379BDF5A2B42C4C4008FD0E7 /* nostr */,
-				3792121E2B29E6580081F161 /* cashu */,
 				372034BD2B29E1BD00C4F955 /* Assets.xcassets */,
 				372034BF2B29E1BD00C4F955 /* Preview Content */,
 			);
@@ -139,20 +139,6 @@
 			);
 			path = "Preview Content";
 			sourceTree = "<group>";
-		};
-		3792121E2B29E6580081F161 /* cashu */ = {
-			isa = PBXGroup;
-			children = (
-				379212242B29E6580081F161 /* cashu.swift */,
-				3792121F2B29E6580081F161 /* model.swift */,
-				379212202B29E6580081F161 /* data.swift */,
-				379212212B29E6580081F161 /* network.swift */,
-				379212222B29E6580081F161 /* crypto.swift */,
-				379212232B29E6580081F161 /* Base64FS.swift */,
-			);
-			name = cashu;
-			path = "macadamia-cli/cashu";
-			sourceTree = SOURCE_ROOT;
 		};
 		379BDF5A2B42C4C4008FD0E7 /* nostr */ = {
 			isa = PBXGroup;
@@ -176,6 +162,20 @@
 			);
 			name = Settings;
 			sourceTree = "<group>";
+		};
+		37DD6E202B618B1400AC5676 /* cashu */ = {
+			isa = PBXGroup;
+			children = (
+				37DD6E212B618B1400AC5676 /* model.swift */,
+				37DD6E222B618B1400AC5676 /* data.swift */,
+				37DD6E232B618B1400AC5676 /* network.swift */,
+				37DD6E242B618B1400AC5676 /* crypto.swift */,
+				37DD6E252B618B1400AC5676 /* Base64FS.swift */,
+				37DD6E262B618B1400AC5676 /* cashu.swift */,
+			);
+			name = cashu;
+			path = macadamia/cashu;
+			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */
 
@@ -264,29 +264,29 @@
 			buildActionMask = 2147483647;
 			files = (
 				372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */,
+				37DD6E2C2B618B1400AC5676 /* cashu.swift in Sources */,
 				3743CE642B494C3D00F862AB /* RestoreView.swift in Sources */,
 				3743CE582B47798800F862AB /* NostrSendView.swift in Sources */,
 				379BDF602B430765008FD0E7 /* RelayManagerView.swift in Sources */,
 				3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */,
 				3792123A2B2A36830081F161 /* WalletView.swift in Sources */,
-				379212262B29E6580081F161 /* model.swift in Sources */,
-				3792122B2B29E6580081F161 /* cashu.swift in Sources */,
-				3792122A2B29E6580081F161 /* Base64FS.swift in Sources */,
+				37DD6E292B618B1400AC5676 /* network.swift in Sources */,
+				37DD6E272B618B1400AC5676 /* model.swift in Sources */,
+				37DD6E2B2B618B1400AC5676 /* Base64FS.swift in Sources */,
 				379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */,
-				379212282B29E6580081F161 /* network.swift in Sources */,
 				3743CE682B4AA67600F862AB /* TransactionDetailView.swift in Sources */,
 				37B2C1582B60192100535DAF /* MintView.swift in Sources */,
 				379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */,
 				372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */,
 				379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */,
-				379212292B29E6580081F161 /* crypto.swift in Sources */,
 				3743CE662B49B7D600F862AB /* NostrProfileMessageView.swift in Sources */,
 				3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */,
 				3743CE5E2B48A94D00F862AB /* MeltView.swift in Sources */,
+				37DD6E2A2B618B1400AC5676 /* crypto.swift in Sources */,
 				379BDF5D2B42C554008FD0E7 /* NostrContentView.swift in Sources */,
-				379212272B29E6580081F161 /* data.swift in Sources */,
 				3792123C2B2A36970081F161 /* SettingsView.swift in Sources */,
 				379BDF622B430775008FD0E7 /* MintManagerView.swift in Sources */,
+				37DD6E282B618B1400AC5676 /* data.swift in Sources */,
 				379BDF5E2B42C554008FD0E7 /* nostr.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
