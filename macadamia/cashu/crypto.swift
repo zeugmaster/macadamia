@@ -81,6 +81,35 @@ func hashToCurve(message: String) -> secp256k1.Signing.PublicKey {
     return point!
 }
 
+func secureHashToCurve(message: Data) throws -> secp256k1.Signing.PublicKey {
+    let domainSeparator = Data("Secp256k1_HashToCurve_Cashu_".utf8)
+    
+    let msgToHash = SHA256.hash(data: domainSeparator + message)
+    print(String(bytes: msgToHash.bytes))
+    
+    var counter: UInt32 = 0
+
+    while counter < UInt32(pow(2.0, 16)) {
+        // Append the counter to the hash and hash again
+        var counterData = Data(withUnsafeBytes(of: &counter, { Data($0) }))
+        let hash = SHA256.hash(data: msgToHash + counterData)
+        do {
+            // Attempt to create a public key from the hash
+            // Note: The PublicKey initializer will vary based on the secp256k1 library you use.
+            // This is a placeholder; you will need to adapt it to your library's API.
+            let prefix = Data([0x02])
+            let combined = prefix + hash
+            return try secp256k1.Signing.PublicKey(dataRepresentation: combined, format: .compressed)
+        } catch {
+            // If the point does not lie on the curve, try the next counter value
+            counter += 1
+        }
+    }
+    
+    // If no valid point is found, throw an error
+    throw NSError(domain: "No valid point found", code: -1, userInfo: nil)
+}
+
 func negatePublicKey(key: secp256k1.Signing.PublicKey) -> secp256k1.Signing.PublicKey {
     let serialized = key.dataRepresentation
     var firstByte = serialized.first!
