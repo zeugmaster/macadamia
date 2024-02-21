@@ -14,6 +14,7 @@ import OSLog
 
 // Step 1 (Alice)
 //TODO: needs to be able to throw
+//TODO: should be broken up into one function for secret and one for the outputs
 func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keysetID:String) -> (outputs: [Output], blindingFactors: [String], secrets:[String]) {
     var outputs = [Output]()
     var blindingFactors = [String]()
@@ -139,6 +140,8 @@ func convertKeysetID(keysetID: String) -> Int? {
 }
 
 func convertHexKeysetID(keysetID: String) -> Int? {
+    // FIXME: converting [UInt8] to Data to [UInt8] is unnessecary
+    // let data = try! [UInt8](keysetID.bytes)
     let data = try! [UInt8](Data(keysetID.bytes))
     let big = BInt(bytes: data)
     let result = big % (Int(pow(2.0, 31.0)) - 1)
