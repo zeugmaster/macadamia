@@ -19,7 +19,12 @@ func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keyse
     var outputs = [Output]()
     var blindingFactors = [String]()
     var secrets = [String]()
-    let keysetInt = convertKeysetID(keysetID: keysetID)!
+    let keysetInt:Int
+    if keysetID.count == 16 {
+        keysetInt = convertHexKeysetID(keysetID: keysetID)!
+    } else {
+        keysetInt = convertKeysetID(keysetID: keysetID)!
+    }
     for i in 0..<amounts.count {
         let index = counter + i
         

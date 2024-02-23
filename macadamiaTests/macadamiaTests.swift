@@ -6,6 +6,8 @@
 //
 
 import XCTest
+@testable import macadamia
+import BIP39
 
 final class macadamiaTests: XCTestCase {
 
@@ -17,17 +19,45 @@ final class macadamiaTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-        XCTAssertTrue(1 == 1)
+    func testSecureHashToCurve() throws {
+        //case 000...000
+        do {
+            let messageData = try Data("0000000000000000000000000000000000000000000000000000000000000000".bytes)
+            let result = try secureHashToCurve(message: messageData)
+            XCTAssertEqual(String(bytes: result.dataRepresentation),
+                           "024cce997d3b518f739663b757deaec95bcd9473c30a14ac2fd04023a739d1a725")
+        }
+        //case 000...001
+        do {
+            let messageData = try Data("0000000000000000000000000000000000000000000000000000000000000001".bytes)
+            let result = try secureHashToCurve(message: messageData)
+            XCTAssertEqual(String(bytes: result.dataRepresentation),
+                           "022e7158e11c9506f1aa4248bf531298daa7febd6194f003edcd9b93ade6253acf")
+        }
     }
     
-    func testSecureH2C() {
+    func testSecretGeneration() throws {
+        let phrase = "half depart obvious quality work element tank gorilla view sugar picture humble"
+        let mnemonic = try BIP39.Mnemonic(phrase: phrase.components(separatedBy: " "))
+        let seed = mnemonic.seed
         
+        let keysetID = "009a1f293253e41e"
+        let secrets = [
+            "485875df74771877439ac06339e284c3acfcd9be7abf3bc20b516faeadfe77ae",
+            "8f2b39e8e594a4056eb1e6dbb4b0c38ef13b1b2c751f64f810ec04ee35b77270",
+            "bc628c79accd2364fd31511216a0fab62afd4a18ff77a20deded7b858c9860c8",
+            "59284fd1650ea9fa17db2b3acf59ecd0f2d52ec3261dd4152785813ff27a33bf",
+            "576c23393a8b31cc8da6688d9c9a96394ec74b40fdaf1f693a6bb84284334ea0"
+        ]
+        
+        let outputs = generateDeterministicOutputs(counter: 0, 
+                                                   seed: String(bytes: seed),
+                                                   amounts: [1,1,1,1,1],
+                                                   keysetID: keysetID)
+        
+        for i in 0..<outputs.secrets.count {
+            XCTAssertEqual(secrets[i], outputs.secrets[i])
+        }
     }
 
     func testPerformanceExample() throws {
