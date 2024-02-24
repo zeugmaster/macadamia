@@ -26,6 +26,7 @@ struct SettingsView: View {
                     NavigationLink(destination: MintManagerView()) { Text("Mints") }
                     NavigationLink(destination: MnemonicView()) { Text("Show Seed Phrase") }
                     NavigationLink(destination: RestoreView()) { Text("Restore") }
+                    NavigationLink(destination: DrainView()) { Text("Drain Wallet") }
                 } header: {
                     Text("cashu")
                 }
