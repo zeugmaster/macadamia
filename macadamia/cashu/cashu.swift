@@ -10,6 +10,7 @@ enum WalletError: Error {
     case invalidMnemonicError
     case tokenDeserializationError(String)
     case tokenSerializationError(detail:String)
+    case tokenStateCheckError(String)
     case unknownMintError //TODO: should not be treated like an error
     case missingMintKeyset
     case insufficientFunds(mintURL:String)
@@ -25,7 +26,7 @@ class Wallet {
     
     var database = Database.loadFromFile() //TODO: set to private
     
-    private init() {        
+    private init() {
         if self.database.mnemonic == nil {
             let randomMnemonic = Mnemonic()
             self.database.mnemonic = randomMnemonic.phrase.joined(separator: " ")
@@ -47,7 +48,7 @@ class Wallet {
         if !database.mints.contains(where: {$0.url.absoluteString == "https://mint.macadamia.cash"}) {
             try await addMint(with: URL(string: "https://mint.macadamia.cash")!, at: 0)
         }
-
+        
         for mint in self.database.mints {
             try await refreshMintDetails(mint: mint)
         }
@@ -168,7 +169,7 @@ class Wallet {
                                                           outputs: outputs,
                                                           amount: amount,
                                                           invoiceHash: quote.hash)
-        let proofs = unblindPromises(promises: promises, 
+        let proofs = unblindPromises(promises: promises,
                                      blindingFactors: bfs,
                                      secrets: secrets,
                                      mintPublicKeys: mint.activeKeyset.keys)
@@ -221,6 +222,9 @@ class Wallet {
     //MARK: - Receive
     func receiveToken(tokenString:String) async throws {
         let tokenlist = try self.deserializeToken(token: tokenString).token
+        for token in tokenlist {
+            
+        }
         var amounts = [Int]()
         for p in tokenlist[0].proofs {
             amounts.append(p.amount)
@@ -236,7 +240,7 @@ class Wallet {
                                                                       keysetID: keyset.id)
         mint.activeKeyset.derivationCounter += newOutputs.count
         let newPromises = try await Network.split(for: mint, proofs: tokenlist[0].proofs, outputs: newOutputs)
-        let newProofs = unblindPromises(promises: newPromises, 
+        let newProofs = unblindPromises(promises: newPromises,
                                         blindingFactors: bfs,
                                         secrets: secrets,
                                         mintPublicKeys: keyset.keys)
@@ -274,7 +278,7 @@ class Wallet {
         let (new, change) = try await split(mint: mint, totalProofs: proofs, at: invoiceAmount+fee)
         // if this fails copied proofs are discarded but originals remain ->
         // if executes -> make sure new AND change proofs are written back to DB
-//        print("-------------->" + String(describing: proofs))
+        //        print("-------------->" + String(describing: proofs))
         database.removeProofsFromValid(proofsToRemove: proofs)
         database.proofs.append(contentsOf: change)
         database.saveToFile()
@@ -302,7 +306,7 @@ class Wallet {
         }
     }
     
-        
+    
     //MARK: - Restore
     func restoreWithMnemonic(mnemonic:String) async throws {
         
@@ -395,7 +399,7 @@ class Wallet {
         
         return (proofs, currentCounter, proofs.count)
     }
-
+    
     //MARK: - HELPERS
     private func split(mint:Mint, totalProofs:[Proof], at amount:Int) async throws -> (new:[Proof], change:[Proof]) {
         let sum = totalProofs.reduce(0) { $0 + $1.amount }
@@ -424,6 +428,7 @@ class Wallet {
         return (sendProofs, newProofs)
     }
     
+    //TODO: needs support for multi mint token creation
     private func serializeProofs(proofs: [Proof], memo:String? = nil) throws -> String {
         guard let mint = database.mintForKeysetID(id: proofs[0].id) else {
             throw WalletError.tokenSerializationError(detail: "no mint found for keyset id: \(proofs[0].id)")
@@ -456,13 +461,14 @@ class Wallet {
         }
         print(jsonString)
         let jsonData = jsonString.data(using: .utf8)!
-        guard let tokenContainer:Token_Container = try? JSONDecoder().decode(Token_Container.self, 
+        guard let tokenContainer:Token_Container = try? JSONDecoder().decode(Token_Container.self,
                                                                              from: jsonData) else {
             throw WalletError.tokenDeserializationError("")
         }
         return tokenContainer
     }
     
+    //FIXME: ONLY WORKS FOR SINGLE MINT TOKENS
     func checkTokenStatePending(token:String) async throws -> Bool {
         guard let deserializedToken = try deserializeToken(token: token).token.first else {
             throw WalletError.tokenDeserializationError("Token container does not contain a token.")
@@ -472,7 +478,22 @@ class Wallet {
             throw WalletError.tokenDeserializationError("could not decode mint URL from Token")
         }
         let result = try await Network.check(mintURL: mintURL, proofs: proofs)
-        print(result)
+        if result.spendable.contains(true) {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    //Only legacy way to check
+    func checkTokenStateSpendable(for token:Token_JSON) async throws -> Bool {
+        guard !token.proofs.isEmpty else {
+            throw WalletError.tokenStateCheckError("token is empty")
+        }
+        guard let mintURL = URL(string: token.mint) else {
+            throw WalletError.tokenDeserializationError("could not decode mint URL from Token")
+        }
+        let result = try await Network.check(mintURL: mintURL, proofs: token.proofs)
         if result.spendable.contains(true) {
             return true
         } else {
