@@ -221,15 +221,49 @@ class Wallet {
     
     //MARK: - Receive
     func receiveToken(tokenString:String) async throws {
-        let tokenlist = try self.deserializeToken(token: tokenString).token
-        for token in tokenlist {
-            
+        let parts = try deserializeToken(token: tokenString).token
+        
+        for part in parts {
+            try await receiveTokenPart(part: part, of: tokenString)
         }
+//        let tokenlist = try self.deserializeToken(token: tokenString).token
+//        
+//        var amounts = [Int]()
+//        for p in tokenlist[0].proofs {
+//            amounts.append(p.amount)
+//        }
+//        guard let mint = self.database.mintForKeysetID(id: tokenlist[0].proofs[0].id) else {
+//            throw WalletError.unknownMintError
+//        }
+//        
+//        let keyset = mint.activeKeyset
+//        let (newOutputs, bfs, secrets) = generateDeterministicOutputs(counter: mint.activeKeyset.derivationCounter,
+//                                                                      seed: database.seed!,
+//                                                                      amounts: amounts,
+//                                                                      keysetID: keyset.id)
+//        mint.activeKeyset.derivationCounter += newOutputs.count
+//        let newPromises = try await Network.split(for: mint, proofs: tokenlist[0].proofs, outputs: newOutputs)
+//        let newProofs = unblindPromises(promises: newPromises,
+//                                        blindingFactors: bfs,
+//                                        secrets: secrets,
+//                                        mintPublicKeys: keyset.keys)
+//        self.database.proofs.append(contentsOf: newProofs)
+//        let t = Transaction(timeStamp: ISO8601DateFormatter().string(from: Date()),
+//                            unixTimestamp: Date().timeIntervalSince1970,
+//                            amount: newProofs.reduce(0){ $0 + $1.amount },
+//                            type: .cashu,
+//                            token: tokenString,
+//                            proofs: newProofs)
+//        database.transactions.insert(t, at: 0)
+//        self.database.saveToFile()
+    }
+    
+    func receiveTokenPart(part:Token_JSON, of token:String) async throws {
         var amounts = [Int]()
-        for p in tokenlist[0].proofs {
+        for p in part.proofs {
             amounts.append(p.amount)
         }
-        guard let mint = self.database.mintForKeysetID(id: tokenlist[0].proofs[0].id) else {
+        guard let mint = database.mints.first(where: { $0.url.absoluteString == part.mint }) else {
             throw WalletError.unknownMintError
         }
         
@@ -239,7 +273,7 @@ class Wallet {
                                                                       amounts: amounts,
                                                                       keysetID: keyset.id)
         mint.activeKeyset.derivationCounter += newOutputs.count
-        let newPromises = try await Network.split(for: mint, proofs: tokenlist[0].proofs, outputs: newOutputs)
+        let newPromises = try await Network.split(for: mint, proofs: part.proofs, outputs: newOutputs)
         let newProofs = unblindPromises(promises: newPromises,
                                         blindingFactors: bfs,
                                         secrets: secrets,
@@ -249,7 +283,7 @@ class Wallet {
                             unixTimestamp: Date().timeIntervalSince1970,
                             amount: newProofs.reduce(0){ $0 + $1.amount },
                             type: .cashu,
-                            token: tokenString,
+                            token: token,
                             proofs: newProofs)
         database.transactions.insert(t, at: 0)
         self.database.saveToFile()
