@@ -45,7 +45,7 @@ struct DrainView: View {
                     Text("Some wallets may not be able to accept V3 tokens containing proofs from multiple mints.")
                 }
                 Section {
-                    Button {
+                    Button(role:.destructive) {
                         vm.createBackupToken()
                     } label: {
                         Text("Create Backup Token")
@@ -161,9 +161,7 @@ class DrainViewModel: ObservableObject {
     
     @Published var mintList = [String]()
     @Published var selectedMints:Set<String> = []
-    
     @Published var tokens = [TokenInfo]()
-    
     @Published var makeTokenMultiMint = false
     
     @Published var showAlert:Bool = false
@@ -183,7 +181,6 @@ class DrainViewModel: ObservableObject {
             self.tokens = tokens.map({ (token: String, mintID: String, sum: Int) in
                 TokenInfo(token: token, mint: mintID, amount: sum)
             })
-            print(tokens)
         } catch {
             displayAlert(alert: AlertDetail(title: error.localizedDescription))
         }

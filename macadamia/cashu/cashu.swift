@@ -408,7 +408,17 @@ class Wallet {
     ///Fetches all proofs for all known mints and returns them either one token per mint or as one big multi-mint token
     func drainWallet(multiMint:Bool) throws -> [(token:String, mintID:String, sum:Int)] {
         if multiMint {
-            return []
+            var parts = [Token_JSON]()
+            var sum = 0
+            for mint in database.mints {
+                let proofs = try database.retrieveProofs(from: mint, amount: nil)
+                parts.append(Token_JSON(mint: mint.url.absoluteString, proofs: proofs.proofs))
+                sum += proofs.sum
+            }
+            let multiToken = try serializeToken(parts: parts, memo: "Wallet Drain")
+            database.proofs = []
+            database.saveToFile()
+            return [(multiToken, "Multi Mint", sum)]
         } else {
             var tokens = [(String, String, Int)]()
             for mint in database.mints {
@@ -416,6 +426,8 @@ class Wallet {
                 let token = try serializeProofs(proofs: proofs.proofs)
                 tokens.append((token, mint.url.absoluteString, proofs.sum))
             }
+            database.proofs = []
+            database.saveToFile()
             return tokens
         }
     }
@@ -455,6 +467,14 @@ class Wallet {
         }
         let token = Token_JSON(mint: mint.url.absoluteString, proofs: proofs)
         let tokenContainer = Token_Container(token: [token], memo: memo)
+        let jsonData = try JSONEncoder().encode(tokenContainer)
+        let jsonString = String(data: jsonData, encoding: .utf8)!
+        let safeString = jsonString.encodeBase64UrlSafe()
+        return "cashuA" + safeString
+    }
+    
+    func serializeToken(parts:[Token_JSON], memo:String? = nil) throws -> String {
+        let tokenContainer = Token_Container(token: parts, memo: memo)
         let jsonData = try JSONEncoder().encode(tokenContainer)
         let jsonString = String(data: jsonData, encoding: .utf8)!
         let safeString = jsonString.encodeBase64UrlSafe()
