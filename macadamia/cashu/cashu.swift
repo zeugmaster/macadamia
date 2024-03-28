@@ -489,7 +489,7 @@ class Wallet {
         }
     }
     
-    //Only legacy way to check
+    //Only legacy API way to check
     func checkTokenStateSpendable(for token:Token_JSON) async throws -> Bool {
         guard !token.proofs.isEmpty else {
             throw WalletError.tokenStateCheckError("token is empty")

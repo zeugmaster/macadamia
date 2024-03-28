@@ -34,6 +34,8 @@
 		379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF662B4696B6008FD0E7 /* MnemonicView.swift */; };
 		379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF682B46F31E008FD0E7 /* SendView.swift */; };
 		37B2C1582B60192100535DAF /* MintView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37B2C1572B60192100535DAF /* MintView.swift */; };
+		37B64EC12BB594AD005C772F /* Selector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37B64EC02BB594AD005C772F /* Selector.swift */; };
+		37B64EC32BB5AB86005C772F /* SelectorTwo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37B64EC22BB5AB86005C772F /* SelectorTwo.swift */; };
 		37CC21802B8A71FD00A13F2F /* DrainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37CC217F2B8A71FD00A13F2F /* DrainView.swift */; };
 		37DD6E272B618B1400AC5676 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DD6E212B618B1400AC5676 /* model.swift */; };
 		37DD6E282B618B1400AC5676 /* data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DD6E222B618B1400AC5676 /* data.swift */; };
@@ -68,6 +70,8 @@
 		379BDF662B4696B6008FD0E7 /* MnemonicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MnemonicView.swift; sourceTree = "<group>"; };
 		379BDF682B46F31E008FD0E7 /* SendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendView.swift; sourceTree = "<group>"; };
 		37B2C1572B60192100535DAF /* MintView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintView.swift; sourceTree = "<group>"; };
+		37B64EC02BB594AD005C772F /* Selector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Selector.swift; sourceTree = "<group>"; };
+		37B64EC22BB5AB86005C772F /* SelectorTwo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectorTwo.swift; sourceTree = "<group>"; };
 		37CC217F2B8A71FD00A13F2F /* DrainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrainView.swift; sourceTree = "<group>"; };
 		37DD6E212B618B1400AC5676 /* model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = model.swift; sourceTree = "<group>"; };
 		37DD6E222B618B1400AC5676 /* data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = data.swift; sourceTree = "<group>"; };
@@ -162,6 +166,8 @@
 				379BDF612B430775008FD0E7 /* MintManagerView.swift */,
 				379BDF662B4696B6008FD0E7 /* MnemonicView.swift */,
 				37CC217F2B8A71FD00A13F2F /* DrainView.swift */,
+				37B64EC22BB5AB86005C772F /* SelectorTwo.swift */,
+				37B64EC02BB594AD005C772F /* Selector.swift */,
 			);
 			name = Settings;
 			sourceTree = "<group>";
@@ -277,6 +283,7 @@
 				37DD6E272B618B1400AC5676 /* model.swift in Sources */,
 				37DD6E2B2B618B1400AC5676 /* Base64FS.swift in Sources */,
 				379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */,
+				37B64EC12BB594AD005C772F /* Selector.swift in Sources */,
 				3743CE682B4AA67600F862AB /* TransactionDetailView.swift in Sources */,
 				37B2C1582B60192100535DAF /* MintView.swift in Sources */,
 				379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */,
@@ -292,6 +299,7 @@
 				379BDF622B430775008FD0E7 /* MintManagerView.swift in Sources */,
 				37DD6E282B618B1400AC5676 /* data.swift in Sources */,
 				379BDF5E2B42C554008FD0E7 /* nostr.swift in Sources */,
+				37B64EC32BB5AB86005C772F /* SelectorTwo.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
