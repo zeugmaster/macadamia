@@ -404,6 +404,22 @@ class Wallet {
         return (proofs, currentCounter, proofs.count)
     }
     
+    //MARK: DRAIN
+    ///Fetches all proofs for all known mints and returns them either one token per mint or as one big multi-mint token
+    func drainWallet(multiMint:Bool) throws -> [(token:String, mintID:String, sum:Int)] {
+        if multiMint {
+            return []
+        } else {
+            var tokens = [(String, String, Int)]()
+            for mint in database.mints {
+                let proofs = try database.retrieveProofs(from: mint, amount: nil)
+                let token = try serializeProofs(proofs: proofs.proofs)
+                tokens.append((token, mint.url.absoluteString, proofs.sum))
+            }
+            return tokens
+        }
+    }
+    
     //MARK: - HELPERS
     private func split(mint:Mint, totalProofs:[Proof], at amount:Int) async throws -> (new:[Proof], change:[Proof]) {
         let sum = totalProofs.reduce(0) { $0 + $1.amount }
