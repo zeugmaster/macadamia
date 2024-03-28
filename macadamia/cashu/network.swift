@@ -109,7 +109,8 @@ enum Network {
         guard let payload = try? JSONEncoder().encode(["proofs":proofs]) else {
             throw NetworkError.encodingError
         }
-        let httpReq = URLRequest.post(url: mintURL.appending(path: "check"), body: payload)
+        var httpReq = URLRequest.post(url: mintURL.appending(path: "check"), body: payload)
+        httpReq.timeoutInterval = 10
         let (data, response) = try await URLSession.shared.data(for: httpReq)
         guard let decoded = try? JSONDecoder().decode(StateCheckResponse.self, from: data) else {
             throw parseHTTPErrorResponse(data: data, response: response)
