@@ -179,12 +179,24 @@ class DrainViewModel: ObservableObject {
     
     func createBackupToken() {
         do {
+            guard !wallet.database.proofs.isEmpty else {
+                displayAlert(alert: AlertDetail(title: "Empty Wallet", 
+                                                description: "No drain token can be created from an empty wallet."))
+                return
+            }
             let tokens = try wallet.drainWallet(multiMint: makeTokenMultiMint)
             self.tokens = tokens.map({ (token: String, mintID: String, sum: Int) in
-                TokenInfo(token: token, mint: mintID, amount: sum)
+                let t = Transaction(timeStamp: ISO8601DateFormatter().string(from: Date()),
+                                    unixTimestamp: Date().timeIntervalSince1970,
+                                    amount: sum,
+                                    type: .drain,
+                                    token: token)
+                wallet.database.transactions.insert(t, at: 0)
+                return TokenInfo(token: token, mint: mintID, amount: sum)
             })
         } catch {
-            displayAlert(alert: AlertDetail(title: error.localizedDescription))
+            displayAlert(alert: AlertDetail(title: "Draining Wallet unsuccessful", 
+                                            description: String(describing: error)))
         }
     }
     

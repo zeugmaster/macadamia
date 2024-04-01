@@ -462,6 +462,7 @@ class Wallet {
     
     //TODO: needs support for multi mint token creation
     private func serializeProofs(proofs: [Proof], memo:String? = nil) throws -> String {
+        guard !proofs.isEmpty else { throw WalletError.tokenSerializationError(detail: "proofs cannot be empty")}
         guard let mint = database.mintForKeysetID(id: proofs[0].id) else {
             throw WalletError.tokenSerializationError(detail: "no mint found for keyset id: \(proofs[0].id)")
         }

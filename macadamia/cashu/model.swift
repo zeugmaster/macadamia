@@ -210,8 +210,9 @@ struct StateCheckResponse: Codable {
 }
 
 enum TransactionType:String,Codable {
-    case lightning = "TransactionTypeLightning"
-    case cashu = "TransactionTypeCashu"
+    case lightning
+    case cashu
+    case drain
 }
 class Transaction:Codable, Identifiable {
     let timeStamp:String

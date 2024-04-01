@@ -178,10 +178,13 @@ struct TransactionListRowView: View {
                 if transaction.type == .cashu {
                     Image(systemName: "banknote")
                     Text(transaction.token ?? "no token")
-                } else {
+                } else if transaction.type == .lightning {
                     Image(systemName: "bolt.fill")
-                    // hey, it's monospaced. might aswell
+                    // hey, it's monospaced. might as well
                     Text(" " + transaction.invoice!)
+                } else if transaction.type == .drain {
+                    Image(systemName: "arrow.turn.down.right")
+                    Text(transaction.token ?? "Token")
                 }
                 Spacer(minLength: 10)
                 if transaction.pending {
