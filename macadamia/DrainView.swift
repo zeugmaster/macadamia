@@ -48,8 +48,10 @@ struct DrainView: View {
                     Button(role:.destructive) {
                         vm.createBackupToken()
                     } label: {
-                        Text("Create Backup Token")
+                        Text("Create Drain Token")
                     }
+                } footer: {
+                    Text("Create a token that contains all proofs of the selected mints. WARNING: This will remove the proofs from the wallet database.")
                 }
                 .disabled(vm.selectedMints.isEmpty)
             } else {
