@@ -50,7 +50,7 @@ public class Database: Codable, CustomStringConvertible {
     }
     
     static func loadFromFile() -> Database {
-        if FileManager.default.fileExists(atPath: Database.getFilePath().absoluteString) {
+        if FileManager.default.fileExists(atPath: Database.getFilePath().path()) {
             do {
                 let data = try Data(contentsOf: Database.getFilePath())
                 let db = try JSONDecoder().decode(Database.self, from: data)
