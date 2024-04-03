@@ -10,7 +10,7 @@ import Foundation
 
 fileprivate var logger = Logger(subsystem: "zeugmaster.macadamia", category: "database")
 
-public class Database: Codable {
+public class Database: Codable, CustomStringConvertible {
     var proofs:[Proof]
     var pendingProofs:[Proof]
     var mints:[Mint]
@@ -20,7 +20,9 @@ public class Database: Codable {
     var mnemonic:String?
     var seed:String?
     
-    private init(proofs: [Proof] = [], 
+    private var loaded = false
+    
+    private init(proofs: [Proof] = [],
          pendingProofs: [Proof] = [],
          transactions:[Transaction] = [],
          mints: [Mint] = [],
@@ -33,6 +35,10 @@ public class Database: Codable {
         self.mnemonic = mnemonic
     }
     
+    public var description: String {
+        "Proofs: \(proofs.count), Mints: \(mints.count), Transactions:\(transactions.count), Seed is \(seed != nil ? "SET" : "NOT SET")"
+    }
+    
     private static func getFilePath() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0].appendingPathComponent("Database.json")
@@ -42,6 +48,7 @@ public class Database: Codable {
         do {
             let data = try Data(contentsOf: Database.getFilePath())
             let db = try JSONDecoder().decode(Database.self, from: data)
+            db.loaded = true
             return db
         } catch {
             return Database()
@@ -51,7 +58,16 @@ public class Database: Codable {
     func saveToFile() {
         let encoder = JSONEncoder()
         do {
+            guard loaded else {
+                logger.warning("Trying to save database to file before ever having loaded from file, saving aborted")
+                return
+            }
+            guard (!proofs.isEmpty && !mints.isEmpty && !transactions.isEmpty) else {
+                logger.warning("writing a db without proofs or mints or transaction is sus af, returning")
+                return
+            }
             encoder.outputFormatting = .prettyPrinted
+            logger.debug("Database before saving: \(self)")
             let data = try encoder.encode(self)
             try data.write(to: Database.getFilePath())
             logger.debug("Saved wallet database to file.")

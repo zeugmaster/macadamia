@@ -2,7 +2,7 @@
 //  DrainView.swift
 //  macadamia
 //
-//  Created by Dario Lass on 24.02.24.
+//  Created by zeugmaster on 24.02.24.
 //
 
 import SwiftUI
@@ -170,11 +170,16 @@ class DrainViewModel: ObservableObject {
     var currentAlert:AlertDetail?
     
     func loadMintList() {
+        print("Drain View: loaded mint list")
         mintList = []
         for mint in wallet.database.mints {
             mintList.append(mint.url.absoluteString)
         }
         selectedMints = Set(mintList)
+    }
+    
+    init() {
+        print("Drain View: initialized view model")
     }
     
     func createBackupToken() {
