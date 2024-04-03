@@ -10,6 +10,11 @@ import Foundation
 
 fileprivate var logger = Logger(subsystem: "zeugmaster.macadamia", category: "database")
 
+//enum DatabaseError: Error {
+//    case fileReadError
+//    case filePathError
+//}
+
 public class Database: Codable, CustomStringConvertible {
     var proofs:[Proof]
     var pendingProofs:[Proof]
@@ -20,7 +25,7 @@ public class Database: Codable, CustomStringConvertible {
     var mnemonic:String?
     var seed:String?
     
-    private var loaded = false
+//    private var loaded = false
     
     private init(proofs: [Proof] = [],
          pendingProofs: [Proof] = [],
@@ -45,12 +50,20 @@ public class Database: Codable, CustomStringConvertible {
     }
     
     static func loadFromFile() -> Database {
-        do {
-            let data = try Data(contentsOf: Database.getFilePath())
-            let db = try JSONDecoder().decode(Database.self, from: data)
-            db.loaded = true
-            return db
-        } catch {
+        if FileManager.default.fileExists(atPath: Database.getFilePath().absoluteString) {
+            do {
+                let data = try Data(contentsOf: Database.getFilePath())
+                let db = try JSONDecoder().decode(Database.self, from: data)
+                return db
+            } catch {
+                // if the file is there but could not be read (big yikes) do not return a new empty db,
+                // because it will be saved and override the old, potentially valuable db
+                //FIXME: this needs to be completely reworked to NOT return a fresh db or at least back up the old
+                logger.error("loadFromFile() could not read database file, altough it is present")
+                return Database()
+            }
+        } else {
+            // if there is no database file present we create an empty one and return it
             return Database()
         }
     }
@@ -58,10 +71,10 @@ public class Database: Codable, CustomStringConvertible {
     func saveToFile() {
         let encoder = JSONEncoder()
         do {
-            guard loaded else {
-                logger.warning("Trying to save database to file before ever having loaded from file, saving aborted")
-                return
-            }
+//            guard loaded else {
+//                logger.warning("Trying to save database to file before ever having loaded from file, saving aborted")
+//                return
+//            }
             guard (!proofs.isEmpty && !mints.isEmpty && !transactions.isEmpty) else {
                 logger.warning("writing a db without proofs or mints or transaction is sus af, returning")
                 return

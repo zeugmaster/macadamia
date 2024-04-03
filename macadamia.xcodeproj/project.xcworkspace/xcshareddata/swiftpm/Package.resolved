@@ -51,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/twostraws/CodeScanner.git",
       "state" : {
-        "revision" : "303bd5adbb61d068c3bcbb839857340c3e6ff8b0",
-        "version" : "2.4.0"
+        "revision" : "bf5d7087015620b250ee6c865b3c9039fc159d1a",
+        "version" : "2.3.3"
       }
     },
     {
@@ -97,7 +97,7 @@
       "location" : "https://github.com/mkrd/Swift-BigInt.git",
       "state" : {
         "branch" : "master",
-        "revision" : "158f8026da758ffc64ea77fd55595b387301f39d"
+        "revision" : "b07e961f4c999671cf8c2dc80e740899e8946013"
       }
     }
   ],

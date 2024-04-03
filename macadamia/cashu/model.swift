@@ -210,8 +210,10 @@ struct StateCheckResponse: Codable {
 }
 
 enum TransactionType:String,Codable {
-    case lightning
-    case cashu
+    // DO NOT REMOVE CODABLE STRING EQV, otherwise db will not read from file
+    case lightning = "TransactionTypeLightning"
+    case cashu = "TransactionTypeCashu"
+    //----
     case drain
 }
 class Transaction:Codable, Identifiable {
