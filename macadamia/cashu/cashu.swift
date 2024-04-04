@@ -404,6 +404,34 @@ class Wallet {
         return (proofs, currentCounter, proofs.count)
     }
     
+    //MARK: DRAIN
+    ///Fetches all proofs for all known mints and returns them either one token per mint or as one big multi-mint token
+    func drainWallet(multiMint:Bool) throws -> [(token:String, mintID:String, sum:Int)] {
+        if multiMint {
+            var parts = [Token_JSON]()
+            var sum = 0
+            for mint in database.mints {
+                let proofs = try database.retrieveProofs(from: mint, amount: nil)
+                parts.append(Token_JSON(mint: mint.url.absoluteString, proofs: proofs.proofs))
+                sum += proofs.sum
+            }
+            let multiToken = try serializeToken(parts: parts, memo: "Wallet Drain")
+            database.proofs = []
+            database.saveToFile()
+            return [(multiToken, "Multi Mint", sum)]
+        } else {
+            var tokens = [(String, String, Int)]()
+            for mint in database.mints {
+                let proofs = try database.retrieveProofs(from: mint, amount: nil)
+                let token = try serializeProofs(proofs: proofs.proofs)
+                tokens.append((token, mint.url.absoluteString, proofs.sum))
+            }
+            database.proofs = []
+            database.saveToFile()
+            return tokens
+        }
+    }
+    
     //MARK: - HELPERS
     private func split(mint:Mint, totalProofs:[Proof], at amount:Int) async throws -> (new:[Proof], change:[Proof]) {
         let sum = totalProofs.reduce(0) { $0 + $1.amount }
@@ -434,11 +462,20 @@ class Wallet {
     
     //TODO: needs support for multi mint token creation
     private func serializeProofs(proofs: [Proof], memo:String? = nil) throws -> String {
+        guard !proofs.isEmpty else { throw WalletError.tokenSerializationError(detail: "proofs cannot be empty")}
         guard let mint = database.mintForKeysetID(id: proofs[0].id) else {
             throw WalletError.tokenSerializationError(detail: "no mint found for keyset id: \(proofs[0].id)")
         }
         let token = Token_JSON(mint: mint.url.absoluteString, proofs: proofs)
         let tokenContainer = Token_Container(token: [token], memo: memo)
+        let jsonData = try JSONEncoder().encode(tokenContainer)
+        let jsonString = String(data: jsonData, encoding: .utf8)!
+        let safeString = jsonString.encodeBase64UrlSafe()
+        return "cashuA" + safeString
+    }
+    
+    func serializeToken(parts:[Token_JSON], memo:String? = nil) throws -> String {
+        let tokenContainer = Token_Container(token: parts, memo: memo)
         let jsonData = try JSONEncoder().encode(tokenContainer)
         let jsonString = String(data: jsonData, encoding: .utf8)!
         let safeString = jsonString.encodeBase64UrlSafe()
@@ -489,7 +526,7 @@ class Wallet {
         }
     }
     
-    //Only legacy way to check
+    //Only legacy API way to check
     func checkTokenStateSpendable(for token:Token_JSON) async throws -> Bool {
         guard !token.proofs.isEmpty else {
             throw WalletError.tokenStateCheckError("token is empty")
