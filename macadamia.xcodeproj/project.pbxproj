@@ -125,7 +125,6 @@
 				372034B92B29E1BC00C4F955 /* macadamiaApp.swift */,
 				372034BB2B29E1BC00C4F955 /* ContentView.swift */,
 				379212392B2A36830081F161 /* WalletView.swift */,
-				377FFEFC2BC41DCF00DD2635 /* ReleaseNoteView.swift */,
 				37B2C1572B60192100535DAF /* MintView.swift */,
 				379BDF642B447138008FD0E7 /* UIHelpers.swift */,
 				3780EEE52B2B5C3F00971AE7 /* QRView.swift */,
@@ -164,6 +163,7 @@
 		379BDF632B430F32008FD0E7 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				377FFEFC2BC41DCF00DD2635 /* ReleaseNoteView.swift */,
 				3792123B2B2A36970081F161 /* SettingsView.swift */,
 				3743CE632B494C3D00F862AB /* RestoreView.swift */,
 				379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */,

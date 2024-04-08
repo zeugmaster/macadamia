@@ -43,6 +43,9 @@ struct ContentView: View {
         })
         .popover(isPresented: $releaseNotesPopoverShowing, content: {
             ReleaseNoteView()
+            Text("Swipe down to dismiss")
+                .foregroundStyle(.secondary)
+                .font(.footnote)
         })
         .preferredColorScheme(.dark)
         //FIXME: for some reason calling .onChange here messes up the view beneath,

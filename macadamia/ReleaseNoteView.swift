@@ -40,18 +40,18 @@ struct ReleaseNoteView: View {
     }
     
     var body: some View {
-        NavigationView(content: {
-            ScrollView {
-                Markdown(markdown)
-                    .markdownTextStyle(\.link, textStyle: {
-                        UnderlineStyle(.single)
-                        ForegroundColor(.primary.opacity(0.9))
-                    })
-                    .padding()
-                Spacer()
-            }
-        })
+        ScrollView {
+            Markdown(markdown)
+                .markdownTextStyle(\.link, textStyle: {
+//                    UnderlineStyle(.single)
+                    ForegroundColor(.blue)
+                })
+                .padding()
+            Spacer()
+        }
+        .toolbar(.visible, for: .navigationBar)
         .preferredColorScheme(.dark)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

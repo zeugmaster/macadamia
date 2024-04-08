@@ -5,7 +5,7 @@ Adds minor improvements like:
 - two
 - three and
 - four
-- five  
+ 
 
 It removes the need for a
 ```
