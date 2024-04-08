@@ -36,6 +36,7 @@ struct SettingsView: View {
                         Text("nostr")
                     }
                 Section {
+                    NavigationLink("About this Release", destination: ReleaseNoteView())
                     HStack {
                         Text("View source on Github")
                         Spacer()

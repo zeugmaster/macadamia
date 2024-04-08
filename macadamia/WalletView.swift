@@ -38,7 +38,7 @@ struct WalletView: View {
                 HStack(alignment:.bottom) {
                     Spacer()
                     Spacer()
-                    Text(String(vm.balance))
+                    Text(vm.balance != nil ? String(vm.balance!) : "...")
                         .monospaced()
                         .bold()
                         .dynamicTypeSize(.accessibility5)
@@ -51,6 +51,7 @@ struct WalletView: View {
                         Spacer()
                 }
                 .onAppear(perform: {
+                    print("onAppear called on WalletView")
                     vm.update()
                 })
                 Spacer()
@@ -211,7 +212,7 @@ class WalletViewModel:ObservableObject {
     
     var wallet = Wallet.shared
     
-    @Published var balance = 0
+    @Published var balance:Int?
     
     @Published var transactions = [Transaction]()
     @Published var transactionListRefreshCounter = 0
@@ -223,6 +224,7 @@ class WalletViewModel:ObservableObject {
         Task {
             try await wallet.updateMints()
         }
+        
         balance = wallet.balance()
         transactions = wallet.database.transactions
     }
