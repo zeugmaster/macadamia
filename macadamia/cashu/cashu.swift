@@ -205,18 +205,24 @@ class Wallet {
         database.removeProofsFromValid(proofsToRemove: proofs)
         database.saveToFile()
         
-        let token = try serializeProofs(proofs: proofsToSend, memo: memo)
-        
-        let t = Transaction(timeStamp: ISO8601DateFormatter().string(from: Date()),
-                            unixTimestamp: Date().timeIntervalSince1970,
-                            amount: amount * -1,
-                            type: .cashu,
-                            pending: true,
-                            token: token,
-                            proofs: proofsToSend)
-        database.transactions.insert(t, at: 0)
-        
-        return token
+        do {
+            let token = try serializeProofs(proofs: proofsToSend, memo: memo)
+            let t = Transaction(timeStamp: ISO8601DateFormatter().string(from: Date()),
+                                unixTimestamp: Date().timeIntervalSince1970,
+                                amount: amount * -1,
+                                type: .cashu,
+                                pending: true,
+                                token: token,
+                                proofs: proofsToSend)
+            database.transactions.insert(t, at: 0)
+            
+            return token
+        } catch {
+            database.proofs.append(contentsOf: proofsToSend)
+            print(proofsToSend)
+            database.saveToFile()
+            throw error
+        }
     }
     
     //MARK: - Receive
@@ -470,7 +476,7 @@ class Wallet {
         let tokenContainer = Token_Container(token: [token], memo: memo)
         let jsonData = try JSONEncoder().encode(tokenContainer)
         let jsonString = String(data: jsonData, encoding: .utf8)!
-        let safeString = jsonString.encodeBase64UrlSafe()
+        let safeString = try jsonString.encodeBase64UrlSafe()
         return "cashuA" + safeString
     }
     
@@ -478,7 +484,7 @@ class Wallet {
         let tokenContainer = Token_Container(token: parts, memo: memo)
         let jsonData = try JSONEncoder().encode(tokenContainer)
         let jsonString = String(data: jsonData, encoding: .utf8)!
-        let safeString = jsonString.encodeBase64UrlSafe()
+        let safeString = try jsonString.encodeBase64UrlSafe()
         return "cashuA" + safeString
     }
     

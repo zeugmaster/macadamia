@@ -19,8 +19,10 @@ extension String {
         return string
     }
 
-    func encodeBase64UrlSafe(removePadding: Bool = false) -> String {
-        let base64Encoded = self.data(using: .ascii)?.base64EncodedString() ?? ""
+    func encodeBase64UrlSafe(removePadding: Bool = false) throws -> String {
+        guard let base64Encoded = self.data(using: .ascii)?.base64EncodedString() else {
+            throw WalletError.tokenSerializationError(detail: "Token could not be encoded. Did you use non-ASCII characters for the memo?")
+        }
         var urlSafeBase64 = base64Encoded
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")

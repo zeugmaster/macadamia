@@ -100,10 +100,6 @@ public class Database: Codable, CustomStringConvertible {
         saveToFile()
     }
     
-    func addProofsToValid(proofs:[Proof]) {
-        
-    }
-    
     func retrieveProofs(from mint: Mint, amount: Int?) throws -> (proofs: [Proof], sum: Int) {
         // Load all mint keysets
         var sum = 0
