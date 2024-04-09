@@ -125,9 +125,6 @@ struct ReceiveView: View {
             }
             .navigationTitle("Receive")
             .toolbar(.hidden, for: .tabBar)
-            .onAppear(perform: {
-                vm.token = "cashuAeyJ0b2tlbiI6W3sicHJvb2ZzIjpbeyJpZCI6IjAwYThjZDljNjViNDNlM2YiLCJhbW91bnQiOjQsIkMiOiIwMmIxOWJmMWI3N2NkOTA1Mjk1YTg0OTFhOTExYzFhMzg3NWQwYWZjZDc5OWQzYzYwZDU0YmNlZGJhNmI0ZDQ3YTAiLCJzZWNyZXQiOiIxYzRjMzcyNjBlMTNkNzJiYzZhNWFmZmU4YzMzZTcwOTVjYTZlZGJmZDk2NDMzYjhlMmExYzlkYTM1OWJjOTEzIn0seyJpZCI6IjAwYThjZDljNjViNDNlM2YiLCJhbW91bnQiOjE2LCJDIjoiMDM1Mjk5MGM3ODdhOTMzYTI5YTM2Mzg1YjMxMzBhMmVjMTE4NDVhNTcwNmMwZWY4NDEyMDUyNWJhY2NmNTUyZjk3Iiwic2VjcmV0IjoiYzFkMGMyODJiMWVhNTkyMjM4YzgxOTIxZjQ0N2RhNGM0ZmM0N2ViMjExMDM0NzBhYzAxMDRjZGY2YTVkNTdiOSJ9XSwibWludCI6Imh0dHBzOi8vbWludC5tYWNhZGFtaWEuY2FzaCJ9XX0="
-            })
             Button(action: {
                 vm.redeem()
             }, label: {
