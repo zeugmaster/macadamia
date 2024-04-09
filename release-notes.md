@@ -1,5 +1,5 @@
-# Version 0.1.0
-## Build 15/16
+# Version {{VERSION}}
+## Build {{BUILD}}
 
 This build of macadamia contains minor improvements like:
 

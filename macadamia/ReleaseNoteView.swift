@@ -35,13 +35,20 @@ struct ReleaseNote {
 }
 
 struct ReleaseNoteView: View {
-    var markdown: String {
-        ReleaseNote.stringFromFile()
+    var mdWithSubstitutions:String {
+        // Fetch version and build numbers
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown Version"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown Build"
+        // Replace placeholders with actual values
+        var md = ReleaseNote.stringFromFile()
+        md = md.replacingOccurrences(of: "{{VERSION}}", with: version)
+        md = md.replacingOccurrences(of: "{{BUILD}}", with: build)
+        return md
     }
     
     var body: some View {
         ScrollView {
-            Markdown(markdown)
+            Markdown(mdWithSubstitutions)
                 .markdownTextStyle(\.link, textStyle: {
 //                    UnderlineStyle(.single)
                     ForegroundColor(.blue)
