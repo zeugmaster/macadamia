@@ -43,7 +43,8 @@ struct TransactionDetailView: View {
                     if transaction.invoice != nil {
                         Text(transaction.invoice!)
                     } else if transaction.token != nil {
-                        Text(transaction.token!)
+                        TokenText(text:transaction.token!)
+                            .frame(idealHeight: 70)
                     } else {
                         Text("Undefined")
                     }

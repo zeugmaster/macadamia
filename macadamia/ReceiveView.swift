@@ -16,11 +16,13 @@ struct ReceiveView: View {
                 if vm.token != nil {
                     Section {
                         // TOKEN STRING
-                        Text(vm.token!)
-                            .lineLimit(5, reservesSpace: true)
-                            .monospaced()
-                            .foregroundStyle(.secondary)
-                            .disableAutocorrection(true)
+//                        Text(vm.token!)
+//                            .lineLimit(5, reservesSpace: true)
+//                            .monospaced()
+//                            .foregroundStyle(.secondary)
+//                            .disableAutocorrection(true)
+                        TokenText(text: vm.token!)
+                            .frame(idealHeight: 70)
                         // TOTAL AMOUNT
                         HStack {
                             Text("Total Amount: ")
@@ -123,9 +125,6 @@ struct ReceiveView: View {
             }
             .navigationTitle("Receive")
             .toolbar(.hidden, for: .tabBar)
-            .onAppear(perform: {
-                
-            })
             Button(action: {
                 vm.redeem()
             }, label: {
@@ -156,6 +155,7 @@ struct ReceiveView: View {
 
 #Preview {
     ReceiveView()
+        
 }
 
 @MainActor
@@ -167,7 +167,6 @@ class ReceiveViewModel: ObservableObject {
     @Published var loading = false
     @Published var success = false
     @Published var totalAmount:Int?
-//    @Published var unknownMint = false
     @Published var addingMint = false
     
     @Published var refreshCounter:Int = 0

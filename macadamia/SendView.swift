@@ -52,10 +52,12 @@ struct SendView: View {
             
             if vm.token != nil {
                 Section {
-                    Text(vm.token!)
-                        .lineLimit(1)
-                        .monospaced()
-                        .foregroundStyle(.secondary)
+//                    Text(vm.token!)
+//                        .lineLimit(1)
+//                        .monospaced()
+//                        .foregroundStyle(.secondary)
+                    TokenText(text: vm.token!)
+                        .frame(idealHeight: 70)
                     Button {
                         copyToClipboard()
                     } label: {

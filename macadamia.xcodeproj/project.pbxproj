@@ -19,6 +19,10 @@
 		3743CE662B49B7D600F862AB /* NostrProfileMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE652B49B7D600F862AB /* NostrProfileMessageView.swift */; };
 		3743CE682B4AA67600F862AB /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE672B4AA67600F862AB /* TransactionDetailView.swift */; };
 		376F43B22B4FEC0D00E55B0F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 376F43B12B4FEC0D00E55B0F /* README.md */; };
+		377FFEFD2BC41DCF00DD2635 /* ReleaseNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 377FFEFC2BC41DCF00DD2635 /* ReleaseNoteView.swift */; };
+		377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377FFEFF2BC43B6900DD2635 /* MarkdownUI */; };
+		377FFF022BC451AB00DD2635 /* release-notes.md in Resources */ = {isa = PBXBuildFile; fileRef = 377FFF012BC451AB00DD2635 /* release-notes.md */; };
+		377FFF042BC5524700DD2635 /* TokenText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 377FFF032BC5524700DD2635 /* TokenText.swift */; };
 		3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3780EEE52B2B5C3F00971AE7 /* QRView.swift */; };
 		3792122E2B29E7520081F161 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 3792122D2B29E7520081F161 /* BigNumber */; };
 		379212312B29E7900081F161 /* BIP32 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212302B29E7900081F161 /* BIP32 */; };
@@ -57,6 +61,9 @@
 		3743CE652B49B7D600F862AB /* NostrProfileMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrProfileMessageView.swift; sourceTree = "<group>"; };
 		3743CE672B4AA67600F862AB /* TransactionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
 		376F43B12B4FEC0D00E55B0F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		377FFEFC2BC41DCF00DD2635 /* ReleaseNoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseNoteView.swift; sourceTree = "<group>"; };
+		377FFF012BC451AB00DD2635 /* release-notes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "release-notes.md"; sourceTree = "<group>"; };
+		377FFF032BC5524700DD2635 /* TokenText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenText.swift; sourceTree = "<group>"; };
 		3780EEE52B2B5C3F00971AE7 /* QRView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRView.swift; sourceTree = "<group>"; };
 		379212392B2A36830081F161 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
 		3792123B2B2A36970081F161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -86,6 +93,7 @@
 				379BDF592B421855008FD0E7 /* NostrSDK in Frameworks */,
 				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
 				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
+				377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */,
 				379212312B29E7900081F161 /* BIP32 in Frameworks */,
 				3743CE612B48AD3900F862AB /* CodeScanner in Frameworks */,
 			);
@@ -98,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				376F43B12B4FEC0D00E55B0F /* README.md */,
+				377FFF012BC451AB00DD2635 /* release-notes.md */,
 				372034B82B29E1BC00C4F955 /* macadamia */,
 				372034B72B29E1BC00C4F955 /* Products */,
 			);
@@ -125,6 +134,7 @@
 				3743CE592B485BF800F862AB /* ReceiveView.swift */,
 				3743CE5D2B48A94D00F862AB /* MeltView.swift */,
 				3743CE672B4AA67600F862AB /* TransactionDetailView.swift */,
+				377FFF032BC5524700DD2635 /* TokenText.swift */,
 				379BDF632B430F32008FD0E7 /* Settings */,
 				37DD6E202B618B1400AC5676 /* cashu */,
 				379BDF5A2B42C4C4008FD0E7 /* nostr */,
@@ -156,6 +166,7 @@
 		379BDF632B430F32008FD0E7 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				377FFEFC2BC41DCF00DD2635 /* ReleaseNoteView.swift */,
 				3792123B2B2A36970081F161 /* SettingsView.swift */,
 				3743CE632B494C3D00F862AB /* RestoreView.swift */,
 				379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */,
@@ -202,6 +213,7 @@
 				379212332B29E7B30081F161 /* BIP39 */,
 				379BDF582B421855008FD0E7 /* NostrSDK */,
 				3743CE602B48AD3900F862AB /* CodeScanner */,
+				377FFEFF2BC43B6900DD2635 /* MarkdownUI */,
 			);
 			productName = macadamia;
 			productReference = 372034B62B29E1BC00C4F955 /* macadamia.app */;
@@ -237,6 +249,7 @@
 				379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */,
 				379BDF572B421855008FD0E7 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */,
 				3743CE5F2B48AD3900F862AB /* XCRemoteSwiftPackageReference "CodeScanner" */,
+				377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -255,6 +268,7 @@
 				37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */,
 				372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */,
 				376F43B22B4FEC0D00E55B0F /* README.md in Resources */,
+				377FFF022BC451AB00DD2635 /* release-notes.md in Resources */,
 				372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -282,6 +296,8 @@
 				379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */,
 				372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */,
 				37CC21802B8A71FD00A13F2F /* DrainView.swift in Sources */,
+				377FFF042BC5524700DD2635 /* TokenText.swift in Sources */,
+				377FFEFD2BC41DCF00DD2635 /* ReleaseNoteView.swift in Sources */,
 				379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */,
 				3743CE662B49B7D600F862AB /* NostrProfileMessageView.swift in Sources */,
 				3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */,
@@ -424,7 +440,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
 				DEVELOPMENT_TEAM = AN6VRTK6TB;
 				ENABLE_PREVIEWS = YES;
@@ -462,7 +478,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
 				DEVELOPMENT_TEAM = AN6VRTK6TB;
 				ENABLE_PREVIEWS = YES;
@@ -525,6 +541,14 @@
 				minimumVersion = 2.3.3;
 			};
 		};
+		377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.3.0;
+			};
+		};
 		3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/mkrd/Swift-BigInt.git";
@@ -564,6 +588,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3743CE5F2B48AD3900F862AB /* XCRemoteSwiftPackageReference "CodeScanner" */;
 			productName = CodeScanner;
+		};
+		377FFEFF2BC43B6900DD2635 /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
 		};
 		3792122D2B29E7520081F161 /* BigNumber */ = {
 			isa = XCSwiftPackageProductDependency;
