@@ -1,4 +1,5 @@
 {
+  "originHash" : "3ae1c85a27c313b9f0adc455759725e1e6753d55ee0ae7dd58c3dfb28ac88a41",
   "pins" : [
     {
       "identity" : "base58",
@@ -64,6 +65,15 @@
       }
     },
     {
+      "identity" : "networkimage",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gonzalezreal/NetworkImage",
+      "state" : {
+        "revision" : "7aff8d1b31148d32c5933d75557d42f6323ee3d1",
+        "version" : "6.0.0"
+      }
+    },
+    {
       "identity" : "nostr-sdk-ios",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/nostr-sdk-ios.git",
@@ -84,7 +94,7 @@
     {
       "identity" : "secp256k1.swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/GigaBitcoin/secp256k1.swift.git",
+      "location" : "https://github.com/GigaBitcoin/secp256k1.swift",
       "state" : {
         "revision" : "0f5f60ee9ad739c9603c3546c726a109d2c24cbd",
         "version" : "0.14.0"
@@ -98,7 +108,16 @@
         "branch" : "master",
         "revision" : "b07e961f4c999671cf8c2dc80e740899e8946013"
       }
+    },
+    {
+      "identity" : "swift-markdown-ui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gonzalezreal/swift-markdown-ui.git",
+      "state" : {
+        "revision" : "ae799d015a5374708f7b4c85f3294c05f2a564e2",
+        "version" : "2.3.0"
+      }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

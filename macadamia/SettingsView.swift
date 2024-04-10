@@ -26,6 +26,7 @@ struct SettingsView: View {
                     NavigationLink(destination: MintManagerView()) { Text("Mints") }
                     NavigationLink(destination: MnemonicView()) { Text("Show Seed Phrase") }
                     NavigationLink(destination: RestoreView()) { Text("Restore") }
+                    NavigationLink(destination: DrainView()) { Text("Drain Wallet") }
                 } header: {
                     Text("cashu")
                 }
@@ -35,6 +36,7 @@ struct SettingsView: View {
                         Text("nostr")
                     }
                 Section {
+                    NavigationLink("About this Release", destination: ReleaseNoteView())
                     HStack {
                         Text("View source on Github")
                         Spacer()
@@ -81,3 +83,4 @@ struct SettingsView: View {
 #Preview {
     SettingsView()
 }
+
