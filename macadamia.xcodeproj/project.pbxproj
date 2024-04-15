@@ -38,8 +38,8 @@
 		379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF662B4696B6008FD0E7 /* MnemonicView.swift */; };
 		379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF682B46F31E008FD0E7 /* SendView.swift */; };
 		37B2C1582B60192100535DAF /* MintView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37B2C1572B60192100535DAF /* MintView.swift */; };
-		37DC18A42B8669A900F9B37B /* macadamiaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DC18A32B8669A900F9B37B /* macadamiaTests.swift */; };
 		37CC21802B8A71FD00A13F2F /* DrainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37CC217F2B8A71FD00A13F2F /* DrainView.swift */; };
+		37DC18A42B8669A900F9B37B /* macadamiaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DC18A32B8669A900F9B37B /* macadamiaTests.swift */; };
 		37DD6E272B618B1400AC5676 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DD6E212B618B1400AC5676 /* model.swift */; };
 		37DD6E282B618B1400AC5676 /* data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DD6E222B618B1400AC5676 /* data.swift */; };
 		37DD6E292B618B1400AC5676 /* network.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DD6E232B618B1400AC5676 /* network.swift */; };
@@ -86,9 +86,9 @@
 		379BDF662B4696B6008FD0E7 /* MnemonicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MnemonicView.swift; sourceTree = "<group>"; };
 		379BDF682B46F31E008FD0E7 /* SendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendView.swift; sourceTree = "<group>"; };
 		37B2C1572B60192100535DAF /* MintView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintView.swift; sourceTree = "<group>"; };
+		37CC217F2B8A71FD00A13F2F /* DrainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrainView.swift; sourceTree = "<group>"; };
 		37DC18A12B8669A900F9B37B /* macadamiaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macadamiaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		37DC18A32B8669A900F9B37B /* macadamiaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macadamiaTests.swift; sourceTree = "<group>"; };
-		37CC217F2B8A71FD00A13F2F /* DrainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrainView.swift; sourceTree = "<group>"; };
 		37DD6E212B618B1400AC5676 /* model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = model.swift; sourceTree = "<group>"; };
 		37DD6E222B618B1400AC5676 /* data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = data.swift; sourceTree = "<group>"; };
 		37DD6E232B618B1400AC5676 /* network.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = network.swift; sourceTree = "<group>"; };
@@ -516,7 +516,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
 				DEVELOPMENT_TEAM = AN6VRTK6TB;
 				ENABLE_PREVIEWS = YES;
@@ -554,7 +554,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
 				DEVELOPMENT_TEAM = AN6VRTK6TB;
 				ENABLE_PREVIEWS = YES;

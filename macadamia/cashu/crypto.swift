@@ -3,7 +3,6 @@
 //  macadamia-cli
 //
 //
-
 import Foundation
 import CryptoKit
 import secp256k1
@@ -12,7 +11,6 @@ import BIP39
 import BigNumber
 import OSLog
 
-// Step 1 (Alice)
 //TODO: needs to be able to throw
 //TODO: should be broken up into one function for secret and one for the outputs
 func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keysetID:String) -> (outputs: [Output], blindingFactors: [String], secrets:[String]) {
@@ -32,7 +30,7 @@ func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keyse
         let blindingFactorPath = "m/129372'/0'/\(keysetInt)'/\(index)'/1"
         
         let x = childPrivateKeyForDerivationPath(seed: seed, derivationPath: secretPath)!
-        let Y = hashToCurve(message: x)
+        let Y = try! secureHashToCurve(message: x.data(using: .utf8)!)
         
         let r = try! secp256k1.Signing.PrivateKey(dataRepresentation: childPrivateKeyForDerivationPath(seed: seed, derivationPath: blindingFactorPath)!.bytes)
         let output = try! Y.combine([r.publicKey])
@@ -47,7 +45,6 @@ func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keyse
     return (outputs, blindingFactors, secrets)
 }
 
-// Step 3 (Alice) 
 //TODO: DEFINITELY needs to be able to throw
 func unblindPromises(promises:[Promise],
                      blindingFactors:[String],
@@ -70,22 +67,6 @@ func unblindPromises(promises:[Promise],
     return proofs
 }
 
-func hashToCurve(message: String) -> secp256k1.Signing.PublicKey {
-    var point:secp256k1.Signing.PublicKey? = nil
-    let prefix = Data([0x02])
-    var messageData = message.data(using: .utf8)!
-    while point == nil {
-        let hash = SHA256.hash(data: messageData)
-        let combined = prefix + hash
-        do {
-            point = try secp256k1.Signing.PublicKey(dataRepresentation: combined, format: .compressed)
-        } catch {
-            messageData = Data(hash)
-        }
-    }
-    return point!
-}
-
 func secureHashToCurve(message: Data) throws -> secp256k1.Signing.PublicKey {
     let domainSeparator = Data("Secp256k1_HashToCurve_Cashu_".utf8)
     
@@ -95,18 +76,13 @@ func secureHashToCurve(message: Data) throws -> secp256k1.Signing.PublicKey {
     var counter: UInt32 = 0
 
     while counter < UInt32(pow(2.0, 16)) {
-        // Append the counter to the hash and hash again
-        var counterData = Data(withUnsafeBytes(of: &counter, { Data($0) }))
+        let counterData = Data(withUnsafeBytes(of: &counter, { Data($0) }))
         let hash = SHA256.hash(data: msgToHash + counterData)
         do {
-            // Attempt to create a public key from the hash
-            // Note: The PublicKey initializer will vary based on the secp256k1 library you use.
-            // This is a placeholder; you will need to adapt it to your library's API.
             let prefix = Data([0x02])
             let combined = prefix + hash
             return try secp256k1.Signing.PublicKey(dataRepresentation: combined, format: .compressed)
         } catch {
-            // If the point does not lie on the curve, try the next counter value
             counter += 1
         }
     }
@@ -174,8 +150,6 @@ func convertKeysetID(keysetID: String) -> Int? {
 }
 
 func convertHexKeysetID(keysetID: String) -> Int? {
-    // FIXME: converting [UInt8] to Data to [UInt8] is unnessecary
-    // let data = try! [UInt8](keysetID.bytes)
     let data = try! [UInt8](Data(keysetID.bytes))
     let big = BInt(bytes: data)
     let result = big % (Int(pow(2.0, 31.0)) - 1)

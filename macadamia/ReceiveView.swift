@@ -15,12 +15,6 @@ struct ReceiveView: View {
             List {
                 if vm.token != nil {
                     Section {
-                        // TOKEN STRING
-//                        Text(vm.token!)
-//                            .lineLimit(5, reservesSpace: true)
-//                            .monospaced()
-//                            .foregroundStyle(.secondary)
-//                            .disableAutocorrection(true)
                         TokenText(text: vm.token!)
                             .frame(idealHeight: 70)
                         // TOTAL AMOUNT
@@ -200,6 +194,7 @@ class ReceiveViewModel: ObservableObject {
             let tokenAmount = amountForToken(token: token)
             let known = wallet.database.mints.contains(where: { $0.url.absoluteString.contains(token.mint) })
             let part = TokenPart(token: token, knownMint: known, amount: tokenAmount)
+            if token.proofs.count == 0 { continue }
             tokenParts.append(part)
             totalAmount! += tokenAmount
         }
@@ -257,7 +252,7 @@ class ReceiveViewModel: ObservableObject {
     }
 
     func redeem() {
-        guard !tokenParts.contains(where: { $0.state == .notSpendable }) else {
+        guard tokenParts.allSatisfy({ $0.state == .spendable }) else {
             displayAlert(alert: AlertDetail(title: "Unable to redeem", description: "One or more parts of this token are not spendable. macadamia does not yet support redeeming only parts of a token."))
             return
         }

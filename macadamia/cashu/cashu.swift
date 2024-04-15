@@ -411,6 +411,7 @@ class Wallet {
     }
     
     //MARK: DRAIN
+    //TODO: consolidate redundancies
     ///Fetches all proofs for all known mints and returns them either one token per mint or as one big multi-mint token
     func drainWallet(multiMint:Bool) throws -> [(token:String, mintID:String, sum:Int)] {
         if multiMint {
@@ -418,6 +419,7 @@ class Wallet {
             var sum = 0
             for mint in database.mints {
                 let proofs = try database.retrieveProofs(from: mint, amount: nil)
+                if proofs.proofs.isEmpty { continue }
                 parts.append(Token_JSON(mint: mint.url.absoluteString, proofs: proofs.proofs))
                 sum += proofs.sum
             }
@@ -429,6 +431,7 @@ class Wallet {
             var tokens = [(String, String, Int)]()
             for mint in database.mints {
                 let proofs = try database.retrieveProofs(from: mint, amount: nil)
+                if proofs.proofs.isEmpty { continue }
                 let token = try serializeProofs(proofs: proofs.proofs)
                 tokens.append((token, mint.url.absoluteString, proofs.sum))
             }
@@ -502,17 +505,19 @@ class Wallet {
             noPrefix = String(token.dropFirst("cashu:".count))
         }
         noPrefix = String(token.dropFirst(6))
-        print(noPrefix)
         guard let jsonString = noPrefix.decodeBase64UrlSafe() else {
             throw WalletError.tokenDeserializationError("token could not be decoded from Base64")
         }
-        print(jsonString)
         let jsonData = jsonString.data(using: .utf8)!
-        guard let tokenContainer:Token_Container = try? JSONDecoder().decode(Token_Container.self,
-                                                                             from: jsonData) else {
-            throw WalletError.tokenDeserializationError("")
+        do {
+            let tokenContainer:Token_Container = try JSONDecoder().decode(Token_Container.self,
+                                                                           from: jsonData)
+            return tokenContainer
+        } catch {
+            logger.warning("Could not deserialize token. error: \(String(describing: error))")
+            logger.warning("Token that could not be deserialized: \(token)")
+            throw WalletError.tokenDeserializationError(String(describing: error))
         }
-        return tokenContainer
     }
     
     //FIXME: ONLY WORKS FOR SINGLE MINT TOKENS
