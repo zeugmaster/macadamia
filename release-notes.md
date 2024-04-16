@@ -1,7 +1,7 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-This build of macadamia contains **important changes to cryptographic functions**:
+This build of macadamia contains **important changes to cryptographic functions** as well as bug fixes:
 
 ⚠️ Important: Due to necessary changes in the underlying cryptography, this build **breaks backwards compatibility** when using the `Restore from Seedphrase` feature.  
 
