@@ -75,7 +75,8 @@ public class Database: Codable, CustomStringConvertible {
 //                logger.warning("Trying to save database to file before ever having loaded from file, saving aborted")
 //                return
 //            }
-            guard (!proofs.isEmpty && !mints.isEmpty && !transactions.isEmpty) else {
+            if (proofs.isEmpty && mints.isEmpty && transactions.isEmpty) {
+                logger.debug("Database before ATTEMPTED saving: \(self)")
                 logger.warning("writing a db without proofs or mints or transaction is sus af, returning")
                 return
             }

@@ -29,17 +29,27 @@ func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keyse
         let secretPath = "m/129372'/0'/\(keysetInt)'/\(index)'/0"
         let blindingFactorPath = "m/129372'/0'/\(keysetInt)'/\(index)'/1"
         
+        // x is the secret, Y = hashToCurve(x)
         let x = childPrivateKeyForDerivationPath(seed: seed, derivationPath: secretPath)!
         let Y = try! secureHashToCurve(message: x.data(using: .utf8)!)
         
+        
+        // r is the blinding factor
         let r = try! secp256k1.Signing.PrivateKey(dataRepresentation: childPrivateKeyForDerivationPath(seed: seed, derivationPath: blindingFactorPath)!.bytes)
         let output = try! Y.combine([r.publicKey])
         
-        outputs.append(Output(amount: amounts[i], B_: String(bytes: output.dataRepresentation)))
+        let outputString = String(bytes: output.dataRepresentation)
+        
+        outputs.append(Output(amount: amounts[i], B_: outputString))
         
         blindingFactors.append(String(bytes: r.dataRepresentation))
         secrets.append(x)
-        Logger(subsystem: "com.zeugmaster.macadamia", category: "wallet").debug("Created secrets with derivation path \(secretPath, privacy: .public)")
+        Logger(subsystem: "com.zeugmaster.macadamia", category: "wallet").debug(
+            """
+            Created secrets with derivation path \(secretPath, privacy: .public), \
+            for keysetID: \(keysetID), output: ...\(outputString.suffix(10))
+            """
+        )
     }
     
     return (outputs, blindingFactors, secrets)
@@ -71,8 +81,6 @@ func secureHashToCurve(message: Data) throws -> secp256k1.Signing.PublicKey {
     let domainSeparator = Data("Secp256k1_HashToCurve_Cashu_".utf8)
     
     let msgToHash = SHA256.hash(data: domainSeparator + message)
-    print(String(bytes: msgToHash.bytes))
-    
     var counter: UInt32 = 0
 
     while counter < UInt32(pow(2.0, 16)) {
