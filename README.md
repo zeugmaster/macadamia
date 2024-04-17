@@ -14,6 +14,8 @@ Additionally, macadamia supports sending and receiving/redeeming tokens sent ove
 
 You can test it using [Testflight](https://testflight.apple.com/join/FteRYrAZ)
 
+Come join the discussion in the [Telegram channel](https://t.me/macadamiawallet)
+
 ### WARNING: 
 This project is in the very early beta stages and propably contains bugs that can lead to a loss of funds. Please only experiment with amounts of sats you are ready to lose!
 
