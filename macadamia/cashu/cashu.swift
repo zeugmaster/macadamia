@@ -334,14 +334,15 @@ class Wallet {
         
         for mint in database.mints {
             for keyset in mint.allKeysets {
+                logger.info("Attempting restore for keyset: \(keyset.id) of mint: \(mint.url.absoluteString)")
                 let (proofs, _, lastMatchCounter) = await restoreProofs(mint: mint, keysetID: keyset.id, seed: self.database.seed!)
-                print("last match counter: \(lastMatchCounter)")
-                keyset.derivationCounter = lastMatchCounter
-                // - "Very graceful /s"
-                // - "no. but very efficient."
+                print("last match counter: \(String(describing: lastMatchCounter))")
+                keyset.derivationCounter = lastMatchCounter + 1
+                
                 if keyset.id == mint.activeKeyset.id {
-                    mint.activeKeyset.derivationCounter = lastMatchCounter
+                    mint.activeKeyset.derivationCounter = lastMatchCounter + 1
                 }
+                
                 let (spendable, _) = try await check(mint: mint, proofs: proofs) // ignores pending but should not
                 guard spendable.count == proofs.count else {
                     throw WalletError.restoreError(detail: "could not filter: proofs, spendable need matching count")
@@ -350,6 +351,7 @@ class Wallet {
                 for i in 0..<spendable.count {
                     if spendable[i] { spendableProofs.append(proofs[i]) }
                 }
+                logger.info("Found \(spendableProofs.count) spendable proofs for keyset \(keyset.id)")
                 self.database.proofs.append(contentsOf: spendableProofs)
                 self.database.saveToFile()
             }
@@ -368,21 +370,19 @@ class Wallet {
         var batchLastMatchIndex = 0
         let emptyRuns = 2
         while emtpyResponses < emptyRuns {
-            print(keysetID)
-            let (outputs, blindingFactors, secrets) = generateDeterministicOutputs(counter: currentCounter,
-                                                                                   seed: self.database.seed!,
-                                                                                   amounts: Array(repeating: 1, count: batchSize),
-                                                                                   keysetID: keysetID)
+            let (outputs, 
+                 blindingFactors,
+                 secrets) = generateDeterministicOutputs(counter: currentCounter,
+                                                         seed: self.database.seed!,
+                                                         amounts: Array(repeating: 1, count: batchSize),
+                                                         keysetID: keysetID)
             
             guard let restoreRespone = try? await Network.restoreRequest(mintURL: mint.url, outputs: outputs) else {
                 print("unable to decode restoreResponse from Mint")
                 return ([], 0, 0)
             }
-            print(restoreRespone)
+//            print(restoreRespone)
             currentCounter += batchSize
-            batchLastMatchIndex = outputs.lastIndex(where: { oldOutput in
-                restoreRespone.outputs.contains(where: {newOut in oldOutput.B_ == newOut.B_})
-            }) ?? 0
             
             if restoreRespone.promises.isEmpty {
                 emtpyResponses += 1
@@ -390,6 +390,9 @@ class Wallet {
             } else {
                 //reset counter to ensure they are CONSECUTIVE empty responses
                 emtpyResponses = 0
+                batchLastMatchIndex = outputs.lastIndex(where: { oldOutput in
+                    restoreRespone.outputs.contains(where: {newOut in oldOutput.B_ == newOut.B_})
+                }) ?? 0
             }
             var rs = [String]()
             var xs = [String]()
@@ -400,17 +403,20 @@ class Wallet {
                 }
             }
             
-            let batchProofs = unblindPromises(promises: restoreRespone.promises, blindingFactors: rs, secrets: xs, mintPublicKeys: mintPubkeys)
+            let batchProofs = unblindPromises(promises: restoreRespone.promises, 
+                                              blindingFactors: rs,
+                                              secrets: xs,
+                                              mintPublicKeys: mintPubkeys)
             proofs.append(contentsOf: batchProofs)
-            print("current counter: \(currentCounter), emptyruns: \(emptyRuns), batchlastmatch:\(batchLastMatchIndex)")
         }
-        currentCounter -= emptyRuns * batchSize
+        currentCounter -= (emptyRuns + 1) * batchSize
         currentCounter += batchLastMatchIndex
-        
-        return (proofs, currentCounter, proofs.count)
+        if currentCounter < 0 { currentCounter = 0 }
+        return (proofs, proofs.count, currentCounter)
     }
     
     //MARK: DRAIN
+    //TODO: consolidate redundancies
     ///Fetches all proofs for all known mints and returns them either one token per mint or as one big multi-mint token
     func drainWallet(multiMint:Bool) throws -> [(token:String, mintID:String, sum:Int)] {
         if multiMint {
@@ -418,6 +424,7 @@ class Wallet {
             var sum = 0
             for mint in database.mints {
                 let proofs = try database.retrieveProofs(from: mint, amount: nil)
+                if proofs.proofs.isEmpty { continue }
                 parts.append(Token_JSON(mint: mint.url.absoluteString, proofs: proofs.proofs))
                 sum += proofs.sum
             }
@@ -429,6 +436,7 @@ class Wallet {
             var tokens = [(String, String, Int)]()
             for mint in database.mints {
                 let proofs = try database.retrieveProofs(from: mint, amount: nil)
+                if proofs.proofs.isEmpty { continue }
                 let token = try serializeProofs(proofs: proofs.proofs)
                 tokens.append((token, mint.url.absoluteString, proofs.sum))
             }
@@ -502,17 +510,19 @@ class Wallet {
             noPrefix = String(token.dropFirst("cashu:".count))
         }
         noPrefix = String(token.dropFirst(6))
-        print(noPrefix)
         guard let jsonString = noPrefix.decodeBase64UrlSafe() else {
             throw WalletError.tokenDeserializationError("token could not be decoded from Base64")
         }
-        print(jsonString)
         let jsonData = jsonString.data(using: .utf8)!
-        guard let tokenContainer:Token_Container = try? JSONDecoder().decode(Token_Container.self,
-                                                                             from: jsonData) else {
-            throw WalletError.tokenDeserializationError("")
+        do {
+            let tokenContainer:Token_Container = try JSONDecoder().decode(Token_Container.self,
+                                                                           from: jsonData)
+            return tokenContainer
+        } catch {
+            logger.warning("Could not deserialize token. error: \(String(describing: error))")
+            logger.warning("Token that could not be deserialized: \(token)")
+            throw WalletError.tokenDeserializationError(String(describing: error))
         }
-        return tokenContainer
     }
     
     //FIXME: ONLY WORKS FOR SINGLE MINT TOKENS

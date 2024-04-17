@@ -1,11 +1,12 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-This build of macadamia contains minor improvements like:
+This build of macadamia contains **important changes to cryptographic functions** as well as bug fixes:
 
-- Correct display of token strings without auto-linebreaks or hyphenation
-- This release note popover 🎉
-- Release notes in settings
-- adding a token memo with non-ASCII will return an error instead of an empty token string
+⚠️ Important: Due to necessary changes in the underlying cryptography, this build **breaks backwards compatibility** when using the `Restore from Seedphrase` feature.  
+
+To avoid loss of funds, please consider performing one full `Drain` and subsequent `Redeem` back into your wallet. 
+
+This will ensure using `Restore` works properly going forward.
 
 For more information check out macadamia on [GitHub](https://github.com/zeugmaster/macadamia).

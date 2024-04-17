@@ -3,7 +3,6 @@
 //  macadamia-cli
 //
 //
-
 import Foundation
 import CryptoKit
 import secp256k1
@@ -12,36 +11,50 @@ import BIP39
 import BigNumber
 import OSLog
 
-// Step 1 (Alice)
 //TODO: needs to be able to throw
+//TODO: should be broken up into one function for secret and one for the outputs
 func generateDeterministicOutputs(counter:Int, seed:String, amounts:[Int], keysetID:String) -> (outputs: [Output], blindingFactors: [String], secrets:[String]) {
     var outputs = [Output]()
     var blindingFactors = [String]()
     var secrets = [String]()
-    let keysetInt = convertKeysetID(keysetID: keysetID)!
+    let keysetInt:Int
+    if keysetID.count == 16 {
+        keysetInt = convertHexKeysetID(keysetID: keysetID)!
+    } else {
+        keysetInt = convertKeysetID(keysetID: keysetID)!
+    }
     for i in 0..<amounts.count {
         let index = counter + i
         
         let secretPath = "m/129372'/0'/\(keysetInt)'/\(index)'/0"
         let blindingFactorPath = "m/129372'/0'/\(keysetInt)'/\(index)'/1"
         
+        // x is the secret, Y = hashToCurve(x)
         let x = childPrivateKeyForDerivationPath(seed: seed, derivationPath: secretPath)!
-        let Y = hashToCurve(message: x)
+        let Y = try! secureHashToCurve(message: x.data(using: .utf8)!)
         
+        
+        // r is the blinding factor
         let r = try! secp256k1.Signing.PrivateKey(dataRepresentation: childPrivateKeyForDerivationPath(seed: seed, derivationPath: blindingFactorPath)!.bytes)
         let output = try! Y.combine([r.publicKey])
         
-        outputs.append(Output(amount: amounts[i], B_: String(bytes: output.dataRepresentation)))
+        let outputString = String(bytes: output.dataRepresentation)
+        
+        outputs.append(Output(amount: amounts[i], B_: outputString))
         
         blindingFactors.append(String(bytes: r.dataRepresentation))
         secrets.append(x)
-        Logger(subsystem: "com.zeugmaster.macadamia", category: "wallet").debug("Created secrets with derivation path \(secretPath, privacy: .public)")
+        Logger(subsystem: "com.zeugmaster.macadamia", category: "wallet").debug(
+            """
+            Created secrets with derivation path \(secretPath, privacy: .public), \
+            for keysetID: \(keysetID), output: ...\(outputString.suffix(10))
+            """
+        )
     }
     
     return (outputs, blindingFactors, secrets)
 }
 
-// Step 3 (Alice) 
 //TODO: DEFINITELY needs to be able to throw
 func unblindPromises(promises:[Promise],
                      blindingFactors:[String],
@@ -64,20 +77,26 @@ func unblindPromises(promises:[Promise],
     return proofs
 }
 
-func hashToCurve(message: String) -> secp256k1.Signing.PublicKey {
-    var point:secp256k1.Signing.PublicKey? = nil
-    let prefix = Data([0x02])
-    var messageData = message.data(using: .utf8)!
-    while point == nil {
-        let hash = SHA256.hash(data: messageData)
-        let combined = prefix + hash
+func secureHashToCurve(message: Data) throws -> secp256k1.Signing.PublicKey {
+    let domainSeparator = Data("Secp256k1_HashToCurve_Cashu_".utf8)
+    
+    let msgToHash = SHA256.hash(data: domainSeparator + message)
+    var counter: UInt32 = 0
+
+    while counter < UInt32(pow(2.0, 16)) {
+        let counterData = Data(withUnsafeBytes(of: &counter, { Data($0) }))
+        let hash = SHA256.hash(data: msgToHash + counterData)
         do {
-            point = try secp256k1.Signing.PublicKey(dataRepresentation: combined, format: .compressed)
+            let prefix = Data([0x02])
+            let combined = prefix + hash
+            return try secp256k1.Signing.PublicKey(dataRepresentation: combined, format: .compressed)
         } catch {
-            messageData = Data(hash)
+            counter += 1
         }
     }
-    return point!
+    
+    // If no valid point is found, throw an error
+    throw NSError(domain: "No valid point found", code: -1, userInfo: nil)
 }
 
 func negatePublicKey(key: secp256k1.Signing.PublicKey) -> secp256k1.Signing.PublicKey {
