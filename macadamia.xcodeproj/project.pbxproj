@@ -7,10 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		37049E262BD54A2E00BBAC4E /* URUI in Frameworks */ = {isa = PBXBuildFile; productRef = 37049E252BD54A2E00BBAC4E /* URUI */; };
 		372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034B92B29E1BC00C4F955 /* macadamiaApp.swift */; };
 		372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
 		372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */; };
+		372D8FDC2BD5BD2500494170 /* QRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372D8FDB2BD5BD2500494170 /* QRScanner.swift */; };
 		3743CE582B47798800F862AB /* NostrSendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE572B47798800F862AB /* NostrSendView.swift */; };
 		3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE592B485BF800F862AB /* ReceiveView.swift */; };
 		3743CE5E2B48A94D00F862AB /* MeltView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE5D2B48A94D00F862AB /* MeltView.swift */; };
@@ -65,6 +67,7 @@
 		372034BB2B29E1BC00C4F955 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		372034BD2B29E1BD00C4F955 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		372D8FDB2BD5BD2500494170 /* QRScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScanner.swift; sourceTree = "<group>"; };
 		3743CE572B47798800F862AB /* NostrSendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrSendView.swift; sourceTree = "<group>"; };
 		3743CE592B485BF800F862AB /* ReceiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiveView.swift; sourceTree = "<group>"; };
 		3743CE5D2B48A94D00F862AB /* MeltView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeltView.swift; sourceTree = "<group>"; };
@@ -104,6 +107,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				379BDF592B421855008FD0E7 /* NostrSDK in Frameworks */,
+				37049E262BD54A2E00BBAC4E /* URUI in Frameworks */,
 				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
 				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
 				377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */,
@@ -157,6 +161,7 @@
 				3743CE5D2B48A94D00F862AB /* MeltView.swift */,
 				3743CE672B4AA67600F862AB /* TransactionDetailView.swift */,
 				377FFF032BC5524700DD2635 /* TokenText.swift */,
+				372D8FDB2BD5BD2500494170 /* QRScanner.swift */,
 				379BDF632B430F32008FD0E7 /* Settings */,
 				37DD6E202B618B1400AC5676 /* cashu */,
 				379BDF5A2B42C4C4008FD0E7 /* nostr */,
@@ -244,6 +249,7 @@
 				379BDF582B421855008FD0E7 /* NostrSDK */,
 				3743CE602B48AD3900F862AB /* CodeScanner */,
 				377FFEFF2BC43B6900DD2635 /* MarkdownUI */,
+				37049E252BD54A2E00BBAC4E /* URUI */,
 			);
 			productName = macadamia;
 			productReference = 372034B62B29E1BC00C4F955 /* macadamia.app */;
@@ -302,6 +308,7 @@
 				379BDF572B421855008FD0E7 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */,
 				3743CE5F2B48AD3900F862AB /* XCRemoteSwiftPackageReference "CodeScanner" */,
 				377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				37049E242BD54A2E00BBAC4E /* XCRemoteSwiftPackageReference "URUI" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -351,6 +358,7 @@
 				37DD6E272B618B1400AC5676 /* model.swift in Sources */,
 				37DD6E2B2B618B1400AC5676 /* Base64FS.swift in Sources */,
 				379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */,
+				372D8FDC2BD5BD2500494170 /* QRScanner.swift in Sources */,
 				3743CE682B4AA67600F862AB /* TransactionDetailView.swift in Sources */,
 				37B2C1582B60192100535DAF /* MintView.swift in Sources */,
 				379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */,
@@ -654,6 +662,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		37049E242BD54A2E00BBAC4E /* XCRemoteSwiftPackageReference "URUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/BlockchainCommons/URUI.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
 		3743CE5F2B48AD3900F862AB /* XCRemoteSwiftPackageReference "CodeScanner" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/twostraws/CodeScanner.git";
@@ -705,6 +721,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		37049E252BD54A2E00BBAC4E /* URUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 37049E242BD54A2E00BBAC4E /* XCRemoteSwiftPackageReference "URUI" */;
+			productName = URUI;
+		};
 		3743CE602B48AD3900F862AB /* CodeScanner */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3743CE5F2B48AD3900F862AB /* XCRemoteSwiftPackageReference "CodeScanner" */;

@@ -1,5 +1,5 @@
 {
-  "originHash" : "3ae1c85a27c313b9f0adc455759725e1e6753d55ee0ae7dd58c3dfb28ac88a41",
+  "originHash" : "bf0aa46c7c6937209bfeeb46c048c176f6fa769b806fe26b0a096bdecaccad59",
   "pins" : [
     {
       "identity" : "base58",
@@ -17,6 +17,33 @@
       "state" : {
         "revision" : "f35a770ff7f3fd553cc44057f492c0107cc7b481",
         "version" : "1.0.1"
+      }
+    },
+    {
+      "identity" : "bcswiftdcbor",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/BlockchainCommons/BCSwiftDCBOR",
+      "state" : {
+        "revision" : "922746297fe733019b42b9083275eb2837296a7d",
+        "version" : "1.0.5"
+      }
+    },
+    {
+      "identity" : "bcswiftfloat16",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/blockchaincommons/BCSwiftFloat16",
+      "state" : {
+        "revision" : "71f380285d88a876f9cdf4e34e2e9e77d7ca4aef",
+        "version" : "1.0.0"
+      }
+    },
+    {
+      "identity" : "bcswifttags",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/BlockchainCommons/BCSwiftTags",
+      "state" : {
+        "revision" : "edb94b337d03e01c871db895c65d8fd3b6d43c9c",
+        "version" : "0.1.2"
       }
     },
     {
@@ -110,12 +137,48 @@
       }
     },
     {
+      "identity" : "swift-collections",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/wolfmcnally/swift-collections",
+      "state" : {
+        "revision" : "53a8adc54374f620002a3b6401d39e0feb3c57ae",
+        "version" : "1.1.0"
+      }
+    },
+    {
       "identity" : "swift-markdown-ui",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gonzalezreal/swift-markdown-ui.git",
       "state" : {
         "revision" : "ae799d015a5374708f7b4c85f3294c05f2a564e2",
         "version" : "2.3.0"
+      }
+    },
+    {
+      "identity" : "swift-numberkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/wolfmcnally/swift-numberkit.git",
+      "state" : {
+        "revision" : "34a26297c200489779929b7fd7d4d30b63e87e69",
+        "version" : "2.4.3"
+      }
+    },
+    {
+      "identity" : "urkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/BlockchainCommons/URKit.git",
+      "state" : {
+        "revision" : "c98261c7b2db42ccfbbba0853379826b86aaffc4",
+        "version" : "14.0.2"
+      }
+    },
+    {
+      "identity" : "urui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/BlockchainCommons/URUI.git",
+      "state" : {
+        "revision" : "1a673ef072ec2d7d595d3210bcc993036c89cc54",
+        "version" : "11.0.0"
       }
     }
   ],
