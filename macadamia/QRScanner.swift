@@ -1,10 +1,10 @@
-////
-////  QRScanner.swift
-////  macadamia
-////
-////  Created by zm on 21.04.24.
-////
 //
+//  QRScanner.swift
+//  macadamia
+//
+//  Created by zm on 21.04.24.
+//
+
 import SwiftUI
 import URUI
 import Combine
@@ -18,14 +18,23 @@ struct QRScanner: View {
                 URVideo(videoSession: viewModel.videoSession)
                     
             }
-            ZStack {
-                Rectangle()
-                    .fill(Color.clear)
-                    .background(Color.black.opacity(0.5))
-                Text("\(Int(viewModel.estimatedPercentComplete * 100))%")
+            VStack {
+                Spacer()
+                HStack {
+                    if viewModel.estimatedPercentComplete > 0 {
+                        Text("\(Int(viewModel.estimatedPercentComplete * 100))%")
+                            .padding()
+                    }
+                    Spacer()
+                    Button {
+                        viewModel.restart()
+                    } label: {
+                        Image(systemName: "arrow.counterclockwise")
+                    }
                     .padding()
+                }
+                .background(Color.black.opacity(0.5))
             }
-            .frame(maxHeight: 40)
         }
         .clipShape(RoundedRectangle(cornerRadius: 6.0))
     }
@@ -64,9 +73,14 @@ class QRScannerViewModel: ObservableObject {
         case .failure(_):
             print("failure")
             self.estimatedPercentComplete = 0
-        case .other(_): 
-            print("undef scan res")
-        case .progress(let progress): 
+        case .other(let result):
+            if let onResult = onResult, result.contains("cashu") {
+                onResult(result)
+            }
+            isScanning = false
+            estimatedPercentComplete = 1
+        case .progress(let progress):
+            print(progress)
             self.estimatedPercentComplete = progress.estimatedPercentComplete
         case .reject: 
             print("rejected")
