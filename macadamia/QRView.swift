@@ -52,13 +52,14 @@ struct QRView: View {
     init(string: String) {
         self.string = string
         let strData = string.data(using: .utf8)!
+        
         //TODO: handle errors, remove hardcoded max frag size
         let ur = try! UR(type:"bytes", cbor: strData.cbor)
-        self._urDisplayState = StateObject(wrappedValue: URDisplayState(ur: ur, maxFragmentLen: 500))
+        self._urDisplayState = StateObject(wrappedValue: URDisplayState(ur: ur, maxFragmentLen: 200))
     }
     
     var body: some View {
-        if urDisplayState.isSinglePart {
+        if string.count < 650 {
             StaticQR(qrCode: generateQRCode(from: string))
                 .clipShape(RoundedRectangle(cornerRadius: 6.0))
         } else {
