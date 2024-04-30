@@ -1,12 +1,12 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-This build of macadamia contains **important changes to cryptographic functions** as well as bug fixes:
+This build of macadamia introduces **animated QR codes**!
 
-⚠️ Important: Due to necessary changes in the underlying cryptography, this build **breaks backwards compatibility** when using the `Restore from Seedphrase` feature.  
+Animated QR codes let you transmit Cashu tokens of any size.
 
-To avoid loss of funds, please consider performing one full `Drain` and subsequent `Redeem` back into your wallet. 
-
-This will ensure using `Restore` works properly going forward.
+The wallet will automatically choose animated QR when the token size is above a certain number of characters (or approximately 2 proofs).
+Compatibility with other wallets that support animated QR may not be perfect in the beginning, but will improve quickly.
+This is still a work in progress.
 
 For more information check out macadamia on [GitHub](https://github.com/zeugmaster/macadamia).
