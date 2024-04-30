@@ -23,6 +23,7 @@ class TokenTextField: UIView {
         textView.textColor = .lightGray
         textView.layer.backgroundColor = UIColor.clear.cgColor
         textView.isEditable = false
+        textView.isSelectable = false
         return textView
     }()
     
