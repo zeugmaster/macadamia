@@ -22,6 +22,8 @@ class TokenTextField: UIView {
         textView.layer.cornerRadius = 5.0
         textView.textColor = .lightGray
         textView.layer.backgroundColor = UIColor.clear.cgColor
+        textView.isEditable = false
+        textView.isSelectable = false
         return textView
     }()
     

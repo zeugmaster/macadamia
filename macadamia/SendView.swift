@@ -44,18 +44,16 @@ struct SendView: View {
                 }
                 .foregroundStyle(.secondary)
             }
+            .disabled(vm.token != nil)
             Section {
                 TextField("enter note", text: $vm.tokenMemo)
             } footer: {
                 Text("Tap to add a note to the recipient.")
             }
+            .disabled(vm.token != nil)
             
             if vm.token != nil {
                 Section {
-//                    Text(vm.token!)
-//                        .lineLimit(1)
-//                        .monospaced()
-//                        .foregroundStyle(.secondary)
                     TokenText(text: vm.token!)
                         .frame(idealHeight: 70)
                     Button {
@@ -83,6 +81,11 @@ struct SendView: View {
                             Image(systemName: "square.and.arrow.up")
                         }
                     }
+                }
+                Section {
+                    QRView(string: vm.token!)
+                } header: {
+                    Text("Share via QR code")
                 }
             }
         }

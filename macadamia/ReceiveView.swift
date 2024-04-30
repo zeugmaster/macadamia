@@ -9,7 +9,8 @@ import SwiftUI
 
 struct ReceiveView: View {
     @StateObject var vm = ReceiveViewModel()
-        
+    @ObservedObject var qrsVM = QRScannerViewModel()
+    
     var body: some View {
         VStack {
             List {
@@ -79,6 +80,7 @@ struct ReceiveView: View {
                     Section {
                         Button {
                             vm.reset()
+                            qrsVM.restart()
                         } label: {
                             HStack {
                                 Text("Reset")
@@ -89,6 +91,9 @@ struct ReceiveView: View {
                         .disabled(vm.addingMint)
                     }
                 } else {
+                    QRScanner(viewModel: qrsVM)
+                        .frame(minHeight: 300, maxHeight: 400)
+                        .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
                     Button {
                         vm.paste()
                     } label: {
@@ -100,6 +105,9 @@ struct ReceiveView: View {
                     }
                 }
             }
+            .onAppear(perform: {
+                qrsVM.onResult = vm.parseToken(token:)
+            })
             .alert(vm.currentAlert?.title ?? "Error", isPresented: $vm.showAlert) {
                 Button(role: .cancel) {
                     
@@ -149,7 +157,6 @@ struct ReceiveView: View {
 
 #Preview {
     ReceiveView()
-        
 }
 
 @MainActor
@@ -181,7 +188,11 @@ class ReceiveViewModel: ObservableObject {
             deserialized = try wallet.deserializeToken(token: token)
         } catch {
             displayAlert(alert: AlertDetail(title: "Invalid token",
-                                            description: "This token could not be read. Input: \(token.prefix(20))... Error: \(String(describing: error))"))
+                                            description: """
+                                            This token could not be read.\
+                                            Input: \(token.prefix(20))... \
+                                            Error: \(String(describing: error))
+                                            """))
             return
         }
         
@@ -192,7 +203,9 @@ class ReceiveViewModel: ObservableObject {
         totalAmount = 0
         for token in deserialized.token {
             let tokenAmount = amountForToken(token: token)
-            let known = wallet.database.mints.contains(where: { $0.url.absoluteString.contains(token.mint) })
+            let known = wallet.database.mints.contains(where: {
+                $0.url.absoluteString.contains(token.mint)
+            })
             let part = TokenPart(token: token, knownMint: known, amount: tokenAmount)
             if token.proofs.count == 0 { continue }
             tokenParts.append(part)
@@ -253,7 +266,12 @@ class ReceiveViewModel: ObservableObject {
 
     func redeem() {
         guard tokenParts.allSatisfy({ $0.state == .spendable }) else {
-            displayAlert(alert: AlertDetail(title: "Unable to redeem", description: "One or more parts of this token are not spendable. macadamia does not yet support redeeming only parts of a token."))
+            displayAlert(alert: AlertDetail(title: "Unable to redeem", 
+                                            description: """
+                                                        One or more parts of this token are not
+                                                        spendable. macadamia does not yet
+                                                        support redeeming only parts of a token.
+                                                        """))
             return
         }
         loading = true

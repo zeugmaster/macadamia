@@ -51,7 +51,6 @@ struct WalletView: View {
                         Spacer()
                 }
                 .onAppear(perform: {
-                    print("onAppear called on WalletView")
                     vm.update()
                 })
                 Spacer()

@@ -35,7 +35,7 @@ struct MintView: View {
             }
             if vm.quote != nil {
                 Section {
-                    QRCodeView(qrCode: generateQRCode(from: vm.quote!.pr))
+                    StaticQR(qrCode: generateQRCode(from: vm.quote!.pr))
                         .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
                     Button {
                         copyToClipboard()
