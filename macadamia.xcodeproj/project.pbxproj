@@ -20,6 +20,7 @@
 		3743CE642B494C3D00F862AB /* RestoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE632B494C3D00F862AB /* RestoreView.swift */; };
 		3743CE662B49B7D600F862AB /* NostrProfileMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE652B49B7D600F862AB /* NostrProfileMessageView.swift */; };
 		3743CE682B4AA67600F862AB /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE672B4AA67600F862AB /* TransactionDetailView.swift */; };
+		376E88432BE5468B0026FF8D /* Popovers in Frameworks */ = {isa = PBXBuildFile; productRef = 376E88422BE5468B0026FF8D /* Popovers */; };
 		376F43B22B4FEC0D00E55B0F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 376F43B12B4FEC0D00E55B0F /* README.md */; };
 		377FFEFD2BC41DCF00DD2635 /* ReleaseNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 377FFEFC2BC41DCF00DD2635 /* ReleaseNoteView.swift */; };
 		377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377FFEFF2BC43B6900DD2635 /* MarkdownUI */; };
@@ -112,6 +113,7 @@
 				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
 				377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */,
 				379212312B29E7900081F161 /* BIP32 in Frameworks */,
+				376E88432BE5468B0026FF8D /* Popovers in Frameworks */,
 				3743CE612B48AD3900F862AB /* CodeScanner in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -250,6 +252,7 @@
 				3743CE602B48AD3900F862AB /* CodeScanner */,
 				377FFEFF2BC43B6900DD2635 /* MarkdownUI */,
 				37049E252BD54A2E00BBAC4E /* URUI */,
+				376E88422BE5468B0026FF8D /* Popovers */,
 			);
 			productName = macadamia;
 			productReference = 372034B62B29E1BC00C4F955 /* macadamia.app */;
@@ -309,6 +312,7 @@
 				3743CE5F2B48AD3900F862AB /* XCRemoteSwiftPackageReference "CodeScanner" */,
 				377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				37049E242BD54A2E00BBAC4E /* XCRemoteSwiftPackageReference "URUI" */,
+				376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -678,6 +682,14 @@
 				minimumVersion = 2.3.3;
 			};
 		};
+		376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/aheze/Popovers.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.2;
+			};
+		};
 		377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui.git";
@@ -730,6 +742,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3743CE5F2B48AD3900F862AB /* XCRemoteSwiftPackageReference "CodeScanner" */;
 			productName = CodeScanner;
+		};
+		376E88422BE5468B0026FF8D /* Popovers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */;
+			productName = Popovers;
 		};
 		377FFEFF2BC43B6900DD2635 /* MarkdownUI */ = {
 			isa = XCSwiftPackageProductDependency;

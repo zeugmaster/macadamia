@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Popovers
 
 let betaDisclaimerURL = URL(string: "https://macadamia.cash/beta.html")!
 
@@ -69,77 +70,126 @@ struct WalletView: View {
                     }
                 }
                 .id(vm.transactionListRefreshCounter)
-                .padding(EdgeInsets(top: 60, leading: 20, bottom: 40, trailing: 20))
+                .padding(EdgeInsets(top: 60, leading: 20, bottom: 20, trailing: 20))
                 .listStyle(.plain)
                 .refreshable {
                     vm.checkPending()
                 }
                 Spacer()
                 HStack {
-                   // First button
-                   Button(action: {
-                       navigationPath.append("Receive")
-                   }) {
-                       Text("Receive")
-                           .frame(maxWidth: .infinity)
-                           .padding()
-                           .bold()
-                           .foregroundColor(.white)
-                           .cornerRadius(10)
-                   }
-                   .buttonStyle(.bordered)
-                   .padding(WalletView.buttonPadding)
-                   
-                   // Second button
-                   Button(action: {
-                       navigationPath.append("Send")
-                   }) {
-                       Text("Send")
-                           .frame(maxWidth: .infinity)
-                           .padding()
-                           .bold()
-                           .foregroundColor(.white)
-                           .cornerRadius(10)
-                   }.buttonStyle(.bordered)
-                        .padding(WalletView.buttonPadding)
-               }
-               .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-                HStack {
-                   // First button
-                    NavigationLink(destination: MintView()) {
-                        Text("Mint")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .bold()
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
+                    //MARK: - BUTTON "RECEIVE"
+                    Templates.Menu(
+                        configuration: {
+                            $0.popoverAnchor = .bottom
+                            $0.originAnchor = .top
+                            $0.backgroundColor = Color.black.opacity(0.5)
+                        }
+                    ) {
+                        Templates.MenuItem {
+                            navigationPath.append("Receive")
+                        } label: { fade in
+                            Color.clear.overlay(
+                                HStack {
+                                    Text("Scan or Paste Token")
+                                    Spacer()
+                                    Image(systemName: "qrcode")
+                                }
+                                .foregroundStyle(.white)
+                                .dynamicTypeSize(.large)
+                            )
+                            .padding(20)
+                            .opacity(fade ? 0.5 : 1)
+                        }
+                        .background(Color.black)
+                        Templates.MenuItem {
+                            navigationPath.append("Mint")
+                        } label: { fade in
+                            Color.clear.overlay(
+                                HStack {
+                                    Text("Create Invoice")
+                                    Spacer()
+                                    Image(systemName: "bolt.fill")
+                                }
+                                .foregroundStyle(.white)
+                                .dynamicTypeSize(.large)
+                            )
+                            .padding(20)
+                            .opacity(fade ? 0.5 : 1)
+                        }
+                        .background(Color.black)
+                    } label: { fade in
+                        Text("\(Image(systemName: "arrow.down"))  Receive")
+                           .opacity(fade ? 0.5 : 1) // Apply fading effect based on a condition
+                           .dynamicTypeSize(.xLarge) // Apply dynamic type size for accessibility
+                           .fontWeight(.semibold) // Apply bold font weight
+                           .padding(EdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0)) // Add padding around the text
+                           .frame(maxWidth: .infinity) // Ensure it takes up the maximum width
+                           .background(Color.secondary.opacity(0.3)) // Apply a semi-transparent background
+                           .cornerRadius(10) // Apply rounded corners to the background
                     }
-                    .buttonStyle(.bordered)
-                    .padding(WalletView.buttonPadding)
-                   
-                   // Second button
-                   Button(action: {
-                       navigationPath.append("Melt")
-                   }) {
-                       Text("Melt")
-                           .frame(maxWidth: .infinity)
-                           .padding()
-                           .bold()
-                           .foregroundColor(.white)
-                           .cornerRadius(10)
-                   }.buttonStyle(.bordered)
-                        .padding(WalletView.buttonPadding)
-               }
-               .padding(EdgeInsets(top: 0, leading: 20, bottom: 40, trailing: 20))
+                    //MARK: - BUTTON "SEND"
+                    Templates.Menu(
+                        configuration: {
+                            $0.popoverAnchor = .bottom
+                            $0.originAnchor = .top
+                            $0.backgroundColor = Color.black.opacity(0.5)
+                        }
+                    ) {
+                        Templates.MenuItem {
+                            navigationPath.append("Send")
+                        } label: { fade in
+                            Color.clear.overlay(
+                                HStack {
+                                    Text("Create Cashu Token")
+                                    Spacer()
+                                    Image(systemName: "banknote")
+                                }
+                                .foregroundStyle(.white)
+                                .dynamicTypeSize(.large)
+                            )
+                            .padding(20)
+                            .opacity(fade ? 0.5 : 1)
+                        }
+                        .background(Color.black)
+                        Templates.MenuItem {
+                            navigationPath.append("Melt")
+                        } label: { fade in
+                            Color.clear.overlay(
+                                HStack {
+                                    Text("Pay Lightning Invoice")
+                                    Spacer()
+                                    Image(systemName: "bolt.fill")
+                                }
+                                .foregroundStyle(.white)
+                                .dynamicTypeSize(.large)
+                            )
+                            .padding(20)
+                            .opacity(fade ? 0.5 : 1)
+                        }
+                        .background(Color.black)
+                    } label: { fade in
+                        Text("\(Image(systemName: "arrow.up"))  Send")
+                           .opacity(fade ? 0.5 : 1) // Apply fading effect based on a condition
+                           .dynamicTypeSize(.xLarge) // Apply dynamic type size for accessibility
+                           .fontWeight(.semibold) // Apply bold font weight
+                           .padding(EdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0))
+                           .frame(maxWidth: .infinity) // Ensure it takes up the maximum width
+                           .background(Color.secondary.opacity(0.3)) // Apply a semi-transparent background
+                           .cornerRadius(10) // Apply rounded corners to the background
+                    }
+                }
+                .padding(EdgeInsets(top: 20, leading: 20, bottom: 50, trailing: 20))
             }
             .navigationDestination(for: String.self) { tag in
                 switch tag {
                 case "Send":
-                    SendView()
+                    SendView(vm: SendViewModel(navPath: navigationPath))
                 case "Receive":
                     ReceiveView()
                 case "Melt":
                     MeltView()
+                case "Mint":
+                    MintView(vm: MintViewModel(navPath: $navigationPath))
                 default:
                     EmptyView()
                 }
@@ -197,7 +247,6 @@ struct TransactionListRowView: View {
             .fontWeight(.light)
             .font(.callout)
         }
-        
     }
 }
 
