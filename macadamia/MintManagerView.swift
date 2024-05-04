@@ -32,23 +32,7 @@ struct MintManagerView: View {
                 Text("Swipe to delete. Make sure to add correct prefix and port numbers to mint URLs. Pressing RETURN  will add the mint URL")
             }
         }
-        .alert(vm.currentAlert?.title ?? "Error", isPresented: $vm.showAlert) {
-            Button(role: .cancel) {
-                
-            } label: {
-                Text(vm.currentAlert?.primaryButtonText ?? "OK")
-            }
-            if vm.currentAlert?.onAffirm != nil &&
-                vm.currentAlert?.affirmText != nil {
-                Button(role: .destructive) {
-                    vm.currentAlert!.onAffirm!()
-                } label: {
-                    Text(vm.currentAlert!.affirmText!)
-                }
-            }
-        } message: {
-            Text(vm.currentAlert?.alertDescription ?? "")
-        }
+        .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
     }
 }
 
@@ -103,9 +87,10 @@ class MintManagerViewModel: ObservableObject {
     }
     
     func removeMint(at offsets: IndexSet) {
+        //TODO: CHECK FOR BALANCE
         if true {
             displayAlert(alert: AlertDetail(title: "Are you sure?",
-                                           description: "This mint still has a balance. Are you sure you want to delete it?",
+                                           description: "Are you sure you want to delete it?",
                                             primaryButtonText: "Cancel",
                                            affirmText: "Yes",
                                             onAffirm: {
