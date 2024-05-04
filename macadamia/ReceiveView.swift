@@ -8,8 +8,12 @@
 import SwiftUI
 
 struct ReceiveView: View {
-    @StateObject var vm = ReceiveViewModel()
+    @ObservedObject var vm:ReceiveViewModel
     @ObservedObject var qrsVM = QRScannerViewModel()
+    
+    init(vm: ReceiveViewModel) {
+        self.vm = vm
+    }
     
     var body: some View {
         VStack {
@@ -155,10 +159,6 @@ struct ReceiveView: View {
     }
 }
 
-#Preview {
-    ReceiveView()
-}
-
 @MainActor
 class ReceiveViewModel: ObservableObject {
     
@@ -175,6 +175,17 @@ class ReceiveViewModel: ObservableObject {
     @Published var showAlert:Bool = false
     var currentAlert:AlertDetail?
     var wallet = Wallet.shared
+    
+    private var _navPath: Binding<NavigationPath>  // Changed to non-optional
+        
+    init(navPath: Binding<NavigationPath>) {
+        self._navPath = navPath
+    }
+    
+    var navPath: NavigationPath {
+        get { _navPath.wrappedValue }
+        set { _navPath.wrappedValue = newValue }
+    }
     
     func paste() {
         let pasteString = UIPasteboard.general.string ?? ""
@@ -280,6 +291,9 @@ class ReceiveViewModel: ObservableObject {
                 try await wallet.receiveToken(tokenString: token!)
                 self.loading = false
                 self.success = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    if !self.navPath.isEmpty { self.navPath.removeLast() }
+                }
             } catch {
                 displayAlert(alert: AlertDetail(title: "Redeem failed",
                                                description: String(describing: error)))
@@ -340,4 +354,8 @@ class TokenPart:ObservableObject, Hashable {
         self.addingMint = addingMint
         self.state = state
     }
+}
+
+#Preview {
+    ReceiveView(vm:ReceiveViewModel(navPath: Binding.constant(NavigationPath())))
 }

@@ -185,9 +185,9 @@ struct WalletView: View {
                 case "Send":
                     SendView(vm: SendViewModel(navPath: navigationPath))
                 case "Receive":
-                    ReceiveView()
+                    ReceiveView(vm: ReceiveViewModel(navPath: $navigationPath))
                 case "Melt":
-                    MeltView()
+                    MeltView(vm: MeltViewModel(navPath: $navigationPath))
                 case "Mint":
                     MintView(vm: MintViewModel(navPath: $navigationPath))
                 default:

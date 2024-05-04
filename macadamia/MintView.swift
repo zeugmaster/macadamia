@@ -5,9 +5,6 @@ struct MintView: View {
     @State private var isCopied = false
     @FocusState var amountFieldInFocus:Bool
     
-//    init(vm: MintViewModel) {
-//        self.vm = vm
-//    }
     init(vm:MintViewModel) {
         self.vm = vm
     }
@@ -236,7 +233,7 @@ class MintViewModel:ObservableObject {
                 try await wallet.requestMint(from: selectedMint, for: quote, with: amount)
                 minting = false
                 mintSuccess = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     if !self.navPath.isEmpty { self.navPath.removeLast() }
                 }
             } catch {

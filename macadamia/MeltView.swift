@@ -9,7 +9,11 @@ import SwiftUI
 import CodeScanner
 
 struct MeltView: View {
-    @ObservedObject var vm = MeltViewModel()
+    @ObservedObject var vm:MeltViewModel
+    
+    init(vm: MeltViewModel) {
+        self.vm = vm
+    }
     
     var body: some View {
         VStack {
@@ -112,9 +116,8 @@ struct MeltView: View {
 }
 
 #Preview {
-    MeltView()
+    MeltView(vm: MeltViewModel(navPath: Binding.constant(NavigationPath())))
 }
-
 
 @MainActor
 class MeltViewModel: ObservableObject {
@@ -123,7 +126,6 @@ class MeltViewModel: ObservableObject {
     
     @Published var loading = false
     @Published var success = false
-//    @Published var invoiceAmount:Int?
     
     @Published var fee:Int?
     
@@ -134,6 +136,17 @@ class MeltViewModel: ObservableObject {
     @Published var showAlert:Bool = false
     var currentAlert:AlertDetail?
     var wallet = Wallet.shared
+    
+    private var _navPath: Binding<NavigationPath>  // Changed to non-optional
+        
+    init(navPath: Binding<NavigationPath>) {
+        self._navPath = navPath
+    }
+    
+    var navPath: NavigationPath {
+        get { _navPath.wrappedValue }
+        set { _navPath.wrappedValue = newValue }
+    }
     
     func processScanViewResult(result:Result<ScanResult,ScanError>) {
         guard var text = try? result.get().string.lowercased() else {
@@ -186,6 +199,9 @@ class MeltViewModel: ObservableObject {
                 if invoicePaid {
                     loading = false
                     success = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        if !self.navPath.isEmpty { self.navPath.removeLast() }
+                    }
                 } else {
                     loading = false
                     success = false
