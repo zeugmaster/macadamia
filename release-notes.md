@@ -1,12 +1,11 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-This build of macadamia introduces **animated QR codes**!
+This build of macadamia containes **minor UI improvements**:
 
-Animated QR codes let you transmit Cashu tokens of any size.
+The four main buttons have been consolidated into two, which you can either tap or touch-drag (for those shooting ecash from the hip 🤠).
+Further, views that are no longer needed after a successful operation will auto-dismiss after 1 second.
 
-The wallet will automatically choose animated QR when the token size is above a certain number of characters (or approximately 2 proofs).
-Compatibility with other wallets that support animated QR may not be perfect in the beginning, but will improve quickly.
-This is still a work in progress.
+As always, thanks for testing **macadamia**!
 
 For more information check out macadamia on [GitHub](https://github.com/zeugmaster/macadamia).

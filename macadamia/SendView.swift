@@ -9,10 +9,14 @@ import SwiftUI
 
 struct SendView: View {
     
-    @ObservedObject var vm = SendViewModel()
+    @ObservedObject var vm:SendViewModel
     @State private var isCopied = false
     
     @FocusState var amountFieldInFocus:Bool
+    
+    init(vm:SendViewModel) {
+        self.vm = vm
+    }
     
     var body: some View {
         Form {
@@ -91,23 +95,7 @@ struct SendView: View {
         }
         .navigationTitle("Send")
         .navigationBarTitleDisplayMode(.inline)
-        .alert(vm.currentAlert?.title ?? "Error", isPresented: $vm.showAlert) {
-            Button(role: .cancel) {
-                
-            } label: {
-                Text(vm.currentAlert?.primaryButtonText ?? "OK")
-            }
-            if vm.currentAlert?.onAffirm != nil &&
-                vm.currentAlert?.affirmText != nil {
-                Button(role: .destructive) {
-                    vm.currentAlert!.onAffirm!()
-                } label: {
-                    Text(vm.currentAlert!.affirmText!)
-                }
-            }
-        } message: {
-            Text(vm.currentAlert?.alertDescription ?? "")
-        }
+        .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
         .onAppear(perform: {
             amountFieldInFocus = true
         })
@@ -149,13 +137,15 @@ struct SendView: View {
 }
 
 #Preview {
-    SendView()
+    SendView(vm: SendViewModel())
 }
 
 @MainActor
 class SendViewModel: ObservableObject {
     
     @Published var recipientProfile:Profile?
+    
+    @Published var navPath:NavigationPath?
     
     @Published var showingShareSheet = false
     @Published var tokenMemo = ""
@@ -173,6 +163,10 @@ class SendViewModel: ObservableObject {
     var wallet = Wallet.shared
     
     @Published var token:String?
+    
+    init(navPath:NavigationPath? = nil) {
+        self.navPath = navPath
+    }
     
     func fetchMintInfo() {
         mintList = []

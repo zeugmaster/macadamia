@@ -1,4 +1,5 @@
-# macadamia for iOS
+# macadamia Wallet for iOS <img align="left" width="40" height="40" src="https://macadamia.cash/images/Artboard%201@1024x-8.png" alt="logo">
+
 
 This is __macadamia__, a native iOS client for [cashu](https://github.com/cashubtc).
 cashu is a Chaumian eCash system designed for near perfect privacy.
@@ -22,7 +23,7 @@ This project is in the very early beta stages and propably contains bugs that ca
 ## Project Timeline:
 
 #### Phase 0 - Native Swift and SwiftUI Wallet Alpha Release and PoC
-**Completed**
+**Complete**
 
 #### Phase 1 - Library Segregation, Late Stage Beta Testing and App Store Release
 

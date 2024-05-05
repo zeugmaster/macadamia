@@ -1,9 +1,13 @@
 import SwiftUI
 
 struct MintView: View {
-    @ObservedObject var vm = MintViewModel()
+    @ObservedObject var vm:MintViewModel
     @State private var isCopied = false
     @FocusState var amountFieldInFocus:Bool
+    
+    init(vm:MintViewModel) {
+        self.vm = vm
+    }
     
     var body: some View {
         Form {
@@ -66,23 +70,7 @@ struct MintView: View {
         }
         .navigationTitle("Mint")
         .toolbar(.hidden, for: .tabBar)
-        .alert(vm.currentAlert?.title ?? "Error", isPresented: $vm.showAlert) {
-            Button(role: .cancel) {
-                
-            } label: {
-                Text(vm.currentAlert?.primaryButtonText ?? "OK")
-            }
-            if vm.currentAlert?.onAffirm != nil &&
-                vm.currentAlert?.affirmText != nil {
-                Button(role: .destructive) {
-                    vm.currentAlert!.onAffirm!()
-                } label: {
-                    Text(vm.currentAlert!.affirmText!)
-                }
-            }
-        } message: {
-            Text(vm.currentAlert?.alertDescription ?? "")
-        }
+        .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
         .onAppear(perform: {
             vm.fetchMintList()
         })
@@ -151,10 +139,10 @@ struct MintView: View {
         }
     }
 }
-
-#Preview {
-    MintView()
-}
+//
+//#Preview {
+//    MintView(vm: MintViewModel())
+//}
 
 @MainActor
 class MintViewModel:ObservableObject {
@@ -172,6 +160,17 @@ class MintViewModel:ObservableObject {
     @Published var showAlert:Bool = false
     var currentAlert:AlertDetail?
     var wallet = Wallet.shared
+    
+    private var _navPath: Binding<NavigationPath>  // Changed to non-optional
+        
+    init(navPath: Binding<NavigationPath>) {
+        self._navPath = navPath
+    }
+    
+    var navPath: NavigationPath {
+        get { _navPath.wrappedValue }
+        set { _navPath.wrappedValue = newValue }
+    }
     
     func fetchMintList() {
         mintList = wallet.database.mints.map { mint in
@@ -218,6 +217,9 @@ class MintViewModel:ObservableObject {
                 try await wallet.requestMint(from: selectedMint, for: quote, with: amount)
                 minting = false
                 mintSuccess = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    if !self.navPath.isEmpty { self.navPath.removeLast() }
+                }
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error",
                                                 description: String(describing: error)))

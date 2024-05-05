@@ -32,6 +32,38 @@ struct AlertDetail {
     }
 }
 
+struct AlertViewModifier: ViewModifier {
+    @Binding var isPresented: Bool
+    var currentAlert: AlertDetail?
+
+    func body(content: Content) -> some View {
+        content
+            .alert(currentAlert?.title ?? "Error", isPresented: $isPresented) {
+                Button(role: .cancel) {
+                    // This button could potentially reset or handle cancel logic
+                } label: {
+                    Text(currentAlert?.primaryButtonText ?? "OK")
+                }
+                if let affirmText = currentAlert?.affirmText, let onAffirm = currentAlert?.onAffirm {
+                    Button(role: .destructive) {
+                        onAffirm()
+                    } label: {
+                        Text(affirmText)
+                    }
+                }
+            } message: {
+                Text(currentAlert?.alertDescription ?? "")
+            }
+    }
+}
+
+extension View {
+    func alertView(isPresented: Binding<Bool>, currentAlert: AlertDetail?) -> some View {
+        self.modifier(AlertViewModifier(isPresented: isPresented, currentAlert: currentAlert))
+    }
+}
+
+
 struct ShareSheet: UIViewControllerRepresentable {
     var items: [Any]
 

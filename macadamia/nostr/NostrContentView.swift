@@ -133,23 +133,7 @@ struct NostrInboxView: View {
                 vm.connectToRelay()
                 vm.listRedraw += 1
             }
-            .alert(vm.currentAlert?.title ?? "Error", isPresented: $vm.showAlert) {
-                Button(role: .cancel) {
-                    
-                } label: {
-                    Text(vm.currentAlert?.primaryButtonText ?? "OK")
-                }
-                if vm.currentAlert?.onAffirm != nil &&
-                    vm.currentAlert?.affirmText != nil {
-                    Button(role: .destructive) {
-                        vm.currentAlert!.onAffirm!()
-                    } label: {
-                        Text(vm.currentAlert!.affirmText!)
-                    }
-                }
-            } message: {
-                Text(vm.currentAlert?.alertDescription ?? "")
-            }
+            .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
         }
     }
 }
