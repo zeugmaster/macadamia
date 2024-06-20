@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Popovers
+import CoreBluetooth
 
 let betaDisclaimerURL = URL(string: "https://macadamia.cash/beta.html")!
 
@@ -33,6 +34,13 @@ struct WalletView: View {
                         )
                     }
                     Spacer()
+                    Button {
+                        navigationPath.append("AirNut")
+                    } label: {
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                            .font(.system(size: 28))
+                            .padding(EdgeInsets(top: 6, leading: 6, bottom: 6, trailing: 24))
+                    }
                 }
                 .padding(EdgeInsets(top: 20, leading: 40, bottom: 0, trailing: 0))
                 Spacer(minLength: 60)
@@ -190,6 +198,8 @@ struct WalletView: View {
                     MeltView(vm: MeltViewModel(navPath: $navigationPath))
                 case "Mint":
                     MintView(vm: MintViewModel(navPath: $navigationPath))
+                case "AirNut":
+                    AirNutView(vm: AirNutViewModel())
                 default:
                     EmptyView()
                 }
