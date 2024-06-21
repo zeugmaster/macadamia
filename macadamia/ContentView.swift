@@ -17,7 +17,7 @@ struct ContentView: View {
             Color.black.ignoresSafeArea()
             TabView(selection: $selectedTab) {
                 // First tab content
-                WalletView(navigationTag: $walletNavigationTag, urlState: $urlState)
+                WalletView(navigationTag:  walletNavigationTag, urlState: urlState)
                     .tabItem {
                         Label("Wallet", systemImage: "bitcoinsign.circle")
                     }
@@ -55,7 +55,7 @@ struct ContentView: View {
                 .font(.footnote)
         })
         .preferredColorScheme(.dark)
-        .onOpenURL { url in
+        .onOpenURL () { url in
             handleUrl(url)
         }
         //FIXME: for some reason calling .onChange here messes up the view beneath,
@@ -72,8 +72,8 @@ struct ContentView: View {
     }
      func handleUrl(_ url: URL) {
          if url.scheme == "cashu" {
-             
-             let token = url.host
+             let token = url.absoluteString.replacingOccurrences(of: "cashu:", with: "")
+             print(token)
              urlState = token
              walletNavigationTag = "Receive"
              selectedTab = 0
