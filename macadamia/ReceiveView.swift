@@ -10,6 +10,7 @@ import SwiftUI
 struct ReceiveView: View {
     @ObservedObject var vm:ReceiveViewModel
     @ObservedObject var qrsVM = QRScannerViewModel()
+    @State var initialState: String?
     
     init(vm: ReceiveViewModel) {
         self.vm = vm
@@ -162,8 +163,12 @@ class ReceiveViewModel: ObservableObject {
     
     private var _navPath: Binding<NavigationPath>  // Changed to non-optional
         
-    init(navPath: Binding<NavigationPath>) {
+    init(navPath: Binding<NavigationPath>, initialState: String?) {
         self._navPath = navPath
+        guard let token = initialState else {
+            return
+        }
+        parseToken(token: initialState!)
     }
     
     var navPath: NavigationPath {

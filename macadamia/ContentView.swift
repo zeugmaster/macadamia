@@ -75,7 +75,7 @@ struct ContentView: View {
              
              let token = url.host
              urlState = token
-             walletNavigationTag = "receive"
+             walletNavigationTag = "Receive"
              selectedTab = 0
          }
         }

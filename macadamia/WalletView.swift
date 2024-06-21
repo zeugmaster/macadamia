@@ -13,6 +13,8 @@ let betaDisclaimerURL = URL(string: "https://macadamia.cash/beta.html")!
 struct WalletView: View {
     @ObservedObject var vm = WalletViewModel()
     @State var navigationPath = NavigationPath()
+    @State var navigationTag: String?
+    @State var urlState: String?
     
     static let buttonPadding:CGFloat = 1
         
@@ -185,13 +187,18 @@ struct WalletView: View {
                 case "Send":
                     SendView(vm: SendViewModel(navPath: navigationPath))
                 case "Receive":
-                    ReceiveView(vm: ReceiveViewModel(navPath: $navigationPath))
+                    ReceiveView(vm: ReceiveViewModel(navPath: $navigationPath, initialState: urlState))
                 case "Melt":
                     MeltView(vm: MeltViewModel(navPath: $navigationPath))
                 case "Mint":
                     MintView(vm: MintViewModel(navPath: $navigationPath))
                 default:
                     EmptyView()
+                }
+            }
+            .onAppear {
+                if navigationTag == "Receive" {
+                  navigationPath.append("Receive")       
                 }
             }
             .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
