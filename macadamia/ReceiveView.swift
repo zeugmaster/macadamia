@@ -163,7 +163,7 @@ class ReceiveViewModel: ObservableObject {
     
     private var _navPath: Binding<NavigationPath>  // Changed to non-optional
         
-    init(navPath: Binding<NavigationPath>, initialState: String?) {
+    init(navPath: Binding<NavigationPath>, initialState: String? = nil) {
         self._navPath = navPath
         guard let token = initialState else {
             return
