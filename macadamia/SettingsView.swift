@@ -27,6 +27,7 @@ struct SettingsView: View {
                     NavigationLink(destination: MnemonicView()) { Text("Show Seed Phrase") }
                     NavigationLink(destination: RestoreView()) { Text("Restore") }
                     NavigationLink(destination: DrainView()) { Text("Drain Wallet") }
+                    NavigationLink(destination: AirNutSettingsView(), label: { Text("AirNut") } )
                 } header: {
                     Text("cashu")
                 }

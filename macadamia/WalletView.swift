@@ -37,6 +37,7 @@ struct WalletView: View {
                     Button {
                         navigationPath.append("AirNut")
                     } label: {
+                        
                         Image(systemName: "antenna.radiowaves.left.and.right")
                             .font(.system(size: 28))
                             .padding(EdgeInsets(top: 6, leading: 6, bottom: 6, trailing: 24))
@@ -199,7 +200,7 @@ struct WalletView: View {
                 case "Mint":
                     MintView(vm: MintViewModel(navPath: $navigationPath))
                 case "AirNut":
-                    AirNutView(vm: AirNutViewModel())
+                    AirNutView(vm: AirNutViewModel(navPath: $navigationPath, tokenString: "cashuAtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest"))
                 default:
                     EmptyView()
                 }

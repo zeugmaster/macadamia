@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		37049E262BD54A2E00BBAC4E /* URUI in Frameworks */ = {isa = PBXBuildFile; productRef = 37049E252BD54A2E00BBAC4E /* URUI */; };
+		3714D7082C24A0700088DCA2 /* AirNutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3714D7072C24A0700088DCA2 /* AirNutSettingsView.swift */; };
 		372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034B92B29E1BC00C4F955 /* macadamiaApp.swift */; };
 		372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
@@ -64,6 +65,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3714D7072C24A0700088DCA2 /* AirNutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirNutSettingsView.swift; sourceTree = "<group>"; };
 		372034B62B29E1BC00C4F955 /* macadamia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macadamia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		372034B92B29E1BC00C4F955 /* macadamiaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macadamiaApp.swift; sourceTree = "<group>"; };
 		372034BB2B29E1BC00C4F955 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -205,6 +207,7 @@
 				379BDF612B430775008FD0E7 /* MintManagerView.swift */,
 				379BDF662B4696B6008FD0E7 /* MnemonicView.swift */,
 				37CC217F2B8A71FD00A13F2F /* DrainView.swift */,
+				3714D7072C24A0700088DCA2 /* AirNutSettingsView.swift */,
 			);
 			name = Settings;
 			sourceTree = "<group>";
@@ -361,6 +364,7 @@
 				379BDF602B430765008FD0E7 /* RelayManagerView.swift in Sources */,
 				3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */,
 				3792123A2B2A36830081F161 /* WalletView.swift in Sources */,
+				3714D7082C24A0700088DCA2 /* AirNutSettingsView.swift in Sources */,
 				37DD6E292B618B1400AC5676 /* network.swift in Sources */,
 				37DD6E272B618B1400AC5676 /* model.swift in Sources */,
 				37DD6E2B2B618B1400AC5676 /* Base64FS.swift in Sources */,
@@ -540,6 +544,8 @@
 				INFOPLIST_FILE = macadamia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = macadamia;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app needs to use Bluetooth to send tokens.";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "This app needs to act as a bluetooth peripheral to enable sending of tokens. ";
 				INFOPLIST_KEY_NSCameraUsageDescription = "macadamia uses your device's camera to read the QR-codes of lightning invoices.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -578,6 +584,8 @@
 				INFOPLIST_FILE = macadamia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = macadamia;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app needs to use Bluetooth to send tokens.";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "This app needs to act as a bluetooth peripheral to enable sending of tokens. ";
 				INFOPLIST_KEY_NSCameraUsageDescription = "macadamia uses your device's camera to read the QR-codes of lightning invoices.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

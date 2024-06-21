@@ -161,7 +161,7 @@ class MintViewModel:ObservableObject {
     var currentAlert:AlertDetail?
     var wallet = Wallet.shared
     
-    private var _navPath: Binding<NavigationPath>  // Changed to non-optional
+    private var _navPath: Binding<NavigationPath> 
         
     init(navPath: Binding<NavigationPath>) {
         self._navPath = navPath
