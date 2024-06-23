@@ -8,16 +8,20 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var releaseNotesPopoverShowing = false
-    
+    @State private var selectedTab: Int = 0
+    @State private var walletNavigationTag: String?
+    @State private var urlState: String?
+        
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            TabView {
+            TabView(selection: $selectedTab) {
                 // First tab content
-                WalletView()
+                WalletView(navigationTag:  $walletNavigationTag, urlState: $urlState)
                     .tabItem {
                         Label("Wallet", systemImage: "bitcoinsign.circle")
                     }
+                    .tag(0)
                 
                 // Second tab content
                 NostrInboxView()
@@ -25,13 +29,16 @@ struct ContentView: View {
                         Image(systemName: "person.2")
                         Text("nostr")
                     }
+                    .tag(1)
                     
                 // Third tab content
                 SettingsView()
                     .tabItem {
                         Image(systemName: "gear")
                         Text("Settings")
-                    }.navigationTitle("Title")
+                    }
+                    .tag(2)
+                    .navigationTitle("Title")
                 
             }
             .persistentSystemOverlays(.hidden)
@@ -48,8 +55,9 @@ struct ContentView: View {
                 .font(.footnote)
         })
         .preferredColorScheme(.dark)
-        //FIXME: for some reason calling .onChange here messes up the view beneath,
-        // which does not show the balance anymore... weird
+        .onOpenURL () { url in
+            handleUrl(url)
+        }
     }
     
     func checkReleaseNotes() {
@@ -59,6 +67,14 @@ struct ContentView: View {
             UserDefaults.standard.setValue(ReleaseNote.hashString(), 
                                            forKey: "LastReleaseNotesAcknoledgedHash")
         }
+    }
+     func handleUrl(_ url: URL) {
+         if url.scheme == "cashu" {
+             let noURLPrefix = url.absoluteStringWithoutPrefix("cashu")
+             urlState = noURLPrefix
+             selectedTab = 0
+             walletNavigationTag = "Receive"
+         }
     }
 }
 

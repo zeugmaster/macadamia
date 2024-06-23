@@ -10,6 +10,7 @@ import SwiftUI
 struct ReceiveView: View {
     @ObservedObject var vm:ReceiveViewModel
     @ObservedObject var qrsVM = QRScannerViewModel()
+    @State var initialState: String?
     
     init(vm: ReceiveViewModel) {
         self.vm = vm
@@ -95,9 +96,16 @@ struct ReceiveView: View {
                         .disabled(vm.addingMint)
                     }
                 } else {
-                    QRScanner(viewModel: qrsVM)
-                        .frame(minHeight: 300, maxHeight: 400)
-                        .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
+                    
+                    //MARK: This check is necessary to prevent a bug in URKit (or the system, who knows)
+                    //MARK: from crashing the app when using the camera on an Apple Silicon Mac
+                    
+                    if !ProcessInfo.processInfo.isiOSAppOnMac {
+                        QRScanner(viewModel: qrsVM)
+                            .frame(minHeight: 300, maxHeight: 400)
+                            .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
+                    }
+                    
                     Button {
                         vm.paste()
                     } label: {
@@ -162,8 +170,12 @@ class ReceiveViewModel: ObservableObject {
     
     private var _navPath: Binding<NavigationPath>  // Changed to non-optional
         
-    init(navPath: Binding<NavigationPath>) {
+    init(navPath: Binding<NavigationPath>, initialState: String? = nil) {
         self._navPath = navPath
+        guard let token = initialState else {
+            return
+        }
+        parseToken(token: token)
     }
     
     var navPath: NavigationPath {

@@ -17,11 +17,16 @@ struct MeltView: View {
     
     var body: some View {
         VStack {
-            CodeScannerView(codeTypes: [.qr], scanMode: .oncePerCode) { result in
-                print(result)
-                vm.processScanViewResult(result: result)
+            //MARK: This check is necessary to prevent a bug in URKit (or the system, who knows)
+            //MARK: from crashing the app when using the camera on an Apple Silicon Mac
+            
+            if !ProcessInfo.processInfo.isiOSAppOnMac {
+                CodeScannerView(codeTypes: [.qr], scanMode: .oncePerCode) { result in
+                    print(result)
+                    vm.processScanViewResult(result: result)
+                }
+                .padding()
             }
-            .padding()
             List {
                 Section {
                     TextField("tap to enter LN invoice", text: $vm.invoice)
