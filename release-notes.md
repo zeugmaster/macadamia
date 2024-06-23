@@ -1,10 +1,7 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-This build of macadamia containes **minor UI improvements**:
-
-The four main buttons have been consolidated into two, which you can either tap or touch-drag (for those shooting ecash from the hip 🤠).
-Further, views that are no longer needed after a successful operation will auto-dismiss after 1 second.
+This build adds the ability to open tokens with a `cashu:` or `cashu://` prefix directly in the app from anywhere within your other applications.
 
 As always, thanks for testing **macadamia**!
 
