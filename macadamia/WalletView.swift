@@ -13,8 +13,8 @@ let betaDisclaimerURL = URL(string: "https://macadamia.cash/beta.html")!
 struct WalletView: View {
     @ObservedObject var vm = WalletViewModel()
     @State var navigationPath = NavigationPath()
-    @State var navigationTag: String?
-    @State var urlState: String?
+    @Binding var navigationTag: String?
+    @Binding var urlState: String?
     
     static let buttonPadding:CGFloat = 1
         
@@ -54,6 +54,7 @@ struct WalletView: View {
                         Spacer()
                 }
                 .onAppear(perform: {
+                    print("onAppear called on HStack")
                     vm.update()
                 })
                 Spacer()
@@ -196,11 +197,12 @@ struct WalletView: View {
                     EmptyView()
                 }
             }
-            .onAppear {
-                if navigationTag == "Receive" {
-                  navigationPath.append("Receive")       
+            .onChange(of: navigationTag, { oldValue, newValue in
+                if newValue == "Receive" {
+                    navigationPath.append("Receive")
+                    navigationTag = nil
                 }
-            }
+            })
             .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
         }
     }
@@ -242,13 +244,11 @@ struct TransactionListRowView: View {
 }
 
 #Preview {
-    WalletView()
+    WalletView(navigationTag: .constant(nil), urlState: .constant(nil))
 }
 
 @MainActor
-class WalletViewModel:ObservableObject {
-    //@Published var totalBalanceString = "2101"
-    
+class WalletViewModel:ObservableObject {    
     var wallet = Wallet.shared
     
     @Published var balance:Int?

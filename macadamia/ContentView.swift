@@ -11,13 +11,13 @@ struct ContentView: View {
     @State private var selectedTab: Int = 0
     @State private var walletNavigationTag: String?
     @State private var urlState: String?
-    
+        
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
             TabView(selection: $selectedTab) {
                 // First tab content
-                WalletView(navigationTag:  walletNavigationTag, urlState: urlState)
+                WalletView(navigationTag:  $walletNavigationTag, urlState: $urlState)
                     .tabItem {
                         Label("Wallet", systemImage: "bitcoinsign.circle")
                     }
@@ -58,8 +58,6 @@ struct ContentView: View {
         .onOpenURL () { url in
             handleUrl(url)
         }
-        //FIXME: for some reason calling .onChange here messes up the view beneath,
-        // which does not show the balance anymore... weird
     }
     
     func checkReleaseNotes() {
@@ -72,13 +70,12 @@ struct ContentView: View {
     }
      func handleUrl(_ url: URL) {
          if url.scheme == "cashu" {
-             let token = url.absoluteString.replacingOccurrences(of: "cashu:", with: "")
-             print(token)
-             urlState = token
-             walletNavigationTag = "Receive"
+             let noURLPrefix = url.absoluteStringWithoutPrefix("cashu")
+             urlState = noURLPrefix
              selectedTab = 0
+             walletNavigationTag = "Receive"
          }
-        }
+    }
 }
 
 #Preview {

@@ -76,3 +76,20 @@ struct ShareSheet: UIViewControllerRepresentable {
         // No need to update the controller here
     }
 }
+
+extension URL {
+    func absoluteStringWithoutPrefix(_ prefix: String) -> String {
+        var modifiedURL = self.absoluteString
+        let lowerPrefix = prefix.lowercased()
+        // Check for "prefix://"
+        let doubleSlashVariant = "\(lowerPrefix)://"
+        if modifiedURL.hasPrefix(doubleSlashVariant) {
+            modifiedURL.removeFirst(doubleSlashVariant.count)
+        }
+        // Check for "prefix:"
+        else if modifiedURL.hasPrefix("\(lowerPrefix):") {
+            modifiedURL.removeFirst("\(lowerPrefix):".count)
+        }
+        return modifiedURL
+    }
+}
