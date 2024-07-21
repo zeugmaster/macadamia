@@ -139,10 +139,10 @@ struct MintView: View {
         }
     }
 }
-//
-//#Preview {
-//    MintView(vm: MintViewModel())
-//}
+
+#Preview {
+    MintView(vm: MintViewModel(navPath: .constant(NavigationPath())))
+}
 
 @MainActor
 class MintViewModel:ObservableObject {

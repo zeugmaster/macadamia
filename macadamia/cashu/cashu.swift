@@ -67,7 +67,7 @@ class Wallet {
         // patch to allow for mintInfo that we can not yet decode
         var mintInfo = try? await Network.mintInfo(mintURL: url)
         if mintInfo == nil {
-            mintInfo = MintInfo(name: "", pubkey: "", version: "", contact: [[""]], nuts: [], parameter: [:])
+            mintInfo = LegacyMintInfo(name: "", pubkey: "", version: "", contact: [[""]], nuts: [], parameter: [:])
         }
         
         var keysets = [Keyset]()

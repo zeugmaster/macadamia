@@ -68,9 +68,9 @@ class Mint: Codable, Identifiable, Hashable {
     let url: URL
     var activeKeyset: Keyset
     var allKeysets: [Keyset]
-    var info:MintInfo
+    var info:LegacyMintInfo
     
-    init(url: URL, activeKeyset: Keyset, allKeysets: [Keyset], info: MintInfo) {
+    init(url: URL, activeKeyset: Keyset, allKeysets: [Keyset], info: LegacyMintInfo) {
         self.url = url
         self.activeKeyset = activeKeyset
         self.allKeysets = allKeysets
@@ -126,13 +126,19 @@ class Mint: Codable, Identifiable, Hashable {
     }
 }
 
-struct MintInfo: Codable {
+struct LegacyMintInfo: Codable {
     let name: String
     let pubkey: String
     let version: String
     let contact: [[String]] //FIXME: array in array?
     let nuts: [String]
     let parameter:Dictionary<String,Bool>
+}
+
+
+
+struct MintInfoV0_16 {
+    
 }
 
 class Keyset: Codable {

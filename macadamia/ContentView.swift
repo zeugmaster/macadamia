@@ -23,6 +23,12 @@ struct ContentView: View {
                     }
                     .tag(0)
                 
+                MintManagerView(vm: MintManagerViewModel(mintList: [mint1, mint2, mint3]))
+                    .tabItem {
+                        Image(systemName: "building.columns")
+                        Text("Mints")
+                    }
+                
                 // Second tab content
                 NostrInboxView()
                     .tabItem {
@@ -38,7 +44,6 @@ struct ContentView: View {
                         Text("Settings")
                     }
                     .tag(2)
-                    .navigationTitle("Title")
                 
             }
             .persistentSystemOverlays(.hidden)

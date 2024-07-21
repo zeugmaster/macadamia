@@ -22,10 +22,10 @@ enum NetworkError: Error {
 
 enum Network {
     //MARK: MINT INFO
-    static func mintInfo(mintURL:URL) async throws -> MintInfo {
+    static func mintInfo(mintURL:URL) async throws -> LegacyMintInfo {
         let url = mintURL.appending(path: "info")
         let (data, response) = try await URLSession.shared.data(from: url)
-        guard let decoded = try? JSONDecoder().decode(MintInfo.self, from: data) else {
+        guard let decoded = try? JSONDecoder().decode(LegacyMintInfo.self, from: data) else {
             throw parseHTTPErrorResponse(data: data, response: response)
         }
         return decoded

@@ -38,7 +38,7 @@ struct WalletView: View {
                 }
                 .padding(EdgeInsets(top: 20, leading: 40, bottom: 0, trailing: 0))
                 Spacer(minLength: 60)
-                HStack(alignment:.bottom) {
+                HStack(alignment:.center) {
                     Spacer()
                     Spacer()
                     Text(vm.balance != nil ? String(vm.balance!) : "...")
@@ -48,7 +48,7 @@ struct WalletView: View {
                     Text("sats")
                         .monospaced()
                         .bold()
-                        .dynamicTypeSize(.accessibility1)
+                        .dynamicTypeSize(.xxxLarge)
                         .padding(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
                         .foregroundStyle(.secondary)
                         Spacer()
