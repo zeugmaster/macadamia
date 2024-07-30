@@ -10,19 +10,39 @@ import SwiftUI
 struct MintDetailView: View {
     @State var mintInfo: MintInfo
     
+    @ScaledMetric(relativeTo: .title) private var iconSize: CGFloat = 80
+    
     var body: some View {
         List {
             Section {
                 HStack {
                     Spacer()
-                    AsyncImage(url: mintInfo.imageURL) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: UIScreen.main.bounds.width / 4)
-                    } placeholder: {
-                        ProgressView()
-                            .frame(width: UIScreen.main.bounds.width / 4, height: UIScreen.main.bounds.width / 4)
+                    ZStack {
+                        Group {
+                            Color.gray.opacity(0.3)
+                            if let imageURL = mintInfo.imageURL {
+                                AsyncImage(url: imageURL) { phase in
+                                    switch phase {
+                                    case .success(let image):
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                    case .failure(_):
+                                        Image(systemName: "photo")
+                                    case .empty:
+                                        ProgressView()
+                                    @unknown default:
+                                        EmptyView()
+                                    }
+                                }
+                            } else {
+                                Image(systemName: "building.columns")
+                                    .foregroundColor(.white)
+                                    .font(.title)
+                            }
+                        }
+                        .frame(width: iconSize, height: iconSize) // Use a relative size or GeometryReader for more flexibility
+                        .clipShape(Circle())
                     }
                     Spacer()
                 }
@@ -30,13 +50,16 @@ struct MintDetailView: View {
             .listRowBackground(Color.clear)
             
             Section {
-                ForEach(0..<4) { index in
-                    Text("Item \(index + 1)")
+                VStack(alignment:.leading) {
+                    Text("URL")
+                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                    Text(mintInfo.url.absoluteString)
                 }
             }
             Section {
                 Button(role: .destructive) {
-                    
+                    print("delete mint button pressed")
                 } label: {
                     HStack {
                         Text("Remove this mint")
@@ -44,7 +67,6 @@ struct MintDetailView: View {
                         Image(systemName: "trash")
                     }
                 }
-
             }
         }
     }

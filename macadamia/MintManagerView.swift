@@ -45,6 +45,12 @@ struct MintManagerView: View {
                         }
                     }
                 }
+                Section {
+                    TextField("Add new Mint URL...", text: $vm.newMintURLString)
+                        .textInputAutocapitalization(.never)
+                } footer: {
+                    Text("Enter a URL to add a new mint to the wallet, hit Return to save.")
+                }
             }
             .navigationTitle("Mints")
             .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
@@ -54,11 +60,13 @@ struct MintManagerView: View {
 
 struct MintInfoRowView: View {
     @State var mintInfo:MintInfo
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 44
     
     var body: some View {
         HStack {
             ZStack {
                 Group {
+                    Color.gray.opacity(0.3)
                     if let imageURL = mintInfo.imageURL {
                         AsyncImage(url: imageURL) { phase in
                             switch phase {
@@ -77,23 +85,21 @@ struct MintInfoRowView: View {
                     } else {
                         Image(systemName: "building.columns")
                             .foregroundColor(.white)
-                            .padding(10)
-                            .background(Color.gray.opacity(0.3))
                     }
                 }
-                .frame(width: 44, height: 44) // Use a relative size or GeometryReader for more flexibility
+                .frame(width: iconSize, height: iconSize) // Use a relative size or GeometryReader for more flexibility
                 .clipShape(Circle())
                 
-                Circle()
-                    .fill(.green)
-                    .frame(width: 12, height: 12)
-                    .offset(x: 15, y: -15)
+//                Circle()
+//                    .fill(.green)
+//                    .frame(width: 12, height: 12)
+//                    .offset(x: 15, y: -15)
             }
             VStack(alignment:.leading) {
                 Text(mintInfo.name)
                     .bold()
                     .dynamicTypeSize(.xLarge)
-                Text("420 sats | 6.90 USD")
+                Text("420 sats | 21.69 USD")
                     .foregroundStyle(.secondary)
                     .dynamicTypeSize(.small)
             }
@@ -117,10 +123,8 @@ class MintManagerViewModel: ObservableObject {
     }
     
     func addMintWithUrlString() {
-        // needs to check for uniqueness and URL format
         
-        
-        
+        // TODO: CHECK HTTP(S) PREFIX AND APPEND IF NECESSARY
 //        guard let url = URL(string: newMintURLString),
 //            newMintURLString.contains("https://") else {
 //            newMintURLString = ""
@@ -182,9 +186,7 @@ class MintManagerViewModel: ObservableObject {
 }
 
 let mint1 = MintInfoV0_15(url: URL(string: "https://mint.macadamia.cash")!, imageURL: URL(string: "https://macadamia.cash/images/Artboard%201@1024x-8.png")!, name: "macadamia Mint", description: "A description of this mint.", version: "Nutshell/0.15.3", pubkey: "03a2118b421e6b47f0656b97bb7eeea43c41096adbc0d0e511ff70de7d94dbd990")
-
 let mint2 = MintInfoV0_15(url: URL(string: "https://mint.minibits.cash")!, name: "Minibits Mint", description: "A description of this mint.", version: "Nutshell/0.15.3", pubkey: "03a2118b421e6b47f0656b97bb7eeea43c41096adbc0d0e511ff70de7d94dbd990")
-
 let mint3 = MintInfoV0_15(url: URL(string: "https://8333.space")!, name: "8333.space", description: "A description of this mint.", version: "Nutshell/0.15.3", pubkey: "03a2118b421e6b47f0656b97bb7eeea43c41096adbc0d0e511ff70de7d94dbd990")
 
 #Preview {

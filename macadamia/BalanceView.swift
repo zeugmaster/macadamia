@@ -7,11 +7,6 @@
 
 import SwiftUI
 
-
-import SwiftUI
-
-import SwiftUI
-
 struct LargeDynamicText: View {
     let text: String
     let baseSize: CGFloat
@@ -81,7 +76,6 @@ struct LargeDynamicText: View {
     }
 }
 
-// Usage
 struct BalanceView: View {
     let txt = "42000"
     var body: some View {
