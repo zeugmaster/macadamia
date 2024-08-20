@@ -183,7 +183,7 @@ class Wallet {
         database.saveToFile()
     }
     
-    //MARK: Send
+    //MARK: - Send
     //FIXME: terrible redundancy and lackluster control flow
     func sendTokens(from mint:Mint, amount:Int, memo:String?) async throws -> String {
         let (proofs, sum) = try database.retrieveProofs(from: mint, amount: amount)
