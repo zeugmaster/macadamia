@@ -89,7 +89,6 @@ struct MintInfoRowView: View {
                 }
                 .frame(width: iconSize, height: iconSize) // Use a relative size or GeometryReader for more flexibility
                 .clipShape(Circle())
-                
 //                Circle()
 //                    .fill(.green)
 //                    .frame(width: 12, height: 12)
@@ -151,8 +150,6 @@ class MintManagerViewModel: ObservableObject {
 //                newMintURLString = ""
 //            }
 //        }
-        
-        
     }
     
     func removeMint(at offsets: IndexSet) {
