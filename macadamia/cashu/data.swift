@@ -4,7 +4,7 @@
 //
 //  Created by zeugmaster on 14.11.23.
 //
-
+/*
 import OSLog
 import Foundation
 
@@ -149,3 +149,4 @@ public class Database: Codable, CustomStringConvertible {
         }
     }
 }
+*/

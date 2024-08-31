@@ -7,11 +7,23 @@
 
 import SwiftUI
 import Popovers
+import CashuSwift
+import SwiftData
 
 let betaDisclaimerURL = URL(string: "https://macadamia.cash/beta.html")!
 
 struct WalletView: View {
-    @ObservedObject var vm = WalletViewModel()
+    @Environment(\.modelContext) private var modelContext
+    @Query private var wallets: [Wallet]
+    
+    @State var balance:Int?
+    
+    @State var transactions = []()
+    @State var transactionListRefreshCounter = 0
+    
+    @State var showAlert:Bool = false
+    var currentAlert:AlertDetail?
+    
     @State var navigationPath = NavigationPath()
     @Binding var navigationTag: String?
     @Binding var urlState: String?
@@ -206,6 +218,38 @@ struct WalletView: View {
             .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
         }
     }
+    
+    func update() {
+        balance = wallets.first?.validProofs.sum
+        transactions = wallets.first.transactions
+    }
+    
+    func checkPending() {
+        Task {
+            do {
+                for transaction in self.transactions {
+                    if transaction.pending && transaction.type == .cashu && transaction.token != nil {
+                        transaction.pending = try await wallet.checkTokenStatePending(token: transaction.token!)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            self.transactionListRefreshCounter += 1
+                        }
+                   }
+                }
+            } catch {
+                let detail = String(String(describing: error).prefix(100)) + "..." //ooof
+                displayAlert(alert: AlertDetail(title: "Unable to update",
+                                                description: detail))
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    self.transactionListRefreshCounter += 1
+                }
+            }
+        }
+    }
+    
+    private func displayAlert(alert:AlertDetail) {
+        currentAlert = alert
+        showAlert = true
+    }
 }
 
 struct TransactionListRowView: View {
@@ -247,52 +291,3 @@ struct TransactionListRowView: View {
     WalletView(navigationTag: .constant(nil), urlState: .constant(nil))
 }
 
-@MainActor
-class WalletViewModel:ObservableObject {    
-    var wallet = Wallet.shared
-    
-    @Published var balance:Int?
-    
-    @Published var transactions = [Transaction]()
-    @Published var transactionListRefreshCounter = 0
-    
-    @Published var showAlert:Bool = false
-    var currentAlert:AlertDetail?
-    
-    func update() {
-        Task {
-            try await wallet.updateMints()
-        }
-        
-        balance = wallet.balance()
-        transactions = wallet.database.transactions
-    }
-    
-    func checkPending() {
-        Task {
-            do {
-                for transaction in self.transactions {
-                    if transaction.pending && transaction.type == .cashu && transaction.token != nil {
-                        transaction.pending = try await wallet.checkTokenStatePending(token: transaction.token!)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                            self.transactionListRefreshCounter += 1
-                        }
-                   }
-                }
-            } catch {
-                let detail = String(String(describing: error).prefix(100)) + "..." //ooof
-                displayAlert(alert: AlertDetail(title: "Unable to update",
-                                                description: detail))
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    self.transactionListRefreshCounter += 1
-                }
-            }
-        }
-    }
-    
-    private func displayAlert(alert:AlertDetail) {
-        currentAlert = alert
-        showAlert = true
-    }
-    
-}

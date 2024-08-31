@@ -5,6 +5,8 @@
 //  Created by zeugmaster on 01.12.23.
 //
 
+/*
+
 import Foundation
 import CryptoKit
 
@@ -262,3 +264,4 @@ extension String {
             .replacingOccurrences(of: "=", with: "")
     }
 }
+*/

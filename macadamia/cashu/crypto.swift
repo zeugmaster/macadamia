@@ -3,6 +3,8 @@
 //  macadamia-cli
 //
 //
+
+/*
 import Foundation
 import CryptoKit
 import secp256k1
@@ -163,3 +165,4 @@ func convertHexKeysetID(keysetID: String) -> Int? {
     let result = big % (Int(pow(2.0, 31.0)) - 1)
     return Int(result)
 }
+*/

@@ -1,3 +1,4 @@
+/*
 import Foundation
 import CryptoKit
 import secp256k1
@@ -574,3 +575,4 @@ class Wallet {
 }
 
 
+*/

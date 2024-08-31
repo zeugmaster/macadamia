@@ -1,4 +1,6 @@
 import SwiftUI
+import CashuSwift
+import SwiftData
 
 struct MintView: View {
     @ObservedObject var vm:MintViewModel
@@ -39,7 +41,7 @@ struct MintView: View {
             }
             if vm.quote != nil {
                 Section {
-                    StaticQR(qrCode: generateQRCode(from: vm.quote!.pr))
+                    StaticQR(qrCode: generateQRCode(from: vm.quote!.request))
                         .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
                     Button {
                         copyToClipboard()
@@ -151,7 +153,7 @@ class MintViewModel:ObservableObject {
     @Published var mintList = [""]
     @Published var selectedMintString = ""
     
-    @Published var quote:QuoteRequestResponse?
+    @Published var quote:Bolt11.MintQuote?
     @Published var loadingInvoice = false
     
     @Published var minting = false
@@ -190,7 +192,7 @@ class MintViewModel:ObservableObject {
     }
     
     func copyInvoice() {
-        UIPasteboard.general.string = quote?.pr
+        UIPasteboard.general.string = quote?.request
     }
     
     func requestInvoice() {
