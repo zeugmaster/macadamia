@@ -6,59 +6,85 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct SendView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var wallets: [Wallet]
     
-    @ObservedObject var vm:SendViewModel
+    var activeWallet:Wallet? {
+        get {
+            wallets.first
+        }
+    }
+    
+    @State var tokenString:String?
+    var navigationPath:Binding<NavigationPath>?
+
+    @State var showingShareSheet = false
+    @State var tokenMemo = ""
+
+    @State var numberString = ""
+    @State var mintList = [String]()
+    @State var selectedMintString = ""
+    @State var selectedMintBalance = 0
+
+    @State var loading = false
+    @State var succes = false
+
+    @State var showAlert:Bool = false
+    @State var currentAlert:AlertDetail? // not sure if the property wrapper is necessary
+
     @State private var isCopied = false
-    
     @FocusState var amountFieldInFocus:Bool
     
-    init(vm:SendViewModel) {
-        self.vm = vm
+    init(token:String? = nil, navigationPath:Binding<NavigationPath>? = nil) {
+        self.tokenString = token
+        self.navigationPath = navigationPath
     }
     
     var body: some View {
         Form {
             Section {
                 HStack {
-                    TextField("enter amount", text: $vm.numberString)
+                    TextField("enter amount", text: $numberString)
                         .keyboardType(.numberPad)
                         .monospaced()
                         .focused($amountFieldInFocus)
                     Text("sats")
                 }
-                Picker("Mint", selection:$vm.selectedMintString) {
-                    ForEach(vm.mintList, id: \.self) {
+                // TODO: CHECK FOR EMPTY MINT LIST
+                Picker("Mint", selection:$selectedMintString) {
+                    ForEach(mintList, id: \.self) {
                         Text($0)
                     }
                 }
                 .onAppear(perform: {
-                    vm.fetchMintInfo()
+                    fetchMintInfo()
                 })
-                .onChange(of: vm.selectedMintString) { oldValue, newValue in
-                    vm.updateBalance()
+                .onChange(of: selectedMintString) { oldValue, newValue in
+                    updateBalance()
                 }
                 HStack {
                     Text("Balance: ")
                     Spacer()
-                    Text(String(vm.selectedMintBalance))
+                    Text(String(selectedMintBalance))
                         .monospaced()
                     Text("sats")
                 }
                 .foregroundStyle(.secondary)
             }
-            .disabled(vm.token != nil)
+            .disabled(tokenString != nil)
             Section {
-                TextField("enter note", text: $vm.tokenMemo)
+                TextField("enter note", text: $tokenMemo)
             } footer: {
                 Text("Tap to add a note to the recipient.")
             }
-            .disabled(vm.token != nil)
+            .disabled(tokenString != nil)
             
-            if vm.token != nil {
+            if tokenString != nil {
                 Section {
-                    TokenText(text: vm.token!)
+                    TokenText(text: tokenString!)
                         .frame(idealHeight: 70)
                     Button {
                         copyToClipboard()
@@ -77,7 +103,7 @@ struct SendView: View {
                     }
                     
                     Button {
-                        vm.showingShareSheet = true
+                        showingShareSheet = true
                     } label: {
                         HStack {
                             Text("Share")
@@ -87,7 +113,7 @@ struct SendView: View {
                     }
                 }
                 Section {
-                    QRView(string: vm.token!)
+                    QRView(string: tokenString!)
                 } header: {
                     Text("Share via QR code")
                 }
@@ -95,7 +121,7 @@ struct SendView: View {
         }
         .navigationTitle("Send")
         .navigationBarTitleDisplayMode(.inline)
-        .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         .onAppear(perform: {
             amountFieldInFocus = true
         })
@@ -103,7 +129,7 @@ struct SendView: View {
         Spacer()
         
         Button(action: {
-            vm.generateToken()
+            generateToken()
         }, label: {
             Text("Generate Token")
                 .frame(maxWidth: .infinity)
@@ -114,15 +140,17 @@ struct SendView: View {
         .buttonStyle(.bordered)
         .padding()
         .toolbar(.hidden, for: .tabBar)
-        .disabled(vm.numberString.isEmpty || vm.amount == 0 || vm.token != nil)
-        .sheet(isPresented: $vm.showingShareSheet, content: {
-            ShareSheet(items: [vm.token ?? "No token provided"])
+        .disabled(numberString.isEmpty || amount == 0 || tokenString != nil)
+        .sheet(isPresented: $showingShareSheet, content: {
+            ShareSheet(items: [tokenString ?? "No token provided"])
         })
 
     }
     
+    // MARK: - LOGIC
+    
     func copyToClipboard() {
-        vm.copyToClipboard()
+        UIPasteboard.general.string = tokenString
         withAnimation {
             isCopied = true
         }
@@ -134,43 +162,12 @@ struct SendView: View {
         }
     }
     
-}
-
-#Preview {
-    SendView(vm: SendViewModel())
-}
-
-@MainActor
-class SendViewModel: ObservableObject {
-    
-    @Published var recipientProfile:Profile?
-    
-    @Published var navPath:NavigationPath?
-    
-    @Published var showingShareSheet = false
-    @Published var tokenMemo = ""
-    
-    @Published var numberString: String = ""
-    @Published var mintList:[String] = [""]
-    @Published var selectedMintString:String = ""
-    @Published var selectedMintBalance = 0
-    
-    @Published var loading = false
-    @Published var succes = false
-    
-    @Published var showAlert:Bool = false
-    var currentAlert:AlertDetail?
-    var wallet = Wallet.shared
-    
-    @Published var token:String?
-    
-    init(navPath:NavigationPath? = nil) {
-        self.navPath = navPath
-    }
-    
     func fetchMintInfo() {
-        mintList = []
-        for mint in wallet.database.mints {
+        guard let activeWallet else {
+            return
+        }
+        
+        for mint in activeWallet.mints {
             let readable = mint.url.absoluteString.dropFirst(8)
             mintList.append(String(readable))
         }
@@ -178,8 +175,11 @@ class SendViewModel: ObservableObject {
     }
     
     func updateBalance() {
-        if let mint = wallet.database.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) {
-            selectedMintBalance = wallet.balance(mint: mint)
+        guard let activeWallet else {
+            return
+        }
+        if let mint = activeWallet.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) {
+            selectedMintBalance = activeWallet.validProofs.sum
         }
     }
     
@@ -188,26 +188,29 @@ class SendViewModel: ObservableObject {
     }
     
     func generateToken() {
-        print(selectedMintString)
-        guard let mint = wallet.database.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) else {
+        guard let activeWallet else {
+            return
+        }
+        guard let mint = activeWallet.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) else {
             displayAlert(alert: AlertDetail(title: "Invalid Mint"))
             return
         }
         Task {
             do {
-                self.token = try await wallet.sendTokens(from:mint, amount: amount, memo:tokenMemo)
+                let (token, change) = try await mint.send(proofs: activeWallet.validProofs, amount: amount, memo: tokenMemo)
+                self.tokenString = try token.serialize(.V3)
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error", description: String(describing: error)))
             }
         }
     }
     
-    func copyToClipboard() {
-        UIPasteboard.general.string = token
-    }
-    
     private func displayAlert(alert:AlertDetail) {
         currentAlert = alert
         showAlert = true
     }
+}
+
+#Preview {
+    SendView()
 }

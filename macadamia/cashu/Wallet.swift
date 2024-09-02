@@ -27,8 +27,8 @@ class Wallet {
     }
 }
 
-@Model
-class Event {
+//@Model
+class Event: Identifiable {
     @Attribute(.unique) let id:UUID
     let date:Date
     let unit:Unit

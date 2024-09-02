@@ -18,9 +18,6 @@ struct WalletView: View {
     
     @State var balance:Int?
     
-    @State var transactions = []()
-    @State var transactionListRefreshCounter = 0
-    
     @State var showAlert:Bool = false
     var currentAlert:AlertDetail?
     
@@ -29,7 +26,13 @@ struct WalletView: View {
     @Binding var urlState: String?
     
     static let buttonPadding:CGFloat = 1
-        
+    
+    var currentWallet:Wallet? {
+        get {
+            wallets.first
+        }
+    }
+    
     var body: some View {
         NavigationStack(path:$navigationPath) {
             VStack {
@@ -53,7 +56,7 @@ struct WalletView: View {
                 HStack(alignment:.center) {
                     Spacer()
                     Spacer()
-                    Text(vm.balance != nil ? String(vm.balance!) : "...")
+                    Text(balance != nil ? String(balance!) : "...")
                         .monospaced()
                         .bold()
                         .dynamicTypeSize(.accessibility5)
@@ -66,12 +69,11 @@ struct WalletView: View {
                         Spacer()
                 }
                 .onAppear(perform: {
-                    print("onAppear called on HStack")
-                    vm.update()
+                    balance = currentWallet?.validProofs.sum
                 })
                 Spacer()
                 List {
-                    if vm.transactions.isEmpty {
+                    if currentWallet?.events == nil {
                         HStack {
                             Spacer()
                             Text("No transactions yet")
@@ -79,17 +81,13 @@ struct WalletView: View {
                             Spacer()
                         }
                     } else {
-                        ForEach(vm.transactions) { transaction in
-                            TransactionListRowView(transaction: transaction)
+                        ForEach(currentWallet!.events) { event in
+                            TransactionListRowView(event: event)
                         }
                     }
                 }
-                .id(vm.transactionListRefreshCounter)
                 .padding(EdgeInsets(top: 60, leading: 20, bottom: 20, trailing: 20))
                 .listStyle(.plain)
-                .refreshable {
-                    vm.checkPending()
-                }
                 Spacer()
                 HStack {
                     //MARK: - BUTTON "RECEIVE"
@@ -204,7 +202,7 @@ struct WalletView: View {
                 case "Melt":
                     MeltView(vm: MeltViewModel(navPath: $navigationPath))
                 case "Mint":
-                    MintView(vm: MintViewModel(navPath: $navigationPath))
+                    MintView(navigationPath: $navigationPath)
                 default:
                     EmptyView()
                 }
@@ -215,69 +213,66 @@ struct WalletView: View {
                     navigationTag = nil
                 }
             })
-            .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
+            .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
     }
     
-    func update() {
-        balance = wallets.first?.validProofs.sum
-        transactions = wallets.first.transactions
-    }
+//    func checkPending() {
+//        Task {
+//            do {
+//                for transaction in self.transactions {
+//                    if transaction.pending && transaction.type == .cashu && transaction.token != nil {
+//                        transaction.pending = try await wallet.checkTokenStatePending(token: transaction.token!)
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+//                            self.transactionListRefreshCounter += 1
+//                        }
+//                   }
+//                }
+//            } catch {
+//                let detail = String(String(describing: error).prefix(100)) + "..." //ooof
+//                displayAlert(alert: AlertDetail(title: "Unable to update",
+//                                                description: detail))
+//                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+//                    self.transactionListRefreshCounter += 1
+//                }
+//            }
+//        }
+//    }
     
-    func checkPending() {
-        Task {
-            do {
-                for transaction in self.transactions {
-                    if transaction.pending && transaction.type == .cashu && transaction.token != nil {
-                        transaction.pending = try await wallet.checkTokenStatePending(token: transaction.token!)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                            self.transactionListRefreshCounter += 1
-                        }
-                   }
-                }
-            } catch {
-                let detail = String(String(describing: error).prefix(100)) + "..." //ooof
-                displayAlert(alert: AlertDetail(title: "Unable to update",
-                                                description: detail))
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    self.transactionListRefreshCounter += 1
-                }
-            }
-        }
-    }
-    
-    private func displayAlert(alert:AlertDetail) {
+    private mutating func displayAlert(alert:AlertDetail) {
         currentAlert = alert
         showAlert = true
     }
 }
 
 struct TransactionListRowView: View {
-    var transaction:Transaction
+    var event:Event
     
-    init(transaction: Transaction) {
-        self.transaction = transaction
+    init(event:Event) {
+        self.event = event
     }
     
     var body: some View {
-        NavigationLink(destination: TransactionDetailView(transaction: transaction)) {
+        NavigationLink(destination: EventDetailView(event: event)) {
             HStack {
-                if transaction.type == .cashu {
-                    Image(systemName: "banknote")
-                    Text(transaction.token ?? "no token")
-                } else if transaction.type == .lightning {
-                    Image(systemName: "bolt.fill")
-                    // hey, it's monospaced. might as well
-                    Text(" " + transaction.invoice!)
-                } else if transaction.type == .drain {
-                    Image(systemName: "arrow.turn.down.right")
-                    Text(transaction.token ?? "Token")
-                }
-                Spacer(minLength: 10)
-                if transaction.pending {
-                    Image(systemName: "hourglass")
-                }
-                Text(String(transaction.amount))
+//                if transaction.type == .cashu {
+//                    Image(systemName: "banknote")
+//                    Text(transaction.token ?? "no token")
+//                } else if transaction.type == .lightning {
+//                    Image(systemName: "bolt.fill")
+//                    // hey, it's monospaced. might as well
+//                    Text(" " + transaction.invoice!)
+//                } else if transaction.type == .drain {
+//                    Image(systemName: "arrow.turn.down.right")
+//                    Text(transaction.token ?? "Token")
+//                }
+//                Spacer(minLength: 10)
+//                if transaction.pending {
+//                    Image(systemName: "hourglass")
+//                }
+                Text(event.shortDescription)
+                Spacer()
+//                Text(String(transaction.amount))
             }
             .lineLimit(1)
             .monospaced()

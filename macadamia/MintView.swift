@@ -3,19 +3,43 @@ import CashuSwift
 import SwiftData
 
 struct MintView: View {
-    @ObservedObject var vm:MintViewModel
+    @State var quote:Bolt11.MintQuote?
+    var navigationPath:Binding<NavigationPath>?
+    
+    @Environment(\.modelContext) private var modelContext
+    @Query private var wallets: [Wallet]
+        
+    var activeWallet:Wallet? {
+        get {
+            wallets.first
+        }
+    }
+    
+    @State var amountString = ""
+    @State var mintList = [String]()
+    @State var selectedMintString = ""
+    
+    @State var loadingInvoice = false
+    
+    @State var minting = false
+    @State var mintSuccess = false
+    
+    @State var showAlert:Bool = false
+    @State var currentAlert:AlertDetail?
+    
     @State private var isCopied = false
     @FocusState var amountFieldInFocus:Bool
     
-    init(vm:MintViewModel) {
-        self.vm = vm
+    init(quote:Bolt11.MintQuote? = nil, navigationPath: Binding<NavigationPath>? = nil) {
+        self.quote = quote
+        self.navigationPath = navigationPath
     }
     
     var body: some View {
         Form {
             Section {
                 HStack {
-                    TextField("enter amount", text: $vm.amountString)
+                    TextField("enter amount", text: $amountString)
                         .keyboardType(.numberPad)
                         .monospaced()
                         .focused($amountFieldInFocus)
@@ -25,13 +49,13 @@ struct MintView: View {
                         .onAppear(perform: {
                             amountFieldInFocus = true
                         })
-                        .disabled(vm.quote != nil)
+                        .disabled(quote != nil)
                     Text("sats")
                         .monospaced()
                 }
-                if !vm.mintList.isEmpty && !vm.selectedMintString.isEmpty {
-                    Picker("Mint", selection: $vm.selectedMintString) {
-                        ForEach(vm.mintList, id: \.self) { mint in
+                if !mintList.isEmpty {
+                    Picker("Mint", selection: $selectedMintString) {
+                        ForEach(mintList, id: \.self) { mint in
                             Text(mint)
                         }
                     }
@@ -39,9 +63,9 @@ struct MintView: View {
                     Text("No mints available")
                 }
             }
-            if vm.quote != nil {
+            if quote != nil {
                 Section {
-                    StaticQR(qrCode: generateQRCode(from: vm.quote!.request))
+                    StaticQR(qrCode: generateQRCode(from: quote!.request))
                         .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
                     Button {
                         copyToClipboard()
@@ -59,7 +83,7 @@ struct MintView: View {
                         }
                     }
                     Button {
-                        vm.reset()
+                        reset()
                     } label: {
                         HStack {
                             Text("Reset")
@@ -72,18 +96,21 @@ struct MintView: View {
         }
         .navigationTitle("Mint")
         .toolbar(.hidden, for: .tabBar)
-        .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         .onAppear(perform: {
-            vm.fetchMintList()
+            if let activeWallet {
+                mintList = activeWallet.mints.map( { $0.url.absoluteString } ) // TODO: drop leading https or http for readability
+                if !mintList.isEmpty { selectedMintString = mintList.first! }
+            }
         })
         
-        if vm.quote == nil {
+        if quote == nil {
             Button(action: {
-                vm.requestInvoice()
+                requestQuote()
                 amountFieldInFocus = false
             }, label: {
                 HStack {
-                    if !vm.loadingInvoice {
+                    if !loadingInvoice {
                         Text("Request Invoice")
                     } else {
                         ProgressView()
@@ -99,18 +126,18 @@ struct MintView: View {
             })
             .buttonStyle(.bordered)
             .padding()
-            .disabled(vm.amountString.isEmpty || vm.amount == 0 || vm.loadingInvoice)
+            .disabled(amountString.isEmpty || amount == 0 || loadingInvoice)
         } else {
             Button(action: {
-                vm.requestMint()
+                requestMint()
             }, label: {
                 HStack {
-                    if vm.minting {
+                    if minting {
                         ProgressView()
                         Spacer()
                             .frame(width: 10)
                         Text("Minting Tokens...")
-                    } else if vm.mintSuccess {
+                    } else if mintSuccess {
                         Text("Success!")
                             .foregroundStyle(.green)
                     } else {
@@ -124,12 +151,14 @@ struct MintView: View {
             })
             .buttonStyle(.bordered)
             .padding()
-            .disabled(vm.minting || vm.mintSuccess)
+            .disabled(minting || mintSuccess)
         }
     }
     
+    // MARK: - LOGIC
+    
     func copyToClipboard() {
-        vm.copyInvoice()
+        UIPasteboard.general.string = quote?.request
         withAnimation {
             isCopied = true
         }
@@ -140,66 +169,25 @@ struct MintView: View {
             }
         }
     }
-}
-
-#Preview {
-    MintView(vm: MintViewModel(navPath: .constant(NavigationPath())))
-}
-
-@MainActor
-class MintViewModel:ObservableObject {
     
-    @Published var amountString = ""
-    @Published var mintList = [""]
-    @Published var selectedMintString = ""
-    
-    @Published var quote:Bolt11.MintQuote?
-    @Published var loadingInvoice = false
-    
-    @Published var minting = false
-    @Published var mintSuccess = false
-    
-    @Published var showAlert:Bool = false
-    var currentAlert:AlertDetail?
-    var wallet = Wallet.shared
-    
-    private var _navPath: Binding<NavigationPath>  // Changed to non-optional
-        
-    init(navPath: Binding<NavigationPath>) {
-        self._navPath = navPath
-    }
-    
-    var navPath: NavigationPath {
-        get { _navPath.wrappedValue }
-        set { _navPath.wrappedValue = newValue }
-    }
-    
-    func fetchMintList() {
-        mintList = wallet.database.mints.map { mint in
-            String(mint.url.absoluteString.dropFirst(8))
-        }
-        if let initial = mintList.first {
-            selectedMintString = initial
-        }
-    }
-    
-    var selectedMint:Mint {
-        wallet.database.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) })!
+    var selectedMint:Mint? {
+        activeWallet?.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) })
     }
     
     var amount: Int {
         return Int(amountString) ?? 0
     }
     
-    func copyInvoice() {
-        UIPasteboard.general.string = quote?.request
-    }
-    
-    func requestInvoice() {
+    func requestQuote() {
+        guard let selectedMint,
+              let activeWallet else {
+            return
+        }
         loadingInvoice = true
         Task {
             do {
-                quote = try await wallet.getQuote(from: selectedMint, for: amount)
+                let quoteRequest = Bolt11.RequestMintQuote(unit: "sat", amount: self.amount)
+                quote = try await selectedMint.getQuote(quoteRequest: quoteRequest) as? Bolt11.MintQuote
                 loadingInvoice = false
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error",
@@ -210,17 +198,26 @@ class MintViewModel:ObservableObject {
     }
     
     func requestMint() {
-        guard let quote = quote else {
+        
+        guard let quote,
+                let activeWallet,
+                let selectedMint else {
             return
         }
+        
         minting = true
         Task {
             do {
-                try await wallet.requestMint(from: selectedMint, for: quote, with: amount)
+                let proofs = try await selectedMint.issue(for: quote)
+                activeWallet.validProofs.append(contentsOf: proofs)
                 minting = false
                 mintSuccess = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    if !self.navPath.isEmpty { self.navPath.removeLast() }
+                    if var navigationPath {
+                        if !navigationPath.isEmpty {
+                            navigationPath.removeLast()
+                        }
+                    }
                 }
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error",
@@ -230,7 +227,7 @@ class MintViewModel:ObservableObject {
         }
     }
     
-    private func displayAlert(alert:AlertDetail) {
+    func displayAlert(alert:AlertDetail) {
         currentAlert = alert
         showAlert = true
     }
@@ -241,4 +238,8 @@ class MintViewModel:ObservableObject {
         minting = false
         mintSuccess = false
     }
+}
+
+#Preview {
+    MintView()
 }

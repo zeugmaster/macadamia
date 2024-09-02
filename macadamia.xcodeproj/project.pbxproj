@@ -19,7 +19,7 @@
 		3743CE612B48AD3900F862AB /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = 3743CE602B48AD3900F862AB /* CodeScanner */; };
 		3743CE642B494C3D00F862AB /* RestoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE632B494C3D00F862AB /* RestoreView.swift */; };
 		3743CE662B49B7D600F862AB /* NostrProfileMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE652B49B7D600F862AB /* NostrProfileMessageView.swift */; };
-		3743CE682B4AA67600F862AB /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE672B4AA67600F862AB /* TransactionDetailView.swift */; };
+		3743CE682B4AA67600F862AB /* EventDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE672B4AA67600F862AB /* EventDetailView.swift */; };
 		374F0DBF2C4978E90031E8CD /* MintDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374F0DBE2C4978E90031E8CD /* MintDetailView.swift */; };
 		374F0DC12C4D34FD0031E8CD /* BalanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374F0DC02C4D34FD0031E8CD /* BalanceView.swift */; };
 		376E68CB2C7DD0470043B46D /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 376E68CA2C7DD0470043B46D /* CashuSwift */; };
@@ -77,7 +77,7 @@
 		3743CE5D2B48A94D00F862AB /* MeltView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeltView.swift; sourceTree = "<group>"; };
 		3743CE632B494C3D00F862AB /* RestoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreView.swift; sourceTree = "<group>"; };
 		3743CE652B49B7D600F862AB /* NostrProfileMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrProfileMessageView.swift; sourceTree = "<group>"; };
-		3743CE672B4AA67600F862AB /* TransactionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
+		3743CE672B4AA67600F862AB /* EventDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDetailView.swift; sourceTree = "<group>"; };
 		374F0DBE2C4978E90031E8CD /* MintDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintDetailView.swift; sourceTree = "<group>"; };
 		374F0DC02C4D34FD0031E8CD /* BalanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceView.swift; sourceTree = "<group>"; };
 		376E68CC2C7DD28E0043B46D /* Wallet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wallet.swift; sourceTree = "<group>"; };
@@ -167,7 +167,7 @@
 				379BDF682B46F31E008FD0E7 /* SendView.swift */,
 				3743CE592B485BF800F862AB /* ReceiveView.swift */,
 				3743CE5D2B48A94D00F862AB /* MeltView.swift */,
-				3743CE672B4AA67600F862AB /* TransactionDetailView.swift */,
+				3743CE672B4AA67600F862AB /* EventDetailView.swift */,
 				377FFF032BC5524700DD2635 /* TokenText.swift */,
 				372D8FDB2BD5BD2500494170 /* QRScanner.swift */,
 				374F0DC02C4D34FD0031E8CD /* BalanceView.swift */,
@@ -374,7 +374,7 @@
 				37DD6E2B2B618B1400AC5676 /* Base64FS.swift in Sources */,
 				379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */,
 				372D8FDC2BD5BD2500494170 /* QRScanner.swift in Sources */,
-				3743CE682B4AA67600F862AB /* TransactionDetailView.swift in Sources */,
+				3743CE682B4AA67600F862AB /* EventDetailView.swift in Sources */,
 				37B2C1582B60192100535DAF /* MintView.swift in Sources */,
 				376E68CD2C7DD28E0043B46D /* Wallet.swift in Sources */,
 				379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */,
