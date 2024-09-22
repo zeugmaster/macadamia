@@ -108,3 +108,4 @@ class QRScannerViewModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 }
+

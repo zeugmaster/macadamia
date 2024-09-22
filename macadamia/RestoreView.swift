@@ -6,29 +6,69 @@
 //
 
 import SwiftUI
+import SwiftData
+import CashuSwift
 
 struct RestoreView: View {
-    @ObservedObject var vm = RestoreViewModel()
+    @State var mnemonic = ""
+    @State var loading = false
+    @State var success = false
+    
+    @State var showAlert:Bool = false
+    @State var currentAlert:AlertDetail?
+    
+    @Environment(\.modelContext) private var modelContext
+    @Query private var wallets: [Wallet]
+    
+    var activeWallet:Wallet? {
+        get {
+            wallets.first
+        }
+    }
+    
+    func attemptRestore() {
+//        guard wallet.database.mnemonic != mnemonic else {
+//            displayAlert(alert: AlertDetail(title: "Already in use",
+//                                           description: "The seed phrase you entered is the same as the one already in use for this wallet."))
+//            return
+//        }
+        Task {
+            do {
+                loading = true
+                
+                success = true
+                loading = false
+            } catch {
+                displayAlert(alert: AlertDetail(title: "Error", description: "There was an error when attempting to restore. Detail: \(String(describing: error))"))
+                loading = false
+            }
+        }
+    }
+    
+    private func displayAlert(alert:AlertDetail) {
+        currentAlert = alert
+        showAlert = true
+    }
     
     var body: some View {
         List {
             Section {
-                TextField("Enter seed phrase", text: $vm.mnemonic, axis: .vertical)
+                TextField("Enter seed phrase", text: $mnemonic, axis: .vertical)
                     .lineLimit(4, reservesSpace: true)
             } footer: {
                 Text("Enter your 12 word seed phrase, separated by spaces or line breaks. Please also make sure that your mint list contains all the mints you want to try restoring from.")
             }
         }
         Button(action: {
-            vm.attemptRestore()
+            attemptRestore()
         }, label: {
             HStack(spacing:0) {
                 Spacer()
-                if vm.loading {
+                if loading {
                     ProgressView()
                     Text("Restoring...")
                         .padding()
-                } else if vm.success {
+                } else if success {
                     Text("Done!")
                         .padding()
                         .foregroundColor(.green)
@@ -45,52 +85,15 @@ struct RestoreView: View {
         .padding()
         .bold()
         .toolbar(.hidden, for: .tabBar)
-        .disabled(vm.mnemonic.isEmpty || vm.loading || vm.success)
+        .disabled(mnemonic.isEmpty || loading || success)
         .navigationTitle("Restore")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
-        .navigationBarBackButtonHidden(vm.loading)
-        .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
+        .navigationBarBackButtonHidden(loading)
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
 }
 
 #Preview {
     RestoreView()
-}
-
-@MainActor
-class RestoreViewModel:ObservableObject {
-    
-    @Published var mnemonic = ""
-    @Published var loading = false
-    @Published var success = false
-    
-    @Published var showAlert:Bool = false
-    var currentAlert:AlertDetail?
-    
-    var wallet = Wallet.shared
-    
-    func attemptRestore() {
-//        guard wallet.database.mnemonic != mnemonic else {
-//            displayAlert(alert: AlertDetail(title: "Already in use",
-//                                           description: "The seed phrase you entered is the same as the one already in use for this wallet."))
-//            return
-//        }
-        Task {
-            do {
-                loading = true
-                try await wallet.restoreWithMnemonic(mnemonic:mnemonic)
-                success = true
-                loading = false
-            } catch {
-                displayAlert(alert: AlertDetail(title: "Error", description: "There was an error when attempting to restore. Detail: \(String(describing: error))"))
-                loading = false
-            }
-        }
-    }
-    
-    private func displayAlert(alert:AlertDetail) {
-        currentAlert = alert
-        showAlert = true
-    }
 }

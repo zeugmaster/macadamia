@@ -3,7 +3,7 @@ import CashuSwift
 import SwiftData
 
 struct MintView: View {
-    @State var quote:Bolt11.MintQuote?
+    @State var quote:CashuSwift.Bolt11.MintQuote?
     var navigationPath:Binding<NavigationPath>?
     
     @Environment(\.modelContext) private var modelContext
@@ -30,7 +30,7 @@ struct MintView: View {
     @State private var isCopied = false
     @FocusState var amountFieldInFocus:Bool
     
-    init(quote:Bolt11.MintQuote? = nil, navigationPath: Binding<NavigationPath>? = nil) {
+    init(quote:CashuSwift.Bolt11.MintQuote? = nil, navigationPath: Binding<NavigationPath>? = nil) {
         self.quote = quote
         self.navigationPath = navigationPath
     }
@@ -186,9 +186,12 @@ struct MintView: View {
         loadingInvoice = true
         Task {
             do {
-                let quoteRequest = Bolt11.RequestMintQuote(unit: "sat", amount: self.amount)
-                quote = try await selectedMint.getQuote(quoteRequest: quoteRequest) as? Bolt11.MintQuote
+                let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat", amount: self.amount)
+                quote = try await CashuSwift.getQuote(mint: selectedMint, quoteRequest: quoteRequest) as? CashuSwift.Bolt11.MintQuote
                 loadingInvoice = false
+                
+                #warning("add quote to transactions")
+                
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error",
                                                description: String(describing: error)))
@@ -208,17 +211,25 @@ struct MintView: View {
         minting = true
         Task {
             do {
-                let proofs = try await selectedMint.issue(for: quote)
-                activeWallet.validProofs.append(contentsOf: proofs)
+                let proofs:[Proof] = try await CashuSwift.issue(for: quote, on: selectedMint).map { p in
+                    let unit = Unit(quote.requestDetail?.unit ?? "other") ?? .other
+                    return Proof(p, unit: unit, state: .valid, mint: selectedMint, wallet: activeWallet)
+                }
+                proofs.forEach({ modelContext.insert($0) })
+                try modelContext.save()
                 minting = false
                 mintSuccess = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     if var navigationPath {
-                        if !navigationPath.isEmpty {
-                            navigationPath.removeLast()
+                        #warning("pretty sure this does nothing in the UI")
+                        if !navigationPath.wrappedValue.isEmpty {
+                            navigationPath.wrappedValue.removeLast()
                         }
                     }
                 }
+                
+                #warning("convert pending transaction to completed")
+                
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error",
                                                 description: String(describing: error)))

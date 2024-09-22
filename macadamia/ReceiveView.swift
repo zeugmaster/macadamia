@@ -6,85 +6,77 @@
 //
 
 import SwiftUI
+import SwiftData
+import CashuSwift
 
 struct ReceiveView: View {
-    @ObservedObject var vm:ReceiveViewModel
-    @ObservedObject var qrsVM = QRScannerViewModel()
-    @State var initialState: String?
+    @Environment(\.modelContext) private var modelContext
+    @Query private var wallets: [Wallet]
     
-    init(vm: ReceiveViewModel) {
-        self.vm = vm
+    var activeWallet:Wallet? {
+        get {
+            wallets.first
+        }
+    }
+    
+    @ObservedObject var qrsVM = QRScannerViewModel()
+    
+    @State var tokenString:String?
+    @State var token:CashuSwift.Token?
+    @State var tokenMemo:String?
+    @State var unit:Unit = .other
+    @State var loading = false
+    @State var success = false
+    @State var totalAmount:Int?
+    @State var addingMint = false
+    
+//    @State var refreshCounter:Int = 0
+    
+    @State var showAlert:Bool = false
+    @State var currentAlert:AlertDetail?
+    
+    private var navigationPath:Binding<NavigationPath>?
+    
+    init(tokenString: String? = nil, navigationPath:Binding<NavigationPath>? = nil) {
+        self.navigationPath = navigationPath
+        self.tokenString = tokenString
     }
     
     var body: some View {
         VStack {
             List {
-                if vm.token != nil {
+                if tokenString != nil {
                     Section {
-                        TokenText(text: vm.token!)
+                        TokenText(text: tokenString!)
                             .frame(idealHeight: 70)
                         // TOTAL AMOUNT
                         HStack {
                             Text("Total Amount: ")
                             Spacer()
-                            Text(String(vm.totalAmount ?? 0) + " sats")
+                            Text(String(totalAmount ?? 0) + " sats")
                         }
                         .foregroundStyle(.secondary)
                         // TOKEN MEMO
-                        if vm.tokenMemo != nil {
-                            if !vm.tokenMemo!.isEmpty {
-                                Text("Memo: \(vm.tokenMemo!)")
+                        if tokenMemo != nil {
+                            if !tokenMemo!.isEmpty {
+                                Text("Memo: \(tokenMemo!)")
                                     .foregroundStyle(.secondary)
                             }
                         }
                     } header: {
                          Text("cashu Token")
                     }
-                    if !vm.tokenParts.isEmpty {
-                        ForEach(vm.tokenParts, id: \.self) {part in
+                    if token != nil && activeWallet != nil {
+                        ForEach(token!.token, id: \.proofs.first?.C) { fragment in
                             Section {
-                                Text("Mint: " + part.token.mint.dropFirst(8))
-                                    .foregroundStyle(.secondary)
-                                switch part.state {
-                                case .mintUnavailable:
-                                    Text("Mint unavailable")
-                                case .notSpendable:
-                                    Text("Token not spendable")
-                                case .spendable:
-                                    EmptyView()
-                                case .unknown:
-                                    Text("Checking...")
-                                }
-                                if vm.tokenParts.count > 1 {
-                                    HStack {
-                                        Text("Amount: ")
-                                        Spacer()
-                                        Text(String(part.amount) + " sats")
-                                    }
-                                }
-                                if (part.knownMint == false && part.state != .mintUnavailable) {
-                                    Button {
-                                        vm.addUnknownMint(for: part)
-                                    } label: {
-                                        HStack {
-                                            if part.addingMint {
-                                                Text("Adding...")
-                                            } else {
-                                                Text("Unknown mint. Add it?")
-                                                Spacer()
-                                                Image(systemName: "plus")
-                                            }
-                                        }
-                                    }
-                                    .disabled(part.addingMint || part.state == .mintUnavailable || part.state == .unknown)
-                                }
+                                TokenFragmentView(activeWallet: activeWallet!, fragment: fragment, unit: .other)
                             }
                         }
                     }
                     
                     Section {
                         Button {
-                            vm.reset()
+                            reset()
                             qrsVM.restart()
                         } label: {
                             HStack {
@@ -93,7 +85,7 @@ struct ReceiveView: View {
                                 Image(systemName: "trash")
                             }
                         }
-                        .disabled(vm.addingMint)
+                        .disabled(addingMint)
                     }
                 } else {
                     
@@ -107,7 +99,7 @@ struct ReceiveView: View {
                     }
                     
                     Button {
-                        vm.paste()
+                        paste()
                     } label: {
                         HStack {
                             Text("Paste from clipboard")
@@ -118,19 +110,19 @@ struct ReceiveView: View {
                 }
             }
             .onAppear(perform: {
-                qrsVM.onResult = vm.parseToken(token:)
+                qrsVM.onResult = scannerDidDecodeString(_:)
             })
-            .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
+            .alertView(isPresented: $showAlert, currentAlert: currentAlert)
             .navigationTitle("Receive")
             .toolbar(.hidden, for: .tabBar)
             Button(action: {
-                vm.redeem()
+                redeem()
             }, label: {
-                if vm.loading {
+                if loading {
                     Text("Sending...")
                         .frame(maxWidth: .infinity)
                         .padding()
-                } else if vm.success {
+                } else if success {
                     Text("Done!")
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -146,153 +138,87 @@ struct ReceiveView: View {
             .padding()
             .bold()
             .toolbar(.hidden, for: .tabBar)
-            .disabled(vm.token == nil || vm.loading || vm.success || vm.addingMint)
+            .disabled(tokenString == nil || loading || success || addingMint)
         }
     }
-}
-
-@MainActor
-class ReceiveViewModel: ObservableObject {
     
-    @Published var token:String?
-    @Published var tokenParts = [TokenPart]()
-    @Published var tokenMemo:String?
-    @Published var loading = false
-    @Published var success = false
-    @Published var totalAmount:Int?
-    @Published var addingMint = false
-    
-    @Published var refreshCounter:Int = 0
-    
-    @Published var showAlert:Bool = false
-    var currentAlert:AlertDetail?
-    var wallet = Wallet.shared
-    
-    private var _navPath: Binding<NavigationPath>  // Changed to non-optional
-        
-    init(navPath: Binding<NavigationPath>, initialState: String? = nil) {
-        self._navPath = navPath
-        guard let token = initialState else {
-            return
-        }
-        parseToken(token: token)
-    }
-    
-    var navPath: NavigationPath {
-        get { _navPath.wrappedValue }
-        set { _navPath.wrappedValue = newValue }
-    }
+    // MARK: - LOGIC
     
     func paste() {
         let pasteString = UIPasteboard.general.string ?? ""
-        parseToken(token: pasteString)
+        // TODO: NEEDS TO CHECK AND ALERT USER IF PAST OP IS UNSUCCESSFUL
+        tokenString = pasteString
+        parseTokenString()
     }
     
-    func parseToken(token:String) {
-        let deserialized:Token_Container
-        
-        do {
-            deserialized = try wallet.deserializeToken(token: token)
-        } catch {
-            displayAlert(alert: AlertDetail(title: "Invalid token",
-                                            description: """
-                                            This token could not be read.\
-                                            Input: \(token.prefix(20))... \
-                                            Error: \(String(describing: error))
-                                            """))
-            return
-        }
-        
-        self.token = token
-        tokenMemo = deserialized.memo
-        
-        tokenParts = []
-        totalAmount = 0
-        for token in deserialized.token {
-            let tokenAmount = amountForToken(token: token)
-            let known = wallet.database.mints.contains(where: {
-                $0.url.absoluteString.contains(token.mint)
-            })
-            let part = TokenPart(token: token, knownMint: known, amount: tokenAmount)
-            if token.proofs.count == 0 { continue }
-            tokenParts.append(part)
-            totalAmount! += tokenAmount
-        }
-        for part in tokenParts {
-            checkTokenState(for: part)
-        }
+    func scannerDidDecodeString(_ string:String) {
+        tokenString = string
     }
     
-    func amountForToken(token:Token_JSON) -> Int {
-        var total = 0
-        for proof in token.proofs {
-            total += proof.amount
-        }
-        return total
-    }
-    
-    func checkTokenState(for tokenPart:TokenPart) {
-        Task {
-            do {
-                let spendable = try await wallet.checkTokenStateSpendable(for:tokenPart.token)
-                if spendable {
-                    tokenPart.state = .spendable
-                    print("token is spendable")
-                } else {
-                    tokenPart.state = .notSpendable
-                    print("token is NOT spendable")
-                }
-            } catch {
-                tokenPart.state = .mintUnavailable
-                print("mint unavailable " + tokenPart.token.mint)
-            }
-            refreshCounter += 1
-        }
-    }
-    
-    func addUnknownMint(for tokenPart:TokenPart) {
-        Task {
-            guard let url = URL(string: tokenPart.token.mint) else {
+    func parseTokenString() {
+        guard let tokenString,
+              !tokenString.isEmpty else {
                 return
-            }
-            tokenPart.addingMint = true
-            addingMint = true
-            do {
-                try await wallet.addMint(with:url)
-                tokenPart.knownMint = true
-                tokenPart.addingMint = false
-                addingMint = false
-            } catch {
-                displayAlert(alert: AlertDetail(title: "Could not add mint", 
-                                                description: String(describing: error)))
-                tokenPart.addingMint = false
-                addingMint = false
-            }
+          }
+        do {
+            token = try tokenString.deserializeToken()
+        } catch {
+            displayAlert(alert: AlertDetail(title: "Could not decode token",
+                                            description: String(describing: error)))
         }
+        
     }
 
     func redeem() {
-        guard tokenParts.allSatisfy({ $0.state == .spendable }) else {
-            displayAlert(alert: AlertDetail(title: "Unable to redeem", 
-                                            description: """
-                                                        One or more parts of this token are not
-                                                        spendable. macadamia does not yet
-                                                        support redeeming only parts of a token.
-                                                        """))
+        guard let activeWallet, let token else {
             return
         }
+        
+        let mintsInToken = activeWallet.mints.filter { mint in
+            token.token.contains { fragment in
+                mint.url.absoluteString == fragment.mint
+            }
+        }
+        
+        guard mintsInToken.count == token.token.count else {
+            // TODO: throw an error
+            displayAlert(alert: AlertDetail(title: "Unable to redeem",
+                                            description: "Are all mints from this token known to the wallet?"))
+            return
+        }
+        
         loading = true
+        
+        var proofs:[Proof] = []
+        
         Task {
             do {
-                try await wallet.receiveToken(tokenString: token!)
+                let proofsDict = try await mintsInToken.receive(token: token, seed:activeWallet.seed)
+                mintsInToken.forEach { mint in
+                    let proofsPerMint = proofsDict[mint.url.absoluteString]!
+                    let internalProofs = proofsPerMint.map { p in
+                        Proof(p, unit: Unit(token.unit) ?? .other, state: .valid, mint: mint, wallet: activeWallet)
+                    }
+                    proofs.append(contentsOf: internalProofs)
+                }
+                proofs.forEach({ modelContext.insert($0) })
+                try modelContext.save()
                 self.loading = false
                 self.success = true
+                
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    if !self.navPath.isEmpty { self.navPath.removeLast() }
+                    if var navigationPath {
+                        #warning("pretty sure this does nothing in the UI")
+                                  if !navigationPath.wrappedValue.isEmpty {
+                            navigationPath.wrappedValue.removeLast()
+                        }
+                    }
                 }
+                
             } catch {
-                displayAlert(alert: AlertDetail(title: "Redeem failed",
-                                               description: String(describing: error)))
+                // receive unsuccessful
+                displayAlert(alert: AlertDetail(title: "Unable to redeem",
+                                                description: String(describing: error)))
                 self.loading = false
                 self.success = false
             }
@@ -300,9 +226,9 @@ class ReceiveViewModel: ObservableObject {
     }
     
     func reset() {
-        token = nil
+        tokenString = nil
         tokenMemo = nil
-        tokenParts = []
+        token = nil
         tokenMemo = nil
         success = false
         addingMint = false
@@ -314,44 +240,128 @@ class ReceiveViewModel: ObservableObject {
     }
 }
 
-enum TokenPartState {
-    case spendable
-    case notSpendable
-    case mintUnavailable
-    case unknown
+struct TokenFragmentView: View {
+    
+    enum FragmentState {
+        case spendable
+        case notSpendable
+        case mintUnavailable
+    }
+    
+    @Environment(\.modelContext) private var modelContext
+    
+    @State var fragmentState:FragmentState = .mintUnavailable
+    @State var fragment:CashuSwift.ProofContainer
+    @State var amount:Int = 0 // will need to change to decimal representation
+    @State var unit:Unit = .other
+    @State var addingMint:Bool = false
+    
+    @State var unknownMint:Bool?
+    
+    var activeWallet:Wallet
+    
+    init(activeWallet:Wallet, fragment:CashuSwift.ProofContainer, unit:Unit) {
+        self.activeWallet = activeWallet
+        self.fragment = fragment
+        self.unit = unit
+    }
+    
+    var body: some View {
+        HStack {
+            Text("Amount:")
+            Spacer()
+            Text(String(amount))
+            switch unit {
+            case .sat:
+                Text("sat")
+            case .usd:
+                Text("$")
+            case .eur:
+                Text("€")
+            case .other:
+                Text("other")
+            }
+        }
+        .onAppear {
+            checkFragmentState()
+        }
+        switch fragmentState {
+        case .spendable:
+            Text("Token part is valid.")
+        case .notSpendable:
+            Text("Token part is invalid.")
+        case .mintUnavailable:
+            Text("Mint unavailable")
+        }
+        if let unknownMint {
+            if unknownMint {
+                Button {
+                    addMint()
+                } label: {
+                    if addingMint {
+                        Text("Adding,,,") // TODO: communicate success or failure to the user
+                    } else {
+                        Text("Unknowm mint. Add it?")
+                    }
+                }
+                .disabled(addingMint)
+            }
+        } else {
+            Text("Checking mint...")
+        }
+    }
+    
+    func checkFragmentState() {
+        guard let url = URL(string: fragment.mint) else {
+            fragmentState = .mintUnavailable
+            return
+        }
+        
+        if activeWallet.mints.contains(where: { $0.url == url }) {
+            unknownMint = false
+        } else {
+            unknownMint = true
+        }
+        
+        Task {
+            do {
+                let proofStates = try await CashuSwift.check(fragment.proofs, url: url)
+                if proofStates.allSatisfy({ $0 == .unspent }) {
+                    fragmentState = .spendable
+                } else {
+                    fragmentState = .notSpendable
+                }
+            } catch {
+                fragmentState = .mintUnavailable
+            }
+        }
+    }
+    
+    func addMint() {
+        Task {
+            do {
+                addingMint = true
+                guard let url = URL(string: fragment.mint) else {
+                    addingMint = false
+                    return
+                }
+                let mint:Mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
+                mint.wallet = activeWallet
+                mint.proofs = []
+                modelContext.insert(mint)
+                try modelContext.save()
+                unknownMint = false
+                checkFragmentState()
+            } catch {
+                print("Could not add mint")
+                unknownMint = true
+            }
+            addingMint = false
+        }
+    }
 }
 
-class TokenPart:ObservableObject, Hashable {
-    
-    @Published var token:Token_JSON
-    @Published var knownMint:Bool
-    @Published var amount:Int
-    @Published var addingMint:Bool
-    @Published var state:TokenPartState
-    
-    static func == (lhs: TokenPart, rhs: TokenPart) -> Bool {
-            lhs.token.proofs == rhs.token.proofs
-        }
-    
-    func hash(into hasher: inout Hasher) {
-        for proof in token.proofs {
-            hasher.combine(proof.C)
-        }
-    }
-    
-    init(token: Token_JSON, 
-         knownMint: Bool,
-         amount: Int,
-         addingMint: Bool = false,
-         state:TokenPartState = .unknown) {
-        self.token = token
-        self.knownMint = knownMint
-        self.amount = amount
-        self.addingMint = addingMint
-        self.state = state
-    }
-}
 
 #Preview {
-    ReceiveView(vm:ReceiveViewModel(navPath: Binding.constant(NavigationPath())))
+    ReceiveView()
 }

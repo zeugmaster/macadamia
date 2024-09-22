@@ -36,22 +36,22 @@ struct WalletView: View {
     var body: some View {
         NavigationStack(path:$navigationPath) {
             VStack {
-                HStack {
-                    Button {
-                        if UIApplication.shared.canOpenURL(betaDisclaimerURL) {
-                            UIApplication.shared.open(betaDisclaimerURL)
-                        }
-                    } label: {
-                        Text("BETA")
-                            .padding(6)
-                            .overlay(
-                            RoundedRectangle(cornerRadius: 4) // Rounded rectangle shape
-                                .stroke(lineWidth: 1) // Thin outline with specified line width
-                        )
-                    }
-                    Spacer()
-                }
-                .padding(EdgeInsets(top: 20, leading: 40, bottom: 0, trailing: 0))
+//                HStack {
+//                    Button {
+//                        if UIApplication.shared.canOpenURL(betaDisclaimerURL) {
+//                            UIApplication.shared.open(betaDisclaimerURL)
+//                        }
+//                    } label: {
+//                        Text("BETA")
+//                            .padding(6)
+//                            .overlay(
+//                            RoundedRectangle(cornerRadius: 4) // Rounded rectangle shape
+//                                .stroke(lineWidth: 1) // Thin outline with specified line width
+//                        )
+//                    }
+//                    Spacer()
+//                }
+//                .padding(EdgeInsets(top: 20, leading: 40, bottom: 0, trailing: 0))
                 Spacer(minLength: 60)
                 HStack(alignment:.center) {
                     Spacer()
@@ -69,7 +69,7 @@ struct WalletView: View {
                         Spacer()
                 }
                 .onAppear(perform: {
-                    balance = currentWallet?.validProofs.sum
+                    balance = currentWallet?.proofs.filter({ $0.state == .valid }).sum
                 })
                 Spacer()
                 List {
@@ -196,11 +196,12 @@ struct WalletView: View {
             .navigationDestination(for: String.self) { tag in
                 switch tag {
                 case "Send":
-                    SendView(vm: SendViewModel(navPath: navigationPath))
+                    SendView(navigationPath: $navigationPath)
                 case "Receive":
-                    ReceiveView(vm: ReceiveViewModel(navPath: $navigationPath, initialState: urlState))
+                    #warning("breaking url passing mechanism")
+                    ReceiveView(navigationPath: $navigationPath)
                 case "Melt":
-                    MeltView(vm: MeltViewModel(navPath: $navigationPath))
+                    MeltView(navPath: $navigationPath)
                 case "Mint":
                     MintView(navigationPath: $navigationPath)
                 default:

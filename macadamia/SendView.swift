@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import CashuSwift
 
 struct SendView: View {
     @Environment(\.modelContext) private var modelContext
@@ -149,6 +150,12 @@ struct SendView: View {
     
     // MARK: - LOGIC
     
+    var selectedMint:Mint? {
+        get {
+            activeWallet?.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) })
+        }
+    }
+    
     func copyToClipboard() {
         UIPasteboard.general.string = tokenString
         withAnimation {
@@ -175,12 +182,11 @@ struct SendView: View {
     }
     
     func updateBalance() {
-        guard let activeWallet else {
+        guard let activeWallet,
+              let selectedMint else {
             return
         }
-        if let mint = activeWallet.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) {
-            selectedMintBalance = activeWallet.validProofs.sum
-        }
+        selectedMintBalance = selectedMint.proofs.sum
     }
     
     var amount: Int {
@@ -188,16 +194,26 @@ struct SendView: View {
     }
     
     func generateToken() {
-        guard let activeWallet else {
+        guard let activeWallet,
+              let selectedMint else {
             return
         }
-        guard let mint = activeWallet.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) else {
-            displayAlert(alert: AlertDetail(title: "Invalid Mint"))
-            return
-        }
+        
         Task {
             do {
-                let (token, change) = try await mint.send(proofs: activeWallet.validProofs, amount: amount, memo: tokenMemo)
+                #warning("add unit selection")
+                
+                selectedMint.proofs.forEach({ $0.state = .pending })
+                let (token, change) = try await CashuSwift.send(mint: selectedMint, proofs: selectedMint.proofs, amount: amount, memo: tokenMemo)
+                
+                let changeProofs = change.map({ Proof($0,
+                                                      unit: Unit(token.unit) ?? .other,
+                                                      state: .valid, 
+                                                      mint: selectedMint,
+                                                      wallet: activeWallet) })
+                changeProofs.forEach({ modelContext.insert($0) })
+                try modelContext.save()
+                
                 self.tokenString = try token.serialize(.V3)
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error", description: String(describing: error)))

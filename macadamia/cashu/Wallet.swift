@@ -10,20 +10,94 @@ import CashuSwift
 import SwiftData
 
 @Model
-class Wallet {
-    @Attribute(.unique) let seed:String
+final class Wallet {
+    let seed:String?
+    
+    let name:String?
+    
+    @Relationship(inverse: \Mint.wallet)
     var mints:[Mint]
-    var validProofs:[Proof]
-    var spentProofs:[Proof]
+    
+    var proofs:[Proof]
     let dateCreated:Date
     var events:[Event]
     
-    init(seed: String, mints: [Mint], validProofs: [Proof], spentProofs: [Proof], dateCreated:Date) {
+    init(seed: String? = nil) {
         self.seed = seed
-        self.mints = mints
-        self.validProofs = validProofs
-        self.spentProofs = spentProofs
-        self.dateCreated = dateCreated
+        self.dateCreated = Date()
+    }
+}
+
+@Model
+final class Mint:MintRepresenting {
+    var url: URL
+    
+    var keysets: [CashuSwift.Keyset]
+    
+    var info: CashuSwift.MintInfo?
+    
+    var nickName:String?
+    
+    var dateAdded:Date
+    
+//    @Relationship(inverse: \Wallet.mints)
+    var wallet: Wallet
+    
+    @Relationship(inverse: \Proof.mint)
+    var proofs:[Proof]
+    
+    required init(url: URL, keysets: [CashuSwift.Keyset]) {
+        self.url = url
+        self.keysets = keysets
+        self.dateAdded = Date()
+    }
+}
+
+@Model
+final class Proof:ProofRepresenting {
+    
+    var keysetID: String
+    var C: String
+    var secret: String
+    var amount: Int
+    var state:State
+    var unit:Unit
+    
+    var dateCreated:Date
+    
+//    @Relationship(inverse: \Mint.proofs)
+    var mint:Mint
+    
+//    @Relationship(inverse: \Wallet.proofs)
+    var wallet:Wallet
+    
+    init(keysetID: String, C: String, secret: String, unit:Unit, state:State, amount: Int, mint:Mint, wallet: Wallet) {
+        self.keysetID = keysetID
+        self.C = C
+        self.secret = secret
+        self.amount = amount
+        self.state = state
+        self.mint = mint
+        self.wallet = wallet
+        self.dateCreated = Date()
+        self.unit = unit
+    }
+    
+    init(_ proofRepresenting:ProofRepresenting, unit:Unit, state:State, mint: Mint, wallet:Wallet) {
+        self.keysetID = proofRepresenting.keysetID
+        self.C = proofRepresenting.C
+        self.amount = proofRepresenting.amount
+        self.secret = proofRepresenting.secret
+        self.wallet = wallet
+        self.mint = mint
+        self.unit = unit
+        self.state = state
+    }
+    
+    enum State {
+        case valid
+        case pending
+        case spent
     }
 }
 
@@ -46,11 +120,11 @@ class Event: Identifiable {
 
 @Model
 final class PendingMintEvent: Event {
-    let quote:Bolt11.MintQuote
+    let quote:CashuSwift.Bolt11.MintQuote
     let amount:Double
     let expiration:Date
     
-    init(quote: Bolt11.MintQuote, amount: Double, expiration: Date, unit: Unit, shortDescription:String, visible:Bool = true) {
+    init(quote: CashuSwift.Bolt11.MintQuote, amount: Double, expiration: Date, unit: Unit, shortDescription:String, visible:Bool = true) {
         self.quote = quote
         self.amount = amount
         self.expiration = expiration
@@ -109,11 +183,11 @@ final class ReceiveEvent: Event {
 
 @Model
 final class PendingMeltEvent: Event {
-    let quote:Bolt11.MeltQuote
+    let quote:CashuSwift.Bolt11.MeltQuote
     let amount:Double
     let expiration:Date
     
-    init(quote: Bolt11.MeltQuote, amount: Double, expiration: Date, visible:Bool = true) {
+    init(quote: CashuSwift.Bolt11.MeltQuote, amount: Double, expiration: Date, visible:Bool = true) {
         self.quote = quote
         self.amount = amount
         self.expiration = expiration
@@ -144,10 +218,18 @@ final class RestoreEvent: Event {
     }
 }
 
-enum Unit {
-    case sat
-    case usd
-    case eur
-    case mixed
-    case other
+enum Unit:String, CaseIterable {
+    case sat = "sat"
+    case usd = "usd"
+    case eur = "eur"
+    case other = "other"
+    
+    init?(_ string:String?) {
+        if let match = Unit.allCases.first(where: { $0.rawValue.lowercased() == string?.lowercased() }) {
+            self = match
+        } else {
+            return nil
+        }
+    }
 }
+

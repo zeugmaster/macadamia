@@ -64,10 +64,9 @@ struct EventDetailView: View {
     
     private func unitString(_ unit: Unit) -> String {
         switch unit {
-        case .sat: return "Satoshi"
+        case .sat: return "sat"
         case .usd: return "USD"
         case .eur: return "EUR"
-        case .mixed: return "Mixed"
         case .other: return "Other"
         }
     }

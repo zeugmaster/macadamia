@@ -6,13 +6,42 @@
 //
 
 import SwiftUI
+import SwiftData
 import CodeScanner
+import CashuSwift
 
 struct MeltView: View {
-    @ObservedObject var vm:MeltViewModel
+    @Environment(\.modelContext) private var modelContext
+    @Query private var wallets: [Wallet]
+        
+    var activeWallet:Wallet? {
+        get {
+            wallets.first
+        }
+    }
     
-    init(vm: MeltViewModel) {
-        self.vm = vm
+    @State var quote:CashuSwift.Bolt11.MeltQuote?
+    
+    @State var invoiceString:String = ""
+    @State var loading = false
+    @State var success = false
+        
+    @State var mintList:[String] = [""]
+    @State var selectedMintString:String = ""
+    @State var selectedMintBalance = 0
+    
+    @State var showAlert:Bool = false
+    @State var currentAlert:AlertDetail?
+    
+    private var _navPath: Binding<NavigationPath>  // Changed to non-optional
+        
+    init(navPath: Binding<NavigationPath>) {
+        self._navPath = navPath
+    }
+    
+    var navPath: NavigationPath {
+        get { _navPath.wrappedValue }
+        set { _navPath.wrappedValue = newValue }
     }
     
     var body: some View {
@@ -23,48 +52,48 @@ struct MeltView: View {
             if !ProcessInfo.processInfo.isiOSAppOnMac {
                 CodeScannerView(codeTypes: [.qr], scanMode: .oncePerCode) { result in
                     print(result)
-                    vm.processScanViewResult(result: result)
+                    processScanViewResult(result: result)
                 }
                 .padding()
             }
             List {
                 Section {
-                    TextField("tap to enter LN invoice", text: $vm.invoice)
+                    TextField("tap to enter LN invoice", text: $invoiceString)
                         .monospaced()
                         .foregroundStyle(.secondary)
                         .onSubmit() {
-                            vm.checkFee()
+                            getQuote()
                         }
-                    if !vm.invoice.isEmpty {
+                    if !invoiceString.isEmpty {
                         HStack {
                             Text("Amount: ")
                             Spacer()
-                            Text(String(vm.invoiceAmount ?? 0) + " sats")
+                            Text(String(invoiceAmount ?? 0) + " sats")
                         }
                         .foregroundStyle(.secondary)
-                        if vm.fee != nil {
+                        if quote != nil {
                             HStack {
                                 Text("Lightning Fee: ")
                                 Spacer()
-                                Text(String(vm.fee ?? 0) + " sats")
+                                Text(String(quote?.feeReserve ?? 0) + " sats")
                             }
                             .foregroundStyle(.secondary)
                         }
                     }
-                    Picker("Mint", selection:$vm.selectedMintString) {
-                        ForEach(vm.mintList, id: \.self) {
+                    Picker("Mint", selection:$selectedMintString) {
+                        ForEach(mintList, id: \.self) {
                             Text($0)
                         }
                     }.onAppear(perform: {
-                        vm.fetchMintInfo()
+                        fetchMintInfo()
                     })
-                    .onChange(of: vm.selectedMintString) { oldValue, newValue in
-                        vm.updateBalance()
+                    .onChange(of: selectedMintString) { oldValue, newValue in
+                        updateBalance()
                     }
                     HStack {
                         Text("Balance: ")
                         Spacer()
-                        Text(String(vm.selectedMintBalance))
+                        Text(String(selectedMintBalance))
                             .monospaced()
                         Text("sats")
                     }
@@ -74,13 +103,13 @@ struct MeltView: View {
                 }
             }
             Button(action: {
-                vm.melt()
+                melt()
             }, label: {
-                if vm.loading {
+                if loading {
                     Text("Melting...")
                         .frame(maxWidth: .infinity)
                         .padding()
-                } else if vm.success {
+                } else if success {
                     Text("Done!")
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -96,45 +125,15 @@ struct MeltView: View {
             .padding()
             .bold()
             .toolbar(.hidden, for: .tabBar)
-            .disabled(vm.invoice.isEmpty || vm.loading || vm.success)
+            .disabled(invoiceString.isEmpty || loading || success)
             .navigationTitle("Melt")
             .navigationBarTitleDisplayMode(.inline)
-            .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
+            .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
     }
-}
-
-#Preview {
-    MeltView(vm: MeltViewModel(navPath: Binding.constant(NavigationPath())))
-}
-
-@MainActor
-class MeltViewModel: ObservableObject {
     
-    @Published var invoice:String = ""
-    
-    @Published var loading = false
-    @Published var success = false
-    
-    @Published var fee:Int?
-    
-    @Published var mintList:[String] = [""]
-    @Published var selectedMintString:String = ""
-    @Published var selectedMintBalance = 0
-    
-    @Published var showAlert:Bool = false
-    var currentAlert:AlertDetail?
-    var wallet = Wallet.shared
-    
-    private var _navPath: Binding<NavigationPath>  // Changed to non-optional
-        
-    init(navPath: Binding<NavigationPath>) {
-        self._navPath = navPath
-    }
-    
-    var navPath: NavigationPath {
-        get { _navPath.wrappedValue }
-        set { _navPath.wrappedValue = newValue }
+    var selectedMint:Mint? {
+        activeWallet?.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) })
     }
     
     func processScanViewResult(result:Result<ScanResult,ScanError>) {
@@ -149,30 +148,43 @@ class MeltViewModel: ObservableObject {
                                            description: "The QR code you scanned does not seem to be of a valid Lighning Network invoice. Please try again."))
             return
         }
-        invoice = text
-        checkFee()
+        invoiceString = text
+        getQuote()
     }
     
     func updateBalance() {
-        if let mint = wallet.database.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) {
-            selectedMintBalance = wallet.balance(mint: mint)
+        guard let activeWallet,
+              let selectedMint else {
+            return
         }
+        selectedMintBalance = selectedMint.proofs.sum
     }
     
     var invoiceAmount:Int? {
-        try? QuoteRequestResponse.satAmountFromInvoice(pr: invoice)
+        try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString)
     }
     
-    func checkFee() {
+    func getQuote() {
+        guard let activeWallet,
+              let selectedMint else {
+            print("unable to get quote, activeWallet or selectedMint is nil")
+            return
+        }
+        
         Task {
-            let selectedMint = wallet.database.mints.first(where: {$0.url.absoluteString.contains(selectedMintString)})!
-            fee = try? await Network.checkFee(mint: selectedMint, invoice: invoice)
+            quote = try await CashuSwift.getQuote(mint:selectedMint,
+                                                  quoteRequest: CashuSwift.Bolt11.RequestMeltQuote(unit: "sat", // TODO: REMOVE HARD CODED UNIT
+                                                                                                   request: invoiceString,
+                                                                                                   options: nil)) as? CashuSwift.Bolt11.MeltQuote
         }
     }
     
     func fetchMintInfo() {
-        mintList = []
-        for mint in wallet.database.mints {
+        guard let activeWallet else {
+            return
+        }
+        
+        for mint in activeWallet.mints {
             let readable = mint.url.absoluteString.dropFirst(8)
             mintList.append(String(readable))
         }
@@ -180,16 +192,34 @@ class MeltViewModel: ObservableObject {
     }
     
     func melt() {
-        let selectedMint = wallet.database.mints.first(where: {$0.url.absoluteString.contains(selectedMintString)})!
+        guard let selectedMint,
+              let activeWallet,
+              let quote else {
+            return
+        }
+        
+        let worstInputFee = (CashuSwift.activeKeysetForUnit("sat", mint: selectedMint)?.inputFeePPK ?? 0 * worstCaseInputCount(for: UInt( quote.amount + quote.feeReserve )) + 999) / 1000
+        let targetAmount = quote.amount + quote.feeReserve + worstInputFee
+        // TODO: ADD FEE AMOUNT UI AND INFO
+        guard let selection = selectedMint.proofs.pick(targetAmount) else {
+            displayAlert(alert: AlertDetail(title: "Insufficient funds.",
+                                           description: "The wallet could not collect enough ecash to settle this payment."))
+            return
+        }
+        
+        let proofsToSent = selection.picked.map({ $0 as! Proof })
+        proofsToSent.forEach({ $0.state = .pending})
+        
         loading = true
+        
         Task {
             do {
-                let invoicePaid = try await wallet.melt(mint: selectedMint, invoice: invoice)
-                if invoicePaid {
+                let meltResult = try await CashuSwift.melt(mint: selectedMint, quote: quote, proofs: proofsToSent, seed: activeWallet.seed)
+                if meltResult.paid {
                     loading = false
                     success = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        if !self.navPath.isEmpty { self.navPath.removeLast() }
+//                        if !self.navPath.isEmpty { self.navPath.removeLast() }
                     }
                 } else {
                     loading = false
@@ -210,4 +240,18 @@ class MeltViewModel: ObservableObject {
         currentAlert = alert
         showAlert = true
     }
+    
+    func worstCaseInputCount(for n: UInt) -> Int {
+        guard n > 0 else { return 1 }
+        
+        let bitsNeeded = n.bitWidth - n.leadingZeroBitCount
+        let isPowerOfTwo = (n & (n - 1)) == 0
+        let maxBitsInRange = isPowerOfTwo ? bitsNeeded : bitsNeeded
+        return maxBitsInRange + 1
+    }
 }
+
+#Preview {
+    MeltView(navPath: Binding.constant(NavigationPath()))
+}
+
