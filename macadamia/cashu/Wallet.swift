@@ -171,6 +171,7 @@ final class ReceiveEvent: Event {
     let amount:Double
     let longDescription:String
     let memo:String?
+    let tokenString:String
     
     init(amount: Double, longDescription: String, unit: Unit, shortDescription:String, visible:Bool = true) {
         self.amount = amount

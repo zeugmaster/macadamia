@@ -159,7 +159,7 @@ class ContentViewModel: ObservableObject {
     //needed to make updates to profile info reflected in UI
     @Published var listRedraw = 0
     
-    var wallet = Wallet.shared
+//    var wallet = Wallet.shared
     
     init() {
         

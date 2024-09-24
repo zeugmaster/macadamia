@@ -6,16 +6,44 @@
 //
 
 import SwiftUI
+import SwiftData
+import BIP39
 
 struct MnemonicView: View {
-    @ObservedObject var vm = MnemonicViewModel()
+    
+    @State var mnemonic = [String]()
+    @State var mintList = [String]()
+    
+    @Environment(\.modelContext) private var modelContext
+    @Query private var wallets: [Wallet]
+    
+    var activeWallet:Wallet? {
+        get {
+            wallets.first
+        }
+    }
+    
+    func loadData() {
+        guard let activeWallet else {
+            return
+        }
+        if let seed = activeWallet.seed,
+           let mnemo = try? Mnemonic(entropy: seed.bytes).phrase {
+            mnemonic = mnemo
+        }
+        mintList = activeWallet.mints.map( { $0.url.absoluteString } )
+    }
+    
+    func copyMnemonic() {
+        UIPasteboard.general.string = mnemonic.joined(separator: " ")
+    }
     
     @State private var isCopied = false
     
     var body: some View {
         List {
             Section {
-                ForEach(vm.mnemonic, id: \.self) { word in
+                ForEach(mnemonic, id: \.self) { word in
                     Text(word)
                 }
                 .disabled(true)
@@ -41,7 +69,7 @@ struct MnemonicView: View {
                 }
             }
             Section {
-                ForEach(vm.mintList, id: \.self) { mintURL in
+                ForEach(mintList, id: \.self) { mintURL in
                     Text(mintURL)
                 }
                 .disabled(true)
@@ -50,12 +78,12 @@ struct MnemonicView: View {
                 Text("macadamia can only restore eCash from the mints it knows about. It would be wise to include their URLs in the backup of your seed phrase.")
             }
         }
-        .onAppear(perform: vm.loadData)
+        .onAppear(perform: loadData)
     }
     
     func copyToClipboard() {
         // Perform the actual copy operation here
-        vm.copyMnemonic()
+        copyMnemonic()
 
         // Change button text with animation
         withAnimation {
@@ -69,34 +97,6 @@ struct MnemonicView: View {
             }
         }
     }
-}
-
-class MnemonicViewModel: ObservableObject {
-    
-    var wallet = Wallet.shared
-    
-    @Published var mnemonic = [String]()
-    @Published var mintList = [String]()
-    
-    init(wallet: Wallet = Wallet.shared, 
-         mnemonic: [String] = [String](),
-         mintList: [String] = [String]()) {
-        self.wallet = wallet
-        self.mnemonic = mnemonic
-        self.mintList = mintList
-    }
-    
-    func loadData() {
-        if let mnemo = wallet.database.mnemonic {
-            mnemonic = mnemo.components(separatedBy: " ")
-        }
-        mintList = wallet.database.mints.map( { $0.url.absoluteString } )
-    }
-    
-    func copyMnemonic() {
-        UIPasteboard.general.string = wallet.database.mnemonic
-    }
-    
 }
 
 #Preview {

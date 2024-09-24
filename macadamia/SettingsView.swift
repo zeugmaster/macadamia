@@ -24,7 +24,7 @@ struct SettingsView: View {
             List {
                 Section {
                     NavigationLink(destination: MnemonicView()) { Text("Show Seed Phrase") }
-                    NavigationLink(destination: RestoreView()) { Text("Restore") }
+                    NavigationLink(destination: EmptyView()) { Text("Restore") }.disabled(true)
                     NavigationLink(destination: DrainView()) { Text("Drain Wallet") }
                 } header: {
                     Text("cashu")
@@ -74,7 +74,6 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
         }
-        
     }
 }
 
