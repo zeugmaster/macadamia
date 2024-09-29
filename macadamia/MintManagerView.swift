@@ -7,31 +7,6 @@
 
 import SwiftUI
 
-protocol MintInfo {
-    var url:URL { get }
-    var name:String { get }
-    var description:String { get }
-    var version:String { get }
-    var pubkey:String { get }
-    var imageURL:URL? { get }
-}
-
-struct MintInfoV0_15: MintInfo {
-    
-    var url: URL
-    
-    var imageURL: URL?
-    
-    var name: String
-    
-    var description: String
-    
-    var version: String
-    
-    var pubkey: String
-    
-}
-
 struct MintManagerView: View {
     @ObservedObject var vm:MintManagerViewModel
     
@@ -182,10 +157,6 @@ class MintManagerViewModel: ObservableObject {
     }
 }
 
-let mint1 = MintInfoV0_15(url: URL(string: "https://mint.macadamia.cash")!, imageURL: URL(string: "https://macadamia.cash/images/Artboard%201@1024x-8.png")!, name: "macadamia Mint", description: "A description of this mint.", version: "Nutshell/0.15.3", pubkey: "03a2118b421e6b47f0656b97bb7eeea43c41096adbc0d0e511ff70de7d94dbd990")
-let mint2 = MintInfoV0_15(url: URL(string: "https://mint.minibits.cash")!, name: "Minibits Mint", description: "A description of this mint.", version: "Nutshell/0.15.3", pubkey: "03a2118b421e6b47f0656b97bb7eeea43c41096adbc0d0e511ff70de7d94dbd990")
-let mint3 = MintInfoV0_15(url: URL(string: "https://8333.space")!, name: "8333.space", description: "A description of this mint.", version: "Nutshell/0.15.3", pubkey: "03a2118b421e6b47f0656b97bb7eeea43c41096adbc0d0e511ff70de7d94dbd990")
-
-#Preview {
-    MintManagerView(vm: MintManagerViewModel(mintList: [mint1, mint2, mint3]))
-}
+//#Preview {
+//    MintManagerView(vm: MintManagerViewModel(mintList: [mint1, mint2, mint3]))
+//}

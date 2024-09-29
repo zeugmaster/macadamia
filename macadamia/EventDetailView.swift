@@ -13,50 +13,29 @@ struct EventDetailView: View {
     var body: some View {
         List {
             Section(header: Text("Base Event Properties")) {
-                Text("ID: \(event.id.uuidString)")
                 Text("Date: \(event.date, formatter: dateFormatter)")
                 Text("Unit: \(unitString(event.unit))")
                 Text("Short Description: \(event.shortDescription)")
             }
             
             Section(header: Text("Specific Event Properties")) {
-                switch event {
-                case let pendingMint as PendingMintEvent:
-                    Text("Amount: \(pendingMint.amount)")
-                    Text("Expiration: \(pendingMint.expiration, formatter: dateFormatter)")
-                    
-                case let mint as MintEvent:
-                    Text("Amount: \(mint.amount)")
-                    Text("Long Description: \(mint.longDescription)")
-                    
-                case let send as SendEvent:
-                    Text("Amount: \(send.amount)")
-                    Text("Long Description: \(send.longDescription)")
-                    Text("Redeemed: \(send.redeemed ? "Yes" : "No")")
-                    if let memo = send.memo {
-                        Text("Memo: \(memo)")
-                    }
-                    
-                case let receive as ReceiveEvent:
-                    Text("Amount: \(receive.amount)")
-                    Text("Long Description: \(receive.longDescription)")
-                    if let memo = receive.memo {
-                        Text("Memo: \(memo)")
-                    }
-                    
-                case let pendingMelt as PendingMeltEvent:
-                    Text("Amount: \(pendingMelt.amount)")
-                    Text("Expiration: \(pendingMelt.expiration, formatter: dateFormatter)")
-                    
-                case let melt as MeltEvent:
-                    Text("Amount: \(melt.amount)")
-                    Text("Long Description: \(melt.longDescription)")
-                    
-                case let restore as RestoreEvent:
-                    Text("Long Description: \(restore.longDescription)")
-                    
-                default:
-                    Text("Unknown Event Type")
+                switch event.kind {
+                case .pendingMint:
+                    Text("pending mint")
+                case .mint:
+                    Text("mint event")
+                case .send:
+                    Text("send")
+                case .receive:
+                    Text("receive")
+                case .pendingMelt:
+                    Text("pending melt")
+                case .melt:
+                    Text("melt")
+                case .restore:
+                    Text("restore")
+                case .drain:
+                    Text("drain")
                 }
             }
         }
@@ -79,6 +58,6 @@ struct EventDetailView: View {
     }()
 }
 
-#Preview {
-    EventDetailView(event: SendEvent(amount: 21, longDescription: "this was a send event", redeemed: false, proofs: [], unit: .sat, shortDescription: "Melt"))
-}
+//#Preview {
+//    EventDetailView(event: Event)
+//}

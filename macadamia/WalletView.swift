@@ -81,9 +81,9 @@ struct WalletView: View {
                             Spacer()
                         }
                     } else {
-                        ForEach(currentWallet!.events) { event in
-                            TransactionListRowView(event: event)
-                        }
+//                        ForEach(currentWallet!.events) { event in
+//                            TransactionListRowView(event: event)
+//                        }
                     }
                 }
                 .padding(EdgeInsets(top: 60, leading: 20, bottom: 20, trailing: 20))

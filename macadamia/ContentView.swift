@@ -30,12 +30,12 @@ struct ContentView: View {
                     }
                 
                 // Second tab content
-                NostrInboxView()
-                    .tabItem {
-                        Image(systemName: "person.2")
-                        Text("nostr")
-                    }
-                    .tag(1)
+//                NostrInboxView()
+//                    .tabItem {
+//                        Image(systemName: "person.2")
+//                        Text("nostr")
+//                    }
+//                    .tag(1)
                     
                 // Third tab content
                 SettingsView()

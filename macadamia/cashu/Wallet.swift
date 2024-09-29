@@ -25,6 +25,9 @@ final class Wallet {
     init(seed: String? = nil) {
         self.seed = seed
         self.dateCreated = Date()
+        self.mints = []
+        self.proofs = []
+        self.events = []
     }
 }
 
@@ -41,7 +44,7 @@ final class Mint:MintRepresenting {
     var dateAdded:Date
     
 //    @Relationship(inverse: \Wallet.mints)
-    var wallet: Wallet
+    var wallet: Wallet?
     
     @Relationship(inverse: \Proof.mint)
     var proofs:[Proof]
@@ -50,7 +53,12 @@ final class Mint:MintRepresenting {
         self.url = url
         self.keysets = keysets
         self.dateAdded = Date()
+        self.proofs = []
     }
+}
+
+final class MintInfo {
+    
 }
 
 @Model
@@ -60,7 +68,7 @@ final class Proof:ProofRepresenting {
     var C: String
     var secret: String
     var amount: Int
-    var state:State
+    var state:Proof.State
     var unit:Unit
     
     var dateCreated:Date
@@ -92,140 +100,75 @@ final class Proof:ProofRepresenting {
         self.mint = mint
         self.unit = unit
         self.state = state
+        self.dateCreated = Date()
     }
     
-    enum State {
+    enum State:Codable {
         case valid
         case pending
         case spent
     }
 }
 
-//@Model
-class Event: Identifiable {
-    @Attribute(.unique) let id:UUID
-    let date:Date
-    let unit:Unit
-    var shortDescription:String
-    var visible:Bool
+@Model
+final class Event {
+    let date: Date
+    let unit: Unit
+    let shortDescription: String
+    let visible: Bool
+    let kind: Kind
     
-    init(unit: Unit, shortDescription:String, visible:Bool) {
-        self.id = UUID()
-        self.date = Date()
+    enum Kind: Codable {
+        case pendingMint
+        case mint
+        case send
+        case receive
+        case pendingMelt
+        case melt
+        case restore
+        case drain
+    }
+    
+    // Kind specific properties
+    var bolt11MintQuote: CashuSwift.Bolt11.MintQuote?
+    var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote?
+    var amount: Double?
+    var expiration: Date?
+    var longDescription: String?
+    var proofs:[Proof]?
+    var memo: String?
+    var tokenString: String?
+    var redeemed: Bool?
+    
+    init(date: Date, unit: Unit, shortDescription: String, visible: Bool, kind: Kind, bolt11MintQuote: CashuSwift.Bolt11.MintQuote? = nil, bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? = nil, amount: Double? = nil, expiration: Date? = nil, longDescription: String? = nil, proofs: [Proof]? = nil, memo: String? = nil, tokenString: String? = nil, redeemed: Bool? = nil) {
+        self.date = date
         self.unit = unit
         self.shortDescription = shortDescription
         self.visible = visible
-    }
-}
-
-@Model
-final class PendingMintEvent: Event {
-    let quote:CashuSwift.Bolt11.MintQuote
-    let amount:Double
-    let expiration:Date
-    
-    init(quote: CashuSwift.Bolt11.MintQuote, amount: Double, expiration: Date, unit: Unit, shortDescription:String, visible:Bool = true) {
-        self.quote = quote
+        self.kind = kind
+        self.bolt11MintQuote = bolt11MintQuote
+        self.bolt11MeltQuote = bolt11MeltQuote
         self.amount = amount
         self.expiration = expiration
-        super.init(unit: unit,
-                   shortDescription: shortDescription,
-                   visible: visible)
-    }
-}
-
-@Model
-final class MintEvent: Event {
-    let amount:Double
-    let longDescription:String
-    
-    init(amount: Double, longDescription: String, unit: Unit, shortDescription:String, visible:Bool = true) {
-        self.amount = amount
         self.longDescription = longDescription
-        super.init(unit: unit, shortDescription: shortDescription,
-                   visible: visible)
-    }
-}
-
-@Model
-final class SendEvent: Event {
-    let amount:Double
-    let longDescription:String
-    var redeemed:Bool
-    let proofs:[Proof]
-    let memo:String?
-    
-    init(amount: Double, longDescription: String, redeemed: Bool, proofs: [Proof], unit: Unit, shortDescription:String, visible:Bool = true) {
-        self.amount = amount
-        self.longDescription = longDescription
-        self.redeemed = redeemed
         self.proofs = proofs
-        super.init(unit: unit, 
-                   shortDescription: shortDescription,
-                   visible: visible)
+        self.memo = memo
+        self.tokenString = tokenString
+        self.redeemed = redeemed
     }
-}
-
-@Model
-final class ReceiveEvent: Event {
-    let amount:Double
-    let longDescription:String
-    let memo:String?
-    let tokenString:String
     
-    init(amount: Double, longDescription: String, unit: Unit, shortDescription:String, visible:Bool = true) {
-        self.amount = amount
-        self.longDescription = longDescription
-        super.init(unit: unit,
-                   shortDescription: shortDescription,
-                   visible: visible)
+    static func pendingMintEvent(unit:Unit, shortDescription: String, visible:Bool = true, quote:CashuSwift.Bolt11.MintQuote, amount:Double, expiration:Date) -> Event {
+        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .pendingMint, bolt11MintQuote: quote, amount: amount, expiration: expiration)
     }
 }
 
-@Model
-final class PendingMeltEvent: Event {
-    let quote:CashuSwift.Bolt11.MeltQuote
-    let amount:Double
-    let expiration:Date
-    
-    init(quote: CashuSwift.Bolt11.MeltQuote, amount: Double, expiration: Date, visible:Bool = true) {
-        self.quote = quote
-        self.amount = amount
-        self.expiration = expiration
-        super.init(unit: unit,
-                   shortDescription: shortDescription, visible: visible)
-    }
-}
-
-@Model
-final class MeltEvent: Event {
-    let amount:Double
-    let longDescription:String
-    
-    init(amount: Double, longDescription: String, visible:Bool = true) {
-        self.amount = amount
-        self.longDescription = longDescription
-        super.init(unit: unit, shortDescription: shortDescription, visible: visible)
-    }
-}
-
-@Model
-final class RestoreEvent: Event {
-    let longDescription:String
-    
-    init(longDescription: String) {
-        self.longDescription = longDescription
-        super.init(unit: unit, shortDescription: shortDescription, visible: visible)
-    }
-}
-
-enum Unit:String, CaseIterable {
+enum Unit: String, Codable, CaseIterable {
     case sat = "sat"
     case usd = "usd"
     case eur = "eur"
     case other = "other"
     
-    init?(_ string:String?) {
+    init?(_ string: String?) {
         if let match = Unit.allCases.first(where: { $0.rawValue.lowercased() == string?.lowercased() }) {
             self = match
         } else {
@@ -233,4 +176,3 @@ enum Unit:String, CaseIterable {
         }
     }
 }
-
