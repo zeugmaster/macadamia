@@ -18,7 +18,9 @@ final class Wallet {
     @Relationship(inverse: \Mint.wallet)
     var mints:[Mint]
     
+    @Relationship(inverse: \Proof.wallet)
     var proofs:[Proof]
+    
     let dateCreated:Date
     var events:[Event]
     
@@ -33,14 +35,11 @@ final class Wallet {
 
 @Model
 final class Mint:MintRepresenting {
+    
     var url: URL
-    
     var keysets: [CashuSwift.Keyset]
-    
-    var info: CashuSwift.MintInfo?
-    
+    var info: MintInfo?
     var nickName:String?
-    
     var dateAdded:Date
     
 //    @Relationship(inverse: \Wallet.mints)
@@ -57,8 +56,23 @@ final class Mint:MintRepresenting {
     }
 }
 
-final class MintInfo {
+
+struct MintInfo: Codable {
+    let name: String
+    let pubkey: String
+    let version: String
+    let shortDescription: String?
+    let longDescription: String?
+    let imageURL:URL?
     
+    init(with mintInfo:CashuSwift.MintInfo) {
+        self.name = mintInfo.name
+        self.pubkey = mintInfo.pubkey
+        self.version = mintInfo.version
+        self.shortDescription = mintInfo.descriptionShort
+        self.longDescription = mintInfo.descriptionLong
+        self.imageURL = nil
+    }
 }
 
 @Model

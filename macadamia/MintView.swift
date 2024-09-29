@@ -215,6 +215,7 @@ struct MintView: View {
                     let unit = Unit(quote.requestDetail?.unit ?? "other") ?? .other
                     return Proof(p, unit: unit, state: .valid, mint: selectedMint, wallet: activeWallet)
                 }
+//                activeWallet.proofs.append(contentsOf: proofs)
                 proofs.forEach({ modelContext.insert($0) })
                 try modelContext.save()
                 minting = false

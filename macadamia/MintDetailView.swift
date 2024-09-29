@@ -8,53 +8,56 @@
 import SwiftUI
 
 struct MintDetailView: View {
-    @State var mintInfo: MintInfo
+    @Bindable var mint: Mint
     
     @ScaledMetric(relativeTo: .title) private var iconSize: CGFloat = 80
     
     var body: some View {
         List {
-            Section {
-                HStack {
-                    Spacer()
-                    ZStack {
-                        Group {
-                            Color.gray.opacity(0.3)
-                            if let imageURL = mintInfo.imageURL {
-                                AsyncImage(url: imageURL) { phase in
-                                    switch phase {
-                                    case .success(let image):
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                    case .failure(_):
-                                        Image(systemName: "photo")
-                                    case .empty:
-                                        ProgressView()
-                                    @unknown default:
-                                        EmptyView()
+            if let info = mint.info {
+                Section {
+                    HStack {
+                        Spacer()
+                        ZStack {
+                            Group {
+                                Color.gray.opacity(0.3)
+                                if let imageURL = info.imageURL {
+                                    AsyncImage(url: imageURL) { phase in
+                                        switch phase {
+                                        case .success(let image):
+                                            image
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fit)
+                                        case .failure(_):
+                                            Image(systemName: "photo")
+                                        case .empty:
+                                            ProgressView()
+                                        @unknown default:
+                                            EmptyView()
+                                        }
                                     }
+                                } else {
+                                    Image(systemName: "building.columns")
+                                        .foregroundColor(.white)
+                                        .font(.title)
                                 }
-                            } else {
-                                Image(systemName: "building.columns")
-                                    .foregroundColor(.white)
-                                    .font(.title)
                             }
+                            .frame(width: iconSize, height: iconSize) // Use a relative size or GeometryReader for more flexibility
+                            .clipShape(Circle())
                         }
-                        .frame(width: iconSize, height: iconSize) // Use a relative size or GeometryReader for more flexibility
-                        .clipShape(Circle())
+                        Spacer()
                     }
-                    Spacer()
                 }
+                .listRowBackground(Color.clear)
+            } else {
+                Text("No mint Info available.")
             }
-            .listRowBackground(Color.clear)
-            
             Section {
                 VStack(alignment:.leading) {
                     Text("URL")
                         .foregroundStyle(.secondary)
                         .font(.caption)
-                    Text(mintInfo.url.absoluteString)
+                    Text(mint.url.absoluteString)
                 }
             }
             Section {
@@ -72,6 +75,6 @@ struct MintDetailView: View {
     }
 }
 
-#Preview {
-    MintDetailView(mintInfo: mint1)
-}
+//#Preview {
+//    MintDetailView(mintInfo: mint1)
+//}

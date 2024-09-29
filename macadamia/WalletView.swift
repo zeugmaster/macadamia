@@ -15,6 +15,7 @@ let betaDisclaimerURL = URL(string: "https://macadamia.cash/beta.html")!
 struct WalletView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
+    @Query private var proofs: [Proof]
     
     @State var balance:Int?
     
@@ -69,7 +70,8 @@ struct WalletView: View {
                         Spacer()
                 }
                 .onAppear(perform: {
-                    balance = currentWallet?.proofs.filter({ $0.state == .valid }).sum
+                    balance = proofs.filter({ $0.state == .valid }).sum
+                    print(currentWallet?.proofs)
                 })
                 Spacer()
                 List {

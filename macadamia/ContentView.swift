@@ -5,8 +5,21 @@
 //
 
 import SwiftUI
+import SwiftData
+import BIP39
 
 struct ContentView: View {
+    
+    @Environment(\.modelContext) private var modelContext
+    @Query private var wallets: [Wallet]
+    
+    
+    var activeWallet:Wallet? {
+        get {
+            wallets.first
+        }
+    }
+    
     @State private var releaseNotesPopoverShowing = false
     @State private var selectedTab: Int = 0
     @State private var walletNavigationTag: String?
@@ -23,7 +36,7 @@ struct ContentView: View {
                     }
                     .tag(0)
                 
-                MintManagerView(vm: MintManagerViewModel(mintList: [mint1, mint2, mint3]))
+                MintManagerView()
                     .tabItem {
                         Image(systemName: "building.columns")
                         Text("Mints")
@@ -52,6 +65,9 @@ struct ContentView: View {
         .ignoresSafeArea()
         .onAppear(perform: {
             checkReleaseNotes()
+            if wallets.isEmpty {
+                initializeWallet()
+            }
         })
         .popover(isPresented: $releaseNotesPopoverShowing, content: {
             ReleaseNoteView()
@@ -63,6 +79,13 @@ struct ContentView: View {
         .onOpenURL () { url in
             handleUrl(url)
         }
+    }
+    
+    private func initializeWallet() {
+        let seed = String(bytes: Mnemonic().seed)
+        let wallet = Wallet(seed: seed)
+        modelContext.insert(wallet)
+        try? modelContext.save()
     }
     
     func checkReleaseNotes() {
