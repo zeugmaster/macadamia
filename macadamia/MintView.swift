@@ -192,6 +192,7 @@ struct MintView: View {
                 
                 #warning("add quote to transactions")
                 
+                
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error",
                                                description: String(describing: error)))
@@ -215,17 +216,13 @@ struct MintView: View {
                     let unit = Unit(quote.requestDetail?.unit ?? "other") ?? .other
                     return Proof(p, unit: unit, state: .valid, mint: selectedMint, wallet: activeWallet)
                 }
-//                activeWallet.proofs.append(contentsOf: proofs)
                 proofs.forEach({ modelContext.insert($0) })
                 try modelContext.save()
                 minting = false
                 mintSuccess = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    if var navigationPath {
-                        #warning("pretty sure this does nothing in the UI")
-                        if !navigationPath.wrappedValue.isEmpty {
-                            navigationPath.wrappedValue.removeLast()
-                        }
+                    if var navigationPath, !navigationPath.wrappedValue.isEmpty {
+                        navigationPath.wrappedValue.removeLast()
                     }
                 }
                 
