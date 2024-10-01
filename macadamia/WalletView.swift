@@ -16,6 +16,13 @@ struct WalletView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
     @Query private var proofs: [Proof]
+    // query events (transactions) if they are visible and in chronological order
+    @Query(
+        filter: #Predicate { event in
+                event.visible == true
+            },
+        sort: [SortDescriptor(\Event.date, order: .reverse)]
+    ) private var events: [Event]
     
     @State var balance:Int?
     
@@ -83,9 +90,9 @@ struct WalletView: View {
                             Spacer()
                         }
                     } else {
-//                        ForEach(currentWallet!.events) { event in
-//                            TransactionListRowView(event: event)
-//                        }
+                        ForEach(events) { event in
+                            TransactionListRowView(event: event)
+                        }
                     }
                 }
                 .padding(EdgeInsets(top: 60, leading: 20, bottom: 20, trailing: 20))

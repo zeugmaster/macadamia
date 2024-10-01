@@ -129,7 +129,7 @@ final class Event {
     let date: Date
     let unit: Unit
     let shortDescription: String
-    let visible: Bool
+    var visible: Bool
     let kind: Kind
     
     enum Kind: Codable {
@@ -143,7 +143,7 @@ final class Event {
         case drain
     }
     
-    // Kind specific properties
+    // Kind specific properties because we can't use generics
     var bolt11MintQuote: CashuSwift.Bolt11.MintQuote?
     var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote?
     var amount: Double?
@@ -174,6 +174,31 @@ final class Event {
     static func pendingMintEvent(unit:Unit, shortDescription: String, visible:Bool = true, quote:CashuSwift.Bolt11.MintQuote, amount:Double, expiration:Date) -> Event {
         Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .pendingMint, bolt11MintQuote: quote, amount: amount, expiration: expiration)
     }
+    
+    static func mintEvent(unit:Unit, shortDescription: String, visible:Bool = true, amount:Double) -> Event {
+        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .mint, amount: amount)
+    }
+    
+    static func sendEvent(unit:Unit, shortDescription: String, visible:Bool = true, amount:Double, longDescription:String, proofs:[Proof], memo:String, tokenString:String, redeemed:Bool = false) -> Event {
+        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .send, amount: amount, longDescription: longDescription, proofs: proofs, memo: memo, tokenString: tokenString, redeemed: redeemed)
+    }
+    
+    static func receiveEvent(unit:Unit, shortDescription: String, visible:Bool = true, amount:Double, longDescription: String, proofs:[Proof], memo: String, tokenString: String, redeemed: Bool) -> Event {
+        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .receive, amount: amount, longDescription: longDescription, proofs: proofs, memo: memo, tokenString: tokenString, redeemed: redeemed)
+    }
+    
+//    static func pendingMeltEvent(unit:Unit, shortDescription: String, visible:Bool = true, quote:CashuSwift.Bolt11.MintQuote, amount:Double, expiration:Date) -> Event {
+//        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .pendingMelt, bolt11MeltQuote: quote, amount: amount, expiration: expiration)
+//    }
+    
+    static func meltEvent(unit:Unit, shortDescription: String, visible:Bool = true, amount:Double) -> Event {
+        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .melt, amount: amount)
+    }
+
+//    static func restoreEvent(unit:Unit, shortDescription: String, visible:Bool = true, amount:Double) -> Event {
+//
+//    }
+    
 }
 
 enum Unit: String, Codable, CaseIterable {

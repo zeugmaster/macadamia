@@ -5,6 +5,7 @@ import SwiftData
 struct MintView: View {
     @State var quote:CashuSwift.Bolt11.MintQuote?
     var navigationPath:Binding<NavigationPath>?
+    @State var pendingMintEvent:Event?
     
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
@@ -30,28 +31,36 @@ struct MintView: View {
     @State private var isCopied = false
     @FocusState var amountFieldInFocus:Bool
     
-    init(quote:CashuSwift.Bolt11.MintQuote? = nil, navigationPath: Binding<NavigationPath>? = nil) {
-        self.quote = quote
+    init(quote:CashuSwift.Bolt11.MintQuote? = nil, pendingMintEvent:Event? = nil, navigationPath: Binding<NavigationPath>? = nil) {
+        self._quote = State(initialValue: quote)
         self.navigationPath = navigationPath
+        self._pendingMintEvent = State(initialValue: pendingMintEvent)
     }
     
     var body: some View {
         Form {
             Section {
                 HStack {
-                    TextField("enter amount", text: $amountString)
-                        .keyboardType(.numberPad)
-                        .monospaced()
-                        .focused($amountFieldInFocus)
-                        .onSubmit {
-                            amountFieldInFocus = false
-                        }
-                        .onAppear(perform: {
-                            amountFieldInFocus = true
-                        })
-                        .disabled(quote != nil)
-                    Text("sats")
-                        .monospaced()
+                    if let quote, quote.requestDetail != nil {
+                        Text(String(quote.requestDetail!.amount))
+                            .monospaced()
+                        Text("sats")
+                            .monospaced()
+                    } else {
+                        TextField("enter amount", text: $amountString)
+                            .keyboardType(.numberPad)
+                            .monospaced()
+                            .focused($amountFieldInFocus)
+                            .onSubmit {
+                                amountFieldInFocus = false
+                            }
+                            .onAppear(perform: {
+                                amountFieldInFocus = true
+                            })
+                            .disabled(quote != nil)
+                        Text("sats")
+                            .monospaced()
+                    }
                 }
                 if !mintList.isEmpty {
                     Picker("Mint", selection: $selectedMintString) {
@@ -63,9 +72,15 @@ struct MintView: View {
                     Text("No mints available")
                 }
             }
-            if quote != nil {
+            if let quote {
                 Section {
-                    StaticQR(qrCode: generateQRCode(from: quote!.request))
+                    HStack {
+                        Text("Expires at: ")
+                        Spacer()
+                        Text(Date(timeIntervalSince1970: TimeInterval(quote.expiry)).formatted())
+                    }
+                    .foregroundStyle(.secondary)
+                    StaticQR(qrCode: generateQRCode(from: quote.request))
                         .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
                     Button {
                         copyToClipboard()
@@ -179,8 +194,7 @@ struct MintView: View {
     }
     
     func requestQuote() {
-        guard let selectedMint,
-              let activeWallet else {
+        guard let selectedMint else {
             return
         }
         loadingInvoice = true
@@ -190,9 +204,14 @@ struct MintView: View {
                 quote = try await CashuSwift.getQuote(mint: selectedMint, quoteRequest: quoteRequest) as? CashuSwift.Bolt11.MintQuote
                 loadingInvoice = false
                 
-                #warning("add quote to transactions")
-                
-                
+                let event = Event.pendingMintEvent(unit: Unit(quote?.requestDetail?.unit) ?? .other,
+                                                   shortDescription: "Mint Quote",
+                                                   quote: quote!, //FIXME: SAFE UNWRAPPING
+                                                   amount: Double(quote?.requestDetail?.amount ?? 0),
+                                                   expiration: Date(timeIntervalSince1970: TimeInterval(quote!.expiry))) //FIXME: SAFE UNWRAPPING
+                pendingMintEvent = event
+                modelContext.insert(event)
+                try modelContext.save()
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error",
                                                description: String(describing: error)))
@@ -217,17 +236,19 @@ struct MintView: View {
                     return Proof(p, unit: unit, state: .valid, mint: selectedMint, wallet: activeWallet)
                 }
                 proofs.forEach({ modelContext.insert($0) })
+                let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
+                                            shortDescription: "Minting",
+                                            amount: Double(quote.requestDetail?.amount ?? 0))
+                modelContext.insert(event)
+                if let pendingMintEvent { pendingMintEvent.visible = false }
                 try modelContext.save()
                 minting = false
                 mintSuccess = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    if var navigationPath, !navigationPath.wrappedValue.isEmpty {
+                    if let navigationPath, !navigationPath.wrappedValue.isEmpty {
                         navigationPath.wrappedValue.removeLast()
                     }
                 }
-                
-                #warning("convert pending transaction to completed")
-                
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error",
                                                 description: String(describing: error)))

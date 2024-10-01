@@ -11,33 +11,27 @@ struct EventDetailView: View {
     let event: Event
     
     var body: some View {
-        List {
-            Section(header: Text("Base Event Properties")) {
-                Text("Date: \(event.date, formatter: dateFormatter)")
-                Text("Unit: \(unitString(event.unit))")
-                Text("Short Description: \(event.shortDescription)")
+        switch event.kind {
+        case .pendingMint:
+            if let quote = event.bolt11MintQuote {
+                MintView(quote: quote, pendingMintEvent: event)
+            } else {
+                Text("No quote set.")
             }
-            
-            Section(header: Text("Specific Event Properties")) {
-                switch event.kind {
-                case .pendingMint:
-                    Text("pending mint")
-                case .mint:
-                    Text("mint event")
-                case .send:
-                    Text("send")
-                case .receive:
-                    Text("receive")
-                case .pendingMelt:
-                    Text("pending melt")
-                case .melt:
-                    Text("melt")
-                case .restore:
-                    Text("restore")
-                case .drain:
-                    Text("drain")
-                }
-            }
+        case .mint:
+            Text("mint event")
+        case .send:
+            Text("send")
+        case .receive:
+            Text("receive")
+        case .pendingMelt:
+            Text("pending melt")
+        case .melt:
+            Text("melt")
+        case .restore:
+            Text("restore")
+        case .drain:
+            Text("drain")
         }
     }
     
