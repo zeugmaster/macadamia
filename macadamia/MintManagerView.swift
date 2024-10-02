@@ -38,6 +38,7 @@ struct MintManagerView: View {
                     Section {
                         TextField("Add new Mint URL...", text: $newMintURLString)
                             .textInputAutocapitalization(.never)
+                            .keyboardType(.URL)
                             .onSubmit {
                                 addMint()
                             }
@@ -54,20 +55,41 @@ struct MintManagerView: View {
     }
         
     func addMint() {
-        guard let url = URL(string: newMintURLString) else {
+        // First, trim any whitespace and newlines
+        let trimmedURLString = newMintURLString.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Check if the string starts with a valid scheme
+        guard trimmedURLString.starts(with: "http://") || trimmedURLString.starts(with: "https://") else {
+            displayAlert(alert: AlertDetail(title: "Invalid URL", description: "URL must start with http:// or https://"))
+            return
+        }
+        
+        // Now try to create the URL
+        guard let url = URL(string: trimmedURLString) else {
             displayAlert(alert: AlertDetail(title: "Not a valid URL."))
             return
         }
+        
+        // Additional check: ensure the URL has a host
+        guard url.host != nil else {
+            displayAlert(alert: AlertDetail(title: "Invalid URL", description: "URL must include a valid host"))
+            return
+        }
+        
         Task {
             do {
                 let mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
                 mint.wallet = activeWallet
                 modelContext.insert(mint)
                 try modelContext.save()
-                newMintURLString = ""
+                DispatchQueue.main.async {
+                    newMintURLString = ""
+                }
             } catch {
-                displayAlert(alert: AlertDetail(title: "Could not add mint,",
-                                                description: String(describing: error)))
+                DispatchQueue.main.async {
+                    displayAlert(alert: AlertDetail(title: "Could not add mint.",
+                                                    description: String(describing: error)))
+                }
             }
         }
     }
@@ -111,25 +133,25 @@ struct MintInfoRowView: View {
             ZStack {
                 Group {
                     Color.gray.opacity(0.3)
-                    if let imageURL = mint.info?.imageURL {
-                        AsyncImage(url: imageURL) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                            case .failure(_):
-                                Image(systemName: "photo")
-                            case .empty:
-                                ProgressView()
-                            @unknown default:
-                                EmptyView()
-                            }
-                        }
-                    } else {
+//                    if let imageURL = mint.info?.imageURL {
+//                        AsyncImage(url: imageURL) { phase in
+//                            switch phase {
+//                            case .success(let image):
+//                                image
+//                                    .resizable()
+//                                    .aspectRatio(contentMode: .fit)
+//                            case .failure(_):
+//                                Image(systemName: "photo")
+//                            case .empty:
+//                                ProgressView()
+//                            @unknown default:
+//                                EmptyView()
+//                            }
+//                        }
+//                    } else {
                         Image(systemName: "building.columns")
                             .foregroundColor(.white)
-                    }
+//                    }
                 }
                 .frame(width: iconSize, height: iconSize) // Use a relative size or GeometryReader for more flexibility
                 .clipShape(Circle())
@@ -139,7 +161,7 @@ struct MintInfoRowView: View {
 //                    .offset(x: 15, y: -15)
             }
             VStack(alignment:.leading) {
-                Text(mint.info?.name ?? mint.url.absoluteString)
+                Text(mint.url.absoluteString)
                     .bold()
                     .dynamicTypeSize(.xLarge)
                 Text("420 sats | 21.69 USD")

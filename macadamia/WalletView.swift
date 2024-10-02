@@ -24,10 +24,12 @@ struct WalletView: View {
         sort: [SortDescriptor(\Event.date, order: .reverse)]
     ) private var events: [Event]
     
+    @State private var activeWallet:Wallet?
+    
     @State var balance:Int?
     
     @State var showAlert:Bool = false
-    var currentAlert:AlertDetail?
+    @State var currentAlert:AlertDetail?
     
     @State var navigationPath = NavigationPath()
     @Binding var navigationTag: String?
@@ -35,31 +37,10 @@ struct WalletView: View {
     
     static let buttonPadding:CGFloat = 1
     
-    var currentWallet:Wallet? {
-        get {
-            wallets.first
-        }
-    }
-    
     var body: some View {
+        let _ = print("WalletView body called")
         NavigationStack(path:$navigationPath) {
             VStack {
-//                HStack {
-//                    Button {
-//                        if UIApplication.shared.canOpenURL(betaDisclaimerURL) {
-//                            UIApplication.shared.open(betaDisclaimerURL)
-//                        }
-//                    } label: {
-//                        Text("BETA")
-//                            .padding(6)
-//                            .overlay(
-//                            RoundedRectangle(cornerRadius: 4) // Rounded rectangle shape
-//                                .stroke(lineWidth: 1) // Thin outline with specified line width
-//                        )
-//                    }
-//                    Spacer()
-//                }
-//                .padding(EdgeInsets(top: 20, leading: 40, bottom: 0, trailing: 0))
                 Spacer(minLength: 60)
                 HStack(alignment:.center) {
                     Spacer()
@@ -77,22 +58,15 @@ struct WalletView: View {
                         Spacer()
                 }
                 .onAppear(perform: {
+                    activeWallet = wallets.first
+                    
+                    // FIXME: NEEDS TO RESPECT WALLET SELECTION
                     balance = proofs.filter({ $0.state == .valid }).sum
-                    print(currentWallet?.proofs)
                 })
                 Spacer()
                 List {
-                    if currentWallet?.events == nil {
-                        HStack {
-                            Spacer()
-                            Text("No transactions yet")
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                        }
-                    } else {
-                        ForEach(events) { event in
-                            TransactionListRowView(event: event)
-                        }
+                    ForEach(events) { event in
+                        TransactionListRowView(event: event)
                     }
                 }
                 .padding(EdgeInsets(top: 60, leading: 20, bottom: 20, trailing: 20))
@@ -217,39 +191,17 @@ struct WalletView: View {
                     EmptyView()
                 }
             }
-            .onChange(of: navigationTag, { oldValue, newValue in
-                if newValue == "Receive" {
-                    navigationPath.append("Receive")
-                    navigationTag = nil
-                }
-            })
+//            .onChange(of: navigationTag, { oldValue, newValue in
+//                if newValue == "Receive" {
+//                    navigationPath.append("Receive")
+//                    navigationTag = nil
+//                }
+//            })
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
     }
     
-//    func checkPending() {
-//        Task {
-//            do {
-//                for transaction in self.transactions {
-//                    if transaction.pending && transaction.type == .cashu && transaction.token != nil {
-//                        transaction.pending = try await wallet.checkTokenStatePending(token: transaction.token!)
-//                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-//                            self.transactionListRefreshCounter += 1
-//                        }
-//                   }
-//                }
-//            } catch {
-//                let detail = String(String(describing: error).prefix(100)) + "..." //ooof
-//                displayAlert(alert: AlertDetail(title: "Unable to update",
-//                                                description: detail))
-//                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-//                    self.transactionListRefreshCounter += 1
-//                }
-//            }
-//        }
-//    }
-    
-    private mutating func displayAlert(alert:AlertDetail) {
+    private func displayAlert(alert:AlertDetail) {
         currentAlert = alert
         showAlert = true
     }
@@ -265,24 +217,8 @@ struct TransactionListRowView: View {
     var body: some View {
         NavigationLink(destination: EventDetailView(event: event)) {
             HStack {
-//                if transaction.type == .cashu {
-//                    Image(systemName: "banknote")
-//                    Text(transaction.token ?? "no token")
-//                } else if transaction.type == .lightning {
-//                    Image(systemName: "bolt.fill")
-//                    // hey, it's monospaced. might as well
-//                    Text(" " + transaction.invoice!)
-//                } else if transaction.type == .drain {
-//                    Image(systemName: "arrow.turn.down.right")
-//                    Text(transaction.token ?? "Token")
-//                }
-//                Spacer(minLength: 10)
-//                if transaction.pending {
-//                    Image(systemName: "hourglass")
-//                }
                 Text(event.shortDescription)
                 Spacer()
-//                Text(String(transaction.amount))
             }
             .lineLimit(1)
             .monospaced()

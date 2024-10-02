@@ -12,25 +12,27 @@ struct ContentView: View {
     
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
-    
-    
-    var activeWallet:Wallet? {
-        get {
-            wallets.first
-        }
-    }
+    @State private var activeWallet:Wallet?
     
     @State private var releaseNotesPopoverShowing = false
-    @State private var selectedTab: Int = 0
+    @State private var selectedTab: Tab = .wallet
     @State private var walletNavigationTag: String?
     @State private var urlState: String?
+    
+    enum Tab {
+        case wallet
+        case mints
+        case nostr
+        case settings
+    }
         
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            TabView(selection: $selectedTab) {
+            // FIXME: FOR SOME REASON TRACKING TAB SELECTION LEADS TO FUNNY BEHAVIOUR
+            TabView {
                 // First tab content
-                WalletView(navigationTag:  $walletNavigationTag, urlState: $urlState)
+                WalletView(navigationTag:  .constant(nil), urlState: .constant(nil))
                     .tabItem {
                         Label("Wallet", systemImage: "bitcoinsign.circle")
                     }
@@ -68,6 +70,7 @@ struct ContentView: View {
             if wallets.isEmpty {
                 initializeWallet()
             }
+            activeWallet = wallets.first
         })
         .popover(isPresented: $releaseNotesPopoverShowing, content: {
             ReleaseNoteView()
@@ -96,13 +99,15 @@ struct ContentView: View {
                                            forKey: "LastReleaseNotesAcknoledgedHash")
         }
     }
+    
      func handleUrl(_ url: URL) {
-         if url.scheme == "cashu" {
-             let noURLPrefix = url.absoluteStringWithoutPrefix("cashu")
-             urlState = noURLPrefix
-             selectedTab = 0
-             walletNavigationTag = "Receive"
-         }
+//         if url.scheme == "cashu" {
+//             let noURLPrefix = url.absoluteStringWithoutPrefix("cashu")
+//             urlState = noURLPrefix
+//             selectedTab = 0
+//             walletNavigationTag = "Receive"
+//         }
+         print(url)
     }
 }
 
