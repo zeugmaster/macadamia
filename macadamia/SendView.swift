@@ -145,7 +145,6 @@ struct SendView: View {
         .sheet(isPresented: $showingShareSheet, content: {
             ShareSheet(items: [tokenString ?? "No token provided"])
         })
-
     }
     
     // MARK: - LOGIC
@@ -182,7 +181,7 @@ struct SendView: View {
     }
     
     func updateBalance() {
-        guard let activeWallet,
+        guard let _ = activeWallet,
               let selectedMint else {
             return
         }
@@ -202,6 +201,7 @@ struct SendView: View {
         Task {
             do {
                 #warning("add unit selection")
+                let version:CashuSwift.TokenVersion = .V3
                 
                 selectedMint.proofs.forEach({ $0.state = .pending })
                 let (token, change) = try await CashuSwift.send(mint: selectedMint, proofs: selectedMint.proofs, amount: amount, memo: tokenMemo)
@@ -212,9 +212,28 @@ struct SendView: View {
                                                       mint: selectedMint,
                                                       wallet: activeWallet) })
                 changeProofs.forEach({ modelContext.insert($0) })
+                
+                let sendProofs = token.token.first?.proofs.map({ p in
+                    Proof(p, unit: .sat, state: .pending, mint: selectedMint, wallet: activeWallet)
+                }) ?? []
+                
+                sendProofs.forEach({ modelContext.insert($0) })
+                
+                let event = Event.sendEvent(unit: .sat,
+                                            shortDescription: "Send", 
+                                            wallet: activeWallet,
+                                            amount: Double(sendProofs.sum),
+                                            longDescription: "",
+                                            proofs: sendProofs,
+                                            memo: tokenMemo,
+                                            tokenString: try token.serialize(version))
+                
+                modelContext.insert(event)
+                
+                self.tokenString = try token.serialize(version)
+                
                 try modelContext.save()
                 
-                self.tokenString = try token.serialize(.V3)
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error", description: String(describing: error)))
             }

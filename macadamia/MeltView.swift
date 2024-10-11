@@ -21,6 +21,7 @@ struct MeltView: View {
     }
     
     @State var quote:CashuSwift.Bolt11.MeltQuote?
+    @State var pendingMeltEvent:Event?
     
     @State var invoiceString:String = ""
     @State var loading = false
@@ -33,16 +34,16 @@ struct MeltView: View {
     @State var showAlert:Bool = false
     @State var currentAlert:AlertDetail?
     
-    private var _navPath: Binding<NavigationPath>  // Changed to non-optional
+    var navigationPath: Binding<NavigationPath>?  // Changed to non-optional
         
-    init(navPath: Binding<NavigationPath>) {
-        self._navPath = navPath
+    init(quote:CashuSwift.Bolt11.MeltQuote? = nil,
+         pendingMeltEvent:Event? = nil,
+         navigationPath: Binding<NavigationPath>? = nil) {
+        self.navigationPath = navigationPath
+        self.pendingMeltEvent = pendingMeltEvent
+        self.quote = quote
     }
     
-    var navPath: NavigationPath {
-        get { _navPath.wrappedValue }
-        set { _navPath.wrappedValue = newValue }
-    }
     
     var body: some View {
         VStack {
@@ -198,36 +199,67 @@ struct MeltView: View {
             return
         }
         
+        #error("1. handle pending melt with quote")
+                
+        #error("3. handle proofs -> pending and success event")
+        
         let worstInputFee = (CashuSwift.activeKeysetForUnit("sat", mint: selectedMint)?.inputFeePPK ?? 0 * worstCaseInputCount(for: UInt( quote.amount + quote.feeReserve )) + 999) / 1000
         let targetAmount = quote.amount + quote.feeReserve + worstInputFee
+        
         // TODO: ADD FEE AMOUNT UI AND INFO
-        guard let selection = selectedMint.proofs.pick(targetAmount) else {
+        
+        guard let selection = CashuSwift.pick(selectedMint.proofs, amount: targetAmount, mint: selectedMint) else {
             displayAlert(alert: AlertDetail(title: "Insufficient funds.",
                                            description: "The wallet could not collect enough ecash to settle this payment."))
             return
         }
         
-        let proofsToSent = selection.picked.map({ $0 as! Proof })
+        let proofsToSent = selection.selected.map({ $0 as! Proof })
+        
         proofsToSent.forEach({ $0.state = .pending})
+        #warning("make sure this actually updates the DB")
+        
+        // create a pending melt event that
+        
+        // SAVE AT THIS POINT
         
         loading = true
         
         Task {
             do {
+                
                 let meltResult = try await CashuSwift.melt(mint: selectedMint, quote: quote, proofs: proofsToSent, seed: activeWallet.seed)
+                //TODO: WHILE THIS IS RUNNING KEEP SCREEN OPEN
+                
                 if meltResult.paid {
                     loading = false
                     success = true
+                    
+                    proofsToSent.forEach({ $0.state = .spent})
+                    
+                    // make pending melt event non visible and create melt event for history
+                    
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-//                        if !self.navPath.isEmpty { self.navPath.removeLast() }
+                        if let navigationPath, !navigationPath.wrappedValue.isEmpty {
+                                navigationPath.wrappedValue.removeLast()
+                        }
                     }
                 } else {
+                    
+                    // pending event remains
+                    
+                    proofsToSent.forEach({ $0.state = .valid})
+                    
                     loading = false
                     success = false
                     displayAlert(alert: AlertDetail(title: "Unsuccessful",
                                                    description: "The Lighning invoice could not be payed by the mint. Please try again (later)."))
                 }
             } catch {
+                
+                // pending event also remains
+                // TODO: UI for when quote expires etc.
+                
                 loading = false
                 success = false
                 displayAlert(alert: AlertDetail(title: "Error",
@@ -252,6 +284,6 @@ struct MeltView: View {
 }
 
 #Preview {
-    MeltView(navPath: Binding.constant(NavigationPath()))
+    MeltView()
 }
 

@@ -202,16 +202,25 @@ struct ReceiveView: View {
                     proofs.append(contentsOf: internalProofs)
                 }
                 proofs.forEach({ modelContext.insert($0) })
+                
+                let event = Event.receiveEvent(unit: .sat,
+                                               shortDescription: "Receive",
+                                               wallet: activeWallet,
+                                               amount: Double(proofs.sum),
+                                               longDescription: "",
+                                               proofs: proofs,
+                                               memo: token.memo ?? "",
+                                               tokenString: tokenString ?? "",
+                                               redeemed: true)
+                modelContext.insert(event)
+                
                 try modelContext.save()
                 self.loading = false
                 self.success = true
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    if var navigationPath {
-                        #warning("pretty sure this does nothing in the UI")
-                                  if !navigationPath.wrappedValue.isEmpty {
+                    if let navigationPath, !navigationPath.wrappedValue.isEmpty {
                             navigationPath.wrappedValue.removeLast()
-                        }
                     }
                 }
                 

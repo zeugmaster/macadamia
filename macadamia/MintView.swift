@@ -194,7 +194,7 @@ struct MintView: View {
     }
     
     func requestQuote() {
-        guard let selectedMint else {
+        guard let selectedMint, let activeWallet else {
             return
         }
         loadingInvoice = true
@@ -206,6 +206,7 @@ struct MintView: View {
                 
                 let event = Event.pendingMintEvent(unit: Unit(quote?.requestDetail?.unit) ?? .other,
                                                    shortDescription: "Mint Quote",
+                                                   wallet: activeWallet, 
                                                    quote: quote!, //FIXME: SAFE UNWRAPPING
                                                    amount: Double(quote?.requestDetail?.amount ?? 0),
                                                    expiration: Date(timeIntervalSince1970: TimeInterval(quote!.expiry))) //FIXME: SAFE UNWRAPPING
@@ -221,7 +222,6 @@ struct MintView: View {
     }
     
     func requestMint() {
-        
         guard let quote,
                 let activeWallet,
                 let selectedMint else {
@@ -238,6 +238,7 @@ struct MintView: View {
                 proofs.forEach({ modelContext.insert($0) })
                 let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
                                             shortDescription: "Minting",
+                                            wallet: activeWallet,
                                             amount: Double(quote.requestDetail?.amount ?? 0))
                 modelContext.insert(event)
                 if let pendingMintEvent { pendingMintEvent.visible = false }

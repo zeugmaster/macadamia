@@ -22,6 +22,8 @@ final class Wallet {
     var proofs:[Proof]
     
     let dateCreated:Date
+    
+    @Relationship(inverse: \Event.wallet)
     var events:[Event]
     
     init(seed: String? = nil) {
@@ -131,6 +133,17 @@ final class Event {
     let shortDescription: String
     var visible: Bool
     let kind: Kind
+    let wallet: Wallet
+    
+    var bolt11MintQuote: CashuSwift.Bolt11.MintQuote?
+    var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote?
+    var amount: Double?
+    var expiration: Date?
+    var longDescription: String?
+    var proofs:[Proof]?
+    var memo: String?
+    var tokenString: String?
+    var redeemed: Bool?
     
     enum Kind: Codable {
         case pendingMint
@@ -143,23 +156,13 @@ final class Event {
         case drain
     }
     
-    // Kind specific properties because we can't use generics
-    var bolt11MintQuote: CashuSwift.Bolt11.MintQuote?
-    var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote?
-    var amount: Double?
-    var expiration: Date?
-    var longDescription: String?
-    var proofs:[Proof]?
-    var memo: String?
-    var tokenString: String?
-    var redeemed: Bool?
-    
-    init(date: Date, unit: Unit, shortDescription: String, visible: Bool, kind: Kind, bolt11MintQuote: CashuSwift.Bolt11.MintQuote? = nil, bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? = nil, amount: Double? = nil, expiration: Date? = nil, longDescription: String? = nil, proofs: [Proof]? = nil, memo: String? = nil, tokenString: String? = nil, redeemed: Bool? = nil) {
+    init(date: Date, unit: Unit, shortDescription: String, visible: Bool, kind: Kind, wallet: Wallet, bolt11MintQuote: CashuSwift.Bolt11.MintQuote? = nil, bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? = nil, amount: Double? = nil, expiration: Date? = nil, longDescription: String? = nil, proofs: [Proof]? = nil, memo: String? = nil, tokenString: String? = nil, redeemed: Bool? = nil) {
         self.date = date
         self.unit = unit
         self.shortDescription = shortDescription
         self.visible = visible
         self.kind = kind
+        self.wallet = wallet
         self.bolt11MintQuote = bolt11MintQuote
         self.bolt11MeltQuote = bolt11MeltQuote
         self.amount = amount
@@ -171,34 +174,29 @@ final class Event {
         self.redeemed = redeemed
     }
     
-    static func pendingMintEvent(unit:Unit, shortDescription: String, visible:Bool = true, quote:CashuSwift.Bolt11.MintQuote, amount:Double, expiration:Date) -> Event {
-        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .pendingMint, bolt11MintQuote: quote, amount: amount, expiration: expiration)
+    static func pendingMintEvent(unit: Unit, shortDescription: String, visible: Bool = true, wallet: Wallet, quote: CashuSwift.Bolt11.MintQuote, amount: Double, expiration: Date) -> Event {
+        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .pendingMint, wallet: wallet, bolt11MintQuote: quote, amount: amount, expiration: expiration)
     }
     
-    static func mintEvent(unit:Unit, shortDescription: String, visible:Bool = true, amount:Double) -> Event {
-        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .mint, amount: amount)
+    static func mintEvent(unit: Unit, shortDescription: String, visible: Bool = true, wallet: Wallet, amount: Double) -> Event {
+        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .mint, wallet: wallet, amount: amount)
     }
     
-    static func sendEvent(unit:Unit, shortDescription: String, visible:Bool = true, amount:Double, longDescription:String, proofs:[Proof], memo:String, tokenString:String, redeemed:Bool = false) -> Event {
-        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .send, amount: amount, longDescription: longDescription, proofs: proofs, memo: memo, tokenString: tokenString, redeemed: redeemed)
+    static func sendEvent(unit: Unit, shortDescription: String, visible: Bool = true, wallet: Wallet, amount: Double, longDescription: String, proofs: [Proof], memo: String, tokenString: String, redeemed: Bool = false) -> Event {
+        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .send, wallet: wallet, amount: amount, longDescription: longDescription, proofs: proofs, memo: memo, tokenString: tokenString, redeemed: redeemed)
     }
     
-    static func receiveEvent(unit:Unit, shortDescription: String, visible:Bool = true, amount:Double, longDescription: String, proofs:[Proof], memo: String, tokenString: String, redeemed: Bool) -> Event {
-        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .receive, amount: amount, longDescription: longDescription, proofs: proofs, memo: memo, tokenString: tokenString, redeemed: redeemed)
+    static func receiveEvent(unit: Unit, shortDescription: String, visible: Bool = true, wallet: Wallet, amount: Double, longDescription: String, proofs: [Proof], memo: String, tokenString: String, redeemed: Bool) -> Event {
+        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .receive, wallet: wallet, amount: amount, longDescription: longDescription, proofs: proofs, memo: memo, tokenString: tokenString, redeemed: redeemed)
     }
     
-//    static func pendingMeltEvent(unit:Unit, shortDescription: String, visible:Bool = true, quote:CashuSwift.Bolt11.MintQuote, amount:Double, expiration:Date) -> Event {
-//        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .pendingMelt, bolt11MeltQuote: quote, amount: amount, expiration: expiration)
-//    }
-    
-    static func meltEvent(unit:Unit, shortDescription: String, visible:Bool = true, amount:Double) -> Event {
-        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .melt, amount: amount)
+    static func pendingMeltEvent(unit: Unit, shortDescription:String, visible: Bool = true, wallet: Wallet, quote:CashuSwift.Bolt11.MeltQuote, amount: Double, expiration:Date, longDescription: String, proofs: [Proof]) -> Event {
+        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .pendingMelt, wallet: wallet, amount: amount, expiration: expiration, longDescription: longDescription, proofs: proofs)
     }
-
-//    static func restoreEvent(unit:Unit, shortDescription: String, visible:Bool = true, amount:Double) -> Event {
-//
-//    }
     
+    static func meltEvent(unit: Unit, shortDescription: String, visible: Bool = true, wallet: Wallet, amount: Double) -> Event {
+        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .melt, wallet: wallet, amount: amount)
+    }
 }
 
 enum Unit: String, Codable, CaseIterable {
