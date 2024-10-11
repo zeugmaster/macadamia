@@ -1,10 +1,3 @@
-//
-//  BalanceView.swift
-//  macadamia
-//
-//  Created by zm on 21.07.24.
-//
-
 import SwiftUI
 
 struct LargeDynamicText: View {

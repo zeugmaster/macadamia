@@ -1,10 +1,3 @@
-//
-//  QRScanner.swift
-//  macadamia
-//
-//  Created by zm on 21.04.24.
-//
-
 import Combine
 import SwiftUI
 import URUI

@@ -1,10 +1,3 @@
-//
-//  MnemonicView.swift
-//  macadamia
-//
-//  Created by zeugmaster on 04.01.24.
-//
-
 import BIP39
 import SwiftData
 import SwiftUI

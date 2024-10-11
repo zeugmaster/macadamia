@@ -1,10 +1,3 @@
-//
-//  RelayManagerView.swift
-//  macadamia
-//
-//  Created by zeugmaster on 01.01.24.
-//
-
 import NostrSDK
 import SwiftUI
 

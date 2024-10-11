@@ -1,9 +1,3 @@
-//
-//  macadamiaApp.swift
-//  macadamia
-//
-//
-
 import SwiftData
 import SwiftUI
 

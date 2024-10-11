@@ -1,10 +1,3 @@
-//
-//  EventDetailView.swift
-//  macadamia
-//
-//  Created by zeugmaster on 07.01.24.
-//
-
 import SwiftUI
 
 struct EventDetailView: View {

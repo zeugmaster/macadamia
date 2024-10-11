@@ -1,10 +1,3 @@
-//
-//  WalletView.swift
-//  macadamia
-//
-//  Created by zeugmaster on 13.12.23.
-//
-
 import CashuSwift
 import Popovers
 import SwiftData

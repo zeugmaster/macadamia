@@ -1,10 +1,3 @@
-//
-//  MintRequestView.swift
-//  macadamia
-//
-//  Created by zeugmaster on 14.12.23.
-//
-
 import SwiftUI
 
 struct MintRequestView: View {

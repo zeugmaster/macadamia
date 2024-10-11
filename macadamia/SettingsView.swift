@@ -1,10 +1,3 @@
-//
-//  SettingsView.swift
-//  macadamia
-//
-//  Created by zeugmaster on 13.12.23.
-//
-
 import SwiftUI
 import UIKit
 

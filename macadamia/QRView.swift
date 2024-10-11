@@ -1,9 +1,3 @@
-//
-//  QRView.swift
-//  macadamia
-//
-//  Created by zeugmaster on 14.12.23.
-//
 import CoreImage.CIFilterBuiltins
 import SwiftUI
 import URKit

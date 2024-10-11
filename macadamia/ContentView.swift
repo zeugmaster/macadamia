@@ -1,9 +1,3 @@
-//
-//  ContentView.swift
-//  macadamia
-//
-//
-
 import BIP39
 import SwiftData
 import SwiftUI

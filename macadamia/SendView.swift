@@ -1,10 +1,3 @@
-//
-//  SendView.swift
-//  macadamia
-//
-//  Created by zeugmaster on 04.01.24.
-//
-
 import CashuSwift
 import SwiftData
 import SwiftUI

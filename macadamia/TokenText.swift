@@ -1,10 +1,3 @@
-//
-//  TokenText.swift
-//  AnimatedQR
-//
-//  Created by zm on 08.04.24.
-//
-
 import SwiftUI
 import UIKit
 

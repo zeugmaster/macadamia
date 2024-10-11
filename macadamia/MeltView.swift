@@ -1,10 +1,3 @@
-//
-//  MeltView.swift
-//  macadamia
-//
-//  Created by zeugmaster on 05.01.24.
-//
-
 import CashuSwift
 import CodeScanner
 import SwiftData

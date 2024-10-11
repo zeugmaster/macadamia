@@ -1,10 +1,3 @@
-//
-//  macadamiaTests.swift
-//  macadamiaTests
-//
-//  Created by Dario Lass on 21.02.24.
-//
-
 import BIP39
 @testable import macadamia
 import XCTest

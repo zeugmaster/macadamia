@@ -1,10 +1,3 @@
-//
-//  MintDetailView.swift
-//  macadamia
-//
-//  Created by zm on 18.07.24.
-//
-
 import SwiftUI
 
 struct MintDetailView: View {

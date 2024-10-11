@@ -1,10 +1,3 @@
-//
-//  ReleaseNoteView.swift
-//  macadamia
-//
-//  Created by zm on 08.04.24.
-//
-
 import CryptoKit
 import MarkdownUI
 import secp256k1

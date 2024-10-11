@@ -1,10 +1,3 @@
-//
-//  nostr.swift
-//  nostr-test
-//
-//  Created by zeugmaster on 21.12.23.
-//
-
 import Combine
 import NostrSDK
 import OSLog

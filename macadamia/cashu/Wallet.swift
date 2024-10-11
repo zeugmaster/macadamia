@@ -1,10 +1,3 @@
-//
-//  Wallet.swift
-//  macadamia
-//
-//  Created by zm on 27.08.24.
-//
-
 import CashuSwift
 import Foundation
 import SwiftData
