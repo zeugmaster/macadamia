@@ -9,9 +9,9 @@ import SwiftUI
 
 struct MintDetailView: View {
     @Bindable var mint: Mint
-    
+
     @ScaledMetric(relativeTo: .title) private var iconSize: CGFloat = 80
-    
+
     var body: some View {
         List {
             if let info = mint.info {
@@ -24,11 +24,11 @@ struct MintDetailView: View {
                                 if let imageURL = info.imageURL {
                                     AsyncImage(url: imageURL) { phase in
                                         switch phase {
-                                        case .success(let image):
+                                        case let .success(image):
                                             image
                                                 .resizable()
                                                 .aspectRatio(contentMode: .fit)
-                                        case .failure(_):
+                                        case .failure:
                                             Image(systemName: "photo")
                                         case .empty:
                                             ProgressView()
@@ -53,7 +53,7 @@ struct MintDetailView: View {
                 Text("No mint Info available.")
             }
             Section {
-                VStack(alignment:.leading) {
+                VStack(alignment: .leading) {
                     Text("URL")
                         .foregroundStyle(.secondary)
                         .font(.caption)
@@ -75,6 +75,6 @@ struct MintDetailView: View {
     }
 }
 
-//#Preview {
+// #Preview {
 //    MintDetailView(mintInfo: mint1)
-//}
+// }

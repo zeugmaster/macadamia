@@ -5,45 +5,43 @@
 //  Created by zeugmaster on 21.12.23.
 //
 
-import SwiftUI
+import Combine
 import NostrSDK
 import OSLog
-import Combine
+import SwiftUI
 
-
-fileprivate var logger = Logger(subsystem: "zeugmaster.macadamia", category: "nostr")
+private var logger = Logger(subsystem: "zeugmaster.macadamia", category: "nostr")
 
 class Profile: Equatable, CustomStringConvertible, Codable {
     var description: String {
         let description = "\(npub.prefix(12)) name: \(name ?? "nil")"
         return description
     }
-    
+
     static func == (lhs: Profile, rhs: Profile) -> Bool {
         lhs.pubkey == rhs.pubkey
     }
-    
-    let pubkey:String
-    let npub:String
-    var name:String?
-    var pictureURL:URL?
-    
-    var tokenMessages:[String]?
-    
-    init(pubkey: String, npub: String, name: String? = nil, pictureURL: URL? = nil, tokenMessages:[String]? = nil) {
+
+    let pubkey: String
+    let npub: String
+    var name: String?
+    var pictureURL: URL?
+
+    var tokenMessages: [String]?
+
+    init(pubkey: String, npub: String, name: String? = nil, pictureURL: URL? = nil, tokenMessages: [String]? = nil) {
         self.pubkey = pubkey
         self.npub = npub
         self.name = name
         self.pictureURL = pictureURL
         self.tokenMessages = tokenMessages
     }
-    
 }
 
 class Message {
-    let senderPubkey:String
-    var decryptedContent:String
-    
+    let senderPubkey: String
+    var decryptedContent: String
+
     init(senderPubkey: String, decryptedContent: String) {
         self.senderPubkey = senderPubkey
         self.decryptedContent = decryptedContent
@@ -61,54 +59,51 @@ enum ContactServiceError: Error {
 }
 
 class NostrService: EventCreating {
-    
     static let shared = NostrService()
-    
+
     private var eventsCancellable: AnyCancellable?
     private var stateCancellable: AnyCancellable?
     private var relayError: String?
     var state: Relay.State = .notConnected
-            
+
     var relays = [Relay]()
-    var relayStates = Dictionary<String,Relay.State>()
-    
+    var relayStates = [String: Relay.State]()
+
     // both should only be initialzed once to prevent unexpected behaviour and conflicting states
     private var keyManager = KeyManager()
     var dataManager = NostrDataManager()
-    
-    //MARK: - Key handling
-    func setPrivateKey(privateKey:String) throws {
+
+    // MARK: - Key handling
+
+    func setPrivateKey(privateKey: String) throws {
         try keyManager.setPrivateKey(privateKey: privateKey)
     }
-    
-    //MARK: - Initializer
+
+    // MARK: - Initializer
+
     private init() {
         logger.debug("Initializing ContactService instance")
-        
+
         do {
-            relays = try dataManager.relayURLlist.map({ urlString in
-                //TODO: check for proper URL initialization
+            relays = try dataManager.relayURLlist.map { urlString in
+                // TODO: check for proper URL initialization
                 try Relay(url: URL(string: urlString)!)
-            })
-        } catch {
-            
-        }
-    }
-    
-    ///Provides the user profile either from saved keypair or cache or nil if none are set
-    var userProfile:Profile? {
-        get {
-            if dataManager.userProfile != nil {
-                return dataManager.userProfile
-            } else if let pubkey = keyManager.keypair?.publicKey {
-                return Profile(pubkey: pubkey.hex, npub: pubkey.npub)
-            } else {
-                return nil
             }
+        } catch {}
+    }
+
+    /// Provides the user profile either from saved keypair or cache or nil if none are set
+    var userProfile: Profile? {
+        if dataManager.userProfile != nil {
+            return dataManager.userProfile
+        } else if let pubkey = keyManager.keypair?.publicKey {
+            return Profile(pubkey: pubkey.hex, npub: pubkey.npub)
+        } else {
+            return nil
         }
     }
-    
-    ///Try to establish a websocket connection to relay
+
+    /// Try to establish a websocket connection to relay
     func connectAll() {
         for r in relays {
             r.connect()
@@ -119,39 +114,36 @@ class NostrService: EventCreating {
                 }
         }
     }
-    
+
     func disconnectAll() {
         for connectedRelay in connectedRelays {
             connectedRelay.disconnect()
         }
     }
-    
-    var connectedRelays:[Relay] {
-        get {
-            return relays.filter({ $0.state == Relay.State.connected })
-        }
+
+    var connectedRelays: [Relay] {
+        return relays.filter { $0.state == Relay.State.connected }
     }
-    
-    ///Fetch contact list events. Returns cleaned list of `[Profile]`
+
+    /// Fetch contact list events. Returns cleaned list of `[Profile]`
     func fetchContactList() async throws -> [Profile] {
-        
         guard let pubkeyhex = keyManager.keypair?.publicKey.hex else {
             throw ContactServiceError.noPrivateKeyError
         }
-        
+
         // kind "3" for follow list events
         let filter = Filter(authors: [pubkeyhex], kinds: [3])
         let events = try await loadEventsWithFilter(filter: filter, from: connectedRelays)
-        
+
         guard !events.isEmpty else {
             logger.warning("Follower list from relay is empty.")
             return []
         }
-        
+
         // de-dup and get latest (newest) event
         let latest = events.deduplicated().latest()
-        
-        //cast generic NostrEvent as ContactListEvent
+
+        // cast generic NostrEvent as ContactListEvent
         guard let followListEvent = latest as? FollowListEvent else {
             let message = "Could not cast list of NostrEvent to ContactListEvent. Events: "
             logger.error("\(message)\(String(describing: events), privacy: .public)")
@@ -162,8 +154,8 @@ class NostrService: EventCreating {
         // which need to be removed
         // TODO: ensure order is kept when doing Array(Set(x))
         var contactPubkeys = Array(Set(followListEvent.followedPubkeys))
-        contactPubkeys.removeAll(where: {$0 == keyManager.keypair?.publicKey.hex})
-        
+        contactPubkeys.removeAll(where: { $0 == keyManager.keypair?.publicKey.hex })
+
         // returns the array of pubkeys and tries to also supply public keys as npub
         return contactPubkeys.map { pubkey in
             guard let pk = PublicKey(hex: pubkey) else {
@@ -173,42 +165,41 @@ class NostrService: EventCreating {
             return Profile(pubkey: pk.hex, npub: pk.npub)
         }
     }
-    
-    func loadInfo(for profiles:[Profile], of user:Profile? = nil) async throws {
-        
+
+    func loadInfo(for profiles: [Profile], of user: Profile? = nil) async throws {
         guard keyManager.keypair?.publicKey.hex != nil else {
             throw ContactServiceError.noPrivateKeyError
         }
-        
+
         if profiles.isEmpty {
             logger.warning("loadInfo: input array was emtpy, returning empty")
         }
-        
+
         // create an array of all the pubkeys so we can query the relays all at once
         var pubkeys = profiles.map { $0.pubkey }
         if let user = user {
             pubkeys.append(user.pubkey)
         }
-        
+
         // kind 0 for profile metadata
         let filter = Filter(authors: pubkeys, kinds: [0])
         let events = try await loadEventsWithFilter(filter: filter, from: connectedRelays)
-        
+
         guard let unique = events.deduplicated() as? [SetMetadataEvent] else {
             let message = "Could not cast list of NostrEvent to ContactListEvent. Events: "
             logger.error("\(message)\(String(describing: events), privacy: .public)")
             throw ContactServiceError.relayQueryError
         }
-        
-        //TODO: check for outdated events for the same user
+
+        // TODO: check for outdated events for the same user
         for profile in profiles {
-            let pe = unique.first(where: {$0.pubkey == profile.pubkey })
+            let pe = unique.first(where: { $0.pubkey == profile.pubkey })
             profile.pictureURL = pe?.userMetadata?.pictureURL
             if let name = pe?.userMetadata?.name, name.count > 0 {
                 profile.name = name
             }
         }
-        
+
         if let user = user {
             let upe = unique.first(where: { $0.pubkey == user.pubkey })
             user.pictureURL = upe?.userMetadata?.pictureURL
@@ -217,56 +208,56 @@ class NostrService: EventCreating {
             }
         }
     }
-    
+
     func checkInbox() async throws -> [Message] {
-        
         guard keyManager.keypair?.publicKey.hex != nil else {
             throw ContactServiceError.noPrivateKeyError
         }
-        
-        //loads all message events adressed to OUR  public key (incoming messages)
-        let filter = Filter(kinds: [4],pubkeys:[keyManager.keypair!.publicKey.hex])
-                
+
+        // loads all message events adressed to OUR  public key (incoming messages)
+        let filter = Filter(kinds: [4], pubkeys: [keyManager.keypair!.publicKey.hex])
+
         let events = try await loadEventsWithFilter(filter: filter, from: connectedRelays)
-        
+
         guard let messageEvents = events.deduplicated() as? [DirectMessageEvent] else {
             let message = "Could not cast list of NostrEvent to ContactListEvent. Events: "
             logger.error("\(message)\(String(describing: events), privacy: .public)")
             throw ContactServiceError.relayQueryError
         }
-        
+
         let messages = try messageEvents.map { me in
             let content = try me.decryptedContent(using: keyManager.keypair!.privateKey,
                                                   publicKey: PublicKey(hex: me.pubkey)!)
             return Message(senderPubkey: me.pubkey, decryptedContent: content)
         }
-         
+
         return messages
     }
-    
-    ///`async` call to to load all events from multiple relays with a specified filter
-    ///Will likely contain duplicates.
-    private func loadEventsWithFilter(filter:Filter,
-                                      from relays:[Relay]) async throws -> [NostrEvent] {
-        
+
+    /// `async` call to to load all events from multiple relays with a specified filter
+    /// Will likely contain duplicates.
+    private func loadEventsWithFilter(filter: Filter,
+                                      from relays: [Relay]) async throws -> [NostrEvent]
+    {
         return try await withCheckedThrowingContinuation { continuation in
             loadEventsWithFilter(filter: filter, from: relays) { completion in
                 switch completion {
-                case .success(let events):
+                case let .success(events):
                     continuation.resume(returning: events)
-                case .failure(let error):
+                case let .failure(error):
                     continuation.resume(throwing: error)
                 }
             }
         }
     }
-    
+
     /* potential solution for multi relay query
      TODO: make sure relays actually are connected */
-    ///will produce duplicate entries
+    /// will produce duplicate entries
     private func loadEventsWithFilter(filter: Filter,
                                       from relays: [Relay],
-                                      completion: @escaping (Result<[NostrEvent], Error>) -> Void) {
+                                      completion: @escaping (Result<[NostrEvent], Error>) -> Void)
+    {
         let fs = String(describing: filter)
         logger.info("Attempting to load nostr events with filter: \(fs, privacy: .public)")
         var events = [NostrEvent]()
@@ -282,20 +273,18 @@ class NostrService: EventCreating {
                 relay.events
                     .receive(on: DispatchQueue.main)
                     .compactMap { $0.event }
-                    .sink(
-                        receiveCompletion: { completionResult in
-                            switch completionResult {
-                            case .failure(let error):
-                                completion(.failure(error))
-                                group.leave()
-                            case .finished:
-                                group.leave()
-                            }
-                        },
-                        receiveValue: { event in
-                            events.insert(event, at: 0)
-                        }
-                    )
+                    .sink(receiveCompletion: { completionResult in
+                              switch completionResult {
+                              case let .failure(error):
+                                  completion(.failure(error))
+                                  group.leave()
+                              case .finished:
+                                  group.leave()
+                              }
+                          },
+                          receiveValue: { event in
+                              events.insert(event, at: 0)
+                          })
                     .store(in: &subscriptions)
 
                 // Schedule to close the subscription after the timeout
@@ -317,20 +306,18 @@ class NostrService: EventCreating {
         }
     }
 
-    
-    func sendMessage(to contact:Profile, content:String) throws {
-        
+    func sendMessage(to contact: Profile, content: String) throws {
         guard keyManager.keypair != nil else {
             throw ContactServiceError.noPrivateKeyError
         }
         guard let pubkey = PublicKey(hex: contact.pubkey) else {
             throw ContactServiceError.invalidKeyError
         }
-        
+
         let message = try directMessage(withContent: content,
-                                    toRecipient: pubkey,
-                                    signedBy: keyManager.keypair!)
-        
+                                        toRecipient: pubkey,
+                                        signedBy: keyManager.keypair!)
+
         for relay in connectedRelays {
             do {
                 try relay.publishEvent(message)
@@ -342,17 +329,16 @@ class NostrService: EventCreating {
 }
 
 class KeyManager {
-    
-    private var privateKeyHexString:String?
-    
-    private var privateKey:String? {
+    private var privateKeyHexString: String?
+
+    private var privateKey: String? {
         set {
-            //set and write to file
+            // set and write to file
             privateKeyHexString = newValue
             writeKeyStringToDisk(keyString: privateKeyHexString!)
         }
         get {
-            //if nil check disk, if unsuccessful return nil
+            // if nil check disk, if unsuccessful return nil
             if privateKeyHexString == nil {
                 let saved = keyStringFromDisk()
                 privateKeyHexString = saved
@@ -362,10 +348,10 @@ class KeyManager {
             }
         }
     }
-    
-    ///Takes a nostr private key either as HEX or bech32 with leading `nsec`
-    func setPrivateKey(privateKey:String) throws {
-        let pk:PrivateKey?
+
+    /// Takes a nostr private key either as HEX or bech32 with leading `nsec`
+    func setPrivateKey(privateKey: String) throws {
+        let pk: PrivateKey?
         if privateKey.lowercased().hasPrefix("nsec") {
             pk = PrivateKey(nsec: privateKey)
         } else {
@@ -376,8 +362,8 @@ class KeyManager {
         }
         self.privateKey = pk?.hex
     }
-    
-    ///Return nil if keypair has not been set through `setPrivateKey` and not an disk
+
+    /// Return nil if keypair has not been set through `setPrivateKey` and not an disk
     var keypair: Keypair? {
         if let privateKey = privateKey, let pk = PrivateKey(hex: privateKey) {
             return Keypair(privateKey: pk)
@@ -385,7 +371,7 @@ class KeyManager {
             return nil
         }
     }
-    
+
     private func keyStringFromDisk() -> String? {
         if let data = try? Data(contentsOf: KeyManager.getFilePath()) {
             logger.debug("Successfully read key string from disk.")
@@ -395,8 +381,8 @@ class KeyManager {
             return nil
         }
     }
-    
-    private func writeKeyStringToDisk(keyString:String) {
+
+    private func writeKeyStringToDisk(keyString: String) {
         do {
             let data = keyString.data(using: .utf8)
             try data?.write(to: KeyManager.getFilePath(),
@@ -406,7 +392,7 @@ class KeyManager {
             logger.error("Unable to write key string to disk. error: \(error, privacy: .public)")
         }
     }
-    
+
     private static func getFilePath() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0].appendingPathComponent("nostr-key")
@@ -414,77 +400,71 @@ class KeyManager {
 }
 
 class NostrDataManager: Codable {
-    
     private var _relayURLlist = [String]()
-    private var _userProfile:Profile?
-    
+    private var _userProfile: Profile?
+
     private var defaultRelaysURLs = ["wss://relay.damus.io",
                                      "wss://nostr.wine",
                                      "wss://purplepag.es",
                                      "wss://nos.lol",
                                      "wss://relay.snort.social"]
-    
+
     init() {
         // load from file
         guard let ndm = readDataFromFile() else {
-            //use init values
-            
+            // use init values
+
             _relayURLlist = defaultRelaysURLs
             _userProfile = nil
             return
         }
-        
+
         _relayURLlist = ndm._relayURLlist
         _userProfile = ndm.userProfile
     }
-    
-    var relayURLlist:[String] {
-        get {
-            return _relayURLlist
-        }
+
+    var relayURLlist: [String] {
+        return _relayURLlist
     }
-    
-    var userProfile:Profile? {
-        get {
-            return _userProfile
-        }
+
+    var userProfile: Profile? {
+        return _userProfile
     }
-    
-    func addRelay(with urlString:String) {
+
+    func addRelay(with urlString: String) {
         _relayURLlist.append(urlString)
         saveDataToFile()
     }
-    
-    func removeRelay(with urlString:String) {
+
+    func removeRelay(with urlString: String) {
         _relayURLlist.removeAll(where: { $0 == urlString })
         saveDataToFile()
     }
-    
-    func updateUserProfile(with profile:Profile) {
+
+    func updateUserProfile(with profile: Profile) {
         _userProfile = profile
         saveDataToFile()
     }
-    
+
     func resetUserProfile() {
         _userProfile = nil
         saveDataToFile()
     }
-    
+
     func resetAll() {
         _relayURLlist = defaultRelaysURLs
         _userProfile = nil
-        
+
         do {
             try FileManager.default.removeItem(at: filePath)
         } catch {
             logger.warning("""
-                            Filemanager could not remove file from path
-                            \(self.filePath.absoluteString). error: \(error)
-                           """)
+             Filemanager could not remove file from path
+             \(filePath.absoluteString). error: \(error)
+            """)
         }
-        
     }
-    
+
     private func saveDataToFile() {
         do {
             let data = try JSONEncoder().encode(self)
@@ -494,11 +474,11 @@ class NostrDataManager: Codable {
             logger.error("Unable to write nostr data to disk. error: \(error, privacy: .public)")
         }
     }
-    
+
     private func readDataFromFile() -> NostrDataManager? {
-        do  {
+        do {
             let data = try Data(contentsOf: filePath)
-            logger.debug("Successfully read nostr data from disk. Path: \(self.filePath.absoluteString)")
+            logger.debug("Successfully read nostr data from disk. Path: \(filePath.absoluteString)")
             let ndm = try JSONDecoder().decode(NostrDataManager.self, from: data)
             return ndm
         } catch {
@@ -506,27 +486,23 @@ class NostrDataManager: Codable {
             return nil
         }
     }
-    
-    private var filePath:URL {
-        get {
-            let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-            return paths[0].appendingPathComponent("nostr-data.json")
-        }
+
+    private var filePath: URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0].appendingPathComponent("nostr-data.json")
     }
 }
 
 extension Array where Element == NostrEvent {
-    
-    ///Removes duplicates from input list by comparing `id`
+    /// Removes duplicates from input list by comparing `id`
     func deduplicated() -> [NostrEvent] {
-        
         var seenIDs = Set<String>()
         let result = filter { seenIDs.insert($0.id).inserted }
-        
+
         return result
     }
-    
-    ///Sorts the array of NostrEvents by their unix timestamp and returns the latest
+
+    /// Sorts the array of NostrEvents by their unix timestamp and returns the latest
     func latest() -> NostrEvent? {
         var input = self
         input.sort { $0.createdAt > $1.createdAt }
@@ -536,7 +512,7 @@ extension Array where Element == NostrEvent {
 
 extension Array where Element == Message {
     func uniqueSenders() -> [Profile] {
-        let uniqueSenders = Set(self.map({ $0.senderPubkey }))
+        let uniqueSenders = Set(map { $0.senderPubkey })
         var profiles: [Profile] = []
 
         for sender in uniqueSenders {

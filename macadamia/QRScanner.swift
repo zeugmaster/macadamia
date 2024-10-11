@@ -5,18 +5,17 @@
 //  Created by zm on 21.04.24.
 //
 
+import Combine
 import SwiftUI
 import URUI
-import Combine
 
 struct QRScanner: View {
     @ObservedObject var viewModel: QRScannerViewModel
 
     var body: some View {
-        ZStack(alignment:.bottom) {
+        ZStack(alignment: .bottom) {
             if viewModel.isScanning {
                 URVideo(videoSession: viewModel.videoSession)
-                    
             }
             VStack {
                 Spacer()
@@ -39,7 +38,6 @@ struct QRScanner: View {
         .clipShape(RoundedRectangle(cornerRadius: 6.0))
     }
 }
-
 
 @MainActor
 class QRScannerViewModel: ObservableObject {
@@ -68,26 +66,27 @@ class QRScannerViewModel: ObservableObject {
 
     func handleScanResult(result: URScanResult) {
         // Implement the result handling logic, moving it from the QRScanner view
-        
+
         switch result {
-        case .failure(_):
+        case .failure:
             print("failure")
-            self.estimatedPercentComplete = 0
-        case .other(let result):
+            estimatedPercentComplete = 0
+        case let .other(result):
             if let onResult = onResult, result.contains("cashu") {
                 onResult(result)
             }
             isScanning = false
             estimatedPercentComplete = 1
-        case .progress(let progress):
+        case let .progress(progress):
             print(progress)
-            self.estimatedPercentComplete = progress.estimatedPercentComplete
-        case .reject: 
+            estimatedPercentComplete = progress.estimatedPercentComplete
+        case .reject:
             print("rejected")
-        case .ur(let ur):
-            if case .bytes(let urBytes) = ur.cbor {
+        case let .ur(ur):
+            if case let .bytes(urBytes) = ur.cbor {
                 if let string = String(data: urBytes, encoding: .utf8),
-                   let onResult = onResult {
+                   let onResult = onResult
+                {
                     onResult(string)
                     isScanning = false
                     estimatedPercentComplete = 1
@@ -108,4 +107,3 @@ class QRScannerViewModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 }
-

@@ -5,25 +5,23 @@
 //  Created by zeugmaster on 01.01.24.
 //
 
-import SwiftUI
-import SwiftData
 import CashuSwift
+import SwiftData
+import SwiftUI
 
 struct MintManagerView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
-    
+
     @State var newMintURLString = ""
-    @State var showAlert:Bool = false
-    
-    @State var currentAlert:AlertDetail?
-    
-    var activeWallet:Wallet? {
-        get {
-            wallets.first
-        }
+    @State var showAlert: Bool = false
+
+    @State var currentAlert: AlertDetail?
+
+    var activeWallet: Wallet? {
+        wallets.first
     }
-    
+
     var body: some View {
         NavigationView {
             if let activeWallet {
@@ -53,29 +51,29 @@ struct MintManagerView: View {
             }
         }
     }
-        
+
     func addMint() {
         // First, trim any whitespace and newlines
         let trimmedURLString = newMintURLString.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
         // Check if the string starts with a valid scheme
         guard trimmedURLString.starts(with: "http://") || trimmedURLString.starts(with: "https://") else {
             displayAlert(alert: AlertDetail(title: "Invalid URL", description: "URL must start with http:// or https://"))
             return
         }
-        
+
         // Now try to create the URL
         guard let url = URL(string: trimmedURLString) else {
             displayAlert(alert: AlertDetail(title: "Not a valid URL."))
             return
         }
-        
+
         // Additional check: ensure the URL has a host
         guard url.host != nil else {
             displayAlert(alert: AlertDetail(title: "Invalid URL", description: "URL must include a valid host"))
             return
         }
-        
+
         Task {
             do {
                 let mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
@@ -93,9 +91,9 @@ struct MintManagerView: View {
             }
         }
     }
-        
-    func removeMint(at offsets: IndexSet) {
-        //TODO: CHECK FOR BALANCE
+
+    func removeMint(at _: IndexSet) {
+        // TODO: CHECK FOR BALANCE
 //        if true {
 //            displayAlert(alert: AlertDetail(title: "Are you sure?",
 //                                           description: "Are you sure you want to delete it?",
@@ -117,17 +115,17 @@ struct MintManagerView: View {
 //            }
 //        }
     }
-    
-    private func displayAlert(alert:AlertDetail) {
+
+    private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
     }
 }
 
 struct MintInfoRowView: View {
-    var mint:Mint
+    var mint: Mint
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 44
-    
+
     var body: some View {
         HStack {
             ZStack {
@@ -149,8 +147,8 @@ struct MintInfoRowView: View {
 //                            }
 //                        }
 //                    } else {
-                        Image(systemName: "building.columns")
-                            .foregroundColor(.white)
+                    Image(systemName: "building.columns")
+                        .foregroundColor(.white)
 //                    }
                 }
                 .frame(width: iconSize, height: iconSize) // Use a relative size or GeometryReader for more flexibility
@@ -160,7 +158,7 @@ struct MintInfoRowView: View {
 //                    .frame(width: 12, height: 12)
 //                    .offset(x: 15, y: -15)
             }
-            VStack(alignment:.leading) {
+            VStack(alignment: .leading) {
                 Text(mint.url.absoluteString)
                     .bold()
                     .dynamicTypeSize(.xLarge)
@@ -172,7 +170,6 @@ struct MintInfoRowView: View {
     }
 }
 
-
-//#Preview {
+// #Preview {
 //    MintManagerView(vm: MintManagerViewModel(mintList: [mint1, mint2, mint3]))
-//}
+// }

@@ -5,27 +5,27 @@
 ////  Created by zeugmaster on 06.01.24.
 ////
 //
-//import SwiftUI
-//import SwiftData
-//import CashuSwift
+// import SwiftUI
+// import SwiftData
+// import CashuSwift
 //
-//struct RestoreView: View {
+// struct RestoreView: View {
 //    @State var mnemonic = ""
 //    @State var loading = false
 //    @State var success = false
-//    
+//
 //    @State var showAlert:Bool = false
 //    @State var currentAlert:AlertDetail?
-//    
+//
 //    @Environment(\.modelContext) private var modelContext
 //    @Query private var wallets: [Wallet]
-//    
+//
 //    var activeWallet:Wallet? {
 //        get {
 //            wallets.first
 //        }
 //    }
-//    
+//
 //    func attemptRestore() {
 //        guard let activeWallet else {
 //            displayAlert(alert: AlertDetail(title: "No Wallet",
@@ -40,11 +40,11 @@
 //        Task {
 //            do {
 //                loading = true
-//                
+//
 //                for mint in activeWallet.mints {
-//                    
+//
 //                }
-//                
+//
 //                success = true
 //                loading = false
 //            } catch {
@@ -53,12 +53,12 @@
 //            }
 //        }
 //    }
-//    
+//
 //    private func displayAlert(alert:AlertDetail) {
 //        currentAlert = alert
 //        showAlert = true
 //    }
-//    
+//
 //    var body: some View {
 //        List {
 //            Section {
@@ -101,8 +101,8 @@
 //        .navigationBarBackButtonHidden(loading)
 //        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
 //    }
-//}
+// }
 //
-//#Preview {
+// #Preview {
 //    RestoreView()
-//}
+// }

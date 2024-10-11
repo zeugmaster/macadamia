@@ -5,17 +5,17 @@
 ////  Created by zeugmaster on 06.01.24.
 ////
 //
-//import SwiftUI
+// import SwiftUI
 //
 //
-//struct NostrProfileMessageView: View {
-//    
+// struct NostrProfileMessageView: View {
+//
 //    @ObservedObject var vm:NostrProfileMessageViewModel
-//    
+//
 //    init(vm: NostrProfileMessageViewModel) {
 //        self.vm = vm
 //    }
-//    
+//
 //    var body: some View {
 //        NavigationStack {
 //            List {
@@ -74,25 +74,25 @@
 //            })
 //        }
 //    }
-//}
+// }
 //
 ////#Preview {
 ////    NostrProfileMessageView(vm: NostrProfileMessageViewModel(profile: Demo.user, tokenMessages:["cashuAaosdfhpwiuohafjsöfoivüoiüoierfüoiasügoiqhjüweroighjüowif"]))
 ////}
 //
-//@MainActor
-//class NostrProfileMessageViewModel: ObservableObject {
+// @MainActor
+// class NostrProfileMessageViewModel: ObservableObject {
 //    @Published var profile:Profile
 //    @Published var tokens = [String]()
 //    @Published var showAlert:Bool = false
 //    var currentAlert:AlertDetail?
-//    
+//
 //    var wallet = Wallet.shared
-//    
+//
 //    init(profile: Profile, tokenMessages: [String]? = nil) {
 //        self.profile = profile
 //    }
-//    
+//
 //    // "janky" would be a gross understatement
 //    func redeem(token:String) {
 //        Task {
@@ -136,14 +136,14 @@
 //            }
 //        }
 //    }
-//    
-//    
+//
+//
 //    func updateTokens() {
 //        tokens = profile.tokenMessages ?? []
 //    }
-//    
+//
 //    private func displayAlert(alert:AlertDetail) {
 //        currentAlert = alert
 //        showAlert = true
 //    }
-//}
+// }

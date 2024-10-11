@@ -1,21 +1,21 @@
-import SwiftUI
-import SwiftData
 import CashuSwift
+import SwiftData
+import SwiftUI
 
 struct DrainView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
-    
+
     var activeWallet: Wallet? {
         wallets.first
     }
-    
+
     @State private var selectedMints: Set<String> = []
     @State private var tokens: [TokenInfo] = []
     @State private var makeTokenMultiMint = false
     @State private var showAlert = false
     @State private var currentAlert: AlertDetail?
-    
+
     var body: some View {
         Form {
             if tokens.isEmpty {
@@ -32,7 +32,7 @@ struct DrainView: View {
         .navigationTitle("Drain")
         .navigationBarTitleDisplayMode(.inline)
     }
-    
+
     private var mintSelectionSection: some View {
         Section {
             ForEach(activeWallet?.mints ?? [], id: \.url) { mint in
@@ -56,7 +56,7 @@ struct DrainView: View {
             Text("Select all mints you would like to drain funds from.")
         }
     }
-    
+
     private var multiMintToggleSection: some View {
         Section {
             Toggle("Multi mint token", isOn: $makeTokenMultiMint)
@@ -65,7 +65,7 @@ struct DrainView: View {
             Text("Some wallets may not be able to accept V3 tokens containing proofs from multiple mints.")
         }
     }
-    
+
     private var createTokenSection: some View {
         Section {
             Button(role: .destructive, action: createBackupToken) {
@@ -76,7 +76,7 @@ struct DrainView: View {
         }
         .disabled(selectedMints.isEmpty)
     }
-    
+
     private var tokenListSection: some View {
         ForEach(tokens) { token in
             Section {
@@ -84,7 +84,7 @@ struct DrainView: View {
             }
         }
     }
-    
+
     private var resetSection: some View {
         Section {
             Button(action: reset) {
@@ -96,12 +96,12 @@ struct DrainView: View {
             }
         }
     }
-    
+
     private func loadMintList() {
         guard let wallet = activeWallet else { return }
         selectedMints = Set(wallet.mints.map { $0.url.absoluteString })
     }
-    
+
     private func toggleMintSelection(_ mint: Mint) {
         let mintURL = mint.url.absoluteString
         if selectedMints.contains(mintURL) {
@@ -110,7 +110,7 @@ struct DrainView: View {
             selectedMints.insert(mintURL)
         }
     }
-    
+
     private func createBackupToken() {
         guard let wallet = activeWallet else { return } // TODO: WARNING TO USER
         tokens = []
@@ -120,29 +120,29 @@ struct DrainView: View {
                                                 description: "No drain token can be created from an empty wallet."))
                 return
             }
-            
-            var proofContainers:[CashuSwift.ProofContainer] = []
+
+            var proofContainers: [CashuSwift.ProofContainer] = []
             for mint in wallet.mints {
-                let libProofs = mint.proofs.map({ CashuSwift.Proof($0) })
+                let libProofs = mint.proofs.map { CashuSwift.Proof($0) }
                 let proofContainer = CashuSwift.ProofContainer(mint: mint.url.absoluteString,
                                                                proofs: libProofs)
-                mint.proofs.forEach({ $0.state = .pending })
+                mint.proofs.forEach { $0.state = .pending }
                 proofContainers.append(proofContainer)
             }
-            
+
             if makeTokenMultiMint {
                 let token = CashuSwift.Token(token: proofContainers, memo: "Wallet Drain")
                 var sum = 0
                 for proofContainer in proofContainers {
                     sum += proofContainer.proofs.sum
                 }
-                tokens = [TokenInfo(token: try token.serialize(.V3), mint: "Multi Mint", amount: sum)]
+                tokens = try [TokenInfo(token: token.serialize(.V3), mint: "Multi Mint", amount: sum)]
             } else {
                 for proofContainer in proofContainers {
                     let token = CashuSwift.Token(token: [proofContainer])
-                    tokens.append(TokenInfo(token: try token.serialize(.V3),
-                                            mint: proofContainer.mint,
-                                            amount: proofContainer.proofs.sum))
+                    try tokens.append(TokenInfo(token: token.serialize(.V3),
+                                                mint: proofContainer.mint,
+                                                amount: proofContainer.proofs.sum))
                 }
             }
         } catch {
@@ -150,11 +150,11 @@ struct DrainView: View {
                                             description: String(describing: error)))
         }
     }
-        
+
     private func reset() {
         tokens = []
     }
-    
+
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
@@ -164,7 +164,7 @@ struct DrainView: View {
 struct TokenView: View {
     let token: TokenInfo
     @State private var didCopy = false
-    
+
     var body: some View {
         Group {
             Text(token.token)
@@ -182,7 +182,7 @@ struct TokenView: View {
             }
         }
         .foregroundStyle(.secondary)
-        
+
         Button(action: { copyToClipboard(token: token.token) }) {
             HStack {
                 if didCopy {
@@ -197,7 +197,7 @@ struct TokenView: View {
             }
         }
     }
-    
+
     private func copyToClipboard(token: String) {
         UIPasteboard.general.string = token
         withAnimation {
@@ -216,7 +216,7 @@ struct TokenInfo: Identifiable, Hashable {
     let token: String
     let mint: String
     let amount: Int
-    
+
     var id: String { token }
 }
 

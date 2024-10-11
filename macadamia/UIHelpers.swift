@@ -1,5 +1,5 @@
 //
-//  Alerts.swift
+//  UIHelpers.swift
 //  macadamia
 //
 //  Created by zeugmaster on 02.01.24.
@@ -10,22 +10,21 @@ import Foundation
 import SwiftUI
 import UIKit
 
-
 struct AlertDetail {
-    let title:String
-    let alertDescription:String?
-    let primaryButtonText:String?
-    let affirmText:String?
-    let onAffirm:(() -> Void)?
-    
+    let title: String
+    let alertDescription: String?
+    let primaryButtonText: String?
+    let affirmText: String?
+    let onAffirm: (() -> Void)?
+
     init(title: String,
          description: String? = nil,
          primaryButtonText: String? = nil,
          affirmText: String? = nil,
-         onAffirm: (() -> Void)? = nil) {
-        
+         onAffirm: (() -> Void)? = nil)
+    {
         self.title = title
-        self.alertDescription = description
+        alertDescription = description
         self.primaryButtonText = primaryButtonText
         self.affirmText = affirmText
         self.onAffirm = onAffirm
@@ -59,27 +58,26 @@ struct AlertViewModifier: ViewModifier {
 
 extension View {
     func alertView(isPresented: Binding<Bool>, currentAlert: AlertDetail?) -> some View {
-        self.modifier(AlertViewModifier(isPresented: isPresented, currentAlert: currentAlert))
+        modifier(AlertViewModifier(isPresented: isPresented, currentAlert: currentAlert))
     }
 }
-
 
 struct ShareSheet: UIViewControllerRepresentable {
     var items: [Any]
 
-    func makeUIViewController(context: Context) -> UIActivityViewController {
+    func makeUIViewController(context _: Context) -> UIActivityViewController {
         let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
         return controller
     }
 
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
+    func updateUIViewController(_: UIActivityViewController, context _: Context) {
         // No need to update the controller here
     }
 }
 
 extension URL {
     func absoluteStringWithoutPrefix(_ prefix: String) -> String {
-        var modifiedURL = self.absoluteString
+        var modifiedURL = absoluteString
         let lowerPrefix = prefix.lowercased()
         // Check for "prefix://"
         let doubleSlashVariant = "\(lowerPrefix)://"
@@ -94,15 +92,14 @@ extension URL {
     }
 }
 
-
 struct AdaptiveDynamicTypeModifier: ViewModifier {
     @Environment(\.sizeCategory) var sizeCategory
     let text: String
     let maxWidth: CGFloat
     let maxHeight: CGFloat
-    
+
     @State private var fontSize: CGFloat = 40 // Starting font size
-    
+
     func body(content: Content) -> some View {
         content
             .font(.system(size: fontSize * getScaleFactor(for: sizeCategory)))
@@ -116,17 +113,15 @@ struct AdaptiveDynamicTypeModifier: ViewModifier {
                 }
             )
     }
-    
+
     private func adjustSize(for size: CGSize) {
         let testFont = UIFont.systemFont(ofSize: fontSize * getScaleFactor(for: sizeCategory))
         let attributes = [NSAttributedString.Key.font: testFont]
-        let textSize = (text as NSString).boundingRect(
-            with: CGSize(width: maxWidth, height: .greatestFiniteMagnitude),
-            options: .usesLineFragmentOrigin,
-            attributes: attributes,
-            context: nil
-        ).size
-        
+        let textSize = (text as NSString).boundingRect(with: CGSize(width: maxWidth, height: .greatestFiniteMagnitude),
+                                                       options: .usesLineFragmentOrigin,
+                                                       attributes: attributes,
+                                                       context: nil).size
+
         if textSize.width > maxWidth || textSize.height > maxHeight {
             fontSize -= 1
             DispatchQueue.main.async {
@@ -134,7 +129,7 @@ struct AdaptiveDynamicTypeModifier: ViewModifier {
             }
         }
     }
-    
+
     private func getScaleFactor(for sizeCategory: ContentSizeCategory) -> CGFloat {
         switch sizeCategory {
         case .accessibilityExtraExtraExtraLarge: return 2.0
@@ -146,4 +141,3 @@ struct AdaptiveDynamicTypeModifier: ViewModifier {
         }
     }
 }
-

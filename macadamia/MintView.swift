@@ -1,42 +1,40 @@
-import SwiftUI
 import CashuSwift
 import SwiftData
+import SwiftUI
 
 struct MintView: View {
-    @State var quote:CashuSwift.Bolt11.MintQuote?
-    var navigationPath:Binding<NavigationPath>?
-    @State var pendingMintEvent:Event?
-    
+    @State var quote: CashuSwift.Bolt11.MintQuote?
+    var navigationPath: Binding<NavigationPath>?
+    @State var pendingMintEvent: Event?
+
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
-        
-    var activeWallet:Wallet? {
-        get {
-            wallets.first
-        }
+
+    var activeWallet: Wallet? {
+        wallets.first
     }
-    
+
     @State var amountString = ""
     @State var mintList = [String]()
     @State var selectedMintString = ""
-    
+
     @State var loadingInvoice = false
-    
+
     @State var minting = false
     @State var mintSuccess = false
-    
-    @State var showAlert:Bool = false
-    @State var currentAlert:AlertDetail?
-    
+
+    @State var showAlert: Bool = false
+    @State var currentAlert: AlertDetail?
+
     @State private var isCopied = false
-    @FocusState var amountFieldInFocus:Bool
-    
-    init(quote:CashuSwift.Bolt11.MintQuote? = nil, pendingMintEvent:Event? = nil, navigationPath: Binding<NavigationPath>? = nil) {
-        self._quote = State(initialValue: quote)
+    @FocusState var amountFieldInFocus: Bool
+
+    init(quote: CashuSwift.Bolt11.MintQuote? = nil, pendingMintEvent: Event? = nil, navigationPath: Binding<NavigationPath>? = nil) {
+        _quote = State(initialValue: quote)
         self.navigationPath = navigationPath
-        self._pendingMintEvent = State(initialValue: pendingMintEvent)
+        _pendingMintEvent = State(initialValue: pendingMintEvent)
     }
-    
+
     var body: some View {
         Form {
             Section {
@@ -88,11 +86,11 @@ struct MintView: View {
                         HStack {
                             if isCopied {
                                 Text("Copied!")
-                                        .transition(.opacity)
-                                } else {
-                                    Text("Copy to clipboard")
-                                        .transition(.opacity)
-                                }
+                                    .transition(.opacity)
+                            } else {
+                                Text("Copy to clipboard")
+                                    .transition(.opacity)
+                            }
                             Spacer()
                             Image(systemName: "list.clipboard")
                         }
@@ -114,11 +112,11 @@ struct MintView: View {
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         .onAppear(perform: {
             if let activeWallet {
-                mintList = activeWallet.mints.map( { $0.url.absoluteString } ) // TODO: drop leading https or http for readability
+                mintList = activeWallet.mints.map { $0.url.absoluteString } // TODO: drop leading https or http for readability
                 if !mintList.isEmpty { selectedMintString = mintList.first! }
             }
         })
-        
+
         if quote == nil {
             Button(action: {
                 requestQuote()
@@ -169,9 +167,9 @@ struct MintView: View {
             .disabled(minting || mintSuccess)
         }
     }
-    
+
     // MARK: - LOGIC
-    
+
     func copyToClipboard() {
         UIPasteboard.general.string = quote?.request
         withAnimation {
@@ -184,15 +182,15 @@ struct MintView: View {
             }
         }
     }
-    
-    var selectedMint:Mint? {
+
+    var selectedMint: Mint? {
         activeWallet?.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) })
     }
-    
+
     var amount: Int {
         return Int(amountString) ?? 0
     }
-    
+
     func requestQuote() {
         guard let selectedMint, let activeWallet else {
             return
@@ -203,39 +201,40 @@ struct MintView: View {
                 let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat", amount: self.amount)
                 quote = try await CashuSwift.getQuote(mint: selectedMint, quoteRequest: quoteRequest) as? CashuSwift.Bolt11.MintQuote
                 loadingInvoice = false
-                
+
                 let event = Event.pendingMintEvent(unit: Unit(quote?.requestDetail?.unit) ?? .other,
                                                    shortDescription: "Mint Quote",
-                                                   wallet: activeWallet, 
-                                                   quote: quote!, //FIXME: SAFE UNWRAPPING
+                                                   wallet: activeWallet,
+                                                   quote: quote!, // FIXME: SAFE UNWRAPPING
                                                    amount: Double(quote?.requestDetail?.amount ?? 0),
-                                                   expiration: Date(timeIntervalSince1970: TimeInterval(quote!.expiry))) //FIXME: SAFE UNWRAPPING
+                                                   expiration: Date(timeIntervalSince1970: TimeInterval(quote!.expiry))) // FIXME: SAFE UNWRAPPING
                 pendingMintEvent = event
                 modelContext.insert(event)
                 try modelContext.save()
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error",
-                                               description: String(describing: error)))
+                                                description: String(describing: error)))
                 loadingInvoice = false
             }
         }
     }
-    
+
     func requestMint() {
         guard let quote,
-                let activeWallet,
-                let selectedMint else {
+              let activeWallet,
+              let selectedMint
+        else {
             return
         }
-        
+
         minting = true
         Task {
             do {
-                let proofs:[Proof] = try await CashuSwift.issue(for: quote, on: selectedMint).map { p in
+                let proofs: [Proof] = try await CashuSwift.issue(for: quote, on: selectedMint).map { p in
                     let unit = Unit(quote.requestDetail?.unit ?? "other") ?? .other
                     return Proof(p, unit: unit, state: .valid, mint: selectedMint, wallet: activeWallet)
                 }
-                proofs.forEach({ modelContext.insert($0) })
+                proofs.forEach { modelContext.insert($0) }
                 let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
                                             shortDescription: "Minting",
                                             wallet: activeWallet,
@@ -257,12 +256,12 @@ struct MintView: View {
             }
         }
     }
-    
-    func displayAlert(alert:AlertDetail) {
+
+    func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
     }
-    
+
     func reset() {
         quote = nil
         amountString = ""

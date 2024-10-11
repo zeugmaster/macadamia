@@ -11,17 +11,17 @@ struct LargeDynamicText: View {
     let text: String
     let baseSize: CGFloat
     let minSize: CGFloat
-    
+
     @State private var size: CGFloat
     @Environment(\.sizeCategory) var sizeCategory
-    
+
     init(text: String, baseSize: CGFloat = 60, minSize: CGFloat = 20) {
         self.text = text
         self.baseSize = baseSize
         self.minSize = minSize
-        self._size = State(initialValue: baseSize)
+        _size = State(initialValue: baseSize)
     }
-    
+
     var body: some View {
         Text(text)
             .font(.system(size: scaledSize, weight: .regular, design: .default))
@@ -35,30 +35,30 @@ struct LargeDynamicText: View {
                 }
             )
     }
-    
+
     private var scaledSize: CGFloat {
         size * dynamicTypeScale(for: sizeCategory)
     }
-    
+
     private func adjustSize(for width: CGFloat) {
         let testSize = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         var currentSize = baseSize
-        
+
         while currentSize > minSize {
             let font = UIFont.systemFont(ofSize: currentSize * dynamicTypeScale(for: sizeCategory))
             let attributes = [NSAttributedString.Key.font: font]
             let size = (text as NSString).boundingRect(with: testSize, options: .usesLineFragmentOrigin, attributes: attributes, context: nil)
-            
+
             if size.width <= width {
                 break
             }
-            
+
             currentSize -= 1
         }
-        
-        self.size = max(currentSize, minSize)
+
+        size = max(currentSize, minSize)
     }
-    
+
     private func dynamicTypeScale(for sizeCategory: ContentSizeCategory) -> CGFloat {
         switch sizeCategory {
         case .accessibilityExtraExtraExtraLarge: return 1.5

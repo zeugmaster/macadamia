@@ -4,10 +4,10 @@
 //
 //  Created by zeugmaster on 14.12.23.
 //
-import SwiftUI
 import CoreImage.CIFilterBuiltins
-import URUI
+import SwiftUI
 import URKit
+import URUI
 
 func generateQRCode(from string: String) -> UIImage? {
     let context = CIContext()
@@ -35,29 +35,28 @@ struct StaticQR: View {
                 .resizable()
                 .scaledToFit()
                 .clipShape(RoundedRectangle(cornerSize: CGSize(width: 6, height: 10)))
-                //.frame(width: 200, height: 200)
+            // .frame(width: 200, height: 200)
         } else {
             Text("Failed to generate QR Code")
         }
     }
 }
 
-
-///View that displays either a static or animated QR code
+/// View that displays either a static or animated QR code
 struct QRView: View {
-    let string:String
-    @StateObject private var urDisplayState:URDisplayState
-    
-    //TODO: needs to accept bytes(string) cbor and json -> cbor in the future
+    let string: String
+    @StateObject private var urDisplayState: URDisplayState
+
+    // TODO: needs to accept bytes(string) cbor and json -> cbor in the future
     init(string: String) {
         self.string = string
         let strData = string.data(using: .utf8)!
-        
-        //TODO: handle errors, remove hardcoded max frag size
-        let ur = try! UR(type:"bytes", cbor: strData.cbor)
-        self._urDisplayState = StateObject(wrappedValue: URDisplayState(ur: ur, maxFragmentLen: 200))
+
+        // TODO: handle errors, remove hardcoded max frag size
+        let ur = try! UR(type: "bytes", cbor: strData.cbor)
+        _urDisplayState = StateObject(wrappedValue: URDisplayState(ur: ur, maxFragmentLen: 200))
     }
-    
+
     var body: some View {
         if string.count < 650 {
             StaticQR(qrCode: generateQRCode(from: string))
@@ -68,16 +67,15 @@ struct QRView: View {
                 URQRCode(data: .constant(urDisplayState.part),
                          foregroundColor: .black,
                          backgroundColor: .white)
-                .onAppear {
-                    urDisplayState.framesPerSecond = 8
-                    urDisplayState.run()
-                }
-                .onDisappear {
-                    urDisplayState.stop()
-                }
-                .padding(10)
+                    .onAppear {
+                        urDisplayState.framesPerSecond = 8
+                        urDisplayState.run()
+                    }
+                    .onDisappear {
+                        urDisplayState.stop()
+                    }
+                    .padding(10)
             }
-            
         }
     }
 }

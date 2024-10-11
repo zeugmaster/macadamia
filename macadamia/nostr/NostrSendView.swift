@@ -5,18 +5,18 @@
 ////  Created by zeugmaster on 05.01.24.
 ////
 //
-//import SwiftUI
+// import SwiftUI
 //
 //
-//struct NostrSendView: View {
-//    
+// struct NostrSendView: View {
+//
 //    @ObservedObject var vm:NostrSendViewModel
 //    @State private var isCopied = false
-//    
+//
 //    init(nsvm:NostrSendViewModel) {
 //        self.vm = nsvm
 //    }
-//    
+//
 //    var body: some View {
 //        Form {
 //            Section {
@@ -39,15 +39,15 @@
 //            } footer: {
 //                Text("Tap to add a note to the recipient.")
 //            }
-//            
-//            
+//
+//
 //        }
 //        .navigationTitle("Send")
 //        .navigationBarTitleDisplayMode(.inline)
 //        .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
-//        
+//
 //        Spacer()
-//        
+//
 //        Button(action: {
 //            vm.initiateSend()
 //        }, label: {
@@ -77,7 +77,7 @@
 //        .toolbar(.hidden, for: .tabBar)
 //        .disabled(vm.numberString.isEmpty || vm.amount == 0 || vm.loading || vm.success)
 //    }
-//    
+//
 //    func copyToClipboard() {
 //        withAnimation {
 //            isCopied = true
@@ -89,31 +89,31 @@
 //            }
 //        }
 //    }
-//}
+// }
 //
-//@MainActor
-//class NostrSendViewModel: ObservableObject {
-//    
+// @MainActor
+// class NostrSendViewModel: ObservableObject {
+//
 //    @Published var recipientProfile:Profile
 //    @Published var tokenMemo = ""
-//    
+//
 //    @Published var numberString: String = ""
 //    @Published var mintList:[String] = [""]
 //    @Published var selectedMintString:String = ""
-//    
+//
 //    @Published var loading = false
 //    @Published var success = false
-//    
+//
 //    @Published var showAlert:Bool = false
 //    var currentAlert:AlertDetail?
-//    
+//
 //    var wallet = Wallet.shared
 //    var nostrService = NostrService.shared
-//    
+//
 //    init(recipientProfile:Profile) {
 //        self.recipientProfile = recipientProfile
 //    }
-//    
+//
 //    var recipientDisplayName:String {
 //        get {
 //            if let name = recipientProfile.name {
@@ -123,7 +123,7 @@
 //            }
 //        }
 //    }
-//    
+//
 //    func fetchMintInfo() {
 //        mintList = []
 //        for mint in wallet.database.mints {
@@ -132,11 +132,11 @@
 //        }
 //        selectedMintString = mintList[0]
 //    }
-//    
+//
 //    var amount: Int {
 //        return Int(numberString) ?? 0
 //    }
-//    
+//
 //    func initiateSend() {
 //        print(selectedMintString)
 //        guard let mint = wallet.database.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) else {
@@ -148,10 +148,10 @@
 //                self.loading = true
 //                let token = try await wallet.sendTokens(from:mint, amount: amount, memo:tokenMemo)
 //                let message = """
-//Here is some eCash! You can redeem it using any cashu wallet.
+// Here is some eCash! You can redeem it using any cashu wallet.
 //
-//\(token)
-//"""
+// \(token)
+// """
 //                try nostrService.sendMessage(to: recipientProfile, content: message)
 //                self.loading = false
 //                self.success = true
@@ -169,14 +169,14 @@
 //            }
 //        }
 //    }
-//    
+//
 //    private func displayAlert(alert:AlertDetail) {
 //        currentAlert = alert
 //        showAlert = true
 //    }
-//}
+// }
 //
 //
-//#Preview {
+// #Preview {
 //    NostrSendView(nsvm: NostrSendViewModel(recipientProfile: Profile(pubkey: "f0f0f0f0f0f0", npub: "npub1ß203w98ourtß23894ut", name: "nakamoto")))
-//}
+// }

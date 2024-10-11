@@ -5,43 +5,41 @@
 //  Created by zeugmaster on 05.01.24.
 //
 
-import SwiftUI
-import SwiftData
 import CashuSwift
+import SwiftData
+import SwiftUI
 
 struct ReceiveView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
-    
-    var activeWallet:Wallet? {
-        get {
-            wallets.first
-        }
+
+    var activeWallet: Wallet? {
+        wallets.first
     }
-    
+
     @ObservedObject var qrsVM = QRScannerViewModel()
-    
-    @State var tokenString:String?
-    @State var token:CashuSwift.Token?
-    @State var tokenMemo:String?
-    @State var unit:Unit = .other
+
+    @State var tokenString: String?
+    @State var token: CashuSwift.Token?
+    @State var tokenMemo: String?
+    @State var unit: Unit = .other
     @State var loading = false
     @State var success = false
-    @State var totalAmount:Int?
+    @State var totalAmount: Int?
     @State var addingMint = false
-    
+
 //    @State var refreshCounter:Int = 0
-    
-    @State var showAlert:Bool = false
-    @State var currentAlert:AlertDetail?
-    
-    private var navigationPath:Binding<NavigationPath>?
-    
-    init(tokenString: String? = nil, navigationPath:Binding<NavigationPath>? = nil) {
+
+    @State var showAlert: Bool = false
+    @State var currentAlert: AlertDetail?
+
+    private var navigationPath: Binding<NavigationPath>?
+
+    init(tokenString: String? = nil, navigationPath: Binding<NavigationPath>? = nil) {
         self.navigationPath = navigationPath
         self.tokenString = tokenString
     }
-    
+
     var body: some View {
         VStack {
             List {
@@ -64,7 +62,7 @@ struct ReceiveView: View {
                             }
                         }
                     } header: {
-                         Text("cashu Token")
+                        Text("cashu Token")
                     }
                     if token != nil && activeWallet != nil {
                         ForEach(token!.token, id: \.proofs.first?.C) { fragment in
@@ -73,7 +71,7 @@ struct ReceiveView: View {
                             }
                         }
                     }
-                    
+
                     Section {
                         Button {
                             reset()
@@ -88,16 +86,16 @@ struct ReceiveView: View {
                         .disabled(addingMint)
                     }
                 } else {
-                    
-                    //MARK: This check is necessary to prevent a bug in URKit (or the system, who knows)
-                    //MARK: from crashing the app when using the camera on an Apple Silicon Mac
-                    
+                    // MARK: This check is necessary to prevent a bug in URKit (or the system, who knows)
+
+                    // MARK: from crashing the app when using the camera on an Apple Silicon Mac
+
                     if !ProcessInfo.processInfo.isiOSAppOnMac {
                         QRScanner(viewModel: qrsVM)
                             .frame(minHeight: 300, maxHeight: 400)
                             .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
                     }
-                    
+
                     Button {
                         paste()
                     } label: {
@@ -129,8 +127,8 @@ struct ReceiveView: View {
                         .foregroundColor(.green)
                 } else {
                     Text("Redeem")
-                    .frame(maxWidth: .infinity)
-                    .padding()
+                        .frame(maxWidth: .infinity)
+                        .padding()
                 }
             })
             .foregroundColor(.white)
@@ -141,68 +139,68 @@ struct ReceiveView: View {
             .disabled(tokenString == nil || loading || success || addingMint)
         }
     }
-    
+
     // MARK: - LOGIC
-    
+
     func paste() {
         let pasteString = UIPasteboard.general.string ?? ""
         // TODO: NEEDS TO CHECK AND ALERT USER IF PAST OP IS UNSUCCESSFUL
         tokenString = pasteString
         parseTokenString()
     }
-    
-    func scannerDidDecodeString(_ string:String) {
+
+    func scannerDidDecodeString(_ string: String) {
         tokenString = string
     }
-    
+
     func parseTokenString() {
         guard let tokenString,
-              !tokenString.isEmpty else {
-                return
-          }
+              !tokenString.isEmpty
+        else {
+            return
+        }
         do {
             token = try tokenString.deserializeToken()
         } catch {
             displayAlert(alert: AlertDetail(title: "Could not decode token",
                                             description: String(describing: error)))
         }
-        
     }
 
     func redeem() {
         guard let activeWallet, let token else {
             return
         }
-        
+
         let mintsInToken = activeWallet.mints.filter { mint in
             token.token.contains { fragment in
                 mint.url.absoluteString == fragment.mint
             }
         }
-        
+
         guard mintsInToken.count == token.token.count else {
             // TODO: throw an error
             displayAlert(alert: AlertDetail(title: "Unable to redeem",
                                             description: "Are all mints from this token known to the wallet?"))
             return
         }
-        
+
         loading = true
-        
-        var proofs:[Proof] = []
-        
+
+        var proofs: [Proof] = []
+
         Task {
             do {
-                let proofsDict = try await mintsInToken.receive(token: token, seed:activeWallet.seed)
-                mintsInToken.forEach { mint in
+                let proofsDict = try await mintsInToken.receive(token: token, seed: activeWallet.seed)
+                for mint in mintsInToken {
                     let proofsPerMint = proofsDict[mint.url.absoluteString]!
                     let internalProofs = proofsPerMint.map { p in
                         Proof(p, unit: Unit(token.unit) ?? .other, state: .valid, mint: mint, wallet: activeWallet)
                     }
                     proofs.append(contentsOf: internalProofs)
                 }
-                proofs.forEach({ modelContext.insert($0) })
-                
+                proofs.forEach { modelContext.insert($0) }
+
                 let event = Event.receiveEvent(unit: .sat,
                                                shortDescription: "Receive",
                                                wallet: activeWallet,
@@ -213,17 +211,17 @@ struct ReceiveView: View {
                                                tokenString: tokenString ?? "",
                                                redeemed: true)
                 modelContext.insert(event)
-                
+
                 try modelContext.save()
                 self.loading = false
                 self.success = true
-                
+
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     if let navigationPath, !navigationPath.wrappedValue.isEmpty {
-                            navigationPath.wrappedValue.removeLast()
+                        navigationPath.wrappedValue.removeLast()
                     }
                 }
-                
+
             } catch {
                 // receive unsuccessful
                 displayAlert(alert: AlertDetail(title: "Unable to redeem",
@@ -233,7 +231,7 @@ struct ReceiveView: View {
             }
         }
     }
-    
+
     func reset() {
         tokenString = nil
         tokenMemo = nil
@@ -242,39 +240,38 @@ struct ReceiveView: View {
         success = false
         addingMint = false
     }
-    
-    private func displayAlert(alert:AlertDetail) {
+
+    private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
     }
 }
 
 struct TokenFragmentView: View {
-    
     enum FragmentState {
         case spendable
         case notSpendable
         case mintUnavailable
     }
-    
+
     @Environment(\.modelContext) private var modelContext
-    
-    @State var fragmentState:FragmentState = .mintUnavailable
-    @State var fragment:CashuSwift.ProofContainer
-    @State var amount:Int = 0 // will need to change to decimal representation
-    @State var unit:Unit = .other
-    @State var addingMint:Bool = false
-    
-    @State var unknownMint:Bool?
-    
-    var activeWallet:Wallet
-    
-    init(activeWallet:Wallet, fragment:CashuSwift.ProofContainer, unit:Unit) {
+
+    @State var fragmentState: FragmentState = .mintUnavailable
+    @State var fragment: CashuSwift.ProofContainer
+    @State var amount: Int = 0 // will need to change to decimal representation
+    @State var unit: Unit = .other
+    @State var addingMint: Bool = false
+
+    @State var unknownMint: Bool?
+
+    var activeWallet: Wallet
+
+    init(activeWallet: Wallet, fragment: CashuSwift.ProofContainer, unit: Unit) {
         self.activeWallet = activeWallet
         self.fragment = fragment
         self.unit = unit
     }
-    
+
     var body: some View {
         HStack {
             Text("Amount:")
@@ -319,19 +316,19 @@ struct TokenFragmentView: View {
             Text("Checking mint...")
         }
     }
-    
+
     func checkFragmentState() {
         guard let url = URL(string: fragment.mint) else {
             fragmentState = .mintUnavailable
             return
         }
-        
+
         if activeWallet.mints.contains(where: { $0.url == url }) {
             unknownMint = false
         } else {
             unknownMint = true
         }
-        
+
         Task {
             do {
                 let proofStates = try await CashuSwift.check(fragment.proofs, url: url)
@@ -345,7 +342,7 @@ struct TokenFragmentView: View {
             }
         }
     }
-    
+
     func addMint() {
         Task {
             do {
@@ -354,7 +351,7 @@ struct TokenFragmentView: View {
                     addingMint = false
                     return
                 }
-                let mint:Mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
+                let mint: Mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
                 mint.wallet = activeWallet
                 mint.proofs = []
                 modelContext.insert(mint)
@@ -369,7 +366,6 @@ struct TokenFragmentView: View {
         }
     }
 }
-
 
 #Preview {
     ReceiveView()

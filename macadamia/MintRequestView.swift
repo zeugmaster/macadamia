@@ -9,8 +9,8 @@ import SwiftUI
 
 struct MintRequestView: View {
     @ObservedObject var viewmodel: MintRequestViewModel
-    @Binding var navigationPath:NavigationPath
-    
+    @Binding var navigationPath: NavigationPath
+
     var body: some View {
         Form {
             Section {
@@ -20,7 +20,7 @@ struct MintRequestView: View {
                         .monospaced()
                     Text("sats")
                 }
-                Picker("Mint", selection:$viewmodel.selectedMintString) {
+                Picker("Mint", selection: $viewmodel.selectedMintString) {
                     ForEach(viewmodel.mintList, id: \.self) {
                         Text($0)
                     }
@@ -47,18 +47,18 @@ struct MintRequestView: View {
         .disabled(viewmodel.numberString.isEmpty || viewmodel.amount == 0)
     }
 }
+
 //
-//#Preview {
+// #Preview {
 //    MintRequestView()
-//}
+// }
 
-
-//MARK: -
+// MARK: -
 
 struct MintRequestInvoiceView: View {
-    @ObservedObject var viewmodel:MintRequestViewModel
-    @Binding var navigationPath:NavigationPath
-    
+    @ObservedObject var viewmodel: MintRequestViewModel
+    @Binding var navigationPath: NavigationPath
+
     var body: some View {
         VStack {
             Spacer()
@@ -78,8 +78,7 @@ struct MintRequestInvoiceView: View {
                 }
                 .disabled(viewmodel.loadingInvoice)
             }
-            .padding(EdgeInsets(top: 0, leading: 40, bottom: 0, trailing: 40
-                               ))
+            .padding(EdgeInsets(top: 0, leading: 40, bottom: 0, trailing: 40))
             if viewmodel.loadingInvoice {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
@@ -89,7 +88,7 @@ struct MintRequestInvoiceView: View {
                 QRCodeView(qrCode: generateQRCode(from: viewmodel.invoiceString))
                     .padding(40)
             }
-                
+
             Spacer()
             Button {
                 navigationPath.append("Third")
@@ -112,8 +111,8 @@ struct MintRequestInvoiceView: View {
 
 struct MintRequestCompletionView: View {
     @ObservedObject var viewModel: MintRequestViewModel
-    @Binding var navigationPath:NavigationPath
-    
+    @Binding var navigationPath: NavigationPath
+
     var body: some View {
         Text(viewModel.mintRequestState).onAppear(perform: {
             viewModel.requestMinting()
@@ -135,31 +134,30 @@ struct MintRequestCompletionView: View {
     }
 }
 
-//#Preview {
+// #Preview {
 //    MintRequestInvoiceView(viewmodel: MintRequestViewModel())
-//}
-
+// }
 
 @MainActor
 class MintRequestViewModel: ObservableObject {
     @Published var numberString: String = ""
-    @Published var mintList:[String] = [""]
-    @Published var selectedMintString:String = ""
+    @Published var mintList: [String] = [""]
+    @Published var selectedMintString: String = ""
     @Published var loadingInvoice = true
     @Published var invoiceString = "loading..."
-    @Published var errorToDisplay:Error?
+    @Published var errorToDisplay: Error?
     @Published var mintRequestState = "loading..."
-    
+
     @Published var success = false
-    
+
     private var wallet = Wallet.shared
-    private var selectedMint:Mint?
-    private var quote:QuoteRequestResponse?
-    
+    private var selectedMint: Mint?
+    private var quote: QuoteRequestResponse?
+
     var amount: Int {
         return Int(numberString) ?? 0
     }
-    
+
     func fetchMintInfo() {
         mintList = []
         for mint in wallet.database.mints {
@@ -168,32 +166,31 @@ class MintRequestViewModel: ObservableObject {
         }
         selectedMintString = mintList[0]
     }
-    
+
     func requestQuote() {
         loadingInvoice = true
-        selectedMint = wallet.database.mints.first(where: {$0.url.absoluteString.contains(selectedMintString)})!
-        
+        selectedMint = wallet.database.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) })!
+
         Task {
             do {
-                quote = try await wallet.getQuote(from:selectedMint!, for:amount)
+                quote = try await wallet.getQuote(from: selectedMint!, for: amount)
                 invoiceString = quote!.pr
                 loadingInvoice = false
-                
+
             } catch {
                 errorToDisplay = error
             }
-            
         }
     }
-    
+
     func copyToClipboard() {
         UIPasteboard.general.string = invoiceString
     }
-    
+
     func requestMinting() {
         Task {
             do {
-                try await wallet.requestMint(from:selectedMint!,for:quote!,with:amount)
+                try await wallet.requestMint(from: selectedMint!, for: quote!, with: amount)
                 mintRequestState = "Success"
                 success = true
             } catch {

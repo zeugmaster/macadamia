@@ -1,5 +1,5 @@
 //
-//  SettingView.swift
+//  SettingsView.swift
 //  macadamia
 //
 //  Created by zeugmaster on 13.12.23.
@@ -9,16 +9,15 @@ import SwiftUI
 import UIKit
 
 struct SettingsView: View {
-    
     let sourceRepoURL = URL(string: "https://github.com/zeugmaster/macadamia")!
     let mailURL = URL(string: "mailto:contact@macadamia.cash")!
-    
-    var appVersion:String {
+
+    var appVersion: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown"
         return "Version \(version) (\(build))"
     }
-    
+
     var body: some View {
         NavigationStack {
             List {
@@ -31,9 +30,9 @@ struct SettingsView: View {
                 }
                 Section {
                     NavigationLink(destination: RelayManagerView()) { Text("Relays") }
-                    } header: {
-                        Text("nostr")
-                    }
+                } header: {
+                    Text("nostr")
+                }
                 Section {
                     NavigationLink("About this Release", destination: ReleaseNoteView())
                     HStack {
@@ -77,8 +76,6 @@ struct SettingsView: View {
     }
 }
 
-
 #Preview {
     SettingsView()
 }
-

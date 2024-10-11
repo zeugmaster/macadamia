@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		37049E262BD54A2E00BBAC4E /* URUI in Frameworks */ = {isa = PBXBuildFile; productRef = 37049E252BD54A2E00BBAC4E /* URUI */; };
+		370A83FF2CB94CCD0039A413 /* .swiftformat in Resources */ = {isa = PBXBuildFile; fileRef = 370A83FE2CB94CCD0039A413 /* .swiftformat */; };
 		372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034B92B29E1BC00C4F955 /* macadamiaApp.swift */; };
 		372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
@@ -60,6 +61,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		370A83FE2CB94CCD0039A413 /* .swiftformat */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .swiftformat; sourceTree = "<group>"; };
 		372034B62B29E1BC00C4F955 /* macadamia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macadamia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		372034B92B29E1BC00C4F955 /* macadamiaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macadamiaApp.swift; sourceTree = "<group>"; };
 		372034BB2B29E1BC00C4F955 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -126,6 +128,7 @@
 			isa = PBXGroup;
 			children = (
 				376F43B12B4FEC0D00E55B0F /* README.md */,
+				370A83FE2CB94CCD0039A413 /* .swiftformat */,
 				377FFF012BC451AB00DD2635 /* release-notes.md */,
 				372034B82B29E1BC00C4F955 /* macadamia */,
 				37DC18A22B8669A900F9B37B /* macadamiaTests */,
@@ -226,6 +229,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 372034C42B29E1BD00C4F955 /* Build configuration list for PBXNativeTarget "macadamia" */;
 			buildPhases = (
+				37550EC42CB9060600BDB3F5 /* SwiftFormat */,
 				372034B22B29E1BC00C4F955 /* Sources */,
 				372034B32B29E1BC00C4F955 /* Frameworks */,
 				372034B42B29E1BC00C4F955 /* Resources */,
@@ -322,6 +326,7 @@
 			files = (
 				37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */,
 				372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */,
+				370A83FF2CB94CCD0039A413 /* .swiftformat in Resources */,
 				376F43B22B4FEC0D00E55B0F /* README.md in Resources */,
 				377FFF022BC451AB00DD2635 /* release-notes.md in Resources */,
 				372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */,
@@ -336,6 +341,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		37550EC42CB9060600BDB3F5 /* SwiftFormat */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/**/*.swift",
+			);
+			name = SwiftFormat;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftformat >/dev/null; then\n  swiftformat ${SCRIPT_INPUT_FILE_LIST_0}\nelse\n  echo \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		372034B22B29E1BC00C4F955 /* Sources */ = {

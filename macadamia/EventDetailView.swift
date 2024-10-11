@@ -1,5 +1,5 @@
 //
-//  TransactionDetailView.swift
+//  EventDetailView.swift
 //  macadamia
 //
 //  Created by zeugmaster on 07.01.24.
@@ -9,7 +9,7 @@ import SwiftUI
 
 struct EventDetailView: View {
     let event: Event
-    
+
     var body: some View {
         switch event.kind {
         case .pendingMint:
@@ -34,7 +34,7 @@ struct EventDetailView: View {
             Text("drain")
         }
     }
-    
+
     private func unitString(_ unit: Unit) -> String {
         switch unit {
         case .sat: return "sat"
@@ -43,7 +43,7 @@ struct EventDetailView: View {
         case .other: return "Other"
         }
     }
-    
+
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -52,6 +52,6 @@ struct EventDetailView: View {
     }()
 }
 
-//#Preview {
+// #Preview {
 //    EventDetailView(event: Event)
-//}
+// }

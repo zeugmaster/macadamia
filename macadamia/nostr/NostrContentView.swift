@@ -1,10 +1,10 @@
 //
-//import SwiftUI
-//import NostrSDK
-//import Combine
-//import OSLog
+// import SwiftUI
+// import NostrSDK
+// import Combine
+// import OSLog
 //
-//struct NostrInboxView: View {
+// struct NostrInboxView: View {
 //    @ObservedObject var vm = ContentViewModel()
 //    var body: some View {
 //        NavigationStack {
@@ -12,7 +12,7 @@
 //                Section {
 //                    if vm.userProfile != nil {
 //                        HStack {
-//                            
+//
 //                            if let url = vm.userProfile!.pictureURL {
 //                                AsyncImage(url: url) { image in
 //                                    image.resizable()
@@ -136,41 +136,41 @@
 //            .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
 //        }
 //    }
-//}
+// }
 //
-//#Preview {
+// #Preview {
 //    NostrInboxView()
-//}
+// }
 //
-//@MainActor
-//class ContentViewModel: ObservableObject {
-//    
+// @MainActor
+// class ContentViewModel: ObservableObject {
+//
 //    @Published var nostrService:NostrService
 //    @Published var providedKey:String = ""
 //    @Published var userProfile:Profile?
 //    @Published var contacts = [Profile]()
 //    @Published var randos = [Profile]()
-//    
+//
 //    @Published var showAlert:Bool = false
 //    var currentAlert:AlertDetail?
-//    
+//
 //    var messages = [Message]()
-//    
+//
 //    //needed to make updates to profile info reflected in UI
 //    @Published var listRedraw = 0
-//    
+//
 ////    var wallet = Wallet.shared
-//    
+//
 //    init() {
-//        
+//
 //        nostrService = NostrService.shared
 //        userProfile = nostrService.userProfile
 //    }
-//    
+//
 //    func connectToRelay() {
 //        nostrService.connectAll()
 //    }
-//    
+//
 //    func saveProfileKey() {
 //        // check key validity
 //        do {
@@ -181,16 +181,16 @@
 //            self.providedKey = ""
 //            return
 //        }
-//        
+//
 //        // init userprofile
 //        userProfile = nostrService.userProfile
-//        
+//
 //        //load userprofile info (with follow list)
 //        loadFollowListWithInfo()
 //    }
-//    
+//
 //    func reset() {
-//        displayAlert(alert: AlertDetail(title: "Are you sure?", 
+//        displayAlert(alert: AlertDetail(title: "Are you sure?",
 //                                        description: "Do you really want to remove your nostr key?",
 //                                        primaryButtonText: "Cancel",
 //                                        affirmText: "Yes",
@@ -201,9 +201,9 @@
 //            self.nostrService.dataManager.resetAll()
 //        }))
 //    }
-//    
+//
 //    func loadFollowListWithInfo() {
-//        
+//
 //        Task {
 //            do {
 //                contacts = try await nostrService.fetchContactList()
@@ -211,7 +211,7 @@
 //                var allTokenMessages = messages.filter({ $0.decryptedContent.contains("cashuA") })
 //                randos = allTokenMessages.uniqueSenders().filter { !contacts.contains($0)}
 //                try await nostrService.loadInfo(for: contacts + randos, of: userProfile)
-//                                
+//
 //                // truncate messeges to token
 //                for message in allTokenMessages {
 //                    guard let token = findSubstring(in: message.decryptedContent, withPrefix: "cashuA") else {
@@ -225,7 +225,7 @@
 //                allTokenMessages.removeAll { message in
 //                    return knownTokens.contains(message.decryptedContent)
 //                }
-//                
+//
 //                var offsets = IndexSet()
 //                for index in 0..<allTokenMessages.count {
 //                    let spendable:Bool
@@ -236,13 +236,13 @@
 //                    }
 //                    if !spendable { offsets.insert(index) }
 //                }
-//                
+//
 //                allTokenMessages.remove(atOffsets: offsets)
-//                
+//
 //                for p in contacts + randos {
 //                    p.tokenMessages = allTokenMessages.filter({ $0.senderPubkey == p.pubkey }).map({ $0.decryptedContent })
 //                }
-//                
+//
 //                contacts.sort { (lhs, rhs) -> Bool in
 //                    switch (lhs.name, rhs.name) {
 //                    case let (lhsName?, rhsName?):
@@ -256,9 +256,9 @@
 //                        return true
 //                    }
 //                }
-//                
+//
 //                allTokenMessages.forEach( { print($0.decryptedContent) } )
-//                
+//
 //                listRedraw += 1
 //            } catch {
 //                displayAlert(alert: AlertDetail(title: "Refresh failed",
@@ -266,7 +266,7 @@
 //            }
 //        }
 //    }
-//    
+//
 //    func findSubstring(in text: String, withPrefix prefix: String) -> String? {
 //        let pattern = "\(prefix)\\S*"
 //        let regex = try? NSRegularExpression(pattern: pattern, options: [])
@@ -275,12 +275,12 @@
 //        if let matchRange = matches?.first?.range {
 //            return String(text[Range(matchRange, in: text)!])
 //        }
-//        
+//
 //        return nil
 //    }
-//    
+//
 //    private func displayAlert(alert:AlertDetail) {
 //        currentAlert = alert
 //        showAlert = true
 //    }
-//}
+// }
