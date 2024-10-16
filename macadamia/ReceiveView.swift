@@ -18,7 +18,7 @@ struct ReceiveView: View {
     @State var unit: Unit = .other
     @State var loading = false
     @State var success = false
-    @State var totalAmount: Int?
+    @State var totalAmount: Int = 0
     @State var addingMint = false
 
 //    @State var refreshCounter:Int = 0
@@ -44,15 +44,13 @@ struct ReceiveView: View {
                         HStack {
                             Text("Total Amount: ")
                             Spacer()
-                            Text(String(totalAmount ?? 0) + " sats")
+                            Text(String(totalAmount) + " sats")
                         }
                         .foregroundStyle(.secondary)
                         // TOKEN MEMO
-                        if tokenMemo != nil {
-                            if !tokenMemo!.isEmpty {
-                                Text("Memo: \(tokenMemo!)")
-                                    .foregroundStyle(.secondary)
-                            }
+                        if let tokenMemo, !tokenMemo.isEmpty {
+                            Text("Memo: \(tokenMemo)")
+                                .foregroundStyle(.secondary)
                         }
                     } header: {
                         Text("cashu Token")
@@ -60,7 +58,9 @@ struct ReceiveView: View {
                     if token != nil && activeWallet != nil {
                         ForEach(token!.token, id: \.proofs.first?.C) { fragment in
                             Section {
-                                TokenFragmentView(activeWallet: activeWallet!, fragment: fragment, unit: .other)
+                                TokenFragmentView(activeWallet: activeWallet!,
+                                                  fragment: fragment,
+                                                  unit: Unit(token?.unit) ?? .sat)
                             }
                         }
                     }
@@ -80,7 +80,6 @@ struct ReceiveView: View {
                     }
                 } else {
                     // MARK: This check is necessary to prevent a bug in URKit (or the system, who knows)
-
                     // MARK: from crashing the app when using the camera on an Apple Silicon Mac
 
                     if !ProcessInfo.processInfo.isiOSAppOnMac {
@@ -148,12 +147,12 @@ struct ReceiveView: View {
 
     func parseTokenString() {
         guard let tokenString,
-              !tokenString.isEmpty
-        else {
+              !tokenString.isEmpty else {
             return
         }
         do {
             token = try tokenString.deserializeToken()
+            token?.token.forEach({ totalAmount += $0.proofs.sum })
         } catch {
             displayAlert(alert: AlertDetail(title: "Could not decode token",
                                             description: String(describing: error)))
@@ -188,7 +187,12 @@ struct ReceiveView: View {
                 for mint in mintsInToken {
                     let proofsPerMint = proofsDict[mint.url.absoluteString]!
                     let internalProofs = proofsPerMint.map { p in
-                        Proof(p, unit: Unit(token.unit) ?? .other, state: .valid, mint: mint, wallet: activeWallet)
+                        let fee = mint.keysets.first(where: { $0.keysetID == p.keysetID } )?.inputFeePPK
+                        return Proof(p, unit: Unit(token.unit) ?? .other,
+                                     inputFeePPK: fee ?? 0,
+                                     state: .valid,
+                                     mint: mint,
+                                     wallet: activeWallet)
                     }
                     proofs.append(contentsOf: internalProofs)
                 }
@@ -203,12 +207,15 @@ struct ReceiveView: View {
                                                memo: token.memo ?? "",
                                                tokenString: tokenString ?? "",
                                                redeemed: true)
-                modelContext.insert(event)
+                
+                try await MainActor.run {
+                    modelContext.insert(event)
+                    try modelContext.save()
 
-                try modelContext.save()
-                self.loading = false
-                self.success = true
-
+                    self.loading = false
+                    self.success = true
+                }
+                
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     if let navigationPath, !navigationPath.wrappedValue.isEmpty {
                         navigationPath.wrappedValue.removeLast()
@@ -232,6 +239,7 @@ struct ReceiveView: View {
         tokenMemo = nil
         success = false
         addingMint = false
+        totalAmount = 0
     }
 
     private func displayAlert(alert: AlertDetail) {
@@ -249,17 +257,17 @@ struct TokenFragmentView: View {
 
     @Environment(\.modelContext) private var modelContext
 
-    @State var fragmentState: FragmentState = .mintUnavailable
+    @State var fragmentState: FragmentState? = .mintUnavailable
     @State var fragment: CashuSwift.ProofContainer
     @State var amount: Int = 0 // will need to change to decimal representation
-    @State var unit: Unit = .other
+    @State var unit: Unit = .sat
     @State var addingMint: Bool = false
 
     @State var unknownMint: Bool?
 
     var activeWallet: Wallet
 
-    init(activeWallet: Wallet, fragment: CashuSwift.ProofContainer, unit: Unit) {
+    init(activeWallet: Wallet, fragment: CashuSwift.ProofContainer, unit: Unit = .sat) {
         self.activeWallet = activeWallet
         self.fragment = fragment
         self.unit = unit
@@ -291,6 +299,8 @@ struct TokenFragmentView: View {
             Text("Token part is invalid.")
         case .mintUnavailable:
             Text("Mint unavailable")
+        case .none:
+            Text("Checking...")
         }
         if let unknownMint {
             if unknownMint {
@@ -305,8 +315,6 @@ struct TokenFragmentView: View {
                 }
                 .disabled(addingMint)
             }
-        } else {
-            Text("Checking mint...")
         }
     }
 
@@ -315,6 +323,8 @@ struct TokenFragmentView: View {
             fragmentState = .mintUnavailable
             return
         }
+        
+        amount = fragment.proofs.sum //
 
         if activeWallet.mints.contains(where: { $0.url == url }) {
             unknownMint = false

@@ -453,7 +453,7 @@ class NostrDataManager: Codable {
         } catch {
             logger.warning("""
              Filemanager could not remove file from path
-             \(filePath.absoluteString). error: \(error)
+             \(self.filePath.absoluteString). error: \(error)
             """)
         }
     }
@@ -471,7 +471,7 @@ class NostrDataManager: Codable {
     private func readDataFromFile() -> NostrDataManager? {
         do {
             let data = try Data(contentsOf: filePath)
-            logger.debug("Successfully read nostr data from disk. Path: \(filePath.absoluteString)")
+            logger.debug("Successfully read nostr data from disk. Path: \(self.filePath.absoluteString)")
             let ndm = try JSONDecoder().decode(NostrDataManager.self, from: data)
             return ndm
         } catch {

@@ -45,8 +45,90 @@ final class Mint: MintRepresenting {
     required init(url: URL, keysets: [CashuSwift.Keyset]) {
         self.url = url
         self.keysets = keysets
-        dateAdded = Date()
-        proofs = []
+        self.dateAdded = Date()
+        self.proofs = []
+    }
+    
+    func proofs(for amount:Int, with unit: Unit) -> (selected:[Proof], fee:Int)? {
+        
+        let validProofsOfUnit = proofs.filter({ $0.unit == unit && $0.state == .valid })
+        
+        guard !validProofsOfUnit.isEmpty else {
+            return nil
+        }
+        
+        if validProofsOfUnit.allSatisfy({ $0.inputFeePPK == 0 }) {
+            if let selection = Mint.selectWithoutFee(amount: amount, of: validProofsOfUnit) {
+                return (selection, 0)
+            } else {
+                return nil
+            }
+        } else {
+            return Mint.selectIncludingFee(amount: amount, of: validProofsOfUnit)
+        }
+    }
+    
+    private static func selectWithoutFee(amount: Int, of proofs:[Proof]) -> [Proof]? {
+        
+        let totalAmount = proofs.reduce(0) { $0 + $1.amount }
+        if totalAmount < amount {
+            return nil
+        }
+        
+        // dp[s] will store a subset of proofs that sum up to s
+        var dp = Array<[Proof]?>(repeating: nil, count: totalAmount + 1)
+        dp[0] = []
+        
+        for proof in proofs {
+            let amount = proof.amount
+            if amount > totalAmount {
+                continue
+            }
+            for s in stride(from: totalAmount, through: amount, by: -1) {
+                if let previousSubset = dp[s - amount], dp[s] == nil {
+                    dp[s] = previousSubset + [proof]
+                }
+            }
+        }
+        
+        // Find the minimal total amount that is at least the target amount
+        for s in amount...totalAmount {
+            if let subset = dp[s] {
+                return subset
+            }
+        }
+        
+        return nil
+    }
+    
+    private static func selectIncludingFee(amount: Int, of proofs:[Proof]) -> (selected:[Proof], fee:Int)? {
+        
+        // TODO: BRUTE FORCE CHECK FOR POSSIBLE
+        
+        func fee(_ proofs:[Proof]) -> Int {
+            ((proofs.reduce(0) { $0 + $1.inputFeePPK } + 999) / 1000)
+        }
+        
+        guard var proofsSelected = selectWithoutFee(amount: amount, of: proofs) else {
+            return nil
+        }
+        
+//        proofsSelected.sort(by: { $0.amount > $1.amount })
+        
+        var proofsRest:[Proof] = proofs.filter({ !proofsSelected.contains($0) })
+        
+        proofsRest.sort(by: { $0.amount < $1.amount })
+        
+        while proofsSelected.sum < amount + fee(proofsSelected) {
+            if proofsRest.isEmpty {
+                // TODO: LOG INSUFFICIENT FUNDS
+                return nil
+            } else {
+                proofsSelected.append(proofsRest.removeFirst())
+            }
+        }
+        
+        return (proofsSelected, fee(proofsSelected))
     }
 }
 
@@ -76,16 +158,18 @@ final class Proof: ProofRepresenting {
     var amount: Int
     var state: Proof.State
     var unit: Unit
+    
+    var inputFeePPK:Int
 
     var dateCreated: Date
 
 //    @Relationship(inverse: \Mint.proofs)
-    var mint: Mint
+    var mint: Mint?
 
 //    @Relationship(inverse: \Wallet.proofs)
-    var wallet: Wallet
+    var wallet: Wallet?
 
-    init(keysetID: String, C: String, secret: String, unit: Unit, state: State, amount: Int, mint: Mint, wallet: Wallet) {
+    init(keysetID: String, C: String, secret: String, unit: Unit, inputFeePPK:Int, state: State, amount: Int, mint: Mint?, wallet: Wallet?) {
         self.keysetID = keysetID
         self.C = C
         self.secret = secret
@@ -95,16 +179,18 @@ final class Proof: ProofRepresenting {
         self.wallet = wallet
         dateCreated = Date()
         self.unit = unit
+        self.inputFeePPK = inputFeePPK
     }
 
-    init(_ proofRepresenting: ProofRepresenting, unit: Unit, state: State, mint: Mint, wallet: Wallet) {
-        keysetID = proofRepresenting.keysetID
-        C = proofRepresenting.C
-        amount = proofRepresenting.amount
-        secret = proofRepresenting.secret
+    init(_ proofRepresenting: ProofRepresenting, unit: Unit, inputFeePPK:Int , state: State, mint: Mint, wallet: Wallet) {
+        self.keysetID = proofRepresenting.keysetID
+        self.C = proofRepresenting.C
+        self.amount = proofRepresenting.amount
+        self.secret = proofRepresenting.secret
         self.wallet = wallet
         self.mint = mint
         self.unit = unit
+        self.inputFeePPK = inputFeePPK
         self.state = state
         dateCreated = Date()
     }

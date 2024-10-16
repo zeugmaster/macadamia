@@ -192,6 +192,9 @@ struct MintView: View {
     }
 
     func requestQuote() {
+        
+        // TODO: check continually whether the quote was paid
+        
         guard let selectedMint, let activeWallet else {
             return
         }
@@ -208,9 +211,13 @@ struct MintView: View {
                                                    quote: quote!, // FIXME: SAFE UNWRAPPING
                                                    amount: Double(quote?.requestDetail?.amount ?? 0),
                                                    expiration: Date(timeIntervalSince1970: TimeInterval(quote!.expiry))) // FIXME: SAFE UNWRAPPING
-                pendingMintEvent = event
-                modelContext.insert(event)
-                try modelContext.save()
+                // -- main thread
+                try await MainActor.run {
+                    pendingMintEvent = event
+                    modelContext.insert(event)
+                    try modelContext.save()
+                }
+                
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error",
                                                 description: String(describing: error)))
@@ -222,8 +229,7 @@ struct MintView: View {
     func requestMint() {
         guard let quote,
               let activeWallet,
-              let selectedMint
-        else {
+              let selectedMint else {
             return
         }
 
@@ -232,18 +238,20 @@ struct MintView: View {
             do {
                 let proofs: [Proof] = try await CashuSwift.issue(for: quote, on: selectedMint).map { p in
                     let unit = Unit(quote.requestDetail?.unit ?? "other") ?? .other
-                    return Proof(p, unit: unit, state: .valid, mint: selectedMint, wallet: activeWallet)
+                    return Proof(p, unit: unit, inputFeePPK: 0, state: .valid, mint: selectedMint, wallet: activeWallet)
                 }
                 proofs.forEach { modelContext.insert($0) }
                 let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
                                             shortDescription: "Minting",
                                             wallet: activeWallet,
                                             amount: Double(quote.requestDetail?.amount ?? 0))
-                modelContext.insert(event)
-                if let pendingMintEvent { pendingMintEvent.visible = false }
-                try modelContext.save()
-                minting = false
-                mintSuccess = true
+                try await MainActor.run {
+                    modelContext.insert(event)
+                    if let pendingMintEvent { pendingMintEvent.visible = false }
+                    try modelContext.save()
+                    minting = false
+                    mintSuccess = true
+                }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     if let navigationPath, !navigationPath.wrappedValue.isEmpty {
                         navigationPath.wrappedValue.removeLast()
