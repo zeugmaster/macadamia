@@ -6,9 +6,14 @@ import SwiftUI
 struct MeltView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
+    @Query private var allProofs:[Proof]
 
     var activeWallet: Wallet? {
         wallets.first
+    }
+    
+    var proofsOfSelectedMint:[Proof] {
+        allProofs.filter { $0.mint == selectedMint }
     }
 
     @State var quote: CashuSwift.Bolt11.MeltQuote?
@@ -34,6 +39,7 @@ struct MeltView: View {
         self.navigationPath = navigationPath
         self.pendingMeltEvent = pendingMeltEvent
         self.quote = quote
+        invoiceString = quote?.quote ?? ""
     }
 
     var body: some View {
@@ -151,7 +157,7 @@ struct MeltView: View {
         else {
             return
         }
-        selectedMintBalance = selectedMint.proofs.sum
+        selectedMintBalance = proofsOfSelectedMint.filter({ $0.state == .valid }).sum
     }
 
     var invoiceAmount: Int? {
@@ -159,7 +165,7 @@ struct MeltView: View {
     }
 
     func getQuote() {
-        guard let _ = activeWallet,
+        guard let activeWallet,
               let selectedMint
         else {
             print("unable to get quote, activeWallet or selectedMint is nil")
@@ -167,10 +173,30 @@ struct MeltView: View {
         }
 
         Task {
-            quote = try await CashuSwift.getQuote(mint: selectedMint,
+            guard let meltQuote = try await CashuSwift.getQuote(mint: selectedMint,
                                                   quoteRequest: CashuSwift.Bolt11.RequestMeltQuote(unit: "sat", // TODO: REMOVE HARD CODED UNIT
                                                                                                    request: invoiceString,
-                                                                                                   options: nil)) as? CashuSwift.Bolt11.MeltQuote
+                                                                                                   options: nil)) as? CashuSwift.Bolt11.MeltQuote else {
+                print("could not parse melt quote as bolt11 quote object")
+                return
+            }
+            
+            await MainActor.run {
+                quote = meltQuote
+                if pendingMeltEvent == nil {
+                    pendingMeltEvent = Event.pendingMeltEvent(unit: .sat,
+                                                              shortDescription: "Melt Attempt",
+                                                              wallet: activeWallet,
+                                                              quote: meltQuote,
+                                                              amount: Double(meltQuote.amount),
+                                                              expiration: Date(timeIntervalSince1970: TimeInterval(meltQuote.expiry)),
+                                                              longDescription: "",
+                                                              proofs: [])
+                }
+                
+                modelContext.insert(pendingMeltEvent!)
+                try? modelContext.save()
+            }
         }
     }
 
@@ -191,47 +217,55 @@ struct MeltView: View {
               let activeWallet,
               let quote
         else {
+            print("could not melt, missing mint, wallet or quote")
             return
         }
-
-//        #error("1. handle pending melt with quote")
-
-//        #error("3. handle proofs -> pending and success event")
-
-        let worstInputFee = (CashuSwift.activeKeysetForUnit("sat", mint: selectedMint)?.inputFeePPK ?? 0 * worstCaseInputCount(for: UInt(quote.amount + quote.feeReserve)) + 999) / 1000
-        let targetAmount = quote.amount + quote.feeReserve + worstInputFee
-
+        
+        let selectedUnit:Unit = .sat
+        
         // TODO: ADD FEE AMOUNT UI AND INFO
 
-        guard let selection = CashuSwift.pick(selectedMint.proofs, amount: targetAmount, mint: selectedMint) else {
+        guard let selection = selectedMint.select(allProofs: proofsOfSelectedMint,
+                                                  amount: quote.amount + quote.feeReserve,
+                                                  unit: .sat) else {
             displayAlert(alert: AlertDetail(title: "Insufficient funds.",
                                             description: "The wallet could not collect enough ecash to settle this payment."))
             return
         }
 
-        let proofsToSent = selection.selected.map { $0 as! Proof }
-
-        proofsToSent.forEach { $0.state = .pending }
-        #warning("make sure this actually updates the DB")
-
-        // create a pending melt event that
-
-        // SAVE AT THIS POINT
-
+        selection.selected.forEach { $0.state = .pending }
+        
         loading = true
 
         Task {
             do {
-                let meltResult = try await CashuSwift.melt(mint: selectedMint, quote: quote, proofs: proofsToSent, seed: activeWallet.seed)
-                // TODO: WHILE THIS IS RUNNING KEEP SCREEN OPEN
+                
+                #warning("det sec")
+                let meltResult = try await CashuSwift.melt(mint: selectedMint,
+                                                           quote: quote,
+                                                           proofs: selection.selected,
+                                                           seed: nil)
+                
+                // TODO: temp disable back button
 
                 if meltResult.paid {
-                    loading = false
-                    success = true
+                    await MainActor.run {
+                        loading = false
+                        success = true
 
-                    proofsToSent.forEach { $0.state = .spent }
+                        selection.selected.forEach { $0.state = .spent }
 
-                    // make pending melt event non visible and create melt event for history
+                        // make pending melt event non visible and create melt event for history
+                        let meltEvent = Event.meltEvent(unit: selectedUnit,
+                                                        shortDescription: "Melt",
+                                                        wallet: activeWallet,
+                                                        amount: Double(quote.amount))
+                        
+                        pendingMeltEvent?.visible = false
+                        modelContext.insert(meltEvent)
+                        try? modelContext.save()
+                        print(meltResult)
+                    }
 
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                         if let navigationPath, !navigationPath.wrappedValue.isEmpty {
@@ -239,14 +273,15 @@ struct MeltView: View {
                         }
                     }
                 } else {
-                    // pending event remains
-
-                    proofsToSent.forEach { $0.state = .valid }
-
-                    loading = false
-                    success = false
-                    displayAlert(alert: AlertDetail(title: "Unsuccessful",
-                                                    description: "The Lighning invoice could not be payed by the mint. Please try again (later)."))
+                    await MainActor.run {
+                        selection.selected.forEach { $0.state = .valid }
+                        loading = false
+                        success = false
+                        try? modelContext.save()
+                        displayAlert(alert: AlertDetail(title: "Unsuccessful",
+                                                        description: "The Lighning invoice could not be payed by the mint. Please try again (later)."))
+                        
+                    }
                 }
             } catch {
                 // pending event also remains

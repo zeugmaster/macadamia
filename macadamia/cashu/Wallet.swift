@@ -49,6 +49,25 @@ final class Mint: MintRepresenting {
         self.proofs = []
     }
     
+    func select(allProofs:[Proof], amount:Int, unit:Unit) -> (selected:[Proof], fee:Int)? {
+        
+        let validProofsOfUnit = allProofs.filter({ $0.unit == unit && $0.state == .valid && $0.mint == self})
+        
+        guard !validProofsOfUnit.isEmpty else {
+            return nil
+        }
+        
+        if validProofsOfUnit.allSatisfy({ $0.inputFeePPK == 0 }) {
+            if let selection = Mint.selectWithoutFee(amount: amount, of: validProofsOfUnit) {
+                return (selection, 0)
+            } else {
+                return nil
+            }
+        } else {
+            return Mint.selectIncludingFee(amount: amount, of: validProofsOfUnit)
+        }
+    }
+    
     func proofs(for amount:Int, with unit: Unit) -> (selected:[Proof], fee:Int)? {
         
         let validProofsOfUnit = proofs.filter({ $0.unit == unit && $0.state == .valid })

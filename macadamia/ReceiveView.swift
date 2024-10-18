@@ -55,12 +55,12 @@ struct ReceiveView: View {
                     } header: {
                         Text("cashu Token")
                     }
-                    if token != nil && activeWallet != nil {
-                        ForEach(token!.token, id: \.proofs.first?.C) { fragment in
+                    if let token, let activeWallet {
+                        ForEach(token.token, id: \.proofs.first?.C) { fragment in
                             Section {
-                                TokenFragmentView(activeWallet: activeWallet!,
+                                TokenFragmentView(activeWallet: activeWallet,
                                                   fragment: fragment,
-                                                  unit: Unit(token?.unit) ?? .sat)
+                                                  unit: Unit(token.unit) ?? .sat)
                             }
                         }
                     }

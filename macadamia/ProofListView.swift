@@ -20,10 +20,11 @@ struct MintListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var mints: [Mint]
     
+    
     var body: some View {
         List {
             ForEach(mints) { m in
-                NavigationLink(destination: ProofListView(proofs: m.proofs),
+                NavigationLink(destination: ProofListView(mint: m),
                                label: {
                     Text(m.url.absoluteString)
                 })
@@ -38,13 +39,18 @@ struct MintListView: View {
 
 struct ProofListView: View {
     
-    var proofs:[Proof]
+    @Environment(\.modelContext) private var modelContext
+    @Query private var allProofs: [Proof]
+    
+//    var proofs:[Proof]
+    var mint:Mint
     
     var sortedProofs:[Proof] {
+        let mintProofs = allProofs.filter { $0.mint == mint }
         let outer = [
-            proofs.filter({ $0.state == .valid }).sorted(by: { $0.amount < $1.amount }),
-            proofs.filter({ $0.state == .pending }).sorted(by: { $0.amount < $1.amount }),
-            proofs.filter({ $0.state == .spent }).sorted(by: { $0.amount < $1.amount })
+            mintProofs.filter({ $0.state == .valid }).sorted(by: { $0.amount < $1.amount }),
+            mintProofs.filter({ $0.state == .pending }).sorted(by: { $0.amount < $1.amount }),
+            mintProofs.filter({ $0.state == .spent }).sorted(by: { $0.amount < $1.amount })
         ]
         return outer.flatMap { $0 }
     }
@@ -55,7 +61,7 @@ struct ProofListView: View {
                 ProofView(proof: proof)
             }
         }
-        .navigationTitle(proofs.first?.mint?.url.host(percentEncoded:false) ?? "")
+        .navigationTitle(allProofs.first?.mint?.url.host(percentEncoded:false) ?? "")
     }
 }
 

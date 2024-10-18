@@ -5,6 +5,7 @@ import SwiftUI
 struct MintManagerView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
+    @Query private var allProofs: [Proof]
 
     @State var newMintURLString = ""
     @State var showAlert: Bool = false
@@ -14,6 +15,8 @@ struct MintManagerView: View {
     var activeWallet: Wallet? {
         wallets.first
     }
+    
+    
 
     var body: some View {
         NavigationView {

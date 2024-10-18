@@ -240,12 +240,13 @@ struct MintView: View {
                     let unit = Unit(quote.requestDetail?.unit ?? "other") ?? .other
                     return Proof(p, unit: unit, inputFeePPK: 0, state: .valid, mint: selectedMint, wallet: activeWallet)
                 }
-                proofs.forEach { modelContext.insert($0) }
-                let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
-                                            shortDescription: "Minting",
-                                            wallet: activeWallet,
-                                            amount: Double(quote.requestDetail?.amount ?? 0))
+                
                 try await MainActor.run {
+                    proofs.forEach { modelContext.insert($0) }
+                    let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
+                                                shortDescription: "Minting",
+                                                wallet: activeWallet,
+                                                amount: Double(quote.requestDetail?.amount ?? 0))
                     modelContext.insert(event)
                     if let pendingMintEvent { pendingMintEvent.visible = false }
                     try modelContext.save()

@@ -5,6 +5,7 @@ import SwiftUI
 struct SendView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
+    @Query private var allProofs:[Proof]
 
     var activeWallet: Wallet? {
         wallets.first
@@ -143,6 +144,10 @@ struct SendView: View {
     var selectedMint: Mint? {
         activeWallet?.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) })
     }
+    
+    var proofsOfSelectedMint:[Proof] {
+        allProofs.filter { $0.mint == selectedMint }
+    }
 
     func copyToClipboard() {
         UIPasteboard.general.string = tokenString
@@ -175,7 +180,7 @@ struct SendView: View {
         else {
             return
         }
-        selectedMintBalance = selectedMint.proofs.sum
+        selectedMintBalance = proofsOfSelectedMint.filter({ $0.state == .valid }).sum
     }
 
     var amount: Int {
@@ -204,7 +209,7 @@ struct SendView: View {
                 
                 // let recipientSwapFee =
                 
-                guard let preSelect = selectedMint.proofs(for: amount, with: selectedUnit) else {
+                guard let preSelect = selectedMint.select(allProofs:allProofs, amount: amount, unit: selectedUnit) else {
                     displayAlert(alert: AlertDetail(title: "Could not select proofs to send."))
                     return
                 }
