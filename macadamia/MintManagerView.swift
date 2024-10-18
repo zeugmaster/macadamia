@@ -118,6 +118,18 @@ struct MintManagerView: View {
 struct MintInfoRowView: View {
     var mint: Mint
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 44
+    
+    var sumsByUnit: [Unit: Int] {
+        mint.proofs.filter({ $0.state == .valid }).reduce(into: [Unit: Int]()) { result, proof in
+            result[proof.unit, default: 0] += proof.amount
+        }
+    }
+    
+    var stringForSums:String {
+        sumsByUnit.map { (unit, amount) in
+            balanceString(amount, unit: unit)
+        }.joined(separator: " | ")
+    }
 
     var body: some View {
         HStack {
@@ -152,15 +164,16 @@ struct MintInfoRowView: View {
 //                    .offset(x: 15, y: -15)
             }
             VStack(alignment: .leading) {
-                Text(mint.url.absoluteString)
+                Text(mint.url.host(percentEncoded: false)!)
                     .bold()
                     .dynamicTypeSize(.xLarge)
-                Text("420 sats | 21.69 USD")
-                    .foregroundStyle(.secondary)
-                    .dynamicTypeSize(.small)
+                Text(stringForSums)
+                    .foregroundStyle(.gray)
             }
         }
     }
+    
+    
 }
 
 // #Preview {

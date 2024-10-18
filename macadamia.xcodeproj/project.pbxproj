@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		37049E262BD54A2E00BBAC4E /* URUI in Frameworks */ = {isa = PBXBuildFile; productRef = 37049E252BD54A2E00BBAC4E /* URUI */; };
 		370A83FF2CB94CCD0039A413 /* .swiftformat in Resources */ = {isa = PBXBuildFile; fileRef = 370A83FE2CB94CCD0039A413 /* .swiftformat */; };
+		370A84012CC171D60039A413 /* ProofListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 370A84002CC171D50039A413 /* ProofListView.swift */; };
+		370A84072CC18AEE0039A413 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 370A84062CC18AEE0039A413 /* Flow */; };
+		370A84092CC1E3440039A413 /* Currency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 370A84082CC1E3440039A413 /* Currency.swift */; };
 		372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034B92B29E1BC00C4F955 /* macadamiaApp.swift */; };
 		372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
@@ -62,6 +65,8 @@
 
 /* Begin PBXFileReference section */
 		370A83FE2CB94CCD0039A413 /* .swiftformat */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .swiftformat; sourceTree = "<group>"; };
+		370A84002CC171D50039A413 /* ProofListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofListView.swift; sourceTree = "<group>"; };
+		370A84082CC1E3440039A413 /* Currency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Currency.swift; sourceTree = "<group>"; };
 		372034B62B29E1BC00C4F955 /* macadamia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macadamia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		372034B92B29E1BC00C4F955 /* macadamiaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macadamiaApp.swift; sourceTree = "<group>"; };
 		372034BB2B29E1BC00C4F955 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -111,6 +116,7 @@
 				377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */,
 				376E88432BE5468B0026FF8D /* Popovers in Frameworks */,
 				3743CE612B48AD3900F862AB /* CodeScanner in Frameworks */,
+				370A84072CC18AEE0039A413 /* Flow in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -164,6 +170,7 @@
 				374F0DC02C4D34FD0031E8CD /* BalanceView.swift */,
 				379BDF612B430775008FD0E7 /* MintManagerView.swift */,
 				374F0DBE2C4978E90031E8CD /* MintDetailView.swift */,
+				370A84082CC1E3440039A413 /* Currency.swift */,
 				379BDF632B430F32008FD0E7 /* Settings */,
 				37DD6E202B618B1400AC5676 /* cashu */,
 				379BDF5A2B42C4C4008FD0E7 /* nostr */,
@@ -201,6 +208,7 @@
 				379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */,
 				379BDF662B4696B6008FD0E7 /* MnemonicView.swift */,
 				37CC217F2B8A71FD00A13F2F /* DrainView.swift */,
+				370A84002CC171D50039A413 /* ProofListView.swift */,
 			);
 			name = Settings;
 			sourceTree = "<group>";
@@ -248,6 +256,7 @@
 				37049E252BD54A2E00BBAC4E /* URUI */,
 				376E88422BE5468B0026FF8D /* Popovers */,
 				376E68CA2C7DD0470043B46D /* CashuSwift */,
+				370A84062CC18AEE0039A413 /* Flow */,
 			);
 			productName = macadamia;
 			productReference = 372034B62B29E1BC00C4F955 /* macadamia.app */;
@@ -308,6 +317,7 @@
 				37049E242BD54A2E00BBAC4E /* XCRemoteSwiftPackageReference "URUI" */,
 				376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */,
 				376E68C92C7DD0470043B46D /* XCRemoteSwiftPackageReference "cashu-swift" */,
+				370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -372,6 +382,7 @@
 				372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */,
 				3743CE642B494C3D00F862AB /* RestoreView.swift in Sources */,
 				3743CE582B47798800F862AB /* NostrSendView.swift in Sources */,
+				370A84012CC171D60039A413 /* ProofListView.swift in Sources */,
 				379BDF602B430765008FD0E7 /* RelayManagerView.swift in Sources */,
 				3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */,
 				374F0DC12C4D34FD0031E8CD /* BalanceView.swift in Sources */,
@@ -380,6 +391,7 @@
 				379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */,
 				372D8FDC2BD5BD2500494170 /* QRScanner.swift in Sources */,
 				3743CE682B4AA67600F862AB /* EventDetailView.swift in Sources */,
+				370A84092CC1E3440039A413 /* Currency.swift in Sources */,
 				37B2C1582B60192100535DAF /* MintView.swift in Sources */,
 				376E68CD2C7DD28E0043B46D /* Wallet.swift in Sources */,
 				379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */,
@@ -543,7 +555,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
 				DEVELOPMENT_TEAM = AN6VRTK6TB;
 				ENABLE_PREVIEWS = YES;
@@ -561,7 +573,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.cypherbase.macadamia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -581,7 +593,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
 				DEVELOPMENT_TEAM = AN6VRTK6TB;
 				ENABLE_PREVIEWS = YES;
@@ -599,7 +611,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.cypherbase.macadamia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -689,6 +701,14 @@
 				minimumVersion = 11.0.0;
 			};
 		};
+		370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tevelee/SwiftUI-Flow.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.0;
+			};
+		};
 		3743CE5F2B48AD3900F862AB /* XCRemoteSwiftPackageReference "CodeScanner" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/twostraws/CodeScanner.git";
@@ -752,6 +772,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 37049E242BD54A2E00BBAC4E /* XCRemoteSwiftPackageReference "URUI" */;
 			productName = URUI;
+		};
+		370A84062CC18AEE0039A413 /* Flow */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
+			productName = Flow;
 		};
 		3743CE602B48AD3900F862AB /* CodeScanner */ = {
 			isa = XCSwiftPackageProductDependency;

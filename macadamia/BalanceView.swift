@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LargeDynamicText: View {
-    let text: String
+    var text: String
     let baseSize: CGFloat
     let minSize: CGFloat
 
@@ -72,7 +72,7 @@ struct LargeDynamicText: View {
 struct BalanceView: View {
     let txt = "42000"
     var body: some View {
-        LargeDynamicText(text: "4200", baseSize: 80)
+        LargeDynamicText(text: "420000000000000", baseSize: 80)
             .monospaced()
             .bold()
     }

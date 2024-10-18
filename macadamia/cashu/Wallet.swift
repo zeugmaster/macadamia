@@ -195,10 +195,14 @@ final class Proof: ProofRepresenting {
         dateCreated = Date()
     }
 
-    enum State: Codable {
+    enum State: Codable, Comparable {
         case valid
         case pending
         case spent
+        
+        static func < (lhs: State, rhs: State) -> Bool {
+            lhs.sortOrder < rhs.sortOrder
+        }
     }
 }
 

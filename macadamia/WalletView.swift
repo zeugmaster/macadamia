@@ -29,25 +29,23 @@ struct WalletView: View {
     static let buttonPadding: CGFloat = 1
 
     var body: some View {
-        let _ = print("WalletView body called")
         NavigationStack(path: $navigationPath) {
             VStack {
-                Spacer(minLength: 60)
-                HStack(alignment: .center) {
-                    Spacer()
-                    Spacer()
+                Spacer(minLength: 20)
+                VStack(alignment: .center) {
                     Text(balance != nil ? String(balance!) : "...")
                         .monospaced()
                         .bold()
-                        .dynamicTypeSize(.accessibility5)
+                        .font(.system(size: 70))
+//                    Spacer().frame(width: 20)
                     Text("sats")
                         .monospaced()
                         .bold()
                         .dynamicTypeSize(.xxxLarge)
                         .padding(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
                         .foregroundStyle(.secondary)
-                    Spacer()
                 }
+                .padding(40)
                 .onAppear(perform: {
                     activeWallet = wallets.first
 
@@ -60,7 +58,7 @@ struct WalletView: View {
                         TransactionListRowView(event: event)
                     }
                 }
-                .padding(EdgeInsets(top: 60, leading: 20, bottom: 20, trailing: 20))
+                .padding(EdgeInsets(top: 0, leading: 20, bottom: 20, trailing: 20))
                 .listStyle(.plain)
                 Spacer()
                 HStack {

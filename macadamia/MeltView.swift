@@ -146,7 +146,7 @@ struct MeltView: View {
     }
 
     func updateBalance() {
-        guard let activeWallet,
+        guard let _ = activeWallet,
               let selectedMint
         else {
             return
@@ -159,7 +159,7 @@ struct MeltView: View {
     }
 
     func getQuote() {
-        guard let activeWallet,
+        guard let _ = activeWallet,
               let selectedMint
         else {
             print("unable to get quote, activeWallet or selectedMint is nil")

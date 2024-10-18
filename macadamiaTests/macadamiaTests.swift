@@ -77,13 +77,16 @@ final class macadamiaTests: XCTestCase {
         // Set a target amount
         let targetAmount = 20
         
-        let selection = mint.proofs(for: targetAmount, with: .sat)
+        guard let selection = mint.proofs(for: targetAmount, with: .sat) else {
+            XCTFail()
+            return
+        }
         
-        print("proof sum: \(selection?.selected.sum)")
-        selection?.selected.forEach({ proof in
+        print("proof sum: \(selection.selected.sum)")
+        selection.selected.forEach({ proof in
             print(proof.amount)
         })
-        print(selection?.fee)
+        print(selection.fee)
         print(proofs.sum)
     }
 }
