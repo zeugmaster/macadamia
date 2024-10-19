@@ -190,8 +190,7 @@ struct MeltView: View {
                                                               quote: meltQuote,
                                                               amount: Double(meltQuote.amount),
                                                               expiration: Date(timeIntervalSince1970: TimeInterval(meltQuote.expiry)),
-                                                              longDescription: "",
-                                                              proofs: [])
+                                                              longDescription: "")
                 }
                 
                 modelContext.insert(pendingMeltEvent!)

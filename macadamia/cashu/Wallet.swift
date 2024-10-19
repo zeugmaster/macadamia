@@ -218,10 +218,6 @@ final class Proof: ProofRepresenting {
         case valid
         case pending
         case spent
-        
-        static func < (lhs: State, rhs: State) -> Bool {
-            lhs.sortOrder < rhs.sortOrder
-        }
     }
 }
 
@@ -289,8 +285,8 @@ final class Event {
         Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .receive, wallet: wallet, amount: amount, longDescription: longDescription, proofs: proofs, memo: memo, tokenString: tokenString, redeemed: redeemed)
     }
 
-    static func pendingMeltEvent(unit: Unit, shortDescription: String, visible: Bool = true, wallet: Wallet, quote _: CashuSwift.Bolt11.MeltQuote, amount: Double, expiration: Date, longDescription: String, proofs: [Proof]) -> Event {
-        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .pendingMelt, wallet: wallet, amount: amount, expiration: expiration, longDescription: longDescription, proofs: proofs)
+    static func pendingMeltEvent(unit: Unit, shortDescription: String, visible: Bool = true, wallet: Wallet, quote _: CashuSwift.Bolt11.MeltQuote, amount: Double, expiration: Date, longDescription: String) -> Event {
+        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .pendingMelt, wallet: wallet, amount: amount, expiration: expiration, longDescription: longDescription)
     }
 
     static func meltEvent(unit: Unit, shortDescription: String, visible: Bool = true, wallet: Wallet, amount: Double) -> Event {
