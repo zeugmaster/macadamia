@@ -37,6 +37,7 @@ struct WalletView: View {
                         .monospaced()
                         .bold()
                         .font(.system(size: 70))
+                        .foregroundStyle(.green)
 //                    Spacer().frame(width: 20)
                     Text("sats")
                         .monospaced()

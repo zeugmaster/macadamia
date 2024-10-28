@@ -4,9 +4,9 @@ import SwiftData
 
 @Model
 final class Wallet {
-    let seed: String?
+    var seed: String?
 
-    let name: String?
+    var name: String?
 
     @Relationship(inverse: \Mint.wallet)
     var mints: [Mint]
@@ -14,7 +14,7 @@ final class Wallet {
     @Relationship(inverse: \Proof.wallet)
     var proofs: [Proof]
 
-    let dateCreated: Date
+    var dateCreated: Date
 
     @Relationship(inverse: \Event.wallet)
     var events: [Event]
@@ -35,8 +35,7 @@ final class Mint: MintRepresenting {
     var info: MintInfo?
     var nickName: String?
     var dateAdded: Date
-
-//    @Relationship(inverse: \Wallet.mints)
+ 
     var wallet: Wallet?
 
     @Relationship(inverse: \Proof.mint)
@@ -149,6 +148,15 @@ final class Mint: MintRepresenting {
         
         return (proofsSelected, fee(proofsSelected))
     }
+    
+    func increaseDerivationCounterForKeysetWithID(_ keysetID:String, by n:Int) {
+        if let index = self.keysets.firstIndex(where: { $0.keysetID == keysetID }) {
+            var keyset = self.keysets[index]
+            proofs.forEach({ $0.inputFeePPK = keyset.inputFeePPK })
+            keyset.derivationCounter += n
+            self.keysets[index] = keyset
+        }
+    }
 }
 
 struct MintInfo: Codable {
@@ -201,7 +209,7 @@ final class Proof: ProofRepresenting {
         self.inputFeePPK = inputFeePPK
     }
 
-    init(_ proofRepresenting: ProofRepresenting, unit: Unit, inputFeePPK:Int , state: State, mint: Mint, wallet: Wallet) {
+    init(_ proofRepresenting: ProofRepresenting, unit: Unit, inputFeePPK:Int, state: State, mint: Mint, wallet: Wallet) {
         self.keysetID = proofRepresenting.keysetID
         self.C = proofRepresenting.C
         self.amount = proofRepresenting.amount
@@ -223,12 +231,12 @@ final class Proof: ProofRepresenting {
 
 @Model
 final class Event {
-    let date: Date
-    let unit: Unit
-    let shortDescription: String
+    var date: Date
+    var unit: Unit
+    var shortDescription: String
     var visible: Bool
-    let kind: Kind
-    let wallet: Wallet
+    var kind: Kind
+    var wallet: Wallet
 
     var bolt11MintQuote: CashuSwift.Bolt11.MintQuote?
     var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote?
@@ -285,8 +293,8 @@ final class Event {
         Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .receive, wallet: wallet, amount: amount, longDescription: longDescription, proofs: proofs, memo: memo, tokenString: tokenString, redeemed: redeemed)
     }
 
-    static func pendingMeltEvent(unit: Unit, shortDescription: String, visible: Bool = true, wallet: Wallet, quote _: CashuSwift.Bolt11.MeltQuote, amount: Double, expiration: Date, longDescription: String) -> Event {
-        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .pendingMelt, wallet: wallet, amount: amount, expiration: expiration, longDescription: longDescription)
+    static func pendingMeltEvent(unit: Unit, shortDescription: String, visible: Bool = true, wallet: Wallet, quote: CashuSwift.Bolt11.MeltQuote, amount: Double, expiration: Date, longDescription: String) -> Event {
+        Event(date: Date(), unit: unit, shortDescription: shortDescription, visible: visible, kind: .pendingMelt, wallet: wallet, bolt11MeltQuote: quote, amount: amount, expiration: expiration, longDescription: longDescription)
     }
 
     static func meltEvent(unit: Unit, shortDescription: String, visible: Bool = true, wallet: Wallet, amount: Double) -> Event {

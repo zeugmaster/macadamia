@@ -237,6 +237,7 @@ struct SendView: View {
                 } else if preSelect.selected.sum > amount {
                     // swap to amount specified by user
                     preSelect.selected.forEach({ $0.state = .spent })
+                    #warning("det sec")
                     let (sendProofs, changeProofs) = try await CashuSwift.swap(mint: selectedMint, proofs: preSelect.selected, amount: amount)
                     // add return tokens to db, sendProofs: pending, changeProofs valid
                     let feeRate = selectedMint.keysets.first(where: { $0.keysetID == sendProofs.first?.keysetID })?.inputFeePPK ?? 0

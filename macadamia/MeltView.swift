@@ -245,13 +245,16 @@ struct MeltView: View {
                                                            proofs: selection.selected,
                                                            seed: nil)
                 
-                // TODO: temp disable back button
+                // TODO: temp disable back button (maybe)
 
                 if meltResult.paid {
                     await MainActor.run {
                         loading = false
                         success = true
-
+                        
+//                        meltResult.change.forEach({ modelContext.insert(Proof($0,
+//                                                                              unit: , inputFeePPK: <#T##Int#>, state: <#T##Proof.State#>, mint: <#T##Mint#>, wallet: <#T##Wallet#>)) })
+                        
                         selection.selected.forEach { $0.state = .spent }
 
                         // make pending melt event non visible and create melt event for history
@@ -271,6 +274,7 @@ struct MeltView: View {
                             navigationPath.wrappedValue.removeLast()
                         }
                     }
+                    
                 } else {
                     await MainActor.run {
                         selection.selected.forEach { $0.state = .valid }

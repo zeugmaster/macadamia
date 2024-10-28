@@ -21,8 +21,6 @@ struct ReceiveView: View {
     @State var totalAmount: Int = 0
     @State var addingMint = false
 
-//    @State var refreshCounter:Int = 0
-
     @State var showAlert: Bool = false
     @State var currentAlert: AlertDetail?
 
@@ -183,6 +181,7 @@ struct ReceiveView: View {
 
         Task {
             do {
+                #warning("det sec")
                 let proofsDict = try await mintsInToken.receive(token: token, seed: activeWallet.seed)
                 for mint in mintsInToken {
                     let proofsPerMint = proofsDict[mint.url.absoluteString]!

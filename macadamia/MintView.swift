@@ -169,7 +169,7 @@ struct MintView: View {
     }
 
     // MARK: - LOGIC
-
+    
     func copyToClipboard() {
         UIPasteboard.general.string = quote?.request
         withAnimation {
@@ -232,14 +232,19 @@ struct MintView: View {
               let selectedMint else {
             return
         }
-
+        
         minting = true
         Task {
             do {
-                let proofs: [Proof] = try await CashuSwift.issue(for: quote, on: selectedMint).map { p in
+                let proofs: [Proof] = try await CashuSwift.issue(for: quote, on: selectedMint, seed: activeWallet.seed).map { p in
                     let unit = Unit(quote.requestDetail?.unit ?? "other") ?? .other
                     return Proof(p, unit: unit, inputFeePPK: 0, state: .valid, mint: selectedMint, wallet: activeWallet)
                 }
+                
+                // replace keyset to persist derivation counter
+                selectedMint.increaseDerivationCounterForKeysetWithID(proofs.first!.keysetID, by: proofs.count)
+                let keysetFee = selectedMint.keysets.first(where: { $0.keysetID == proofs.first?.keysetID })?.inputFeePPK ?? 0
+                proofs.forEach({ $0.inputFeePPK = keysetFee })
                 
                 try await MainActor.run {
                     proofs.forEach { modelContext.insert($0) }
