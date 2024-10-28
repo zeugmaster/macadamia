@@ -5,11 +5,12 @@ import SwiftUI
 struct MintManagerView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
-    @Query private var allProofs: [Proof]  // All proofs are monitored
-
+    @Query(animation: .default) private var allProofs: [Proof]
+    
+    @State private var balanceStrings = [UUID: String?]()
+    
     @State var newMintURLString = ""
     @State var showAlert: Bool = false
-
     @State var currentAlert: AlertDetail?
 
     var activeWallet: Wallet? {
@@ -24,7 +25,7 @@ struct MintManagerView: View {
                         List(activeWallet.mints, id: \.url) { mint in
                             NavigationLink(destination: MintDetailView(mint: mint)) {
                                 // Pass proofs related to the mint to MintInfoRowView
-                                MintInfoRowView(mint: mint, proofs: proofsForMint(mint))
+                                MintInfoRowView(mint: mint, balanceString: balanceStrings[mint.mintID] ?? nil)
                             }
                         }
                     }
@@ -40,18 +41,40 @@ struct MintManagerView: View {
                     }
                 }
                 .navigationTitle("Mints")
+                .alert(isPresented: $showAlert) {
+                    Alert(
+                        title: Text(currentAlert?.title ?? "Error"),
+                        message: Text(currentAlert?.alertDescription ?? "An unknown error occurred"),
+                        dismissButton: .default(Text("OK"))
+                    )
+                }
                 .onAppear {
-                    print("MintManagerView appeared")
+                    calculateBalanceStrings()
                 }
             } else {
                 Text("No wallet initialized yet.")
             }
         }
     }
-
-    // Filter proofs for a specific mint
+    
+    func calculateBalanceStrings() {
+        balanceStrings = activeWallet!.mints.reduce(into: [UUID: String?]()) { result, mint in
+            let proofsOfMint = allProofs.filter({ $0.mint == mint && $0.state == .valid })
+            print(proofsOfMint)
+            let sumsByUnit = proofsOfMint.reduce(into: [Unit: Int]()) { result, proof in
+                result[proof.unit, default: 0] += proof.amount
+            }
+            print(sumsByUnit)
+            result[mint.mintID] = sumsByUnit.isEmpty ? nil : sumsByUnit.map { (unit, amount) in
+                "\(amount) \(unit.rawValue)"
+            }.joined(separator: " | ")
+        }
+    }
+    
     func proofsForMint(_ mint: Mint) -> [Proof] {
-        allProofs.filter { $0.mint == mint && $0.state == .valid }
+        return allProofs.filter { proof in
+            proof.mint == mint && proof.state == .valid
+        }
     }
 
     func addMint() {
@@ -86,25 +109,24 @@ struct MintManagerView: View {
 }
 
 struct MintInfoRowView: View {
-    var mint: Mint
-    var proofs: [Proof]  // Pass the relevant proofs
+    let mint: Mint
+//    let proofs: [Proof]
+    let balanceString: String?
 
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 44
 
-    // Calculate balances from the provided proofs
-    var sumsByUnit: [Unit: Int] {
-        proofs.reduce(into: [Unit: Int]()) { result, proof in
-            result[proof.unit, default: 0] += proof.amount
-        }
-    }
-
-    // Format the sums for display
-    var stringForSums: String? {
-        if sumsByUnit.isEmpty { return "No Balance" }
-        return sumsByUnit.map { (unit, amount) in
-            "\(amount) \(unit.rawValue)"
-        }.joined(separator: " | ")
-    }
+//    var sumsByUnit: [Unit: Int] {
+//        proofs.reduce(into: [Unit: Int]()) { result, proof in
+//            result[proof.unit, default: 0] += proof.amount
+//        }
+//    }
+//
+//    var stringForSums: String? {
+//        if sumsByUnit.isEmpty { return "No Balance" }
+//        return sumsByUnit.map { (unit, amount) in
+//            "\(amount) \(unit.rawValue)"
+//        }.joined(separator: " | ")
+//    }
 
     var body: some View {
         HStack {
@@ -120,9 +142,10 @@ struct MintInfoRowView: View {
                 Text(mint.url.host(percentEncoded: false)!)
                     .bold()
                     .dynamicTypeSize(.xLarge)
-                Text(stringForSums ?? "No Balance")
+                Text(balanceString ?? "No Balance")
                     .foregroundStyle(.gray)
             }
         }
     }
 }
+

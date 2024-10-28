@@ -115,7 +115,7 @@ struct DrainView: View {
         guard let wallet = activeWallet else { return } // TODO: WARNING TO USER
         tokens = []
         do {
-            guard !wallet.proofs.isEmpty else {
+            guard let proofs = wallet.proofs, !proofs.isEmpty else {
                 displayAlert(alert: AlertDetail(title: "Empty Wallet",
                                                 description: "No drain token can be created from an empty wallet."))
                 return
@@ -123,10 +123,13 @@ struct DrainView: View {
 
             var proofContainers: [CashuSwift.ProofContainer] = []
             for mint in wallet.mints {
-                let libProofs = mint.proofs.map { CashuSwift.Proof($0) }
+                guard let proofs = mint.proofs, !proofs.isEmpty else {
+                    continue
+                }
+                let libProofs = proofs.map { CashuSwift.Proof($0) }
                 let proofContainer = CashuSwift.ProofContainer(mint: mint.url.absoluteString,
                                                                proofs: libProofs)
-                mint.proofs.forEach { $0.state = .pending }
+                proofs.forEach { $0.state = .pending }
                 proofContainers.append(proofContainer)
             }
 

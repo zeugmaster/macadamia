@@ -26,11 +26,11 @@ struct SettingsView: View {
                 } header: {
                     Text("cashu")
                 }
-                Section {
-                    NavigationLink(destination: RelayManagerView()) { Text("Relays") }
-                } header: {
-                    Text("nostr")
-                }
+//                Section {
+//                    NavigationLink(destination: RelayManagerView()) { Text("Relays") }
+//                } header: {
+//                    Text("nostr")
+//                }
                 Section {
                     NavigationLink("About this Release", destination: ReleaseNoteView())
                     

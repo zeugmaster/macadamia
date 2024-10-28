@@ -196,8 +196,10 @@ struct MintView: View {
         // TODO: check continually whether the quote was paid
         
         guard let selectedMint, let activeWallet else {
+            print("could not request quote: selectedMint or activeWallet are nil")
             return
         }
+        
         loadingInvoice = true
         Task {
             do {
@@ -245,6 +247,9 @@ struct MintView: View {
                 selectedMint.increaseDerivationCounterForKeysetWithID(proofs.first!.keysetID, by: proofs.count)
                 let keysetFee = selectedMint.keysets.first(where: { $0.keysetID == proofs.first?.keysetID })?.inputFeePPK ?? 0
                 proofs.forEach({ $0.inputFeePPK = keysetFee })
+                
+                // FIXME: for some reason SwiftData does not manage the inverse relationship here, so we have to do it ourselves
+                selectedMint.proofs?.append(contentsOf: proofs)
                 
                 try await MainActor.run {
                     proofs.forEach { modelContext.insert($0) }

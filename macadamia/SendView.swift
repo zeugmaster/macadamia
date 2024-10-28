@@ -196,11 +196,6 @@ struct SendView: View {
 
         Task {
             do {
-                // check: proof selection
-                // proof marking
-                // token creation
-                // change db insertion and marking
-                
                 let version: CashuSwift.TokenVersion = .V3
                 
                 // using the .pick function to preselect from all proofs of this mint
@@ -237,6 +232,7 @@ struct SendView: View {
                 } else if preSelect.selected.sum > amount {
                     // swap to amount specified by user
                     preSelect.selected.forEach({ $0.state = .spent })
+                    #warning("need to set proofs back to state valid of operation fails")
                     #warning("det sec")
                     let (sendProofs, changeProofs) = try await CashuSwift.swap(mint: selectedMint, proofs: preSelect.selected, amount: amount)
                     // add return tokens to db, sendProofs: pending, changeProofs valid

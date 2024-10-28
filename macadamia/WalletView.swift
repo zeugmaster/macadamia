@@ -52,6 +52,12 @@ struct WalletView: View {
 
                     // FIXME: NEEDS TO RESPECT WALLET SELECTION
                     balance = proofs.filter { $0.state == .valid }.sum
+                    
+                    // quick sanity check for uniqueness of C across list of proofs
+                    let uniqueCs = Set(proofs.map( { $0.C }))
+                    if uniqueCs.count != proofs.count {
+                        // TODO: LOG BIG RED ERROR
+                    }
                 })
                 Spacer()
                 List {
