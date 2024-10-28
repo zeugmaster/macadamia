@@ -50,7 +50,6 @@ struct MeltView: View {
 
             if !ProcessInfo.processInfo.isiOSAppOnMac {
                 CodeScannerView(codeTypes: [.qr], scanMode: .oncePerCode) { result in
-                    print(result)
                     processScanViewResult(result: result)
                 }
                 .padding()
@@ -188,7 +187,7 @@ struct MeltView: View {
                                                               shortDescription: "Melt Attempt",
                                                               wallet: activeWallet,
                                                               quote: meltQuote,
-                                                              amount: Double(meltQuote.amount),
+                                                              amount: (meltQuote.amount),
                                                               expiration: Date(timeIntervalSince1970: TimeInterval(meltQuote.expiry)),
                                                               longDescription: "")
                 }
@@ -261,7 +260,7 @@ struct MeltView: View {
                         let meltEvent = Event.meltEvent(unit: selectedUnit,
                                                         shortDescription: "Melt",
                                                         wallet: activeWallet,
-                                                        amount: Double(quote.amount))
+                                                        amount: (quote.amount))
                         
                         pendingMeltEvent?.visible = false
                         modelContext.insert(meltEvent)

@@ -211,7 +211,7 @@ struct MintView: View {
                                                    shortDescription: "Mint Quote",
                                                    wallet: activeWallet,
                                                    quote: quote!, // FIXME: SAFE UNWRAPPING
-                                                   amount: Double(quote?.requestDetail?.amount ?? 0),
+                                                   amount: quote?.requestDetail?.amount ?? 0,
                                                    expiration: Date(timeIntervalSince1970: TimeInterval(quote!.expiry))) // FIXME: SAFE UNWRAPPING
                 // -- main thread
                 try await MainActor.run {
@@ -256,7 +256,7 @@ struct MintView: View {
                     let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
                                                 shortDescription: "Minting",
                                                 wallet: activeWallet,
-                                                amount: Double(quote.requestDetail?.amount ?? 0))
+                                                amount: quote.requestDetail?.amount ?? 0)
                     modelContext.insert(event)
                     if let pendingMintEvent { pendingMintEvent.visible = false }
                     try modelContext.save()

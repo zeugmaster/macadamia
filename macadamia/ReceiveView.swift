@@ -200,7 +200,7 @@ struct ReceiveView: View {
                 let event = Event.receiveEvent(unit: .sat,
                                                shortDescription: "Receive",
                                                wallet: activeWallet,
-                                               amount: Double(proofs.sum),
+                                               amount: proofs.sum,
                                                longDescription: "",
                                                proofs: proofs,
                                                memo: token.memo ?? "",

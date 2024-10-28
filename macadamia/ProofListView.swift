@@ -27,31 +27,22 @@ struct ProofListView: View {
     
     @Environment(\.modelContext) private var modelContext
     @Query private var allProofs: [Proof]
-    
-//    @State private var sortedProofs: [Proof] = []
-    
+        
     var mint:Mint
     
     private var sortedProofs: [Proof] {
-        print(allProofs)
         let mintProofs = allProofs.filter { p in
-            print(p.mint)
             return p.mint?.mintID == mint.mintID
         }
-        
         let outer = [
             mintProofs.filter({ $0.state == .valid }).sorted(by: { $0.amount < $1.amount }),
             mintProofs.filter({ $0.state == .pending }).sorted(by: { $0.amount < $1.amount }),
             mintProofs.filter({ $0.state == .spent }).sorted(by: { $0.amount < $1.amount })
         ]
-        print(outer)
-        let flatMap = outer.flatMap { $0 }
-        print(flatMap)
-        return flatMap
+        return outer.flatMap { $0 }
     }
     
     init(mint: Mint) {
-        print("ProofListView initializer called")
         self.mint = mint
     }
     
@@ -88,10 +79,6 @@ struct ProofListView: View {
                     }
                 }
             }
-        }
-        .task {
-            print("task: ProofListView")
-//            sortProofs()
         }
         .navigationTitle(mint.url.host(percentEncoded:false) ?? "")
     }

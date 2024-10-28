@@ -25,7 +25,7 @@ struct MintManagerView: View {
                         List(activeWallet.mints, id: \.url) { mint in
                             NavigationLink(destination: MintDetailView(mint: mint)) {
                                 // Pass proofs related to the mint to MintInfoRowView
-                                MintInfoRowView(mint: mint, balanceString: balanceStrings[mint.mintID] ?? nil)
+                                MintInfoRowView(mint: mint, amountDisplayString: balanceStrings[mint.mintID] ?? nil)
                             }
                         }
                     }
@@ -60,11 +60,9 @@ struct MintManagerView: View {
     func calculateBalanceStrings() {
         balanceStrings = activeWallet!.mints.reduce(into: [UUID: String?]()) { result, mint in
             let proofsOfMint = allProofs.filter({ $0.mint == mint && $0.state == .valid })
-            print(proofsOfMint)
             let sumsByUnit = proofsOfMint.reduce(into: [Unit: Int]()) { result, proof in
                 result[proof.unit, default: 0] += proof.amount
             }
-            print(sumsByUnit)
             result[mint.mintID] = sumsByUnit.isEmpty ? nil : sumsByUnit.map { (unit, amount) in
                 "\(amount) \(unit.rawValue)"
             }.joined(separator: " | ")
@@ -111,7 +109,7 @@ struct MintManagerView: View {
 struct MintInfoRowView: View {
     let mint: Mint
 //    let proofs: [Proof]
-    let balanceString: String?
+    let amountDisplayString: String?
 
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 44
 
@@ -142,7 +140,7 @@ struct MintInfoRowView: View {
                 Text(mint.url.host(percentEncoded: false)!)
                     .bold()
                     .dynamicTypeSize(.xLarge)
-                Text(balanceString ?? "No Balance")
+                Text(amountDisplayString ?? "No Balance")
                     .foregroundStyle(.gray)
             }
         }

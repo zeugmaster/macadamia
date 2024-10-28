@@ -238,7 +238,7 @@ final class Event {
 
     var bolt11MintQuote: CashuSwift.Bolt11.MintQuote?
     var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote?
-    var amount: Double?
+    var amount: Int?
     var expiration: Date?
     var longDescription: String?
     var proofs: [Proof]?
@@ -265,7 +265,7 @@ final class Event {
         wallet: Wallet,
         bolt11MintQuote: CashuSwift.Bolt11.MintQuote? = nil,
         bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? = nil,
-        amount: Double? = nil,
+         amount: Int? = nil,
         expiration: Date? = nil,
         longDescription: String? = nil,
         proofs: [Proof]? = nil,
@@ -292,12 +292,12 @@ final class Event {
     }
 
     static func pendingMintEvent(unit: Unit,
-        shortDescription: String,
-        visible: Bool = true,
-        wallet: Wallet,
-        quote: CashuSwift.Bolt11.MintQuote,
-        amount: Double,
-        expiration: Date
+                                 shortDescription: String,
+                                 visible: Bool = true,
+                                 wallet: Wallet,
+                                 quote: CashuSwift.Bolt11.MintQuote,
+                                 amount: Int,
+                                 expiration: Date
     ) -> Event {
         Event(date: Date(),
             unit: unit,
@@ -312,10 +312,10 @@ final class Event {
     }
 
     static func mintEvent(unit: Unit,
-        shortDescription: String,
-        visible: Bool = true,
-        wallet: Wallet,
-        amount: Double) -> Event {
+                          shortDescription: String,
+                          visible: Bool = true,
+                          wallet: Wallet,
+                          amount: Int) -> Event {
         Event(date: Date(),
             unit: unit,
             shortDescription: shortDescription,
@@ -327,15 +327,15 @@ final class Event {
     }
 
     static func sendEvent(unit: Unit,
-        shortDescription: String,
-        visible: Bool = true,
-        wallet: Wallet,
-        amount: Double,
-        longDescription: String,
-        proofs: [Proof],
-        memo: String,
-        tokenString: String,
-        redeemed: Bool = false) -> Event {
+                          shortDescription: String,
+                          visible: Bool = true,
+                          wallet: Wallet,
+                          amount: Int,
+                          longDescription: String,
+                          proofs: [Proof],
+                          memo: String,
+                          tokenString: String,
+                          redeemed: Bool = false) -> Event {
         Event(date: Date(),
             unit: unit,
             shortDescription: shortDescription,
@@ -352,15 +352,15 @@ final class Event {
     }
 
     static func receiveEvent(unit: Unit,
-        shortDescription: String,
-        visible: Bool = true,
-        wallet: Wallet,
-        amount: Double,
-        longDescription: String,
-        proofs: [Proof],
-        memo: String,
-        tokenString: String,
-        redeemed: Bool) -> Event {
+                             shortDescription: String,
+                             visible: Bool = true,
+                             wallet: Wallet,
+                             amount: Int,
+                             longDescription: String,
+                             proofs: [Proof],
+                             memo: String,
+                             tokenString: String,
+                             redeemed: Bool) -> Event {
         Event(date: Date(),
             unit: unit,
             shortDescription: shortDescription,
@@ -377,13 +377,13 @@ final class Event {
     }
 
     static func pendingMeltEvent(unit: Unit,
-        shortDescription: String,
-        visible: Bool = true,
-        wallet: Wallet,
-        quote: CashuSwift.Bolt11.MeltQuote,
-        amount: Double,
-        expiration: Date,
-        longDescription: String) -> Event {
+                                 shortDescription: String,
+                                 visible: Bool = true,
+                                 wallet: Wallet,
+                                 quote: CashuSwift.Bolt11.MeltQuote,
+                                 amount: Int,
+                                 expiration: Date,
+                                 longDescription: String) -> Event {
         Event(date: Date(),
             unit: unit,
             shortDescription: shortDescription,
@@ -398,10 +398,10 @@ final class Event {
     }
 
     static func meltEvent(unit: Unit,
-        shortDescription: String,
-        visible: Bool = true,
-        wallet: Wallet,
-        amount: Double) -> Event {
+                          shortDescription: String,
+                          visible: Bool = true,
+                          wallet: Wallet,
+                          amount: Int) -> Event {
         Event(date: Date(),
             unit: unit,
             shortDescription: shortDescription,
