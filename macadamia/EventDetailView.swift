@@ -18,7 +18,7 @@ struct EventDetailView: View {
         case .receive:
             Text("receive")
         case .pendingMelt:
-            Text("pending melt")
+            MeltView(quote: event.bolt11MeltQuote, pendingMeltEvent: event)
         case .melt:
             Text("melt")
         case .restore:

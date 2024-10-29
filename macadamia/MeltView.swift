@@ -6,7 +6,8 @@ import SwiftUI
 struct MeltView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
-    @Query private var allProofs:[Proof]
+    @Query private var mints: [Mint]
+    @Query private var allProofs: [Proof]
 
     var activeWallet: Wallet? {
         wallets.first
@@ -34,8 +35,7 @@ struct MeltView: View {
 
     init(quote: CashuSwift.Bolt11.MeltQuote? = nil,
          pendingMeltEvent: Event? = nil,
-         navigationPath: Binding<NavigationPath>? = nil)
-    {
+         navigationPath: Binding<NavigationPath>? = nil) {
         self.navigationPath = navigationPath
         self.pendingMeltEvent = pendingMeltEvent
         self.quote = quote
@@ -162,38 +162,53 @@ struct MeltView: View {
     var invoiceAmount: Int? {
         try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString)
     }
-
+    
+    // getQuote can only be called when UI is not populated
     func getQuote() {
-        guard let activeWallet,
-              let selectedMint
-        else {
+        
+        guard let activeWallet, let selectedMint else {
             print("unable to get quote, activeWallet or selectedMint is nil")
             return
         }
-
+        
+        // needs UI for loading quote, analogous to mint UI
+        
         Task {
-            guard let meltQuote = try await CashuSwift.getQuote(mint: selectedMint,
-                                                  quoteRequest: CashuSwift.Bolt11.RequestMeltQuote(unit: "sat", // TODO: REMOVE HARD CODED UNIT
-                                                                                                   request: invoiceString,
-                                                                                                   options: nil)) as? CashuSwift.Bolt11.MeltQuote else {
-                print("could not parse melt quote as bolt11 quote object")
-                return
-            }
-            
-            await MainActor.run {
-                quote = meltQuote
-                if pendingMeltEvent == nil {
-                    pendingMeltEvent = Event.pendingMeltEvent(unit: .sat,
-                                                              shortDescription: "Melt Attempt",
-                                                              wallet: activeWallet,
-                                                              quote: meltQuote,
-                                                              amount: (meltQuote.amount),
-                                                              expiration: Date(timeIntervalSince1970: TimeInterval(meltQuote.expiry)),
-                                                              longDescription: "")
+            do {
+                let quoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat", // TODO: REMOVE HARD CODED UNIT
+                                                                      request: invoiceString,
+                                                                      options: nil)
+                guard let meltQuote = try await CashuSwift.getQuote(mint: selectedMint,
+                                                                    quoteRequest: quoteRequest) as? CashuSwift.Bolt11.MeltQuote else {
+                    print("could not parse melt quote as bolt11 quote object")
+                    return
                 }
                 
-                modelContext.insert(pendingMeltEvent!)
-                try? modelContext.save()
+                print("""
+                      wallet: \(activeWallet)
+                      quote: \(meltQuote)
+                      """)
+                
+                let event = Event.pendingMeltEvent(unit: .sat,
+                                                   shortDescription: "Melt Quote",
+                                                   wallet: activeWallet,
+                                                   quote: meltQuote,
+                                                   amount: (meltQuote.amount),
+                                                   expiration: Date(timeIntervalSince1970: TimeInterval(meltQuote.expiry)))
+                                
+                // -- main thread
+                await MainActor.run {
+                    quote = meltQuote
+                    modelContext.insert(event)
+                    do {
+                        try modelContext.save()
+                    } catch {
+                        print(error)
+                    }
+                }
+            } catch {
+                displayAlert(alert: AlertDetail(title: "Error",
+                                                description: String(describing: error)))
             }
         }
     }
@@ -251,8 +266,16 @@ struct MeltView: View {
                         loading = false
                         success = true
                         
-//                        meltResult.change.forEach({ modelContext.insert(Proof($0,
-//                                                                              unit: , inputFeePPK: <#T##Int#>, state: <#T##Proof.State#>, mint: <#T##Mint#>, wallet: <#T##Wallet#>)) })
+                        let changeKeyset = selectedMint.keysets.first(where: { $0.keysetID == meltResult.change.first?.keysetID })
+                        let unit = Unit(changeKeyset?.unit) ?? .sat
+                        let inputFee = changeKeyset?.inputFeePPK ?? 0
+                        
+                        meltResult.change.forEach({ modelContext.insert(Proof($0,
+                                                                              unit: unit,
+                                                                              inputFeePPK: inputFee,
+                                                                              state: .valid,
+                                                                              mint: selectedMint,
+                                                                              wallet: activeWallet)) })
                         
                         selection.selected.forEach { $0.state = .spent }
 
@@ -260,7 +283,8 @@ struct MeltView: View {
                         let meltEvent = Event.meltEvent(unit: selectedUnit,
                                                         shortDescription: "Melt",
                                                         wallet: activeWallet,
-                                                        amount: (quote.amount))
+                                                        amount: (quote.amount),
+                                                        longDescription: "")
                         
                         pendingMeltEvent?.visible = false
                         modelContext.insert(meltEvent)

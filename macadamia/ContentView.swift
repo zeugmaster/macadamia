@@ -63,6 +63,9 @@ struct ContentView: View {
                 initializeWallet()
             }
             activeWallet = wallets.first
+            
+            let urls = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
+            print("App Support Directory: \(urls[0])")
         })
         .popover(isPresented: $releaseNotesPopoverShowing, content: {
             ReleaseNoteView()

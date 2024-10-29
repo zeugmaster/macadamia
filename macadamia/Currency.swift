@@ -48,23 +48,3 @@ fileprivate func safeNegate(_ value: Int) -> Int? {
     return didOverflow ? nil : result
 }
 
-//func amountDisplayString(_ amount:Double, unit:Unit) -> String {
-//    let numberFormatter = NumberFormatter()
-//    switch unit {
-//    case .sat:
-//        numberFormatter.maximumFractionDigits = 0
-//        return String(amount) + " sat"
-//    case .usd:
-//        numberFormatter.numberStyle = .currency
-//        numberFormatter.currencyCode = "USD"
-//        let fiat = Double(amount) / 100.0
-//        return numberFormatter.string(from: NSNumber(value: fiat)) ?? ""
-//    case .eur:
-//        numberFormatter.numberStyle = .currency
-//        numberFormatter.currencyCode = "EUR"
-//        let fiat = Double(amount) / 100.0
-//        return numberFormatter.string(from: NSNumber(value: fiat)) ?? ""
-//    case .other:
-//        return String(amount) + "other"
-//    }
-//}

@@ -237,7 +237,7 @@ final class Event {
     var wallet: Wallet?
 
     var bolt11MintQuote: CashuSwift.Bolt11.MintQuote?
-    var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote?
+//    var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote?
     var amount: Int?
     var expiration: Date?
     var longDescription: String?
@@ -289,6 +289,18 @@ final class Event {
         self.memo = memo
         self.tokenString = tokenString
         self.redeemed = redeemed
+    }
+    
+    var bolt11MeltQuoteData: Data?
+
+    var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? {
+        get {
+            guard let data = bolt11MeltQuoteData else { return nil }
+            return try? JSONDecoder().decode(CashuSwift.Bolt11.MeltQuote.self, from: data)
+        }
+        set {
+            bolt11MeltQuoteData = try? JSONEncoder().encode(newValue)
+        }
     }
 
     static func pendingMintEvent(unit: Unit,
@@ -382,18 +394,16 @@ final class Event {
                                  wallet: Wallet,
                                  quote: CashuSwift.Bolt11.MeltQuote,
                                  amount: Int,
-                                 expiration: Date,
-                                 longDescription: String) -> Event {
+                                 expiration: Date) -> Event {
         Event(date: Date(),
-            unit: unit,
-            shortDescription: shortDescription,
-            visible: visible,
-            kind: .pendingMelt,
-            wallet: wallet,
-            bolt11MeltQuote: quote,
-            amount: amount,
-            expiration: expiration,
-            longDescription: longDescription
+              unit: unit,
+              shortDescription: shortDescription,
+              visible: visible,
+              kind: .pendingMelt,
+              wallet: wallet,
+              bolt11MeltQuote: quote,
+              amount: amount,
+              expiration: expiration
         )
     }
 
@@ -401,14 +411,16 @@ final class Event {
                           shortDescription: String,
                           visible: Bool = true,
                           wallet: Wallet,
-                          amount: Int) -> Event {
+                          amount: Int,
+                          longDescription: String) -> Event {
         Event(date: Date(),
-            unit: unit,
-            shortDescription: shortDescription,
-            visible: visible,
-            kind: .melt,
-            wallet: wallet,
-            amount: amount
+              unit: unit,
+              shortDescription: shortDescription,
+              visible: visible,
+              kind: .melt,
+              wallet: wallet,
+              amount: amount,
+              longDescription: longDescription
         )
     }
 }

@@ -3,8 +3,10 @@ import SwiftData
 import SwiftUI
 
 struct MintView: View {
-    @State var quote: CashuSwift.Bolt11.MintQuote?
+    
     var navigationPath: Binding<NavigationPath>?
+    
+    @State var quote: CashuSwift.Bolt11.MintQuote?
     @State var pendingMintEvent: Event?
 
     @Environment(\.modelContext) private var modelContext
@@ -119,7 +121,7 @@ struct MintView: View {
 
         if quote == nil {
             Button(action: {
-                requestQuote()
+                getQuote()
                 amountFieldInFocus = false
             }, label: {
                 HStack {
@@ -190,10 +192,9 @@ struct MintView: View {
     var amount: Int {
         return Int(amountString) ?? 0
     }
-
-    func requestQuote() {
-        
-        // TODO: check continually whether the quote was paid
+    
+    // getQuote can only be called when UI is not populated
+    func getQuote() { // TODO: check continually whether the quote was paid
         
         guard let selectedMint, let activeWallet else {
             print("could not request quote: selectedMint or activeWallet are nil")
@@ -201,10 +202,14 @@ struct MintView: View {
         }
         
         loadingInvoice = true
+        
         Task {
             do {
-                let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat", amount: self.amount)
-                quote = try await CashuSwift.getQuote(mint: selectedMint, quoteRequest: quoteRequest) as? CashuSwift.Bolt11.MintQuote
+                let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
+                                                                      amount: self.amount)
+                quote = try await CashuSwift.getQuote(mint: selectedMint,
+                                                      quoteRequest: quoteRequest) as? CashuSwift.Bolt11.MintQuote
+                
                 loadingInvoice = false
 
                 let event = Event.pendingMintEvent(unit: Unit(quote?.requestDetail?.unit) ?? .other,

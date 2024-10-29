@@ -5,6 +5,7 @@ import SwiftUI
 
 let betaDisclaimerURL = URL(string: "https://macadamia.cash/beta.html")!
 
+@MainActor
 struct WalletView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
@@ -37,7 +38,6 @@ struct WalletView: View {
                         .monospaced()
                         .bold()
                         .font(.system(size: 70))
-                        .foregroundStyle(.green)
 //                    Spacer().frame(width: 20)
                     Text("sats")
                         .monospaced()
@@ -190,6 +190,9 @@ struct WalletView: View {
                     EmptyView()
                 }
             }
+            .onAppear {
+                print(events)
+            }
 //            .onChange(of: navigationTag, { oldValue, newValue in
 //                if newValue == "Receive" {
 //                    navigationPath.append("Receive")
@@ -220,8 +223,6 @@ struct TransactionListRowView: View {
                 Spacer()
             }
             .lineLimit(1)
-            .monospaced()
-            .fontWeight(.light)
             .font(.callout)
         }
     }
