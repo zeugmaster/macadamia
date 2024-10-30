@@ -175,9 +175,8 @@ struct SendView: View {
     }
 
     func updateBalance() {
-        guard let _ = activeWallet,
-              let selectedMint
-        else {
+        guard !proofsOfSelectedMint.isEmpty else {
+            // TODO: log error
             return
         }
         selectedMintBalance = proofsOfSelectedMint.filter({ $0.state == .valid }).sum
@@ -232,15 +231,30 @@ struct SendView: View {
                 } else if preSelect.selected.sum > amount {
                     // swap to amount specified by user
                     preSelect.selected.forEach({ $0.state = .spent })
-                    #warning("need to set proofs back to state valid of operation fails")
-                    #warning("det sec")
-                    let (sendProofs, changeProofs) = try await CashuSwift.swap(mint: selectedMint, proofs: preSelect.selected, amount: amount)
+                    
+                    #warning("need to set proofs back to state valid if operation fails")
+                    
+                    let (sendProofs, changeProofs) = try await CashuSwift.swap(mint: selectedMint, proofs: preSelect.selected, amount: amount, seed: activeWallet.seed)
                     // add return tokens to db, sendProofs: pending, changeProofs valid
-                    let feeRate = selectedMint.keysets.first(where: { $0.keysetID == sendProofs.first?.keysetID })?.inputFeePPK ?? 0
+                    guard let usedKeyset = selectedMint.keysets.first(where: { $0.keysetID == sendProofs.first?.keysetID }) else {
+                        // TODO: log error
+                        return
+                    }
+                    
+                    let feeRate = usedKeyset.inputFeePPK
+                    
                     try await MainActor.run {
                         let internalSendProofs = sendProofs.map({ Proof($0, unit: selectedUnit, inputFeePPK: feeRate, state: .pending, mint: selectedMint, wallet: activeWallet) })
                         internalSendProofs.forEach({ modelContext.insert($0) })
-                        changeProofs.forEach({ modelContext.insert(Proof($0, unit: selectedUnit, inputFeePPK: feeRate, state: .valid, mint: selectedMint, wallet: activeWallet)) })
+                        
+                        let internalChangeProofs = changeProofs.map({ Proof($0, unit: selectedUnit, inputFeePPK: feeRate, state: .valid, mint: selectedMint, wallet: activeWallet) })
+                        internalChangeProofs.forEach({ modelContext.insert($0) })
+                        
+                        selectedMint.proofs?.append(contentsOf: internalSendProofs + internalChangeProofs)
+                        
+                        selectedMint.increaseDerivationCounterForKeysetWithID(usedKeyset.keysetID,
+                                                                              by: internalSendProofs.count + internalChangeProofs.count)
+                        
                         try modelContext.save()
                         // construct token with sendProofs
                         let proofContainer = CashuSwift.ProofContainer(mint: selectedMint.url.absoluteString, proofs: sendProofs.map({ CashuSwift.Proof($0) }))

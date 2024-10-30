@@ -181,7 +181,6 @@ struct ReceiveView: View {
 
         Task {
             do {
-                #warning("det sec")
                 let proofsDict = try await mintsInToken.receive(token: token, seed: activeWallet.seed)
                 for mint in mintsInToken {
                     let proofsPerMint = proofsDict[mint.url.absoluteString]!
@@ -193,10 +192,20 @@ struct ReceiveView: View {
                                      mint: mint,
                                      wallet: activeWallet)
                     }
+                    
+                    guard let usedKeyset = mint.keysets.first(where: { $0.keysetID == internalProofs.first?.keysetID }) else {
+                        // TODO: log error
+                        continue
+                    }
+                    
+                    mint.increaseDerivationCounterForKeysetWithID(usedKeyset.keysetID, by: internalProofs.count)
+                    mint.proofs?.append(contentsOf: internalProofs)
+                    
+                    internalProofs.forEach { modelContext.insert($0) }
+                    
                     proofs.append(contentsOf: internalProofs)
                 }
-                proofs.forEach { modelContext.insert($0) }
-
+                                
                 let event = Event.receiveEvent(unit: .sat,
                                                shortDescription: "Receive",
                                                wallet: activeWallet,

@@ -1,5 +1,8 @@
 import SwiftData
 import SwiftUI
+import OSLog
+
+let logger = Logger(subsystem: "macadamia Wallet", category: "Interface & Database")
 
 @main
 struct macadamiaApp: App {

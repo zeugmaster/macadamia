@@ -151,11 +151,11 @@ struct MeltView: View {
     }
 
     func updateBalance() {
-        guard let _ = activeWallet,
-              let selectedMint
-        else {
+        guard !proofsOfSelectedMint.isEmpty else {
+            // TODO: log error
             return
         }
+        
         selectedMintBalance = proofsOfSelectedMint.filter({ $0.state == .valid }).sum
     }
 
@@ -245,7 +245,8 @@ struct MeltView: View {
                                             description: "The wallet could not collect enough ecash to settle this payment."))
             return
         }
-
+        
+        // this works and is reflected in the database
         selection.selected.forEach { $0.state = .pending }
         
         loading = true
@@ -253,30 +254,43 @@ struct MeltView: View {
         Task {
             do {
                 
-                #warning("det sec")
                 let meltResult = try await CashuSwift.melt(mint: selectedMint,
                                                            quote: quote,
                                                            proofs: selection.selected,
-                                                           seed: nil)
+                                                           seed: activeWallet.seed)
                 
                 // TODO: temp disable back button (maybe)
 
                 if meltResult.paid {
-                    await MainActor.run {
+                    try await MainActor.run {
+                        
                         loading = false
                         success = true
                         
-                        let changeKeyset = selectedMint.keysets.first(where: { $0.keysetID == meltResult.change.first?.keysetID })
-                        let unit = Unit(changeKeyset?.unit) ?? .sat
-                        let inputFee = changeKeyset?.inputFeePPK ?? 0
+                        print(meltResult)
+                        selectedMint.keysets.forEach({ print($0.keysetID) })
                         
-                        meltResult.change.forEach({ modelContext.insert(Proof($0,
-                                                                              unit: unit,
-                                                                              inputFeePPK: inputFee,
-                                                                              state: .valid,
-                                                                              mint: selectedMint,
-                                                                              wallet: activeWallet)) })
+                        if !meltResult.change.isEmpty,
+                           let changeKeyset = selectedMint.keysets.first(where: { $0.keysetID == meltResult.change.first?.keysetID }) {
+                            
+                            let unit = Unit(changeKeyset.unit) ?? .other
+                            let inputFee = changeKeyset.inputFeePPK
+                            
+                            let internalChangeProofs = meltResult.change.map({ Proof($0,
+                                                                                     unit: unit,
+                                                                                     inputFeePPK: inputFee,
+                                                                                     state: .valid,
+                                                                                     mint: selectedMint,
+                                                                                     wallet: activeWallet) })
+                            
+                            selectedMint.proofs?.append(contentsOf: internalChangeProofs)
+                            internalChangeProofs.forEach({ modelContext.insert($0) })
+                            
+                            selectedMint.increaseDerivationCounterForKeysetWithID(changeKeyset.keysetID,
+                                                                                  by: internalChangeProofs.count)
+                        }
                         
+                        // this does not seem to work because it is not reflected in the database
                         selection.selected.forEach { $0.state = .spent }
 
                         // make pending melt event non visible and create melt event for history
@@ -288,7 +302,7 @@ struct MeltView: View {
                         
                         pendingMeltEvent?.visible = false
                         modelContext.insert(meltEvent)
-                        try? modelContext.save()
+                        try modelContext.save()
                         print(meltResult)
                     }
 

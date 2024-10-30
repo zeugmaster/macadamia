@@ -17,12 +17,10 @@
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
 		372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */; };
 		372D8FDC2BD5BD2500494170 /* QRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372D8FDB2BD5BD2500494170 /* QRScanner.swift */; };
-		3743CE582B47798800F862AB /* NostrSendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE572B47798800F862AB /* NostrSendView.swift */; };
 		3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE592B485BF800F862AB /* ReceiveView.swift */; };
 		3743CE5E2B48A94D00F862AB /* MeltView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE5D2B48A94D00F862AB /* MeltView.swift */; };
 		3743CE612B48AD3900F862AB /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = 3743CE602B48AD3900F862AB /* CodeScanner */; };
 		3743CE642B494C3D00F862AB /* RestoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE632B494C3D00F862AB /* RestoreView.swift */; };
-		3743CE662B49B7D600F862AB /* NostrProfileMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE652B49B7D600F862AB /* NostrProfileMessageView.swift */; };
 		3743CE682B4AA67600F862AB /* EventDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE672B4AA67600F862AB /* EventDetailView.swift */; };
 		374F0DBF2C4978E90031E8CD /* MintDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374F0DBE2C4978E90031E8CD /* MintDetailView.swift */; };
 		374F0DC12C4D34FD0031E8CD /* BalanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374F0DC02C4D34FD0031E8CD /* BalanceView.swift */; };
@@ -40,8 +38,6 @@
 		3792123A2B2A36830081F161 /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212392B2A36830081F161 /* WalletView.swift */; };
 		3792123C2B2A36970081F161 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792123B2B2A36970081F161 /* SettingsView.swift */; };
 		379BDF592B421855008FD0E7 /* NostrSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 379BDF582B421855008FD0E7 /* NostrSDK */; };
-		379BDF5D2B42C554008FD0E7 /* NostrContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF5B2B42C554008FD0E7 /* NostrContentView.swift */; };
-		379BDF5E2B42C554008FD0E7 /* nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF5C2B42C554008FD0E7 /* nostr.swift */; };
 		379BDF602B430765008FD0E7 /* RelayManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */; };
 		379BDF622B430775008FD0E7 /* MintManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF612B430775008FD0E7 /* MintManagerView.swift */; };
 		379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF642B447138008FD0E7 /* UIHelpers.swift */; };
@@ -73,11 +69,9 @@
 		372034BD2B29E1BD00C4F955 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		372D8FDB2BD5BD2500494170 /* QRScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScanner.swift; sourceTree = "<group>"; };
-		3743CE572B47798800F862AB /* NostrSendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrSendView.swift; sourceTree = "<group>"; };
 		3743CE592B485BF800F862AB /* ReceiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiveView.swift; sourceTree = "<group>"; };
 		3743CE5D2B48A94D00F862AB /* MeltView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeltView.swift; sourceTree = "<group>"; };
 		3743CE632B494C3D00F862AB /* RestoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreView.swift; sourceTree = "<group>"; };
-		3743CE652B49B7D600F862AB /* NostrProfileMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrProfileMessageView.swift; sourceTree = "<group>"; };
 		3743CE672B4AA67600F862AB /* EventDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDetailView.swift; sourceTree = "<group>"; };
 		374F0DBE2C4978E90031E8CD /* MintDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintDetailView.swift; sourceTree = "<group>"; };
 		374F0DC02C4D34FD0031E8CD /* BalanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceView.swift; sourceTree = "<group>"; };
@@ -89,8 +83,6 @@
 		3780EEE52B2B5C3F00971AE7 /* QRView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRView.swift; sourceTree = "<group>"; };
 		379212392B2A36830081F161 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
 		3792123B2B2A36970081F161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		379BDF5B2B42C554008FD0E7 /* NostrContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NostrContentView.swift; sourceTree = "<group>"; };
-		379BDF5C2B42C554008FD0E7 /* nostr.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = nostr.swift; sourceTree = "<group>"; };
 		379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayManagerView.swift; sourceTree = "<group>"; };
 		379BDF612B430775008FD0E7 /* MintManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintManagerView.swift; sourceTree = "<group>"; };
 		379BDF642B447138008FD0E7 /* UIHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIHelpers.swift; sourceTree = "<group>"; };
@@ -159,8 +151,8 @@
 				372034BB2B29E1BC00C4F955 /* ContentView.swift */,
 				379212392B2A36830081F161 /* WalletView.swift */,
 				37B2C1572B60192100535DAF /* MintView.swift */,
-				3743CE592B485BF800F862AB /* ReceiveView.swift */,
 				379BDF682B46F31E008FD0E7 /* SendView.swift */,
+				3743CE592B485BF800F862AB /* ReceiveView.swift */,
 				3743CE5D2B48A94D00F862AB /* MeltView.swift */,
 				379BDF642B447138008FD0E7 /* UIHelpers.swift */,
 				3780EEE52B2B5C3F00971AE7 /* QRView.swift */,
@@ -173,7 +165,6 @@
 				370A84082CC1E3440039A413 /* Currency.swift */,
 				379BDF632B430F32008FD0E7 /* Settings */,
 				37DD6E202B618B1400AC5676 /* cashu */,
-				379BDF5A2B42C4C4008FD0E7 /* nostr */,
 				372034BD2B29E1BD00C4F955 /* Assets.xcassets */,
 				372034BF2B29E1BD00C4F955 /* Preview Content */,
 			);
@@ -186,17 +177,6 @@
 				372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
-			sourceTree = "<group>";
-		};
-		379BDF5A2B42C4C4008FD0E7 /* nostr */ = {
-			isa = PBXGroup;
-			children = (
-				379BDF5B2B42C554008FD0E7 /* NostrContentView.swift */,
-				3743CE652B49B7D600F862AB /* NostrProfileMessageView.swift */,
-				3743CE572B47798800F862AB /* NostrSendView.swift */,
-				379BDF5C2B42C554008FD0E7 /* nostr.swift */,
-			);
-			path = nostr;
 			sourceTree = "<group>";
 		};
 		379BDF632B430F32008FD0E7 /* Settings */ = {
@@ -381,7 +361,6 @@
 			files = (
 				372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */,
 				3743CE642B494C3D00F862AB /* RestoreView.swift in Sources */,
-				3743CE582B47798800F862AB /* NostrSendView.swift in Sources */,
 				370A84012CC171D60039A413 /* ProofListView.swift in Sources */,
 				379BDF602B430765008FD0E7 /* RelayManagerView.swift in Sources */,
 				3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */,
@@ -400,13 +379,10 @@
 				377FFF042BC5524700DD2635 /* TokenText.swift in Sources */,
 				377FFEFD2BC41DCF00DD2635 /* ReleaseNoteView.swift in Sources */,
 				379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */,
-				3743CE662B49B7D600F862AB /* NostrProfileMessageView.swift in Sources */,
 				3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */,
 				3743CE5E2B48A94D00F862AB /* MeltView.swift in Sources */,
-				379BDF5D2B42C554008FD0E7 /* NostrContentView.swift in Sources */,
 				3792123C2B2A36970081F161 /* SettingsView.swift in Sources */,
 				379BDF622B430775008FD0E7 /* MintManagerView.swift in Sources */,
-				379BDF5E2B42C554008FD0E7 /* nostr.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
