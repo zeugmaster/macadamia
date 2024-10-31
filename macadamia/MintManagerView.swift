@@ -79,6 +79,7 @@ struct MintManagerView: View {
         let trimmedURLString = newMintURLString.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmedURLString.starts(with: "http://") || trimmedURLString.starts(with: "https://"),
               let url = URL(string: trimmedURLString), url.host != nil else {
+            logger.warning("user tried to add a URL that does not start with https:// or http:// which is not supported")
             displayAlert(alert: AlertDetail(title: "Invalid URL", description: "URL must start with http:// or https:// and include a valid host"))
             return
         }
@@ -89,10 +90,12 @@ struct MintManagerView: View {
                 mint.wallet = activeWallet
                 modelContext.insert(mint)
                 try modelContext.save()
+                logger.info("added new mint with URL \(mint.url.absoluteString)")
                 DispatchQueue.main.async {
                     newMintURLString = ""
                 }
             } catch {
+                logger.error("could not add mint due to error \(error)")
                 DispatchQueue.main.async {
                     displayAlert(alert: AlertDetail(title: "Could not add mint.", description: String(describing: error)))
                 }

@@ -5,7 +5,13 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
-    @State private var activeWallet: Wallet?
+    
+    private var activeWallet: Wallet? {
+        get {
+            wallets.first
+        }
+        set {}
+    }
 
     @State private var releaseNotesPopoverShowing = false
     @State private var selectedTab: Tab = .wallet
@@ -29,21 +35,14 @@ struct ContentView: View {
                     .tabItem {
                         Label("Wallet", systemImage: "bitcoinsign.circle")
                     }
-                    .tag(0)
+                    .tag(1)
 
                 MintManagerView()
                     .tabItem {
                         Image(systemName: "building.columns")
                         Text("Mints")
                     }
-
-                // Second tab content
-//                NostrInboxView()
-//                    .tabItem {
-//                        Image(systemName: "person.2")
-//                        Text("nostr")
-//                    }
-//                    .tag(1)
+                    .tag(2)
 
                 // Third tab content
                 SettingsView()
@@ -51,7 +50,7 @@ struct ContentView: View {
                         Image(systemName: "gear")
                         Text("Settings")
                     }
-                    .tag(2)
+                    .tag(3)
             }
             .persistentSystemOverlays(.hidden)
             .background(Color.black)
@@ -62,7 +61,6 @@ struct ContentView: View {
             if wallets.isEmpty {
                 initializeWallet()
             }
-            activeWallet = wallets.first
             
             let urls = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
             print("App Support Directory: \(urls[0])")
@@ -83,7 +81,13 @@ struct ContentView: View {
         let seed = String(bytes: Mnemonic().seed)
         let wallet = Wallet(seed: seed)
         modelContext.insert(wallet)
-        try? modelContext.save()
+        logger.info("No wallet was found, initializing a new one with ID \(wallet.walletID)...")
+        do {
+            try modelContext.save()
+            logger.debug("Successfully saved new wallet.")
+        } catch {
+            logger.critical("Could not save new wallet with ID \(wallet.walletID). error: \(error)")
+        }
     }
 
     func checkReleaseNotes() {
@@ -92,17 +96,18 @@ struct ContentView: View {
             releaseNotesPopoverShowing = true
             UserDefaults.standard.setValue(ReleaseNote.hashString(),
                                            forKey: "LastReleaseNotesAcknoledgedHash")
+            logger.info("Release notes have changed and will be shown.")
         }
     }
 
     func handleUrl(_ url: URL) {
+        logger.info("URL has been passed to the application: \(url.absoluteString)")
 //         if url.scheme == "cashu" {
 //             let noURLPrefix = url.absoluteStringWithoutPrefix("cashu")
 //             urlState = noURLPrefix
 //             selectedTab = 0
 //             walletNavigationTag = "Receive"
 //         }
-        print(url)
     }
 }
 

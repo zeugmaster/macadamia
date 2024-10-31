@@ -146,12 +146,14 @@ struct ReceiveView: View {
     func parseTokenString() {
         guard let tokenString,
               !tokenString.isEmpty else {
+            logger.error("pasted string was empty.")
             return
         }
         do {
             token = try tokenString.deserializeToken()
             token?.token.forEach({ totalAmount += $0.proofs.sum })
         } catch {
+            logger.error("could not decode token from string \(tokenString) \(error)")
             displayAlert(alert: AlertDetail(title: "Could not decode token",
                                             description: String(describing: error)))
         }
@@ -159,6 +161,11 @@ struct ReceiveView: View {
 
     func redeem() {
         guard let activeWallet, let token else {
+            logger.error("""
+                         "could not redeem, one or more of the following variables are nil:
+                         activeWallet: \(activeWallet.debugDescription)
+                         token: \(token.debugDescription)
+                         """)
             return
         }
 
@@ -169,7 +176,7 @@ struct ReceiveView: View {
         }
 
         guard mintsInToken.count == token.token.count else {
-            // TODO: throw an error
+            logger.error("mintsInToken.count does not equal token.token.count")
             displayAlert(alert: AlertDetail(title: "Unable to redeem",
                                             description: "Are all mints from this token known to the wallet?"))
             return
@@ -181,6 +188,7 @@ struct ReceiveView: View {
 
         Task {
             do {
+                logger.debug("attempting to receive token...")
                 let proofsDict = try await mintsInToken.receive(token: token, seed: activeWallet.seed)
                 for mint in mintsInToken {
                     let proofsPerMint = proofsDict[mint.url.absoluteString]!
@@ -193,17 +201,19 @@ struct ReceiveView: View {
                                      wallet: activeWallet)
                     }
                     
-                    guard let usedKeyset = mint.keysets.first(where: { $0.keysetID == internalProofs.first?.keysetID }) else {
-                        // TODO: log error
-                        continue
+                    if let usedKeyset = mint.keysets.first(where: { $0.keysetID == internalProofs.first?.keysetID }) {
+                        mint.increaseDerivationCounterForKeysetWithID(usedKeyset.keysetID, by: internalProofs.count)
+                    } else {
+                        logger.error("Could not determine applied keyset! This will lead to issues with det sec counter and fee rates.")
                     }
                     
-                    mint.increaseDerivationCounterForKeysetWithID(usedKeyset.keysetID, by: internalProofs.count)
                     mint.proofs?.append(contentsOf: internalProofs)
                     
                     internalProofs.forEach { modelContext.insert($0) }
                     
                     proofs.append(contentsOf: internalProofs)
+                    
+                    logger.info("receiving \(internalProofs.count) proof(s) with sum \(internalProofs.sum) from mint \(mint.url.absoluteString)")
                 }
                                 
                 let event = Event.receiveEvent(unit: .sat,
@@ -219,7 +229,8 @@ struct ReceiveView: View {
                 try await MainActor.run {
                     modelContext.insert(event)
                     try modelContext.save()
-
+                    
+                    logger.info("successfully added ecash to the database.")
                     self.loading = false
                     self.success = true
                 }
@@ -232,6 +243,7 @@ struct ReceiveView: View {
 
             } catch {
                 // receive unsuccessful
+                logger.error("could not receive token due to error \(error)")
                 displayAlert(alert: AlertDetail(title: "Unable to redeem",
                                                 description: String(describing: error)))
                 self.loading = false
@@ -359,6 +371,7 @@ struct TokenFragmentView: View {
             do {
                 addingMint = true
                 guard let url = URL(string: fragment.mint) else {
+                    logger.error("mint URL to add does not seem valid.")
                     addingMint = false
                     return
                 }
@@ -367,10 +380,11 @@ struct TokenFragmentView: View {
                 mint.proofs = []
                 modelContext.insert(mint)
                 try modelContext.save()
+                logger.info("added mint \(mint.url.absoluteString) while trying to redeem a token")
                 unknownMint = false
                 checkFragmentState()
             } catch {
-                print("Could not add mint")
+                logger.error("failed to add mint due to error \(error)")
                 unknownMint = true
             }
             addingMint = false

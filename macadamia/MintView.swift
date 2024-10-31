@@ -198,6 +198,11 @@ struct MintView: View {
         
         guard let selectedMint, let activeWallet else {
             print("could not request quote: selectedMint or activeWallet are nil")
+            logger.error("""
+                           unable to request quote because one or more of the following variables are nil:
+                           selectedMInt: \(selectedMint.debugDescription)
+                           activeWallet: \(activeWallet.debugDescription)
+                           """)
             return
         }
         
@@ -211,6 +216,8 @@ struct MintView: View {
                                                       quoteRequest: quoteRequest) as? CashuSwift.Bolt11.MintQuote
                 
                 loadingInvoice = false
+                
+                logger.info("Successfully requested mint quote from mint.")
 
                 let event = Event.pendingMintEvent(unit: Unit(quote?.requestDetail?.unit) ?? .other,
                                                    shortDescription: "Mint Quote",
@@ -228,21 +235,30 @@ struct MintView: View {
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error",
                                                 description: String(describing: error)))
+                logger.error("could not get quote from mint \(selectedMint.url.absoluteString) because of error \(error)")
                 loadingInvoice = false
             }
         }
     }
 
     func requestMint() {
-        guard let quote,
+        guard let quote,        // TODO: improve handling
               let activeWallet,
               let selectedMint else {
+            logger.error("""
+                           unable to request melt because one or more of the following variables are nil:
+                           quote: \(quote.debugDescription)
+                           selectedMInt: \(selectedMint.debugDescription)
+                           activeWallet: \(activeWallet.debugDescription)
+                           """)
             return
         }
         
         minting = true
         Task {
             do {
+                logger.debug("requesting mint for quote with id \(quote.quote)...")
+                
                 let proofs: [Proof] = try await CashuSwift.issue(for: quote, on: selectedMint, seed: activeWallet.seed).map { p in
                     let unit = Unit(quote.requestDetail?.unit ?? "other") ?? .other
                     return Proof(p, unit: unit, inputFeePPK: 0, state: .valid, mint: selectedMint, wallet: activeWallet)
@@ -265,6 +281,7 @@ struct MintView: View {
                     modelContext.insert(event)
                     if let pendingMintEvent { pendingMintEvent.visible = false }
                     try modelContext.save()
+                    logger.debug("Added \(proofs.count) proofs to the db.")
                     minting = false
                     mintSuccess = true
                 }
@@ -276,6 +293,7 @@ struct MintView: View {
             } catch {
                 displayAlert(alert: AlertDetail(title: "Error",
                                                 description: String(describing: error)))
+                logger.error("Minting was not successful with mint \(selectedMint.url.absoluteString) due to error \(error)")
                 minting = false
             }
         }

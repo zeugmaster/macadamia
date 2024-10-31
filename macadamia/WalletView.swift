@@ -38,7 +38,6 @@ struct WalletView: View {
                         .monospaced()
                         .bold()
                         .font(.system(size: 70))
-//                    Spacer().frame(width: 20)
                     Text("sats")
                         .monospaced()
                         .bold()
@@ -56,7 +55,7 @@ struct WalletView: View {
                     // quick sanity check for uniqueness of C across list of proofs
                     let uniqueCs = Set(proofs.map( { $0.C }))
                     if uniqueCs.count != proofs.count {
-                        // TODO: LOG BIG RED ERROR
+                        logger.critical("Wallet seems to contain duplicate proofs.")
                     }
                 })
                 Spacer()
@@ -180,7 +179,6 @@ struct WalletView: View {
                 case "Send":
                     SendView(navigationPath: $navigationPath)
                 case "Receive":
-                    #warning("breaking url passing mechanism")
                     ReceiveView(navigationPath: $navigationPath)
                 case "Melt":
                     MeltView(navigationPath: $navigationPath)
@@ -189,9 +187,6 @@ struct WalletView: View {
                 default:
                     EmptyView()
                 }
-            }
-            .onAppear {
-                print(events)
             }
 //            .onChange(of: navigationTag, { oldValue, newValue in
 //                if newValue == "Receive" {

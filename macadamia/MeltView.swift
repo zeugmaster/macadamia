@@ -136,6 +136,7 @@ struct MeltView: View {
 
     func processScanViewResult(result: Result<ScanResult, ScanError>) {
         guard var text = try? result.get().string.lowercased() else {
+            logger.warning("Could not read string while processing camera scan result.")
             return
         }
         if text.hasPrefix("lightning:") {
@@ -144,6 +145,7 @@ struct MeltView: View {
         guard text.hasPrefix("lnbc") else {
             displayAlert(alert: AlertDetail(title: "Invalid QR",
                                             description: "The QR code you scanned does not seem to be of a valid Lighning Network invoice. Please try again."))
+            logger.warning("Invalid QR. the scanned QR code does not seem to be a LN invoice string. Scan result: \(text)")
             return
         }
         invoiceString = text
@@ -152,7 +154,7 @@ struct MeltView: View {
 
     func updateBalance() {
         guard !proofsOfSelectedMint.isEmpty else {
-            // TODO: log error
+            logger.warning("could not update balance, no proofs available")
             return
         }
         
@@ -167,7 +169,7 @@ struct MeltView: View {
     func getQuote() {
         
         guard let activeWallet, let selectedMint else {
-            print("unable to get quote, activeWallet or selectedMint is nil")
+            logger.warning("unable to get quote, activeWallet or selectedMint is nil")
             return
         }
         
@@ -180,14 +182,9 @@ struct MeltView: View {
                                                                       options: nil)
                 guard let meltQuote = try await CashuSwift.getQuote(mint: selectedMint,
                                                                     quoteRequest: quoteRequest) as? CashuSwift.Bolt11.MeltQuote else {
-                    print("could not parse melt quote as bolt11 quote object")
+                    logger.warning("could not parse melt quote as bolt11 quote object")
                     return
                 }
-                
-                print("""
-                      wallet: \(activeWallet)
-                      quote: \(meltQuote)
-                      """)
                 
                 let event = Event.pendingMeltEvent(unit: .sat,
                                                    shortDescription: "Melt Quote",
@@ -207,12 +204,14 @@ struct MeltView: View {
                     }
                 }
             } catch {
+                logger.warning("Unable to get melt quote. error \(error)")
                 displayAlert(alert: AlertDetail(title: "Error",
                                                 description: String(describing: error)))
             }
         }
     }
 
+    
     func fetchMintInfo() {
         guard let activeWallet else {
             return
@@ -225,12 +224,18 @@ struct MeltView: View {
         selectedMintString = mintList[0]
     }
 
+    
     func melt() {
         guard let selectedMint,
               let activeWallet,
               let quote
         else {
-            print("could not melt, missing mint, wallet or quote")
+            logger.warning("""
+                            could not melt, one or more of the following required variables is nil.
+                            selectedWallet: \(selectedMint.debugDescription)
+                            activeWallet: \(activeWallet.debugDescription)
+                            quote: \(quote.debugDescription)
+                            """)
             return
         }
         
@@ -243,6 +248,7 @@ struct MeltView: View {
                                                   unit: .sat) else {
             displayAlert(alert: AlertDetail(title: "Insufficient funds.",
                                             description: "The wallet could not collect enough ecash to settle this payment."))
+            logger.info("insufficient funds, mint.select() could not collect proofs for the required amount.")
             return
         }
         
@@ -254,6 +260,8 @@ struct MeltView: View {
         Task {
             do {
                 
+                logger.debug("Attempting to melt...")
+                
                 let meltResult = try await CashuSwift.melt(mint: selectedMint,
                                                            quote: quote,
                                                            proofs: selection.selected,
@@ -262,6 +270,9 @@ struct MeltView: View {
                 // TODO: temp disable back button (maybe)
 
                 if meltResult.paid {
+                    
+                    logger.debug("Melt function returned a quote with state PAID")
+                    
                     try await MainActor.run {
                         
                         loading = false
@@ -272,6 +283,8 @@ struct MeltView: View {
                         
                         if !meltResult.change.isEmpty,
                            let changeKeyset = selectedMint.keysets.first(where: { $0.keysetID == meltResult.change.first?.keysetID }) {
+                            
+                            logger.debug("Melt quote includes change, attempting saving to db.")
                             
                             let unit = Unit(changeKeyset.unit) ?? .other
                             let inputFee = changeKeyset.inputFeePPK
@@ -314,6 +327,8 @@ struct MeltView: View {
                     
                 } else {
                     await MainActor.run {
+                        logger.info("Melt function returned a quote with state NOT PAID, probably because the lightning payment failed")
+                        
                         selection.selected.forEach { $0.state = .valid }
                         loading = false
                         success = false
@@ -326,7 +341,8 @@ struct MeltView: View {
             } catch {
                 // pending event also remains
                 // TODO: UI for when quote expires etc.
-
+                
+                logger.error("Melt operation falied with error: \(error)")
                 loading = false
                 success = false
                 displayAlert(alert: AlertDetail(title: "Error",
