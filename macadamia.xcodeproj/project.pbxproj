@@ -17,6 +17,7 @@
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
 		372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */; };
 		3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3725D4D72CD5001A0037DD08 /* AVKit.framework */; };
+		3725D4DA2CD51FBA0037DD08 /* MintPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3725D4D92CD51FBA0037DD08 /* MintPicker.swift */; };
 		372D8FDC2BD5BD2500494170 /* QRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372D8FDB2BD5BD2500494170 /* QRScanner.swift */; };
 		3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE592B485BF800F862AB /* ReceiveView.swift */; };
 		3743CE5E2B48A94D00F862AB /* MeltView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE5D2B48A94D00F862AB /* MeltView.swift */; };
@@ -70,6 +71,7 @@
 		372034BD2B29E1BD00C4F955 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3725D4D72CD5001A0037DD08 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
+		3725D4D92CD51FBA0037DD08 /* MintPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintPicker.swift; sourceTree = "<group>"; };
 		372D8FDB2BD5BD2500494170 /* QRScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScanner.swift; sourceTree = "<group>"; };
 		3743CE592B485BF800F862AB /* ReceiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiveView.swift; sourceTree = "<group>"; };
 		3743CE5D2B48A94D00F862AB /* MeltView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeltView.swift; sourceTree = "<group>"; };
@@ -167,6 +169,7 @@
 				379BDF612B430775008FD0E7 /* MintManagerView.swift */,
 				374F0DBE2C4978E90031E8CD /* MintDetailView.swift */,
 				370A84082CC1E3440039A413 /* Currency.swift */,
+				3725D4D92CD51FBA0037DD08 /* MintPicker.swift */,
 				379BDF632B430F32008FD0E7 /* Settings */,
 				37DD6E202B618B1400AC5676 /* cashu */,
 				372034BD2B29E1BD00C4F955 /* Assets.xcassets */,
@@ -372,6 +375,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */,
+				3725D4DA2CD51FBA0037DD08 /* MintPicker.swift in Sources */,
 				3743CE642B494C3D00F862AB /* RestoreView.swift in Sources */,
 				370A84012CC171D60039A413 /* ProofListView.swift in Sources */,
 				379BDF602B430765008FD0E7 /* RelayManagerView.swift in Sources */,

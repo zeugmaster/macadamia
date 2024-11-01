@@ -19,6 +19,8 @@ struct MintView: View {
     @State var amountString = ""
     @State var mintList = [String]()
     @State var selectedMintString = ""
+    
+    @State var selectedMint:Mint?
 
     @State var loadingInvoice = false
 
@@ -62,15 +64,19 @@ struct MintView: View {
                             .monospaced()
                     }
                 }
-                if !mintList.isEmpty {
-                    Picker("Mint", selection: $selectedMintString) {
-                        ForEach(mintList, id: \.self) { mint in
-                            Text(mint)
-                        }
-                    }
-                } else {
-                    Text("No mints available")
-                }
+                
+                MintPicker(selectedMint: $selectedMint)
+                    .disabled(quote != nil)
+                
+//                if !mintList.isEmpty {
+//                    Picker("Mint", selection: $selectedMintString) {
+//                        ForEach(mintList, id: \.self) { mint in
+//                            Text(mint)
+//                        }
+//                    }
+//                } else {
+//                    Text("No mints available")
+//                }
             }
             if let quote {
                 Section {
@@ -185,9 +191,9 @@ struct MintView: View {
         }
     }
 
-    var selectedMint: Mint? {
-        activeWallet?.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) })
-    }
+//    var selectedMint: Mint? {
+//        activeWallet?.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) })
+//    }
 
     var amount: Int {
         return Int(amountString) ?? 0
