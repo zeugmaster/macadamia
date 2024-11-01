@@ -24,10 +24,14 @@ struct WalletView: View {
     @State var currentAlert: AlertDetail?
 
     @State var navigationPath = NavigationPath()
-    @Binding var navigationTag: String?
+    
     @Binding var urlState: String?
 
     static let buttonPadding: CGFloat = 1
+    
+    init(urlState: Binding<String?>) {
+        self._urlState = urlState
+    }
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -179,7 +183,7 @@ struct WalletView: View {
                 case "Send":
                     SendView(navigationPath: $navigationPath)
                 case "Receive":
-                    ReceiveView(navigationPath: $navigationPath)
+                    ReceiveView(tokenString: urlState, navigationPath: $navigationPath)
                 case "Melt":
                     MeltView(navigationPath: $navigationPath)
                 case "Mint":
@@ -188,12 +192,11 @@ struct WalletView: View {
                     EmptyView()
                 }
             }
-//            .onChange(of: navigationTag, { oldValue, newValue in
-//                if newValue == "Receive" {
-//                    navigationPath.append("Receive")
-//                    navigationTag = nil
-//                }
-//            })
+            .onChange(of: urlState, { oldValue, newValue in
+                if newValue != nil {
+                    navigationPath.append("Receive")
+                }
+            })
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
     }
@@ -224,5 +227,5 @@ struct TransactionListRowView: View {
 }
 
 #Preview {
-    WalletView(navigationTag: .constant(nil), urlState: .constant(nil))
+    WalletView(urlState: .constant(nil))
 }

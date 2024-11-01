@@ -28,7 +28,8 @@ struct ReceiveView: View {
 
     init(tokenString: String? = nil, navigationPath: Binding<NavigationPath>? = nil) {
         self.navigationPath = navigationPath
-        self.tokenString = tokenString
+//        print(tokenString)
+        self._tokenString = State(initialValue: tokenString)
     }
 
     var body: some View {
@@ -99,6 +100,10 @@ struct ReceiveView: View {
             }
             .onAppear(perform: {
                 qrsVM.onResult = scannerDidDecodeString(_:)
+                
+                if let tokenString {
+                    parseTokenString()
+                }
             })
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
             .navigationTitle("Receive")

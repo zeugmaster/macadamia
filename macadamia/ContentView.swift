@@ -15,13 +15,12 @@ struct ContentView: View {
 
     @State private var releaseNotesPopoverShowing = false
     @State private var selectedTab: Tab = .wallet
-    @State private var walletNavigationTag: String?
+    
     @State private var urlState: String?
 
     enum Tab {
         case wallet
         case mints
-        case nostr
         case settings
     }
 
@@ -29,20 +28,20 @@ struct ContentView: View {
         ZStack {
             Color.black.ignoresSafeArea()
             // FIXME: FOR SOME REASON TRACKING TAB SELECTION LEADS TO FUNNY BEHAVIOUR
-            TabView {
+            TabView(selection: $selectedTab) {
                 // First tab content
-                WalletView(navigationTag: .constant(nil), urlState: .constant(nil))
+                WalletView(urlState: $urlState)
                     .tabItem {
                         Label("Wallet", systemImage: "bitcoinsign.circle")
                     }
-                    .tag(1)
+                    .tag(Tab.wallet)
 
                 MintManagerView()
                     .tabItem {
                         Image(systemName: "building.columns")
                         Text("Mints")
                     }
-                    .tag(2)
+                    .tag(Tab.mints)
 
                 // Third tab content
                 SettingsView()
@@ -50,7 +49,7 @@ struct ContentView: View {
                         Image(systemName: "gear")
                         Text("Settings")
                     }
-                    .tag(3)
+                    .tag(Tab.settings)
             }
             .persistentSystemOverlays(.hidden)
             .background(Color.black)
@@ -62,8 +61,10 @@ struct ContentView: View {
                 initializeWallet()
             }
             
-            let urls = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
-            print("App Support Directory: \(urls[0])")
+//            let urls = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
+//            print("App Support Directory: \(urls[0])")
+            
+            selectedTab = .wallet
         })
         .popover(isPresented: $releaseNotesPopoverShowing, content: {
             ReleaseNoteView()
@@ -101,13 +102,12 @@ struct ContentView: View {
     }
 
     func handleUrl(_ url: URL) {
-        logger.info("URL has been passed to the application: \(url.absoluteString)")
-//         if url.scheme == "cashu" {
-//             let noURLPrefix = url.absoluteStringWithoutPrefix("cashu")
-//             urlState = noURLPrefix
-//             selectedTab = 0
-//             walletNavigationTag = "Receive"
-//         }
+        logger.info("URL has been passed to the application: \(url.absoluteString.prefix(30) + (url.absoluteString.count > 30 ? "..." : ""))")
+         if url.scheme == "cashu" {
+             let noURLPrefix = url.absoluteStringWithoutPrefix("cashu")
+             selectedTab = .wallet
+             urlState = noURLPrefix
+         }
     }
 }
 
