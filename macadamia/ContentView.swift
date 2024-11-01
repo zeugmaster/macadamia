@@ -67,10 +67,17 @@ struct ContentView: View {
             selectedTab = .wallet
         })
         .popover(isPresented: $releaseNotesPopoverShowing, content: {
-            ReleaseNoteView()
-            Text("Swipe down to dismiss")
-                .foregroundStyle(.secondary)
-                .font(.footnote)
+            ZStack(alignment: .topTrailing) {
+                ReleaseNoteView()
+                Button {
+                    releaseNotesPopoverShowing = false
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .scaleEffect(1.8)
+                        .opacity(0.3)
+                }
+                .padding(EdgeInsets(top: 24, leading: 0, bottom: 0, trailing: 10))
+            }
         })
         .preferredColorScheme(.dark)
         .onOpenURL { url in

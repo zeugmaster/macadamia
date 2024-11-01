@@ -16,6 +16,7 @@
 		372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
 		372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */; };
+		3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3725D4D72CD5001A0037DD08 /* AVKit.framework */; };
 		372D8FDC2BD5BD2500494170 /* QRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372D8FDB2BD5BD2500494170 /* QRScanner.swift */; };
 		3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE592B485BF800F862AB /* ReceiveView.swift */; };
 		3743CE5E2B48A94D00F862AB /* MeltView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743CE5D2B48A94D00F862AB /* MeltView.swift */; };
@@ -68,6 +69,7 @@
 		372034BB2B29E1BC00C4F955 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		372034BD2B29E1BD00C4F955 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		3725D4D72CD5001A0037DD08 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		372D8FDB2BD5BD2500494170 /* QRScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScanner.swift; sourceTree = "<group>"; };
 		3743CE592B485BF800F862AB /* ReceiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiveView.swift; sourceTree = "<group>"; };
 		3743CE5D2B48A94D00F862AB /* MeltView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeltView.swift; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */,
 				379BDF592B421855008FD0E7 /* NostrSDK in Frameworks */,
 				37049E262BD54A2E00BBAC4E /* URUI in Frameworks */,
 				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
@@ -130,6 +133,7 @@
 				377FFF012BC451AB00DD2635 /* release-notes.md */,
 				372034B82B29E1BC00C4F955 /* macadamia */,
 				37DC18A22B8669A900F9B37B /* macadamiaTests */,
+				3725D4D62CD5001A0037DD08 /* Frameworks */,
 				372034B72B29E1BC00C4F955 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -177,6 +181,14 @@
 				372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		3725D4D62CD5001A0037DD08 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3725D4D72CD5001A0037DD08 /* AVKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		379BDF632B430F32008FD0E7 /* Settings */ = {
