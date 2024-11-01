@@ -23,9 +23,9 @@ struct MeltView: View {
     @State var invoiceString: String = ""
     @State var loading = false
     @State var success = false
-
-    @State var mintList: [String] = [""]
-    @State var selectedMintString: String = ""
+    
+    @State private var selectedMint:Mint?
+    
     @State var selectedMintBalance = 0
 
     @State var showAlert: Bool = false
@@ -44,10 +44,9 @@ struct MeltView: View {
 
     var body: some View {
         VStack {
-            // MARK: This check is necessary to prevent a bug in URKit (or the system, who knows)
-
-            // MARK: from crashing the app when using the camera on an Apple Silicon Mac
-
+            
+            // This check is necessary to prevent a bug in URKit (or the system, who knows)
+            // from crashing the app when using the camera on an Apple Silicon Mac
             if !ProcessInfo.processInfo.isiOSAppOnMac {
                 CodeScannerView(codeTypes: [.qr], scanMode: .oncePerCode) { result in
                     processScanViewResult(result: result)
@@ -78,16 +77,10 @@ struct MeltView: View {
                             .foregroundStyle(.secondary)
                         }
                     }
-                    Picker("Mint", selection: $selectedMintString) {
-                        ForEach(mintList, id: \.self) {
-                            Text($0)
+                    MintPicker(selectedMint: $selectedMint)
+                        .onChange(of: selectedMint) { _, _ in
+                            updateBalance()
                         }
-                    }.onAppear(perform: {
-                        fetchMintInfo()
-                    })
-                    .onChange(of: selectedMintString) { _, _ in
-                        updateBalance()
-                    }
                     HStack {
                         Text("Balance: ")
                         Spacer()
@@ -128,10 +121,6 @@ struct MeltView: View {
             .navigationBarTitleDisplayMode(.inline)
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
-    }
-
-    var selectedMint: Mint? {
-        activeWallet?.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) })
     }
 
     func processScanViewResult(result: Result<ScanResult, ScanError>) {
@@ -211,20 +200,6 @@ struct MeltView: View {
         }
     }
 
-    
-    func fetchMintInfo() {
-        guard let activeWallet else {
-            return
-        }
-
-        for mint in activeWallet.mints {
-            let readable = mint.url.absoluteString.dropFirst(8)
-            mintList.append(String(readable))
-        }
-        selectedMintString = mintList[0]
-    }
-
-    
     func melt() {
         guard let selectedMint,
               let activeWallet,
@@ -354,15 +329,6 @@ struct MeltView: View {
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
-    }
-
-    func worstCaseInputCount(for n: UInt) -> Int {
-        guard n > 0 else { return 1 }
-
-        let bitsNeeded = n.bitWidth - n.leadingZeroBitCount
-        let isPowerOfTwo = (n & (n - 1)) == 0
-        let maxBitsInRange = isPowerOfTwo ? bitsNeeded : bitsNeeded
-        return maxBitsInRange + 1
     }
 }
 

@@ -16,10 +16,10 @@ struct SendView: View {
 
     @State var showingShareSheet = false
     @State var tokenMemo = ""
-
+    
+    @State private var selectedMint:Mint?
+    
     @State var numberString = ""
-    @State var mintList = [String]()
-    @State var selectedMintString = ""
     @State var selectedMintBalance = 0
 
     @State var loading = false
@@ -47,17 +47,10 @@ struct SendView: View {
                     Text("sats")
                 }
                 // TODO: CHECK FOR EMPTY MINT LIST
-                Picker("Mint", selection: $selectedMintString) {
-                    ForEach(mintList, id: \.self) {
-                        Text($0)
-                    }
-                }
-                .onAppear(perform: {
-                    fetchMintInfo()
-                })
-                .onChange(of: selectedMintString) { _, _ in
+                MintPicker(selectedMint: $selectedMint)
+                    .onChange(of: selectedMint) { _, _ in
                     updateBalance()
-                }
+                    }
                 HStack {
                     Text("Balance: ")
                     Spacer()
@@ -141,10 +134,6 @@ struct SendView: View {
 
     // MARK: - LOGIC
 
-    var selectedMint: Mint? {
-        activeWallet?.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) })
-    }
-    
     var proofsOfSelectedMint:[Proof] {
         allProofs.filter { $0.mint == selectedMint }
     }
@@ -160,19 +149,6 @@ struct SendView: View {
                 isCopied = false
             }
         }
-    }
-
-    func fetchMintInfo() {
-        guard let activeWallet else {
-            logger.warning("could not fetch mint info because activeWallet is nil")
-            return
-        }
-        
-        for mint in activeWallet.mints {
-            let readable = mint.url.absoluteString.dropFirst(8)
-            mintList.append(String(readable))
-        }
-        selectedMintString = mintList[0]
     }
 
     func updateBalance() {
