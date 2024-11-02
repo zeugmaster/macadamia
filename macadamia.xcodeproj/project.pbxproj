@@ -27,7 +27,7 @@
 		374F0DBF2C4978E90031E8CD /* MintDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374F0DBE2C4978E90031E8CD /* MintDetailView.swift */; };
 		374F0DC12C4D34FD0031E8CD /* BalanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374F0DC02C4D34FD0031E8CD /* BalanceView.swift */; };
 		376E68CB2C7DD0470043B46D /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 376E68CA2C7DD0470043B46D /* CashuSwift */; };
-		376E68CD2C7DD28E0043B46D /* Wallet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 376E68CC2C7DD28E0043B46D /* Wallet.swift */; };
+		376E68CD2C7DD28E0043B46D /* PersistentModelV1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 376E68CC2C7DD28E0043B46D /* PersistentModelV1.swift */; };
 		376E88432BE5468B0026FF8D /* Popovers in Frameworks */ = {isa = PBXBuildFile; productRef = 376E88422BE5468B0026FF8D /* Popovers */; };
 		376F43B22B4FEC0D00E55B0F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 376F43B12B4FEC0D00E55B0F /* README.md */; };
 		377FFEFD2BC41DCF00DD2635 /* ReleaseNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 377FFEFC2BC41DCF00DD2635 /* ReleaseNoteView.swift */; };
@@ -79,7 +79,7 @@
 		3743CE672B4AA67600F862AB /* EventDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDetailView.swift; sourceTree = "<group>"; };
 		374F0DBE2C4978E90031E8CD /* MintDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintDetailView.swift; sourceTree = "<group>"; };
 		374F0DC02C4D34FD0031E8CD /* BalanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceView.swift; sourceTree = "<group>"; };
-		376E68CC2C7DD28E0043B46D /* Wallet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wallet.swift; sourceTree = "<group>"; };
+		376E68CC2C7DD28E0043B46D /* PersistentModelV1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentModelV1.swift; sourceTree = "<group>"; };
 		376F43B12B4FEC0D00E55B0F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		377FFEFC2BC41DCF00DD2635 /* ReleaseNoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseNoteView.swift; sourceTree = "<group>"; };
 		377FFF012BC451AB00DD2635 /* release-notes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "release-notes.md"; sourceTree = "<group>"; };
@@ -219,7 +219,7 @@
 		37DD6E202B618B1400AC5676 /* cashu */ = {
 			isa = PBXGroup;
 			children = (
-				376E68CC2C7DD28E0043B46D /* Wallet.swift */,
+				376E68CC2C7DD28E0043B46D /* PersistentModelV1.swift */,
 			);
 			name = cashu;
 			path = macadamia/cashu;
@@ -232,7 +232,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 372034C42B29E1BD00C4F955 /* Build configuration list for PBXNativeTarget "macadamia" */;
 			buildPhases = (
-				37550EC42CB9060600BDB3F5 /* SwiftFormat */,
 				372034B22B29E1BC00C4F955 /* Sources */,
 				372034B32B29E1BC00C4F955 /* Frameworks */,
 				372034B42B29E1BC00C4F955 /* Resources */,
@@ -347,28 +346,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		37550EC42CB9060600BDB3F5 /* SwiftFormat */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/**/*.swift",
-			);
-			name = SwiftFormat;
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if which swiftformat >/dev/null; then\n  swiftformat ${SCRIPT_INPUT_FILE_LIST_0}\nelse\n  echo \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		372034B22B29E1BC00C4F955 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -388,7 +365,7 @@
 				3743CE682B4AA67600F862AB /* EventDetailView.swift in Sources */,
 				370A84092CC1E3440039A413 /* Currency.swift in Sources */,
 				37B2C1582B60192100535DAF /* MintView.swift in Sources */,
-				376E68CD2C7DD28E0043B46D /* Wallet.swift in Sources */,
+				376E68CD2C7DD28E0043B46D /* PersistentModelV1.swift in Sources */,
 				379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */,
 				372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */,
 				37CC21802B8A71FD00A13F2F /* DrainView.swift in Sources */,

@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct MintPicker: View {
-    @Query private var mints: [Mint]
+    @Query(sort: [SortDescriptor(\Mint.userIndex, order: .forward)]) private var mints: [Mint]
     
     @Binding var selectedMint:Mint?
     

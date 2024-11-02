@@ -4,7 +4,10 @@ import SwiftUI
 
 struct MintManagerView: View {
     @Environment(\.modelContext) private var modelContext
+    
     @Query private var wallets: [Wallet]
+    @Query private var mints: [Mint]
+    
     @Query(animation: .default) private var allProofs: [Proof]
     
     @State private var balanceStrings = [UUID: String?]()
@@ -16,18 +19,41 @@ struct MintManagerView: View {
     var activeWallet: Wallet? {
         wallets.first
     }
+    
+    var sortedMintsOfActiveWallet: [Mint] {
+        mints.filter({ $0.wallet == activeWallet })
+             .sorted(by: { $0.userIndex ?? 0 < $1.userIndex ?? 0})
+    }
 
     var body: some View {
         NavigationView {
-            if let activeWallet {
+            if let _ = activeWallet {
                 Form {
                     Section {
-                        List(activeWallet.mints, id: \.url) { mint in
-                            NavigationLink(destination: MintDetailView(mint: mint)) {
-                                // Pass proofs related to the mint to MintInfoRowView
-                                MintInfoRowView(mint: mint, amountDisplayString: balanceStrings[mint.mintID] ?? nil)
+                        List {
+                            ForEach(sortedMintsOfActiveWallet) { mint in
+                                NavigationLink(destination: MintDetailView(mint: mint)) {
+                                    // Pass proofs related to the mint to MintInfoRowView
+                                    MintInfoRowView(mint: mint, amountDisplayString: balanceStrings[mint.mintID] ?? nil)
+                                }
+                            }
+                            .onMove { source, destination in
+                                var m = sortedMintsOfActiveWallet
+                                m.move(fromOffsets: source, toOffset: destination)
+                                for (index, mint) in m.enumerated() {
+                                    mint.userIndex = index
+                                }
+                                
+                                do {
+                                    try modelContext.save()
+                                } catch {
+                                    print("Error saving order: \(error)")
+                                }
+                                
                             }
                         }
+                    } footer: {
+                        Text("Hold and drag to change the order. The first mint will be default selected across the application.")
                     }
                     Section {
                         TextField("Add new Mint URL...", text: $newMintURLString)
@@ -37,7 +63,7 @@ struct MintManagerView: View {
                                 addMint()
                             }
                     } footer: {
-                        Text("Enter a URL to add a new mint to the wallet, hit Return to save.")
+                        Text("Enter a URL to add a new mint to the wallet, hit Return to save. macadamia Wallet is not affiliated with any mint and does not custody user funds. You can find a list of mints on [bitcoinmints.com](https://bitcoinmints.com)")
                     }
                 }
                 .navigationTitle("Mints")
@@ -88,6 +114,7 @@ struct MintManagerView: View {
             do {
                 let mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
                 mint.wallet = activeWallet
+                mint.userIndex = activeWallet?.mints.count
                 modelContext.insert(mint)
                 try modelContext.save()
                 logger.info("added new mint with URL \(mint.url.absoluteString)")
@@ -111,23 +138,9 @@ struct MintManagerView: View {
 
 struct MintInfoRowView: View {
     let mint: Mint
-//    let proofs: [Proof]
     let amountDisplayString: String?
 
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 44
-
-//    var sumsByUnit: [Unit: Int] {
-//        proofs.reduce(into: [Unit: Int]()) { result, proof in
-//            result[proof.unit, default: 0] += proof.amount
-//        }
-//    }
-//
-//    var stringForSums: String? {
-//        if sumsByUnit.isEmpty { return "No Balance" }
-//        return sumsByUnit.map { (unit, amount) in
-//            "\(amount) \(unit.rawValue)"
-//        }.joined(separator: " | ")
-//    }
 
     var body: some View {
         HStack {

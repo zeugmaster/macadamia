@@ -101,7 +101,7 @@ struct ReceiveView: View {
             .onAppear(perform: {
                 qrsVM.onResult = scannerDidDecodeString(_:)
                 
-                if let tokenString {
+                if tokenString != nil {
                     parseTokenString()
                 }
             })
