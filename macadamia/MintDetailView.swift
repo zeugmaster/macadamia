@@ -1,7 +1,18 @@
 import SwiftUI
+import SwiftData
 
 struct MintDetailView: View {
     @Bindable var mint: Mint
+
+    // Access the model context
+    @Environment(\.modelContext) private var modelContext
+    // Access the dismiss action to pop the view
+    @Environment(\.dismiss) private var dismiss
+
+    // State variables for alert handling
+    @State private var showDeleteConfirmation = false
+    @State private var showErrorAlert = false
+    @State private var errorMessage = ""
 
     @ScaledMetric(relativeTo: .title) private var iconSize: CGFloat = 80
 
@@ -35,7 +46,7 @@ struct MintDetailView: View {
                                         .font(.title)
                                 }
                             }
-                            .frame(width: iconSize, height: iconSize) // Use a relative size or GeometryReader for more flexibility
+                            .frame(width: iconSize, height: iconSize)
                             .clipShape(Circle())
                         }
                         Spacer()
@@ -43,8 +54,9 @@ struct MintDetailView: View {
                 }
                 .listRowBackground(Color.clear)
             } else {
-                Text("No mint Info available.")
+                Text("No mint info available.")
             }
+
             Section {
                 VStack(alignment: .leading) {
                     Text("URL")
@@ -53,9 +65,11 @@ struct MintDetailView: View {
                     Text(mint.url.absoluteString)
                 }
             }
+
             Section {
                 Button(role: .destructive) {
-                    print("delete mint button pressed")
+                    // Show confirmation alert
+                    showDeleteConfirmation = true
                 } label: {
                     HStack {
                         Text("Remove this mint")
@@ -63,11 +77,39 @@ struct MintDetailView: View {
                         Image(systemName: "trash")
                     }
                 }
+                // Confirmation alert for deletion
+                .alert("Remove Mint", isPresented: $showDeleteConfirmation) {
+                    Button("Delete", role: .destructive) {
+                        deleteMint()
+                    }
+                    Button("Cancel", role: .cancel) { }
+                } message: {
+                    Text("Are you sure you want to remove this mint?")
+                }
             }
+        }
+        // Error alert if deletion fails
+        .alert("Error", isPresented: $showErrorAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
+        }
+    }
+
+    // Function to delete the mint
+    private func deleteMint() {
+        // Delete the mint from the context
+        modelContext.delete(mint)
+
+        do {
+            // Save the context to persist changes
+            try modelContext.save()
+            // Dismiss the view to go back
+            dismiss()
+        } catch {
+            // Handle errors and show an alert
+            errorMessage = "Failed to delete mint: \(error.localizedDescription)"
+            showErrorAlert = true
         }
     }
 }
-
-// #Preview {
-//    MintDetailView(mintInfo: mint1)
-// }
