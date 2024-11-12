@@ -219,6 +219,10 @@ struct TransactionListRowView: View {
             HStack {
                 Text(event.shortDescription)
                 Spacer()
+                if let amount = event.amount {
+                    Text(amountDisplayString(amount, unit: event.unit))
+                        .foregroundStyle(.secondary)
+                }
             }
             .lineLimit(1)
             .font(.callout)

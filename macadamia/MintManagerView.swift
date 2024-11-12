@@ -32,7 +32,7 @@ struct MintManagerView: View {
                     Section {
                         List {
                             ForEach(sortedMintsOfActiveWallet) { mint in
-                                NavigationLink(destination: MintDetailView(mint: mint)) {
+                                NavigationLink(destination: MintInfoView(mint: mint)) {
                                     // Pass proofs related to the mint to MintInfoRowView
                                     MintInfoRowView(mint: mint, amountDisplayString: balanceStrings[mint.mintID] ?? nil)
                                 }
@@ -49,7 +49,6 @@ struct MintManagerView: View {
                                 } catch {
                                     print("Error saving order: \(error)")
                                 }
-                                
                             }
                         }
                     } footer: {
@@ -63,7 +62,11 @@ struct MintManagerView: View {
                                 addMint()
                             }
                     } footer: {
-                        Text("Enter a URL to add a new mint to the wallet, hit Return to save. macadamia Wallet is not affiliated with any mint and does not custody user funds. You can find a list of mints on [bitcoinmints.com](https://bitcoinmints.com)")
+                        Text("""
+                             Enter a URL to add a new mint to the wallet, hit Return to save. 
+                             macadamia Wallet is not affiliated with any mint and does not custody user funds. 
+                             You can find a list of mints on [bitcoinmints.com](https://bitcoinmints.com)
+                             """)
                     }
                 }
                 .navigationTitle("Mints")
@@ -153,7 +156,7 @@ struct MintInfoRowView: View {
             .clipShape(Circle())
 
             VStack(alignment: .leading) {
-                Text(mint.url.host(percentEncoded: false)!)
+                Text(mint.nickName ?? mint.url.host(percentEncoded: false) ?? mint.url.absoluteString)
                     .bold()
                     .dynamicTypeSize(.xLarge)
                 Text(amountDisplayString ?? "No Balance")

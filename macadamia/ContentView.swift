@@ -86,8 +86,9 @@ struct ContentView: View {
     }
 
     private func initializeWallet() {
-        let seed = String(bytes: Mnemonic().seed)
-        let wallet = Wallet(seed: seed)
+        let randomMnemonic = Mnemonic()
+        let seed = String(bytes: randomMnemonic.seed)
+        let wallet = Wallet(mnemonic: randomMnemonic.phrase.joined(separator: " "), seed: seed)
         modelContext.insert(wallet)
         logger.info("No wallet was found, initializing a new one with ID \(wallet.walletID)...")
         do {

@@ -25,6 +25,8 @@ enum AppSchemaV1: VersionedSchema {
         @Attribute(.unique)
         var walletID: UUID
         
+        var mnemonic: String
+        
         var seed: String?
 
         var name: String?
@@ -40,13 +42,14 @@ enum AppSchemaV1: VersionedSchema {
         @Relationship(deleteRule: .cascade ,inverse: \Event.wallet)
         var events: [Event]?
 
-        init(seed: String? = nil) {
+        init(mnemonic: String, seed: String) {
             self.walletID = UUID()
+            self.mnemonic = mnemonic
             self.seed = seed
-            dateCreated = Date()
-            mints = []
-            proofs = []
-            events = []
+            self.dateCreated = Date()
+            self.mints = []
+            self.proofs = []
+            self.events = []
         }
     }
 
@@ -58,9 +61,10 @@ enum AppSchemaV1: VersionedSchema {
         
         var url: URL
         var keysets: [CashuSwift.Keyset]
-        var info: MintInfo?
         var nickName: String?
         var dateAdded: Date
+        
+        var lastDismissedMOTDHash: Data?
      
         var wallet: Wallet?
         
@@ -165,24 +169,6 @@ enum AppSchemaV1: VersionedSchema {
                 keyset.derivationCounter += n
                 self.keysets[index] = keyset
             }
-        }
-    }
-
-    struct MintInfo: Codable {
-        let name: String
-        let pubkey: String
-        let version: String
-        let shortDescription: String?
-        let longDescription: String?
-        let imageURL: URL?
-
-        init(with mintInfo: CashuSwift.MintInfo) {
-            name = mintInfo.name
-            pubkey = mintInfo.pubkey
-            version = mintInfo.version
-            shortDescription = mintInfo.descriptionShort
-            longDescription = mintInfo.descriptionLong
-            imageURL = nil
         }
     }
 

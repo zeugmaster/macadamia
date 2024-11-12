@@ -17,11 +17,7 @@ struct MnemonicView: View {
         guard let activeWallet else {
             return
         }
-        if let seed = activeWallet.seed,
-           let mnemo = try? Mnemonic(entropy: seed.bytes).phrase
-        {
-            mnemonic = mnemo
-        }
+        mnemonic = activeWallet.mnemonic.components(separatedBy: " ")
         mintList = activeWallet.mints.map { $0.url.absoluteString }
     }
 
@@ -34,8 +30,12 @@ struct MnemonicView: View {
     var body: some View {
         List {
             Section {
-                ForEach(mnemonic, id: \.self) { word in
-                    Text(word)
+                ForEach(Array(mnemonic.enumerated()), id: \.offset) { (index, word) in
+                    HStack {
+                        Text("\(index + 1).")
+                            .frame(minWidth: 26, alignment: .trailing)
+                        Text(word)
+                    }
                 }
                 .disabled(true)
                 .foregroundStyle(.secondary)
@@ -66,7 +66,10 @@ struct MnemonicView: View {
                 .disabled(true)
                 .foregroundStyle(.secondary)
             } footer: {
-                Text("macadamia can only restore eCash from the mints it knows about. It would be wise to include their URLs in the backup of your seed phrase.")
+                Text("""
+                    macadamia can only restore ecash from the mints it knows about. \
+                    Make sure to include their URLs in the backup of your seed phrase.
+                    """)
             }
         }
         .onAppear(perform: loadData)
