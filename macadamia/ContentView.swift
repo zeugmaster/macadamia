@@ -60,10 +60,6 @@ struct ContentView: View {
             if wallets.isEmpty {
                 initializeWallet()
             }
-            
-//            let urls = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
-//            print("App Support Directory: \(urls[0])")
-            
             selectedTab = .wallet
         })
         .popover(isPresented: $releaseNotesPopoverShowing, content: {

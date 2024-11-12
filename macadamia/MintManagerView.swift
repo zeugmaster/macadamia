@@ -29,30 +29,32 @@ struct MintManagerView: View {
         NavigationView {
             if let _ = activeWallet {
                 Form {
-                    Section {
-                        List {
-                            ForEach(sortedMintsOfActiveWallet) { mint in
-                                NavigationLink(destination: MintInfoView(mint: mint)) {
-                                    // Pass proofs related to the mint to MintInfoRowView
-                                    MintInfoRowView(mint: mint, amountDisplayString: balanceStrings[mint.mintID] ?? nil)
+                    if !mints.isEmpty {
+                        Section {
+                            List {
+                                ForEach(sortedMintsOfActiveWallet) { mint in
+                                    NavigationLink(destination: MintInfoView(mint: mint)) {
+                                        // Pass proofs related to the mint to MintInfoRowView
+                                        MintInfoRowView(mint: mint, amountDisplayString: balanceStrings[mint.mintID] ?? nil)
+                                    }
+                                }
+                                .onMove { source, destination in
+                                    var m = sortedMintsOfActiveWallet
+                                    m.move(fromOffsets: source, toOffset: destination)
+                                    for (index, mint) in m.enumerated() {
+                                        mint.userIndex = index
+                                    }
+                                    
+                                    do {
+                                        try modelContext.save()
+                                    } catch {
+                                        print("Error saving order: \(error)")
+                                    }
                                 }
                             }
-                            .onMove { source, destination in
-                                var m = sortedMintsOfActiveWallet
-                                m.move(fromOffsets: source, toOffset: destination)
-                                for (index, mint) in m.enumerated() {
-                                    mint.userIndex = index
-                                }
-                                
-                                do {
-                                    try modelContext.save()
-                                } catch {
-                                    print("Error saving order: \(error)")
-                                }
-                            }
+                        } footer: {
+                            Text("Hold and drag to change the order. The first mint will be default selected across the application.")
                         }
-                    } footer: {
-                        Text("Hold and drag to change the order. The first mint will be default selected across the application.")
                     }
                     Section {
                         TextField("Add new Mint URL...", text: $newMintURLString)

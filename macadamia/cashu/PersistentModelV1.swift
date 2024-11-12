@@ -64,7 +64,7 @@ enum AppSchemaV1: VersionedSchema {
         var nickName: String?
         var dateAdded: Date
         
-        var lastDismissedMOTDHash: Data?
+        var lastDismissedMOTDHash: String?
      
         var wallet: Wallet?
         

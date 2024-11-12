@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import CashuSwift
 import Flow
+import CryptoKit
 
 struct MintInfoView: View {
     
@@ -13,6 +14,8 @@ struct MintInfoView: View {
     @Environment(\.modelContext) private var modelContext
     // Access the dismiss action to pop the view
     @Environment(\.dismiss) private var dismiss
+    
+    @State private var motd: String?
 
     // State variables for alert handling
     @State private var showDeleteConfirmation = false
@@ -22,44 +25,28 @@ struct MintInfoView: View {
     @ScaledMetric(relativeTo: .title) private var iconSize: CGFloat = 80
     
     @State private var nicknameInput = ""
-
+    
     var body: some View {
         List {
-            Section {
-                HStack {
-                    Spacer()
-                    ZStack {
-                        Group {
-                            Color.gray.opacity(0.3)
-//                            if let info0_16 = info as? CashuSwift.MintInfo0_16  {
-//                                AsyncImage(url: imageURL) { phase in
-//                                    switch phase {
-//                                    case let .success(image):
-//                                        image
-//                                            .resizable()
-//                                            .aspectRatio(contentMode: .fit)
-//                                    case .failure:
-//                                        Image(systemName: "photo")
-//                                    case .empty:
-//                                        ProgressView()
-//                                    @unknown default:
-//                                        EmptyView()
-//                                    }
-//                                }
-//                            } else {
-                                Image(systemName: "building.columns")
-                                    .foregroundColor(.white)
-                                    .font(.title)
-//                            }
-                        }
+            HStack {
+                Spacer()
+                ZStack {
+                    Circle()
+                        .fill(Color.gray.opacity(0.3))
                         .frame(width: iconSize, height: iconSize)
-                        .clipShape(Circle())
-                    }
-                    Spacer()
+                    Image(systemName: "building.columns")
+                        .foregroundColor(.white)
+                        .font(.title)
                 }
+                Spacer()
             }
+            // Adjust the list row to remove default insets and background
+            .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
-
+            .padding(.bottom, 24) 
+            if let motd {
+                MOTDCell(message: motd, onDismiss: dismissMOTD)
+            }
             Section {
                 TextDescriptionCell(description: "URL", text: mint.url.absoluteString)
                 VStack(alignment: .leading) {
@@ -112,11 +99,18 @@ struct MintInfoView: View {
             Text(errorMessage)
         }
         .task {
+            // fetch mint info
             do {
                 logger.info("loading info for mint: \(mint.url.absoluteString)...")
                 info = try await CashuSwift.loadInfoFromMint(mint)
             } catch {
                 logger.warning("could not load mint info \(error)")
+            }
+            // show MOTD if changed
+            if let infoV_0_16 = info as? CashuSwift.MintInfo0_16 {
+                if mint.lastDismissedMOTDHash != infoV_0_16.motd.hashString() {
+                    motd = infoV_0_16.motd
+                }
             }
         }
     }
@@ -135,6 +129,16 @@ struct MintInfoView: View {
             // Handle errors and show an alert
             errorMessage = "Failed to delete mint: \(error.localizedDescription)"
             showErrorAlert = true
+        }
+    }
+    
+    private func dismissMOTD() {
+        guard let infoV_0_16 = info as? CashuSwift.MintInfo0_16 else {
+            return
+        }
+        mint.lastDismissedMOTDHash = infoV_0_16.motd.hashString()
+        withAnimation {
+            motd = nil
         }
     }
 }
@@ -179,8 +183,50 @@ struct Tag: View {
     }
 }
 
+struct MOTDCell: View {
+    let message: String
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Text(message)
+                .padding()
+                .padding(.trailing, 32) // Ensure text doesn't overlap with the "x" button
+            Spacer()
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.orange.opacity(0.2))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.orange.opacity(0.6), lineWidth: 2)
+                )
+        )
+        .overlay(
+            // Close Button positioned at the top-right corner
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .foregroundColor(.orange)
+                    .padding(8)
+            }
+            .buttonStyle(.plain),
+            alignment: .topTrailing
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            // Consume taps on the entire cell to prevent default selection
+        }
+        // Match default cell insets
+        .listRowInsets(EdgeInsets(top: 0, leading: 2, bottom: 0, trailing: 2))
+        // Add vertical padding to prevent clipping
+        .padding(.vertical, 4)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+    }
+}
+
+
 struct TextDescriptionCell: View {
-    
     var description: String
     var text: String
     
@@ -194,3 +240,15 @@ struct TextDescriptionCell: View {
     }
 }
 
+extension String {
+    func hashString() -> String? {
+        if !self.isEmpty {
+            guard let data = self.data(using: .utf8) else {
+                return nil
+            }
+            return String(bytes: SHA256.hash(data: data).bytes)
+        } else {
+            return nil
+        }
+    }
+}
