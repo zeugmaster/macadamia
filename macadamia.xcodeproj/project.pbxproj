@@ -12,6 +12,7 @@
 		370A84012CC171D60039A413 /* ProofListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 370A84002CC171D50039A413 /* ProofListView.swift */; };
 		370A84072CC18AEE0039A413 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 370A84062CC18AEE0039A413 /* Flow */; };
 		370A84092CC1E3440039A413 /* Currency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 370A84082CC1E3440039A413 /* Currency.swift */; };
+		371758802CE377CA0018DC48 /* Alerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3717587F2CE377CA0018DC48 /* Alerts.swift */; };
 		372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034B92B29E1BC00C4F955 /* macadamiaApp.swift */; };
 		372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
@@ -65,6 +66,7 @@
 		370A83FE2CB94CCD0039A413 /* .swiftformat */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .swiftformat; sourceTree = "<group>"; };
 		370A84002CC171D50039A413 /* ProofListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofListView.swift; sourceTree = "<group>"; };
 		370A84082CC1E3440039A413 /* Currency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Currency.swift; sourceTree = "<group>"; };
+		3717587F2CE377CA0018DC48 /* Alerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alerts.swift; sourceTree = "<group>"; };
 		372034B62B29E1BC00C4F955 /* macadamia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macadamia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		372034B92B29E1BC00C4F955 /* macadamiaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macadamiaApp.swift; sourceTree = "<group>"; };
 		372034BB2B29E1BC00C4F955 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -161,6 +163,7 @@
 				3743CE592B485BF800F862AB /* ReceiveView.swift */,
 				3743CE5D2B48A94D00F862AB /* MeltView.swift */,
 				379BDF642B447138008FD0E7 /* UIHelpers.swift */,
+				3717587F2CE377CA0018DC48 /* Alerts.swift */,
 				3780EEE52B2B5C3F00971AE7 /* QRView.swift */,
 				3743CE672B4AA67600F862AB /* EventDetailView.swift */,
 				377FFF032BC5524700DD2635 /* TokenText.swift */,
@@ -359,6 +362,7 @@
 				3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */,
 				374F0DC12C4D34FD0031E8CD /* BalanceView.swift in Sources */,
 				3792123A2B2A36830081F161 /* WalletView.swift in Sources */,
+				371758802CE377CA0018DC48 /* Alerts.swift in Sources */,
 				374F0DBF2C4978E90031E8CD /* MintInfoView.swift in Sources */,
 				379BDF692B46F31E008FD0E7 /* SendView.swift in Sources */,
 				372D8FDC2BD5BD2500494170 /* QRScanner.swift in Sources */,

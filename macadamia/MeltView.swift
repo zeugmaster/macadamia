@@ -44,7 +44,6 @@ struct MeltView: View {
 
     var body: some View {
         VStack {
-            
             // This check is necessary to prevent a bug in URKit (or the system, who knows)
             // from crashing the app when using the camera on an Apple Silicon Mac
             if !ProcessInfo.processInfo.isiOSAppOnMac {
