@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import CashuSwift
 
 struct AlertDetail {
     let title: String
@@ -27,7 +28,47 @@ struct AlertDetail {
         self.affirmText = affirmText
         self.onAffirm = onAffirm
     }
+    
+    // TODO: expand error handling to all cases and communicate common cases more effectively
+    
+    init(_ error: Swift.Error) {
+        switch error {
+        case let cashuError as CashuError:
+            switch cashuError {
+            case .quoteNotPaid:
+                self = AlertDetail(title: "Quote Not Paid 🚫💰",
+                                   description: "The quote has not been paid. Try again after paying the displayed quote to the mint.")
+                
+            case .blindedMessageAlreadySigned:
+                self = AlertDetail(title: "Blinded Message Already Signed",
+                                   description: "This blinded message has already been signed, indicating an issue during deterministic secret generation.")
+                
+            case .alreadySpent:
+                self = AlertDetail(title: "Already Spent 💸", description: "The ecash has already been spent with the mint.")
+                
+            case .transactionUnbalanced:
+                self = AlertDetail(title: "Transaction Unbalanced", description: "The transaction is unbalanced.")
+                
+            // Add cases for other errors here...
+            case .inputError(let message):
+                self = AlertDetail(title: "Input Error", description: message)
+                
+            case .insufficientInputs(let message):
+                self = AlertDetail(title: "Insufficient Funds", description: "The wallet was unable to collect enough ecash for this transaction.")
+                
+            case .unknownError(let message):
+                self = AlertDetail(title: "Unknown Error", description: message)
+                
+            default:
+                self = AlertDetail(title: "Unhandled Error", description: "An unhandled Cashu error occurred.")
+            }
+            
+        default:
+            self = AlertDetail(title: "General Error", description: error.localizedDescription)
+        }
+    }
 }
+
 
 struct AlertViewModifier: ViewModifier {
     @Binding var isPresented: Bool

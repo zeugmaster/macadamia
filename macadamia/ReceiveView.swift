@@ -249,8 +249,7 @@ struct ReceiveView: View {
             } catch {
                 // receive unsuccessful
                 logger.error("could not receive token due to error \(error)")
-                displayAlert(alert: AlertDetail(title: "Unable to redeem",
-                                                description: String(describing: error)))
+                displayAlert(alert: AlertDetail(error))
                 self.loading = false
                 self.success = false
             }

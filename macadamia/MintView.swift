@@ -217,8 +217,7 @@ struct MintView: View {
                 }
                 
             } catch {
-                displayAlert(alert: AlertDetail(title: "Error",
-                                                description: String(describing: error)))
+                displayAlert(alert: AlertDetail(error))
                 logger.error("could not get quote from mint \(selectedMint.url.absoluteString) because of error \(error)")
                 loadingInvoice = false
             }
@@ -275,8 +274,7 @@ struct MintView: View {
                     }
                 }
             } catch {
-                displayAlert(alert: AlertDetail(title: "Error",
-                                                description: String(describing: error)))
+                displayAlert(alert: AlertDetail(error))
                 logger.error("Minting was not successful with mint \(selectedMint.url.absoluteString) due to error \(error)")
                 minting = false
             }

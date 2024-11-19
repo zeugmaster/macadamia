@@ -193,8 +193,7 @@ struct MeltView: View {
                 }
             } catch {
                 logger.warning("Unable to get melt quote. error \(error)")
-                displayAlert(alert: AlertDetail(title: "Error",
-                                                description: String(describing: error)))
+                displayAlert(alert: AlertDetail(error))
             }
         }
     }
@@ -308,7 +307,7 @@ struct MeltView: View {
                         success = false
                         try? modelContext.save()
                         displayAlert(alert: AlertDetail(title: "Unsuccessful",
-                                                        description: "The Lighning invoice could not be payed by the mint. Please try again (later)."))
+                                                        description: "The Lighning invoice could not be payed by the mint. Please try again later."))
                         
                     }
                 }
@@ -319,8 +318,7 @@ struct MeltView: View {
                 logger.error("Melt operation falied with error: \(error)")
                 loading = false
                 success = false
-                displayAlert(alert: AlertDetail(title: "Error",
-                                                description: String(describing: error)))
+                displayAlert(alert: AlertDetail(error))
             }
         }
     }

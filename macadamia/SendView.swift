@@ -283,7 +283,7 @@ struct SendView: View {
                     logger.critical("amount must not exceed preselected proof sum. .pick() should have returned nil.")
                 }
             } catch {
-                displayAlert(alert: AlertDetail(title: "Error", description: String(describing: error)))
+                displayAlert(alert: AlertDetail(error))
             }
         }
     }

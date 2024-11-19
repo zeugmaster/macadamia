@@ -26,9 +26,7 @@ enum AppSchemaV1: VersionedSchema {
         var walletID: UUID
         
         var mnemonic: String
-        
         var seed: String?
-
         var name: String?
 
         @Relationship(inverse: \Mint.wallet)
@@ -36,7 +34,6 @@ enum AppSchemaV1: VersionedSchema {
 
     //    @Relationship(inverse: \Proof.wallet)
         var proofs: [Proof]?
-
         var dateCreated: Date
 
         @Relationship(deleteRule: .cascade ,inverse: \Event.wallet)
@@ -242,7 +239,8 @@ enum AppSchemaV1: VersionedSchema {
         var wallet: Wallet?
 
         var bolt11MintQuote: CashuSwift.Bolt11.MintQuote?
-    //    var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote?
+        var bolt11MeltQuoteData: Data? // SwiftData is unable to serialize CashuSwift.Bolt11.MeltQuote so we do it ourselves
+
         var amount: Int?
         var expiration: Date?
         var longDescription: String?
@@ -295,8 +293,6 @@ enum AppSchemaV1: VersionedSchema {
             self.tokenString = tokenString
             self.redeemed = redeemed
         }
-        
-        var bolt11MeltQuoteData: Data?
 
         var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? {
             get {

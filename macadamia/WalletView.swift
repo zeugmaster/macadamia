@@ -102,7 +102,7 @@ struct WalletView: View {
                         } label: { fade in
                             Color.clear.overlay(
                                 HStack {
-                                    Text("Create Invoice")
+                                    Text("Mint")
                                     Spacer()
                                     Image(systemName: "bolt.fill")
                                 }
