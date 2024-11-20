@@ -1,6 +1,7 @@
 import BIP39
 import SwiftData
 import SwiftUI
+import CashuSwift
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
@@ -62,6 +63,17 @@ struct ContentView: View {
             }
             selectedTab = .wallet
         })
+        .task {
+            if let activeWallet {
+                for mint in activeWallet.mints {
+                    do {
+                        mint.keysets = try await CashuSwift.updatedKeysetsForMint(mint)
+                    } catch {
+                        logger.warning("Could not update keyset information for mint at \(mint.url.absoluteString), due to error: \(error)")
+                    }
+                }
+            }
+        }
         .popover(isPresented: $releaseNotesPopoverShowing, content: {
             ZStack(alignment: .topTrailing) {
                 ReleaseNoteView()

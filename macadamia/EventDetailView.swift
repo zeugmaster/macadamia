@@ -1,50 +1,116 @@
 import SwiftUI
+import CashuSwift
 
 struct EventDetailView: View {
     let event: Event
 
     var body: some View {
         switch event.kind {
+            
         case .pendingMint:
             if let quote = event.bolt11MintQuote {
                 MintView(quote: quote, pendingMintEvent: event)
             } else {
                 Text("No quote set.")
             }
+            
         case .mint:
             Text("mint event")
+            
         case .send:
-            Text("send")
+            SendEventView(event: event)
+            
         case .receive:
             Text("receive")
+            
         case .pendingMelt:
             MeltView(quote: event.bolt11MeltQuote, pendingMeltEvent: event)
+            
         case .melt:
             Text("melt")
+            
         case .restore:
             Text("restore")
+            
         case .drain:
             Text("drain")
         }
     }
-
-    private func unitString(_ unit: Unit) -> String {
-        switch unit {
-        case .sat: return "sat"
-        case .usd: return "USD"
-        case .eur: return "EUR"
-        case .other: return "Other"
-        }
-    }
-
-    private let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter
-    }()
 }
 
-// #Preview {
-//    EventDetailView(event: Event)
-// }
+struct SendEventView: View {
+    var event: Event
+    
+    @State private var tokenState: TokenState = .unknown
+    
+    enum TokenState {
+        case unknown
+        case spent
+        case pending
+    }
+    
+    var body: some View {
+        List {
+            Section {
+                HStack {
+                    Text("Created at: ")
+                    Spacer()
+                    Text(event.date.formatted())
+                }
+                if let memo = event.memo {
+                    Text("Memo: \(memo)")
+                }
+                if let proofs = event.proofs {
+                        switch tokenState {
+                        case .unknown:
+                            Button {
+                                checkTokenState(with: proofs)
+                            } label: {
+                                HStack {
+                                    Text("Check token state?")
+                                    Spacer()
+                                    Image(systemName: "arrow.counterclockwise")
+                                }
+                            }
+                        case .spent:
+                            HStack {
+                                Text("Token was redeemed.")
+                                Spacer()
+                                Image(systemName: "checkmark.circle")
+                            }
+                        case .pending:
+                            HStack {
+                                Text("Token is pending.")
+                                Spacer()
+                                Image(systemName: "hourglass")
+                            }
+                        }
+                    }
+            }
+            
+            if let tokenString = event.tokenString /*, tokenState != .spent */ {
+                TokenShareView(tokenString: tokenString)
+            }
+        }
+    }
+    
+    private func checkTokenState(with proofs:[Proof]) {
+        guard let firstMint = proofs.first?.mint, proofs.allSatisfy({ $0.mint == firstMint }) else {
+            logger.error("function to check proofs can not handle proofs from different mints!")
+            return
+        }
+        
+        Task {
+            let result = try await CashuSwift.check(proofs, mint: firstMint)
+            await MainActor.run {
+                withAnimation {
+                    if result.allSatisfy({ $0 == CashuSwift.Proof.ProofState.unspent }) {
+                        tokenState = .pending
+                    } else {
+                        tokenState = .spent
+                    }
+                }
+            }
+        }
+    }
+}

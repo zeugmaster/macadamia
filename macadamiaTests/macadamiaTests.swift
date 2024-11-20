@@ -37,8 +37,8 @@ final class macadamiaTests: XCTestCase {
     @MainActor
     func testProofSelection() async throws {
         let context = container.mainContext
-        
-        let wallet = Wallet()
+        let mnemonic = Mnemonic()
+        let wallet = Wallet(mnemonic: mnemonic.phrase.joined(separator: " "), seed: String(bytes: mnemonic.seed))
         context.insert(wallet)
         let mint = try await CashuSwift.loadMint(url: URL(string: "https://testmint.macadamia.cash")!, type: Mint.self)
         mint.wallet = wallet

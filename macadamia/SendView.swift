@@ -14,24 +14,22 @@ struct SendView: View {
     @State var tokenString: String?
     var navigationPath: Binding<NavigationPath>?
 
-    @State var showingShareSheet = false
     @State var tokenMemo = ""
     
     @State private var selectedMint:Mint?
     
-    @State var numberString = ""
-    @State var selectedMintBalance = 0
+    @State private var numberString = ""
+    @State private var selectedMintBalance = 0
 
-    @State var loading = false
-    @State var succes = false
+    @State private var loading = false
 
-    @State var showAlert: Bool = false
-    @State var currentAlert: AlertDetail? // not sure if the property wrapper is necessary
+    @State private var showAlert: Bool = false
+    @State private var currentAlert: AlertDetail?
 
-    @State private var isCopied = false
     @FocusState var amountFieldInFocus: Bool
 
-    init(token: String? = nil, navigationPath: Binding<NavigationPath>? = nil) {
+    init(token: String? = nil,
+         navigationPath: Binding<NavigationPath>? = nil) {
         tokenString = token
         self.navigationPath = navigationPath
     }
@@ -69,40 +67,7 @@ struct SendView: View {
             .disabled(tokenString != nil)
 
             if let tokenString {
-                Section {
-                    TokenText(text: tokenString)
-                        .frame(idealHeight: 70)
-                    Button {
-                        copyToClipboard()
-                    } label: {
-                        HStack {
-                            if isCopied {
-                                Text("Copied!")
-                                    .transition(.opacity)
-                            } else {
-                                Text("Copy to clipboard")
-                                    .transition(.opacity)
-                            }
-                            Spacer()
-                            Image(systemName: "list.clipboard")
-                        }
-                    }
-
-                    Button {
-                        showingShareSheet = true
-                    } label: {
-                        HStack {
-                            Text("Share")
-                            Spacer()
-                            Image(systemName: "square.and.arrow.up")
-                        }
-                    }
-                }
-                Section {
-                    QRView(string: tokenString)
-                } header: {
-                    Text("Share via QR code")
-                }
+                TokenShareView(tokenString: tokenString)
             }
         }
         .navigationTitle("Send")
@@ -127,9 +92,7 @@ struct SendView: View {
         .padding()
         .toolbar(.hidden, for: .tabBar)
         .disabled(numberString.isEmpty || amount == 0 || tokenString != nil)
-        .sheet(isPresented: $showingShareSheet, content: {
-            ShareSheet(items: [tokenString ?? "No token provided"])
-        })
+        
     }
 
     // MARK: - LOGIC
@@ -138,18 +101,7 @@ struct SendView: View {
         allProofs.filter { $0.mint == selectedMint }
     }
 
-    func copyToClipboard() {
-        UIPasteboard.general.string = tokenString
-        withAnimation {
-            isCopied = true
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            withAnimation {
-                isCopied = false
-            }
-        }
-    }
+    
 
     func updateBalance() {
         guard !proofsOfSelectedMint.isEmpty else {
@@ -168,10 +120,10 @@ struct SendView: View {
               let selectedMint
         else {
             logger.error("""
-                        unable to generate Token because one or more of the following variables are nil:
-                        selectedMInt: \(selectedMint.debugDescription)
-                        activeWallet: \(activeWallet.debugDescription)
-                        """)
+                         unable to generate Token because one or more of the following variables are nil:
+                         selectedMInt: \(selectedMint.debugDescription)
+                         activeWallet: \(activeWallet.debugDescription)
+                         """)
             return
         }
 

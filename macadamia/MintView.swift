@@ -31,7 +31,9 @@ struct MintView: View {
     @State private var isCopied = false
     @FocusState var amountFieldInFocus: Bool
 
-    init(quote: CashuSwift.Bolt11.MintQuote? = nil, pendingMintEvent: Event? = nil, navigationPath: Binding<NavigationPath>? = nil) {
+    init(quote: CashuSwift.Bolt11.MintQuote? = nil,
+         pendingMintEvent: Event? = nil,
+         navigationPath: Binding<NavigationPath>? = nil) {
         _quote = State(initialValue: quote)
         self.navigationPath = navigationPath
         _pendingMintEvent = State(initialValue: pendingMintEvent)

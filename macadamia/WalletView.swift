@@ -64,8 +64,12 @@ struct WalletView: View {
                 })
                 Spacer()
                 List {
-                    ForEach(events) { event in
-                        TransactionListRowView(event: event)
+                    if events.isEmpty {
+                        Text("No transactions yet.")
+                    } else {
+                        ForEach(events) { event in
+                            TransactionListRowView(event: event)
+                        }
                     }
                 }
                 .padding(EdgeInsets(top: 0, leading: 20, bottom: 20, trailing: 20))
