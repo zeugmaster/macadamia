@@ -15,19 +15,106 @@ struct EventDetailView: View {
             }
             
         case .mint:
-            Text("mint event")
+            List {
+                HStack {
+                    Text("Minted at: ")
+                    Spacer()
+                    Text(event.date.formatted())
+                }
+                HStack {
+                    Text("Amount: ")
+                    Spacer()
+                    Text(String(event.amount ?? 0))
+                }
+                HStack {
+                    Text("Unit: ")
+                    Spacer()
+                    Text(event.unit.rawValue)
+                }
+                if let text = event.bolt11MintQuote?.request {
+                    TokenText(text: text)
+                        .frame(idealHeight: 70)
+                        .contextMenu {
+                            Button(action: {
+                                UIPasteboard.general.string = text
+                            }) {
+                                Text("Copy")
+                                Spacer()
+                                Image(systemName: "clipboard")
+                            }
+                        }
+                }
+            }
             
         case .send:
             SendEventView(event: event)
             
         case .receive:
-            Text("receive")
+            List {
+                HStack {
+                    Text("Received at: ")
+                    Spacer()
+                    Text(event.date.formatted())
+                }
+                HStack {
+                    Text("Amount: ")
+                    Spacer()
+                    Text(String(event.amount ?? 0))
+                }
+                HStack {
+                    Text("Unit: ")
+                    Spacer()
+                    Text(event.unit.rawValue)
+                }
+                if let text = event.tokenString {
+                    TokenText(text: text)
+                        .frame(idealHeight: 70)
+                        .contextMenu {
+                            Button(action: {
+                                UIPasteboard.general.string = text
+                            }) {
+                                Text("Copy")
+                                Spacer()
+                                Image(systemName: "clipboard")
+                            }
+                        }
+                }
+            }
             
         case .pendingMelt:
             MeltView(quote: event.bolt11MeltQuote, pendingMeltEvent: event)
             
         case .melt:
-            Text("melt")
+            List {
+                HStack {
+                    Text("Melted at: ")
+                    Spacer()
+                    Text(event.date.formatted())
+                }
+                HStack {
+                    Text("Amount: ")
+                    Spacer()
+                    Text(String(event.amount ?? 0))
+                }
+                HStack {
+                    Text("Unit: ")
+                    Spacer()
+                    Text(event.unit.rawValue)
+                }
+                if let text = event.bolt11MeltQuote?.paymentPreimage {
+                    TokenText(text: text)
+                        .frame(idealHeight: 70)
+                        .contextMenu {
+                            Button(action: {
+                                UIPasteboard.general.string = text
+                            }) {
+                                Text("Copy")
+                                Spacer()
+                                Image(systemName: "clipboard")
+                            }
+                        }
+                }
+            }
             
         case .restore:
             Text("restore")

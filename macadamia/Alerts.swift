@@ -35,6 +35,9 @@ struct AlertDetail {
         switch error {
         case let cashuError as CashuError:
             switch cashuError {
+            case .networkError:
+                self = AlertDetail(title: "Network error 📡", description: "The mint could not be reached due to a network issue. Are you both online?")
+                
             case .quoteNotPaid:
                 self = AlertDetail(title: "Quote Not Paid 🚫💰",
                                    description: "The quote has not been paid. Try again after paying the displayed quote to the mint.")
@@ -62,7 +65,6 @@ struct AlertDetail {
             default:
                 self = AlertDetail(title: "Unhandled Error", description: "An unhandled Cashu error occurred.")
             }
-            
         default:
             self = AlertDetail(title: "General Error", description: error.localizedDescription)
         }

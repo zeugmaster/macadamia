@@ -262,6 +262,7 @@ struct MintView: View {
                     let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
                                                 shortDescription: "Minting",
                                                 wallet: activeWallet,
+                                                quote: quote,
                                                 amount: quote.requestDetail?.amount ?? 0)
                     modelContext.insert(event)
                     if let pendingMintEvent { pendingMintEvent.visible = false }

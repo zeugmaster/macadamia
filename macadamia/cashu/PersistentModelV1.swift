@@ -328,6 +328,7 @@ enum AppSchemaV1: VersionedSchema {
                               shortDescription: String,
                               visible: Bool = true,
                               wallet: Wallet,
+                              quote: CashuSwift.Bolt11.MintQuote,
                               amount: Int) -> Event {
             Event(date: Date(),
                 unit: unit,
@@ -335,6 +336,7 @@ enum AppSchemaV1: VersionedSchema {
                 visible: visible,
                 kind: .mint,
                 wallet: wallet,
+                bolt11MintQuote: quote,
                 amount: amount
             )
         }
