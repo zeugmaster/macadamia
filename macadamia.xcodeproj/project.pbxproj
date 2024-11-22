@@ -51,6 +51,7 @@
 		37CC21802B8A71FD00A13F2F /* DrainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37CC217F2B8A71FD00A13F2F /* DrainView.swift */; };
 		37DC18A42B8669A900F9B37B /* macadamiaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DC18A32B8669A900F9B37B /* macadamiaTests.swift */; };
 		37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */; };
+		37F24B2E2CF0D32D007857FB /* WalletInfoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F24B2D2CF0D32D007857FB /* WalletInfoListView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,6 +102,7 @@
 		37DC18A12B8669A900F9B37B /* macadamiaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macadamiaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		37DC18A32B8669A900F9B37B /* macadamiaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macadamiaTests.swift; sourceTree = "<group>"; };
 		37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
+		37F24B2D2CF0D32D007857FB /* WalletInfoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletInfoListView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -210,6 +212,7 @@
 				379BDF662B4696B6008FD0E7 /* MnemonicView.swift */,
 				37CC217F2B8A71FD00A13F2F /* DrainView.swift */,
 				370A84002CC171D50039A413 /* ProofListView.swift */,
+				37F24B2D2CF0D32D007857FB /* WalletInfoListView.swift */,
 			);
 			name = Settings;
 			sourceTree = "<group>";
@@ -380,6 +383,7 @@
 				377FFEFD2BC41DCF00DD2635 /* ReleaseNoteView.swift in Sources */,
 				379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */,
 				3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */,
+				37F24B2E2CF0D32D007857FB /* WalletInfoListView.swift in Sources */,
 				371F794C2CEE26A7003EC129 /* TokenShareView.swift in Sources */,
 				3743CE5E2B48A94D00F862AB /* MeltView.swift in Sources */,
 				3792123C2B2A36970081F161 /* SettingsView.swift in Sources */,

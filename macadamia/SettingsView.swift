@@ -22,6 +22,7 @@ struct SettingsView: View {
                     NavigationLink(destination: DrainView()) { Text("Drain Wallet") }
                     if hiddenMenuShowing {
                         NavigationLink(destination: MintListView()) { Text("Proof Database") }
+                        NavigationLink(destination: WalletInfoListView()) { Text("Wallet Info") }
                     }
                 } header: {
                     Text("cashu")
