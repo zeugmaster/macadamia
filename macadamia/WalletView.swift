@@ -8,15 +8,15 @@ let betaDisclaimerURL = URL(string: "https://macadamia.cash/beta.html")!
 @MainActor
 struct WalletView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var wallets: [Wallet]
+    @Query(filter: #Predicate<Wallet> { wallet in
+        wallet.active == true
+    }) private var wallets: [Wallet]
     @Query private var proofs: [Proof]
     // query events (transactions) if they are visible and in chronological order
     @Query(filter: #Predicate { event in
         event.visible == true
     },
     sort: [SortDescriptor(\Event.date, order: .reverse)]) private var events: [Event]
-
-    @State private var activeWallet: Wallet?
 
     @State var balance: Int?
 
@@ -31,6 +31,13 @@ struct WalletView: View {
     
     init(urlState: Binding<String?>) {
         self._urlState = urlState
+    }
+    
+    var activeWallet:Wallet? {
+        set {}
+        get {
+            wallets.first
+        }
     }
 
     var body: some View {
@@ -51,8 +58,6 @@ struct WalletView: View {
                 }
                 .padding(40)
                 .onAppear(perform: {
-                    activeWallet = wallets.first
-
                     // FIXME: NEEDS TO RESPECT WALLET SELECTION
                     balance = proofs.filter { $0.state == .valid }.sum
                     

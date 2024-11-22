@@ -27,6 +27,7 @@ enum AppSchemaV1: VersionedSchema {
         
         var mnemonic: String
         var seed: String?
+        var active: Bool
         var name: String?
 
         @Relationship(inverse: \Mint.wallet)
@@ -39,10 +40,11 @@ enum AppSchemaV1: VersionedSchema {
         @Relationship(deleteRule: .cascade ,inverse: \Event.wallet)
         var events: [Event]?
 
-        init(mnemonic: String, seed: String) {
+        init(mnemonic: String, seed: String, active:Bool = true) {
             self.walletID = UUID()
             self.mnemonic = mnemonic
             self.seed = seed
+            self.active = active
             self.dateCreated = Date()
             self.mints = []
             self.proofs = []

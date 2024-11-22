@@ -4,7 +4,9 @@ import SwiftUI
 
 struct SendView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var wallets: [Wallet]
+    @Query(filter: #Predicate<Wallet> { wallet in
+        wallet.active == true
+    }) private var wallets: [Wallet]
     @Query private var allProofs:[Proof]
 
     var activeWallet: Wallet? {

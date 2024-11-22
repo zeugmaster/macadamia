@@ -5,7 +5,9 @@ import SwiftUI
 
 struct MeltView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var wallets: [Wallet]
+    @Query(filter: #Predicate<Wallet> { wallet in
+        wallet.active == true
+    }) private var wallets: [Wallet]
     @Query private var mints: [Mint]
     @Query private var allProofs: [Proof]
 

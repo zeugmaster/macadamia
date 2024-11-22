@@ -10,7 +10,9 @@ struct MintView: View {
     @State var pendingMintEvent: Event?
 
     @Environment(\.modelContext) private var modelContext
-    @Query private var wallets: [Wallet]
+    @Query(filter: #Predicate<Wallet> { wallet in
+        wallet.active == true
+    }) private var wallets: [Wallet]
 
     var activeWallet: Wallet? {
         wallets.first
@@ -260,7 +262,7 @@ struct MintView: View {
                 try await MainActor.run {
                     proofs.forEach { modelContext.insert($0) }
                     let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
-                                                shortDescription: "Minting",
+                                                shortDescription: "Mint",
                                                 wallet: activeWallet,
                                                 quote: quote,
                                                 amount: quote.requestDetail?.amount ?? 0)

@@ -9,7 +9,13 @@ struct ContentView: View {
     
     private var activeWallet: Wallet? {
         get {
-            wallets.first
+            if wallets.filter({ $0.active == true }).count > 1 {
+                logger.critical("The database seems to contains more than one wallet marked ACTIVE. this will give undefined results.")
+            }
+            if !wallets.isEmpty && wallets.filter({ $0.active == true }).count < 1 {
+                logger.critical("The database contains at least one wallet, but none are marked active. this will result in wallet malfunctions.")
+            }
+            return wallets.first
         }
         set {}
     }

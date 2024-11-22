@@ -4,7 +4,9 @@ import SwiftUI
 
 struct ReceiveView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var wallets: [Wallet]
+    @Query(filter: #Predicate<Wallet> { wallet in
+        wallet.active == true
+    }) private var wallets: [Wallet]
 
     var activeWallet: Wallet? {
         wallets.first
