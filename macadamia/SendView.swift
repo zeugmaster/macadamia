@@ -4,17 +4,19 @@ import SwiftUI
 
 struct SendView: View {
     @Environment(\.modelContext) private var modelContext
+    
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
     }) private var wallets: [Wallet]
+    
     @Query private var allProofs:[Proof]
-
+//    @Environment(\.dismiss) private var dismiss // not actually needed because this view does not self dismiss
+    
     var activeWallet: Wallet? {
         wallets.first
     }
 
     @State var tokenString: String?
-    var navigationPath: Binding<NavigationPath>?
 
     @State var tokenMemo = ""
     
@@ -30,10 +32,8 @@ struct SendView: View {
 
     @FocusState var amountFieldInFocus: Bool
 
-    init(token: String? = nil,
-         navigationPath: Binding<NavigationPath>? = nil) {
+    init(token: String? = nil) {
         tokenString = token
-        self.navigationPath = navigationPath
     }
 
     var body: some View {
@@ -159,7 +159,7 @@ struct SendView: View {
                     try await MainActor.run {
                         try tokenString = token.serialize(version)
                         let event = Event.sendEvent(unit: selectedUnit,
-                                                    shortDescription: "Send Event",
+                                                    shortDescription: "Send",
                                                     wallet: activeWallet,
                                                     amount: (amount),
                                                     longDescription: "",

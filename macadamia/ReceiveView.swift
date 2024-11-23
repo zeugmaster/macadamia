@@ -4,6 +4,8 @@ import SwiftUI
 
 struct ReceiveView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
     }) private var wallets: [Wallet]
@@ -26,11 +28,7 @@ struct ReceiveView: View {
     @State var showAlert: Bool = false
     @State var currentAlert: AlertDetail?
 
-    private var navigationPath: Binding<NavigationPath>?
-
-    init(tokenString: String? = nil, navigationPath: Binding<NavigationPath>? = nil) {
-        self.navigationPath = navigationPath
-//        print(tokenString)
+    init(tokenString: String? = nil) {
         self._tokenString = State(initialValue: tokenString)
     }
 
@@ -243,9 +241,7 @@ struct ReceiveView: View {
                 }
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    if let navigationPath, !navigationPath.wrappedValue.isEmpty {
-                        navigationPath.wrappedValue.removeLast()
-                    }
+                    dismiss()
                 }
 
             } catch {

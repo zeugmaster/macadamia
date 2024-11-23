@@ -10,14 +10,11 @@ struct MintInfoView: View {
     
     @State var info: CashuSwift.MintInfo?
 
-    // Access the model context
     @Environment(\.modelContext) private var modelContext
-    // Access the dismiss action to pop the view
     @Environment(\.dismiss) private var dismiss
     
     @State private var motd: String?
 
-    // State variables for alert handling
     @State private var showDeleteConfirmation = false
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
@@ -40,7 +37,6 @@ struct MintInfoView: View {
                 }
                 Spacer()
             }
-            // Adjust the list row to remove default insets and background
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
             .padding(.bottom, 24) 

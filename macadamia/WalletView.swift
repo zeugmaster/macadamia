@@ -8,10 +8,13 @@ let betaDisclaimerURL = URL(string: "https://macadamia.cash/beta.html")!
 @MainActor
 struct WalletView: View {
     @Environment(\.modelContext) private var modelContext
+    
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
     }) private var wallets: [Wallet]
+    
     @Query private var proofs: [Proof]
+    
     // query events (transactions) if they are visible and in chronological order
     @Query(filter: #Predicate { event in
         event.visible == true
@@ -23,10 +26,19 @@ struct WalletView: View {
     @State var showAlert: Bool = false
     @State var currentAlert: AlertDetail?
 
-    @State var navigationPath = NavigationPath()
-    
     @Binding var urlState: String?
+    
+    enum Destination: Hashable, Identifiable {
+        case send
+        case receive
+        case melt
+        case mint
 
+        var id: Self { self }
+    }
+    
+    @State private var navigationDestination: Destination?
+    
     static let buttonPadding: CGFloat = 1
     
     init(urlState: Binding<String?>) {
@@ -41,7 +53,7 @@ struct WalletView: View {
     }
 
     var body: some View {
-        NavigationStack(path: $navigationPath) {
+        NavigationStack {
             VStack {
                 Spacer(minLength: 20)
                 VStack(alignment: .center) {
@@ -91,11 +103,12 @@ struct WalletView: View {
                         }
                     ) {
                         Templates.MenuItem {
-                            navigationPath.append("Receive")
+//                            navigationPath.append("Receive")
+                            navigationDestination = .receive
                         } label: { fade in
                             Color.clear.overlay(
                                 HStack {
-                                    Text("Scan or Paste Token")
+                                    Text("Redeem eCash")
                                     Spacer()
                                     Image(systemName: "qrcode")
                                 }
@@ -107,7 +120,8 @@ struct WalletView: View {
                         }
                         .background(Color.black)
                         Templates.MenuItem {
-                            navigationPath.append("Mint")
+//                            navigationPath.append("Mint")
+                            navigationDestination = .mint
                         } label: { fade in
                             Color.clear.overlay(
                                 HStack {
@@ -143,11 +157,12 @@ struct WalletView: View {
                         }
                     ) {
                         Templates.MenuItem {
-                            navigationPath.append("Send")
+//                            navigationPath.append("Send")
+                            navigationDestination = .send
                         } label: { fade in
                             Color.clear.overlay(
                                 HStack {
-                                    Text("Create Cashu Token")
+                                    Text("Send eCash")
                                     Spacer()
                                     Image(systemName: "banknote")
                                 }
@@ -159,11 +174,12 @@ struct WalletView: View {
                         }
                         .background(Color.black)
                         Templates.MenuItem {
-                            navigationPath.append("Melt")
+//                            navigationPath.append("Melt")
+                            navigationDestination = .melt
                         } label: { fade in
                             Color.clear.overlay(
                                 HStack {
-                                    Text("Pay Lightning Invoice")
+                                    Text("Melt")
                                     Spacer()
                                     Image(systemName: "bolt.fill")
                                 }
@@ -187,23 +203,21 @@ struct WalletView: View {
                 }
                 .padding(EdgeInsets(top: 20, leading: 20, bottom: 50, trailing: 20))
             }
-            .navigationDestination(for: String.self) { tag in
-                switch tag {
-                case "Send":
-                    SendView(navigationPath: $navigationPath)
-                case "Receive":
-                    ReceiveView(tokenString: urlState, navigationPath: $navigationPath)
-                case "Melt":
-                    MeltView(navigationPath: $navigationPath)
-                case "Mint":
-                    MintView(navigationPath: $navigationPath)
-                default:
-                    EmptyView()
+            .navigationDestination(item: $navigationDestination) { destination in
+                switch destination {
+                case .mint:
+                    MintView()
+                case Destination.send:
+                    SendView()
+                case .receive:
+                    ReceiveView(tokenString: urlState)
+                case .melt:
+                    MeltView()
                 }
             }
             .onChange(of: urlState, { oldValue, newValue in
                 if newValue != nil {
-                    navigationPath.append("Receive")
+                    navigationDestination = .receive
                 }
             })
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)

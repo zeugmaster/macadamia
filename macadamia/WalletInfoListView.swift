@@ -27,6 +27,7 @@ struct WalletInfoListView: View {
                     Text("Name: \(wallet.name ?? "nil")")
                     Text("ID: \(wallet.walletID)")
                     Text("Mints: \(wallet.mints.count), Proofs: \(wallet.proofs.count)")
+                    Text("Active: \(wallet.active ? "true" : "false")")
                 }
             }
         }

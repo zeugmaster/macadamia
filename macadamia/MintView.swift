@@ -3,9 +3,7 @@ import SwiftData
 import SwiftUI
 
 struct MintView: View {
-    
-    var navigationPath: Binding<NavigationPath>?
-    
+        
     @State var quote: CashuSwift.Bolt11.MintQuote?
     @State var pendingMintEvent: Event?
 
@@ -14,6 +12,8 @@ struct MintView: View {
         wallet.active == true
     }) private var wallets: [Wallet]
 
+    @Environment(\.dismiss) private var dismiss
+    
     var activeWallet: Wallet? {
         wallets.first
     }
@@ -34,10 +34,8 @@ struct MintView: View {
     @FocusState var amountFieldInFocus: Bool
 
     init(quote: CashuSwift.Bolt11.MintQuote? = nil,
-         pendingMintEvent: Event? = nil,
-         navigationPath: Binding<NavigationPath>? = nil) {
+         pendingMintEvent: Event? = nil) {
         _quote = State(initialValue: quote)
-        self.navigationPath = navigationPath
         _pendingMintEvent = State(initialValue: pendingMintEvent)
     }
 
@@ -274,9 +272,8 @@ struct MintView: View {
                     mintSuccess = true
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    if let navigationPath, !navigationPath.wrappedValue.isEmpty {
-                        navigationPath.wrappedValue.removeLast()
-                    }
+                    print("timer elapsed, should dismiss now")
+                    dismiss()
                 }
             } catch {
                 displayAlert(alert: AlertDetail(error))

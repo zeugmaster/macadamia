@@ -5,7 +5,8 @@ struct SettingsView: View {
     let sourceRepoURL = URL(string: "https://github.com/zeugmaster/macadamia")!
     let mailURL = URL(string: "mailto:contact@macadamia.cash")!
     
-    @State var hiddenMenuShowing:Bool = false
+    @State private var hiddenMenuShowing: Bool = false
+    @State private var showReleaseNotes: Bool = false
 
     var appVersion: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"

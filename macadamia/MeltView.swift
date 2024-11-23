@@ -5,6 +5,8 @@ import SwiftUI
 
 struct MeltView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
     }) private var wallets: [Wallet]
@@ -33,12 +35,8 @@ struct MeltView: View {
     @State var showAlert: Bool = false
     @State var currentAlert: AlertDetail?
 
-    var navigationPath: Binding<NavigationPath>? // Changed to non-optional
-
     init(quote: CashuSwift.Bolt11.MeltQuote? = nil,
-         pendingMeltEvent: Event? = nil,
-         navigationPath: Binding<NavigationPath>? = nil) {
-        self.navigationPath = navigationPath
+         pendingMeltEvent: Event? = nil) {
         self.pendingMeltEvent = pendingMeltEvent
         self.quote = quote
         invoiceString = quote?.quote ?? ""
@@ -295,9 +293,7 @@ struct MeltView: View {
                     }
 
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        if let navigationPath, !navigationPath.wrappedValue.isEmpty {
-                            navigationPath.wrappedValue.removeLast()
-                        }
+                        dismiss()
                     }
                     
                 } else {
