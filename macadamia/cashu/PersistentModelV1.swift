@@ -26,19 +26,18 @@ enum AppSchemaV1: VersionedSchema {
         var walletID: UUID
         
         var mnemonic: String
-        var seed: String?
+        var seed: String
         var active: Bool
         var name: String?
 
         @Relationship(inverse: \Mint.wallet)
         var mints: [Mint]
 
-    //    @Relationship(inverse: \Proof.wallet)
-        var proofs: [Proof]?
+        var proofs: [Proof]
         var dateCreated: Date
 
         @Relationship(deleteRule: .cascade ,inverse: \Event.wallet)
-        var events: [Event]?
+        var events: [Event]
 
         init(mnemonic: String, seed: String, active:Bool = true) {
             self.walletID = UUID()
@@ -69,7 +68,6 @@ enum AppSchemaV1: VersionedSchema {
         
         var userIndex: Int?
 
-    //    @Relationship(inverse: \Proof.mint)
         var proofs: [Proof]?
 
         required init(url: URL, keysets: [CashuSwift.Keyset]) {

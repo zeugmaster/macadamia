@@ -34,7 +34,7 @@ struct WalletView: View {
     }
     
     var activeWallet:Wallet? {
-        set {}
+        set { }
         get {
             wallets.first
         }

@@ -4,7 +4,9 @@ import SwiftUI
 
 struct DrainView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var wallets: [Wallet]
+    @Query(filter: #Predicate<Wallet> { wallet in
+        wallet.active == true
+    }) private var wallets: [Wallet]
 
     var activeWallet: Wallet? {
         wallets.first
@@ -115,7 +117,7 @@ struct DrainView: View {
         guard let wallet = activeWallet else { return } // TODO: WARNING TO USER
         tokens = []
         do {
-            guard let proofs = wallet.proofs, !proofs.isEmpty else {
+            guard !wallet.proofs.isEmpty else {
                 displayAlert(alert: AlertDetail(title: "Empty Wallet",
                                                 description: "No drain token can be created from an empty wallet."))
                 return

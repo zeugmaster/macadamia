@@ -42,7 +42,6 @@
 		3792123A2B2A36830081F161 /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212392B2A36830081F161 /* WalletView.swift */; };
 		3792123C2B2A36970081F161 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792123B2B2A36970081F161 /* SettingsView.swift */; };
 		379BDF592B421855008FD0E7 /* NostrSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 379BDF582B421855008FD0E7 /* NostrSDK */; };
-		379BDF602B430765008FD0E7 /* RelayManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */; };
 		379BDF622B430775008FD0E7 /* MintManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF612B430775008FD0E7 /* MintManagerView.swift */; };
 		379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF642B447138008FD0E7 /* UIHelpers.swift */; };
 		379BDF672B4696B6008FD0E7 /* MnemonicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF662B4696B6008FD0E7 /* MnemonicView.swift */; };
@@ -92,7 +91,6 @@
 		3780EEE52B2B5C3F00971AE7 /* QRView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRView.swift; sourceTree = "<group>"; };
 		379212392B2A36830081F161 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
 		3792123B2B2A36970081F161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayManagerView.swift; sourceTree = "<group>"; };
 		379BDF612B430775008FD0E7 /* MintManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintManagerView.swift; sourceTree = "<group>"; };
 		379BDF642B447138008FD0E7 /* UIHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIHelpers.swift; sourceTree = "<group>"; };
 		379BDF662B4696B6008FD0E7 /* MnemonicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MnemonicView.swift; sourceTree = "<group>"; };
@@ -208,7 +206,6 @@
 				377FFEFC2BC41DCF00DD2635 /* ReleaseNoteView.swift */,
 				3792123B2B2A36970081F161 /* SettingsView.swift */,
 				3743CE632B494C3D00F862AB /* RestoreView.swift */,
-				379BDF5F2B430765008FD0E7 /* RelayManagerView.swift */,
 				379BDF662B4696B6008FD0E7 /* MnemonicView.swift */,
 				37CC217F2B8A71FD00A13F2F /* DrainView.swift */,
 				370A84002CC171D50039A413 /* ProofListView.swift */,
@@ -364,7 +361,6 @@
 				3725D4DA2CD51FBA0037DD08 /* MintPicker.swift in Sources */,
 				3743CE642B494C3D00F862AB /* RestoreView.swift in Sources */,
 				370A84012CC171D60039A413 /* ProofListView.swift in Sources */,
-				379BDF602B430765008FD0E7 /* RelayManagerView.swift in Sources */,
 				3780EEE62B2B5C3F00971AE7 /* QRView.swift in Sources */,
 				374F0DC12C4D34FD0031E8CD /* BalanceView.swift in Sources */,
 				3792123A2B2A36830081F161 /* WalletView.swift in Sources */,
@@ -538,7 +534,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
-				DEVELOPMENT_TEAM = AN6VRTK6TB;
+				DEVELOPMENT_TEAM = W285RX5S82;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = macadamia/Info.plist;
@@ -576,7 +572,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
-				DEVELOPMENT_TEAM = AN6VRTK6TB;
+				DEVELOPMENT_TEAM = W285RX5S82;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = macadamia/Info.plist;

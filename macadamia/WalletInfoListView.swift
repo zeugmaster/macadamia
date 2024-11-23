@@ -23,12 +23,10 @@ struct WalletInfoListView: View {
                         Text(wallet.dateCreated.formatted())
                     }
                     Text("Mnemonic: \(wallet.mnemonic)")
-                    if let seed = wallet.seed {
-                        Text("Seed hex: ...\(seed.dropFirst(seed.count - 16))")
-                    }
+                    Text("Seed hex: ...\(wallet.seed.dropFirst(wallet.seed.count - 16))")
                     Text("Name: \(wallet.name ?? "nil")")
                     Text("ID: \(wallet.walletID)")
-                    Text("Mints: \(wallet.mints.count), Proofs: \(wallet.proofs?.count ?? 0)")
+                    Text("Mints: \(wallet.mints.count), Proofs: \(wallet.proofs.count)")
                 }
             }
         }

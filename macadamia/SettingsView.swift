@@ -18,7 +18,7 @@ struct SettingsView: View {
             List {
                 Section {
                     NavigationLink(destination: MnemonicView()) { Text("Show Seed Phrase") }
-                    NavigationLink(destination: EmptyView()) { Text("Restore") }.disabled(true)
+                    NavigationLink(destination: RestoreView()) { Text("Restore") }
                     NavigationLink(destination: DrainView()) { Text("Drain Wallet") }
                     if hiddenMenuShowing {
                         NavigationLink(destination: MintListView()) { Text("Proof Database") }
