@@ -3,6 +3,11 @@ import SwiftData
 import SwiftUI
 import CashuSwift
 
+struct URLState: Equatable {
+    let url: String
+    let timestamp = Date() // prevents .onChange from not firing if you open the same URL twice
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
@@ -10,10 +15,16 @@ struct ContentView: View {
     private var activeWallet: Wallet? {
         get {
             if wallets.filter({ $0.active == true }).count > 1 {
-                logger.critical("The database seems to contains more than one wallet marked ACTIVE. this will give undefined results.")
+                logger.critical("""
+                                The database seems to contains more than one wallet marked ACTIVE. \
+                                this will give undefined results.
+                                """)
             }
             if !wallets.isEmpty && wallets.filter({ $0.active == true }).count < 1 {
-                logger.critical("The database contains at least one wallet, but none are marked active. this will result in wallet malfunctions.")
+                logger.critical("""
+                                The database contains at least one wallet, but none are marked active. \
+                                this will result in wallet malfunctions.
+                                """)
             }
             return wallets.first
         }
@@ -23,7 +34,7 @@ struct ContentView: View {
     @State private var releaseNotesPopoverShowing = false
     @State private var selectedTab: Tab = .wallet
     
-    @State private var urlState: String?
+    @State private var urlState: URLState?
 
     enum Tab {
         case wallet
@@ -75,7 +86,10 @@ struct ContentView: View {
                     do {
                         mint.keysets = try await CashuSwift.updatedKeysetsForMint(mint)
                     } catch {
-                        logger.warning("Could not update keyset information for mint at \(mint.url.absoluteString), due to error: \(error)")
+                        logger.warning("""
+                                       Could not update keyset information for mint at \
+                                       \(mint.url.absoluteString), due to error: \(error)
+                                       """)
                     }
                 }
             }
@@ -124,11 +138,15 @@ struct ContentView: View {
     }
 
     func handleUrl(_ url: URL) {
-        logger.info("URL has been passed to the application: \(url.absoluteString.prefix(30) + (url.absoluteString.count > 30 ? "..." : ""))")
+        logger.info("""
+                    URL has been passed to the application: \ 
+                    \(url.absoluteString.prefix(30) + (url.absoluteString.count > 30 ? "..." : ""))
+                    """)
          if url.scheme == "cashu" {
              let noURLPrefix = url.absoluteStringWithoutPrefix("cashu")
              selectedTab = .wallet
-             urlState = noURLPrefix
+             
+             urlState = URLState(url: noURLPrefix)
          }
     }
 }

@@ -26,22 +26,33 @@ struct WalletView: View {
     @State var showAlert: Bool = false
     @State var currentAlert: AlertDetail?
 
-    @Binding var urlState: String?
+    @Binding var urlState: URLState?
     
-    enum Destination: Hashable, Identifiable {
-        case send
-        case receive
-        case melt
+    enum Destination: Identifiable, Hashable {
         case mint
+        case send
+        case receive(urlString: String?)
+        case melt
 
-        var id: Self { self }
+        var id: String {
+            switch self {
+            case .mint:
+                return "mint"
+            case .send:
+                return "send"
+            case .receive(let urlString):
+                return "receive_\(urlString ?? "nil")"
+            case .melt:
+                return "melt"
+            }
+        }
     }
     
     @State private var navigationDestination: Destination?
     
     static let buttonPadding: CGFloat = 1
     
-    init(urlState: Binding<String?>) {
+    init(urlState: Binding<URLState?>) {
         self._urlState = urlState
     }
     
@@ -72,6 +83,9 @@ struct WalletView: View {
                 .onAppear(perform: {
                     // FIXME: NEEDS TO RESPECT WALLET SELECTION
                     balance = proofs.filter { $0.state == .valid }.sum
+                    
+                    print("url state: \(urlState?.url ?? "nil")")
+                    print("navigationDestination: \(String(describing: navigationDestination))")
                     
                     // quick sanity check for uniqueness of C across list of proofs
                     let uniqueCs = Set(proofs.map( { $0.C }))
@@ -104,7 +118,7 @@ struct WalletView: View {
                     ) {
                         Templates.MenuItem {
 //                            navigationPath.append("Receive")
-                            navigationDestination = .receive
+                            navigationDestination = .receive(urlString: nil)
                         } label: { fade in
                             Color.clear.overlay(
                                 HStack {
@@ -207,17 +221,19 @@ struct WalletView: View {
                 switch destination {
                 case .mint:
                     MintView()
-                case Destination.send:
+                case .send:
                     SendView()
-                case .receive:
-                    ReceiveView(tokenString: urlState)
+                case .receive (let urlString):
+                    ReceiveView(tokenString: urlString)
                 case .melt:
                     MeltView()
                 }
             }
             .onChange(of: urlState, { oldValue, newValue in
-                if newValue != nil {
-                    navigationDestination = .receive
+                print("url state var did change to \(newValue?.url ?? "nil")")
+                if let newValue {
+                    navigationDestination = .receive(urlString: newValue.url)
+                    urlState = nil
                 }
             })
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
