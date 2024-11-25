@@ -139,7 +139,9 @@ struct SendView: View {
                 
                 // let recipientSwapFee =
                 
-                guard let preSelect = selectedMint.select(allProofs:allProofs, amount: amount, unit: selectedUnit) else {
+                guard let preSelect = selectedMint.select(allProofs:allProofs,
+                                                          amount: amount,
+                                                          unit: selectedUnit) else {
                     displayAlert(alert: AlertDetail(title: "Could not select proofs to send."))
                     logger.warning("no proofs could be selected to generate a token with this amount.")
                     return
@@ -161,11 +163,13 @@ struct SendView: View {
                         let event = Event.sendEvent(unit: selectedUnit,
                                                     shortDescription: "Send",
                                                     wallet: activeWallet,
-                                                    amount: (amount),
+                                                    amount: amount,
                                                     longDescription: "",
                                                     proofs: preSelect.selected,
                                                     memo: tokenMemo,
-                                                    tokenString: tokenString ?? "") // TODO: handle more explicitly / robust
+                                                    tokens: [TokenInfo(token: tokenString ?? "nil",
+                                                                       mint: selectedMint.url.absoluteString,
+                                                                       amount: amount)])
                         modelContext.insert(event)
                         try modelContext.save()
                     }
@@ -196,6 +200,7 @@ struct SendView: View {
                                                                         wallet: activeWallet) })
                         
                         internalSendProofs.forEach({ modelContext.insert($0) })
+                        activeWallet.proofs.append(contentsOf: internalSendProofs)
                         
                         let internalChangeProofs = changeProofs.map({ Proof($0,
                                                                             unit: selectedUnit,
@@ -205,6 +210,7 @@ struct SendView: View {
                                                                             wallet: activeWallet) })
                         
                         internalChangeProofs.forEach({ modelContext.insert($0) })
+                        activeWallet.proofs.append(contentsOf: internalChangeProofs)
                         
                         selectedMint.proofs?.append(contentsOf: internalSendProofs + internalChangeProofs)
                         
@@ -222,13 +228,15 @@ struct SendView: View {
                         tokenString = try token.serialize(version)
                         // log event
                         let event = Event.sendEvent(unit: selectedUnit,
-                                                    shortDescription: "Send Event",
+                                                    shortDescription: "Send",
                                                     wallet: activeWallet,
                                                     amount: (amount),
                                                     longDescription: "",
                                                     proofs: internalSendProofs,
                                                     memo: tokenMemo,
-                                                    tokenString: tokenString ?? "") // TODO: handle more explicitly / robust
+                                                    tokens: [TokenInfo(token: tokenString ?? "nil",
+                                                                       mint: selectedMint.url.absoluteString,
+                                                                       amount: internalSendProofs.sum)])
                         modelContext.insert(event)
                         try modelContext.save()
                         logger.info("successfully created sendable token and saved change to db.")

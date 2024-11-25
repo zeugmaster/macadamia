@@ -66,12 +66,12 @@ struct EventDetailView: View {
                     Spacer()
                     Text(event.unit.rawValue)
                 }
-                if let text = event.tokenString {
-                    TokenText(text: text)
+                if let tokenInfo = event.tokens?.first {
+                    TokenText(text: tokenInfo.token)
                         .frame(idealHeight: 70)
                         .contextMenu {
                             Button(action: {
-                                UIPasteboard.general.string = text
+                                UIPasteboard.general.string = tokenInfo.token
                             }) {
                                 Text("Copy")
                                 Spacer()
@@ -117,10 +117,41 @@ struct EventDetailView: View {
             }
             
         case .restore:
-            Text("restore")
+            List {
+                HStack {
+                    Text("Restored at: ")
+                    Spacer()
+                    Text(event.date.formatted())
+                }
+                Text(event.longDescription ?? "No description.")
+            }
             
         case .drain:
-            Text("drain")
+            List {
+                HStack {
+                    Text("Created at: ")
+                    Spacer()
+                    Text(event.date.formatted())
+                }
+                if let tokens = event.tokens, !tokens.isEmpty {
+                    ForEach(tokens, id: \.self) { tokenInfo in
+                        Section {
+                            TokenText(text: tokenInfo.token)
+                                .frame(idealHeight: 70)
+                                .contextMenu {
+                                    Button(action: {
+                                        UIPasteboard.general.string = tokenInfo.token
+                                    }) {
+                                        Text("Copy")
+                                        Spacer()
+                                        Image(systemName: "clipboard")
+                                    }
+                                }
+                            Text(tokenInfo.mint)
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -175,8 +206,8 @@ struct SendEventView: View {
                     }
             }
             
-            if let tokenString = event.tokenString /*, tokenState != .spent */ {
-                TokenShareView(tokenString: tokenString)
+            if let tokenInfo = event.tokens?.first /*, tokenState != .spent */ {
+                TokenShareView(tokenString: tokenInfo.token)
             }
         }
     }

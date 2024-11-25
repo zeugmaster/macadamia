@@ -270,6 +270,7 @@ struct MeltView: View {
                                                                                      wallet: activeWallet) })
                             
                             selectedMint.proofs?.append(contentsOf: internalChangeProofs)
+                            activeWallet.proofs.append(contentsOf: internalChangeProofs)
                             internalChangeProofs.forEach({ modelContext.insert($0) })
                             
                             selectedMint.increaseDerivationCounterForKeysetWithID(changeKeyset.keysetID,

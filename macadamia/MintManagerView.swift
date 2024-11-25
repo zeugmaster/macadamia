@@ -38,7 +38,8 @@ struct MintManagerView: View {
                                 ForEach(sortedMintsOfActiveWallet) { mint in
                                     NavigationLink(destination: MintInfoView(mint: mint)) {
                                         // Pass proofs related to the mint to MintInfoRowView
-                                        MintInfoRowView(mint: mint, amountDisplayString: balanceStrings[mint.mintID] ?? nil)
+                                        MintInfoRowView(mint: mint,
+                                                        amountDisplayString: balanceStrings[mint.mintID] ?? nil)
                                     }
                                 }
                                 .onMove { source, destination in
@@ -56,7 +57,10 @@ struct MintManagerView: View {
                                 }
                             }
                         } footer: {
-                            Text("Hold and drag to change the order. The first mint will be default selected across the application.")
+                            Text("""
+                                 Hold and drag to change the order. The first mint will be \
+                                 default selected across the application.
+                                 """)
                         }
                     }
                     Section {
@@ -64,7 +68,7 @@ struct MintManagerView: View {
                             .textInputAutocapitalization(.never)
                             .keyboardType(.URL)
                             .onSubmit {
-                                addMint()
+                                addMint(urlString: newMintURLString)
                             }
                     } footer: {
                         Text("""
@@ -72,6 +76,10 @@ struct MintManagerView: View {
                              macadamia Wallet is not affiliated with any mint and does not custody user funds. 
                              You can find a list of mints on [bitcoinmints.com](https://bitcoinmints.com)
                              """)
+                    }
+                    .onTapGesture(count: 3) {
+                        addMint(urlString: "https://testmint.macadamia.cash")
+                        addMint(urlString: "https://testnut.cashu.space")
                     }
                 }
                 .navigationTitle("Mints")
@@ -109,12 +117,31 @@ struct MintManagerView: View {
         }
     }
 
-    func addMint() {
-        let trimmedURLString = newMintURLString.trimmingCharacters(in: .whitespacesAndNewlines)
+    func addMint(urlString: String) {
+        guard let activeWallet else {
+            return
+        }
+        
+        let trimmedURLString = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
+        
         guard trimmedURLString.starts(with: "http://") || trimmedURLString.starts(with: "https://"),
               let url = URL(string: trimmedURLString), url.host != nil else {
             logger.warning("user tried to add a URL that does not start with https:// or http:// which is not supported")
-            displayAlert(alert: AlertDetail(title: "Invalid URL", description: "URL must start with http:// or https:// and include a valid host"))
+            displayAlert(alert: AlertDetail(title: "Invalid URL",
+                                            description: """
+                                                         URL must start with http:// or https:// \
+                                                         and include a valid host.
+                                                         """))
+            return
+        }
+        
+        guard !activeWallet.mints.contains(where: { $0.url == url }) else {
+            logger.warning("user tried to add a mint with a url that is already in the list of mints.")
+            displayAlert(alert: AlertDetail(title: "Duplicate Mint",
+                                            description: """
+                                                         The mint you are trying to add is already \
+                                                         known to the wallet. Please add each mint only once.
+                                                         """))
             return
         }
 
@@ -122,7 +149,7 @@ struct MintManagerView: View {
             do {
                 let mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
                 mint.wallet = activeWallet
-                mint.userIndex = activeWallet?.mints.count
+                mint.userIndex = activeWallet.mints.count
                 modelContext.insert(mint)
                 try modelContext.save()
                 logger.info("added new mint with URL \(mint.url.absoluteString)")

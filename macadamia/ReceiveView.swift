@@ -165,7 +165,7 @@ struct ReceiveView: View {
     }
 
     func redeem() {
-        guard let activeWallet, let token else {
+        guard let activeWallet, let token, let tokenString else {
             logger.error("""
                          "could not redeem, one or more of the following variables are nil:
                          activeWallet: \(activeWallet.debugDescription)
@@ -189,7 +189,7 @@ struct ReceiveView: View {
 
         loading = true
 
-        var proofs: [Proof] = []
+        var combinedProofs: [Proof] = []
 
         Task {
             do {
@@ -209,26 +209,37 @@ struct ReceiveView: View {
                     if let usedKeyset = mint.keysets.first(where: { $0.keysetID == internalProofs.first?.keysetID }) {
                         mint.increaseDerivationCounterForKeysetWithID(usedKeyset.keysetID, by: internalProofs.count)
                     } else {
-                        logger.error("Could not determine applied keyset! This will lead to issues with det sec counter and fee rates.")
+                        logger.error("""
+                                     Could not determine applied keyset! \
+                                     This will lead to issues with det sec counter and fee rates.
+                                     """)
                     }
                     
                     mint.proofs?.append(contentsOf: internalProofs)
+                    activeWallet.proofs.append(contentsOf: internalProofs)
                     
                     internalProofs.forEach { modelContext.insert($0) }
                     
-                    proofs.append(contentsOf: internalProofs)
+                    combinedProofs.append(contentsOf: internalProofs)
                     
-                    logger.info("receiving \(internalProofs.count) proof(s) with sum \(internalProofs.sum) from mint \(mint.url.absoluteString)")
+                    logger.info("""
+                                receiving \(internalProofs.count) proof(s) with sum \
+                                \(internalProofs.sum) from mint \(mint.url.absoluteString)
+                                """)
                 }
-                                
+                
+                let tokenInfo = TokenInfo(token: tokenString,
+                                          mint: mintsInToken.count == 1 ? mintsInToken.first!.url.absoluteString : "Multi Mint",
+                                          amount: combinedProofs.sum)
+                
                 let event = Event.receiveEvent(unit: .sat,
                                                shortDescription: "Receive",
                                                wallet: activeWallet,
-                                               amount: proofs.sum,
+                                               amount: combinedProofs.sum,
                                                longDescription: "",
-                                               proofs: proofs,
+                                               proofs: combinedProofs,
                                                memo: token.memo ?? "",
-                                               tokenString: tokenString ?? "",
+                                               tokens: [tokenInfo],
                                                redeemed: true)
                 
                 try await MainActor.run {

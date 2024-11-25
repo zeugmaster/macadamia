@@ -185,10 +185,10 @@ struct MintView: View {
         guard let selectedMint, let activeWallet else {
             print("could not request quote: selectedMint or activeWallet are nil")
             logger.error("""
-                           unable to request quote because one or more of the following variables are nil:
-                           selectedMInt: \(selectedMint.debugDescription)
-                           activeWallet: \(activeWallet.debugDescription)
-                           """)
+                         unable to request quote because one or more of the following variables are nil:
+                         selectedMInt: \(selectedMint.debugDescription)
+                         activeWallet: \(activeWallet.debugDescription)
+                         """)
             return
         }
         
@@ -231,11 +231,11 @@ struct MintView: View {
               let activeWallet,
               let selectedMint else {
             logger.error("""
-                           unable to request melt because one or more of the following variables are nil:
-                           quote: \(quote.debugDescription)
-                           selectedMInt: \(selectedMint.debugDescription)
-                           activeWallet: \(activeWallet.debugDescription)
-                           """)
+                         unable to request melt because one or more of the following variables are nil:
+                         quote: \(quote.debugDescription)
+                         selectedMInt: \(selectedMint.debugDescription)
+                         activeWallet: \(activeWallet.debugDescription)
+                         """)
             return
         }
         
@@ -243,6 +243,8 @@ struct MintView: View {
         Task {
             do {
                 logger.debug("requesting mint for quote with id \(quote.quote)...")
+                
+                print("selectedMint.keyset derivation counter: \(selectedMint.keysets.map({ $0.derivationCounter }))")
                 
                 let proofs: [Proof] = try await CashuSwift.issue(for: quote, on: selectedMint, seed: activeWallet.seed).map { p in
                     let unit = Unit(quote.requestDetail?.unit ?? "other") ?? .other
@@ -256,6 +258,7 @@ struct MintView: View {
                 
                 // FIXME: for some reason SwiftData does not manage the inverse relationship here, so we have to do it ourselves
                 selectedMint.proofs?.append(contentsOf: proofs)
+                activeWallet.proofs.append(contentsOf: proofs)
                 
                 try await MainActor.run {
                     proofs.forEach { modelContext.insert($0) }
@@ -272,7 +275,6 @@ struct MintView: View {
                     mintSuccess = true
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    print("timer elapsed, should dismiss now")
                     dismiss()
                 }
             } catch {

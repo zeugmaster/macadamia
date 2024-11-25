@@ -237,18 +237,21 @@ enum AppSchemaV1: VersionedSchema {
         var visible: Bool
         var kind: Kind
         var wallet: Wallet?
-
+        
         var bolt11MintQuote: CashuSwift.Bolt11.MintQuote?
         var bolt11MeltQuoteData: Data? // SwiftData is unable to serialize CashuSwift.Bolt11.MeltQuote so we do it ourselves
-
+        
         var amount: Int?
         var expiration: Date?
         var longDescription: String?
         var proofs: [Proof]?
         var memo: String?
-        var tokenString: String?
+        
+//        @Attribute(.transformable)
+        var tokens: [TokenInfo]?
+        
         var redeemed: Bool?
-
+        
         enum Kind: Codable {
             case pendingMint
             case mint
@@ -259,23 +262,23 @@ enum AppSchemaV1: VersionedSchema {
             case restore
             case drain
         }
-
+        
         init(date: Date,
-            unit: Unit,
-            shortDescription: String,
-            visible: Bool,
-            kind: Kind,
-            wallet: Wallet,
-            bolt11MintQuote: CashuSwift.Bolt11.MintQuote? = nil,
-            bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? = nil,
+             unit: Unit,
+             shortDescription: String,
+             visible: Bool,
+             kind: Kind,
+             wallet: Wallet,
+             bolt11MintQuote: CashuSwift.Bolt11.MintQuote? = nil,
+             bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? = nil,
              amount: Int? = nil,
-            expiration: Date? = nil,
-            longDescription: String? = nil,
-            proofs: [Proof]? = nil,
-            memo: String? = nil,
-            tokenString: String? = nil,
-            redeemed: Bool? = nil
-        ) {
+             expiration: Date? = nil,
+             longDescription: String? = nil,
+             proofs: [Proof]? = nil,
+             memo: String? = nil,
+             tokens: [TokenInfo]? = nil,
+             redeemed: Bool? = nil) {
+            
             self.eventID = UUID()
             self.date = date
             self.unit = unit
@@ -290,10 +293,10 @@ enum AppSchemaV1: VersionedSchema {
             self.longDescription = longDescription
             self.proofs = proofs
             self.memo = memo
-            self.tokenString = tokenString
+            self.tokens = tokens
             self.redeemed = redeemed
         }
-
+        
         var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? {
             get {
                 guard let data = bolt11MeltQuoteData else { return nil }
@@ -303,7 +306,7 @@ enum AppSchemaV1: VersionedSchema {
                 bolt11MeltQuoteData = try? JSONEncoder().encode(newValue)
             }
         }
-
+        
         static func pendingMintEvent(unit: Unit,
                                      shortDescription: String,
                                      visible: Bool = true,
@@ -313,17 +316,17 @@ enum AppSchemaV1: VersionedSchema {
                                      expiration: Date
         ) -> Event {
             Event(date: Date(),
-                unit: unit,
-                shortDescription: shortDescription,
-                visible: visible,
-                kind: .pendingMint,
-                wallet: wallet,
-                bolt11MintQuote: quote,
-                amount: amount,
-                expiration: expiration
+                  unit: unit,
+                  shortDescription: shortDescription,
+                  visible: visible,
+                  kind: .pendingMint,
+                  wallet: wallet,
+                  bolt11MintQuote: quote,
+                  amount: amount,
+                  expiration: expiration
             )
         }
-
+        
         static func mintEvent(unit: Unit,
                               shortDescription: String,
                               visible: Bool = true,
@@ -331,16 +334,16 @@ enum AppSchemaV1: VersionedSchema {
                               quote: CashuSwift.Bolt11.MintQuote,
                               amount: Int) -> Event {
             Event(date: Date(),
-                unit: unit,
-                shortDescription: shortDescription,
-                visible: visible,
-                kind: .mint,
-                wallet: wallet,
-                bolt11MintQuote: quote,
-                amount: amount
+                  unit: unit,
+                  shortDescription: shortDescription,
+                  visible: visible,
+                  kind: .mint,
+                  wallet: wallet,
+                  bolt11MintQuote: quote,
+                  amount: amount
             )
         }
-
+        
         static func sendEvent(unit: Unit,
                               shortDescription: String,
                               visible: Bool = true,
@@ -349,23 +352,23 @@ enum AppSchemaV1: VersionedSchema {
                               longDescription: String,
                               proofs: [Proof],
                               memo: String,
-                              tokenString: String,
+                              tokens: [TokenInfo],
                               redeemed: Bool = false) -> Event {
             Event(date: Date(),
-                unit: unit,
-                shortDescription: shortDescription,
-                visible: visible,
-                kind: .send,
-                wallet: wallet,
-                amount: amount,
-                longDescription: longDescription,
-                proofs: proofs,
-                memo: memo,
-                tokenString: tokenString,
-                redeemed: redeemed
+                  unit: unit,
+                  shortDescription: shortDescription,
+                  visible: visible,
+                  kind: .send,
+                  wallet: wallet,
+                  amount: amount,
+                  longDescription: longDescription,
+                  proofs: proofs,
+                  memo: memo,
+                  tokens: tokens,
+                  redeemed: redeemed
             )
         }
-
+        
         static func receiveEvent(unit: Unit,
                                  shortDescription: String,
                                  visible: Bool = true,
@@ -374,23 +377,23 @@ enum AppSchemaV1: VersionedSchema {
                                  longDescription: String,
                                  proofs: [Proof],
                                  memo: String,
-                                 tokenString: String,
+                                 tokens: [TokenInfo],
                                  redeemed: Bool) -> Event {
             Event(date: Date(),
-                unit: unit,
-                shortDescription: shortDescription,
-                visible: visible,
-                kind: .receive,
-                wallet: wallet,
-                amount: amount,
-                longDescription: longDescription,
-                proofs: proofs,
-                memo: memo,
-                tokenString: tokenString,
-                redeemed: redeemed
+                  unit: unit,
+                  shortDescription: shortDescription,
+                  visible: visible,
+                  kind: .receive,
+                  wallet: wallet,
+                  amount: amount,
+                  longDescription: longDescription,
+                  proofs: proofs,
+                  memo: memo,
+                  tokens: tokens,
+                  redeemed: redeemed
             )
         }
-
+        
         static func pendingMeltEvent(unit: Unit,
                                      shortDescription: String,
                                      visible: Bool = true,
@@ -409,7 +412,7 @@ enum AppSchemaV1: VersionedSchema {
                   expiration: expiration
             )
         }
-
+        
         static func meltEvent(unit: Unit,
                               shortDescription: String,
                               visible: Bool = true,
@@ -425,6 +428,32 @@ enum AppSchemaV1: VersionedSchema {
                   amount: amount,
                   longDescription: longDescription
             )
+        }
+        
+        static func drainEvent(shortDescription: String,
+                               visible:Bool = true,
+                               wallet: Wallet,
+                               tokens: [TokenInfo]) -> Event {
+            Event(date: Date(),
+                  unit: .other,
+                  shortDescription: shortDescription,
+                  visible: visible,
+                  kind: .drain,
+                  wallet: wallet,
+                  tokens: tokens)
+        }
+        
+        static func restoreEvent(shortDescription: String,
+                                 visible: Bool = true,
+                                 wallet: Wallet,
+                                 longDescription: String) -> Event {
+            Event(date: Date(),
+                  unit: .other,
+                  shortDescription: shortDescription,
+                  visible: visible,
+                  kind: .restore,
+                  wallet: wallet,
+                  longDescription: longDescription)
         }
     }
 

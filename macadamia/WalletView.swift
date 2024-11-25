@@ -82,11 +82,8 @@ struct WalletView: View {
                 .padding(40)
                 .onAppear(perform: {
                     // FIXME: NEEDS TO RESPECT WALLET SELECTION
-                    balance = proofs.filter { $0.state == .valid }.sum
-                    
-                    print("url state: \(urlState?.url ?? "nil")")
-                    print("navigationDestination: \(String(describing: navigationDestination))")
-                    
+                    balance = proofs.filter { $0.state == .valid && $0.wallet == activeWallet }.sum
+
                     // quick sanity check for uniqueness of C across list of proofs
                     let uniqueCs = Set(proofs.map( { $0.C }))
                     if uniqueCs.count != proofs.count {

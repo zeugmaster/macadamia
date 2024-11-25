@@ -104,7 +104,7 @@ struct ContentView: View {
                         .scaleEffect(1.8)
                         .opacity(0.3)
                 }
-                .padding(EdgeInsets(top: 24, leading: 0, bottom: 0, trailing: 10))
+                .padding(EdgeInsets(top: 24, leading: 0, bottom: 0, trailing: 20))
             }
         })
         .preferredColorScheme(.dark)

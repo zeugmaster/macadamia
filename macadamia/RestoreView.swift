@@ -85,13 +85,20 @@ struct RestoreView: View {
         
         if activeWallet.proofs.contains(where: { $0.state == .valid }) {
             displayAlert(alert: AlertDetail(title: "Wallet not empty!",
-                                            description: "This wallet still contains valid ecash that would become inaccessible if you restore now. Please empty the wallet first."))
+                                            description: """
+                                                         This wallet still contains valid ecash \
+                                                         that would become inaccessible if you restore now. \
+                                                         Please empty the wallet first.
+                                                         """))
             return
         }
         
         guard !activeWallet.mints.isEmpty else {
             displayAlert(alert: AlertDetail(title: "No Mints",
-                                            description: "You need to add all the mints you want to restore ecash from. You can do so in the 'Mints' tab of the app."))
+                                            description:"""
+                                                        You need to add all the mints you want to restore ecash from. \
+                                                        You can do so in the 'Mints' tab of the app.
+                                                        """))
             logger.warning("user tried to restore wallet with no known mints. aborted.")
             return
         }
@@ -105,7 +112,11 @@ struct RestoreView: View {
                 success = true
                 loading = false
             } catch {
-                displayAlert(alert: AlertDetail(title: "Error", description: "There was an error when attempting to restore. Detail: \(String(describing: error))"))
+                displayAlert(alert: AlertDetail(title: "Error",
+                                                description: """
+                                                             There was an error when attempting to restore. \
+                                                             Detail: \(String(describing: error))
+                                                             """))
                 loading = false
             }
         }
@@ -126,9 +137,7 @@ struct RestoreView: View {
         
         let newWallet = Wallet(mnemonic: mnemo.phrase.joined(separator: " "),
                                seed: seed)
-        
-        
-        
+                
         for mint in mints {
             let newMint = Mint(url: mint.url, keysets: mint.keysets)
             newMint.userIndex = mint.userIndex
@@ -153,8 +162,10 @@ struct RestoreView: View {
                           wallet: newWallet)
                 })
                 
-                mint.increaseDerivationCounterForKeysetWithID(result.keysetID,
-                                                              by: result.derivationCounter)
+                newMint.increaseDerivationCounterForKeysetWithID(result.keysetID,
+                                                                 by: result.derivationCounter)
+                
+                print("newMint.keyset derivation counter: \(newMint.keysets.map({ $0.derivationCounter }))")
                                 
                 newMint.proofs?.append(contentsOf: internalProofs)
                 
@@ -168,8 +179,15 @@ struct RestoreView: View {
         
         newWallet.active = true
         
-        
-        
+        let event = Event.restoreEvent(shortDescription: "Restore",
+                                       wallet: newWallet,
+                                       longDescription: """
+                                                        Successfulle recovered ecash \
+                                                        from \(newWallet.mints.count) mints \
+                                                        using a seed phrase! 🤠
+                                                        """)
+        modelContext.insert(event)
+                
         try modelContext.save()
     }
 
