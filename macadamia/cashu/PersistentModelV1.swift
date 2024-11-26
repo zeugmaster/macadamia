@@ -250,6 +250,8 @@ enum AppSchemaV1: VersionedSchema {
 //        @Attribute(.transformable)
         var tokens: [TokenInfo]?
         
+        var mints: [Mint]?
+        
         var redeemed: Bool?
         
         enum Kind: Codable {
@@ -277,6 +279,7 @@ enum AppSchemaV1: VersionedSchema {
              proofs: [Proof]? = nil,
              memo: String? = nil,
              tokens: [TokenInfo]? = nil,
+             minta: [Mint]? = nil,
              redeemed: Bool? = nil) {
             
             self.eventID = UUID()
@@ -294,6 +297,7 @@ enum AppSchemaV1: VersionedSchema {
             self.proofs = proofs
             self.memo = memo
             self.tokens = tokens
+            self.mints = minta
             self.redeemed = redeemed
         }
         
@@ -313,8 +317,8 @@ enum AppSchemaV1: VersionedSchema {
                                      wallet: Wallet,
                                      quote: CashuSwift.Bolt11.MintQuote,
                                      amount: Int,
-                                     expiration: Date
-        ) -> Event {
+                                     expiration: Date,
+                                     mints: [Mint]) -> Event {
             Event(date: Date(),
                   unit: unit,
                   shortDescription: shortDescription,
@@ -323,7 +327,8 @@ enum AppSchemaV1: VersionedSchema {
                   wallet: wallet,
                   bolt11MintQuote: quote,
                   amount: amount,
-                  expiration: expiration
+                  expiration: expiration,
+                  minta: mints
             )
         }
         
@@ -400,7 +405,8 @@ enum AppSchemaV1: VersionedSchema {
                                      wallet: Wallet,
                                      quote: CashuSwift.Bolt11.MeltQuote,
                                      amount: Int,
-                                     expiration: Date) -> Event {
+                                     expiration: Date,
+                                     mints: [Mint]) -> Event {
             Event(date: Date(),
                   unit: unit,
                   shortDescription: shortDescription,
@@ -409,7 +415,8 @@ enum AppSchemaV1: VersionedSchema {
                   wallet: wallet,
                   bolt11MeltQuote: quote,
                   amount: amount,
-                  expiration: expiration
+                  expiration: expiration,
+                  minta: mints
             )
         }
         

@@ -263,6 +263,7 @@ struct TransactionListRowView: View {
             .lineLimit(1)
             .font(.callout)
         }
+        .listRowBackground(Color.clear)
     }
 }
 

@@ -37,14 +37,18 @@ struct MintView: View {
          pendingMintEvent: Event? = nil) {
         _quote = State(initialValue: quote)
         _pendingMintEvent = State(initialValue: pendingMintEvent)
+        
+        if let mint = pendingMintEvent?.mints?.first {
+            _selectedMint = State(initialValue: mint)
+        }
     }
 
     var body: some View {
         Form {
             Section {
                 HStack {
-                    if let quote, quote.requestDetail != nil {
-                        Text(String(quote.requestDetail!.amount))
+                    if let quote, let requestDetail = quote.requestDetail {
+                        Text(String(requestDetail.amount))
                             .monospaced()
                         Text("sats")
                             .monospaced()
@@ -64,9 +68,11 @@ struct MintView: View {
                             .monospaced()
                     }
                 }
-                
-                MintPicker(selectedMint: $selectedMint)
-                    .disabled(quote != nil)
+                if let mint = pendingMintEvent?.mints?.first {
+                    Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
+                } else {
+                    MintPicker(selectedMint: $selectedMint)
+                }
             }
             if let quote {
                 Section {
@@ -210,7 +216,8 @@ struct MintView: View {
                                                    wallet: activeWallet,
                                                    quote: quote!, // FIXME: SAFE UNWRAPPING
                                                    amount: quote?.requestDetail?.amount ?? 0,
-                                                   expiration: Date(timeIntervalSince1970: TimeInterval(quote!.expiry))) // FIXME: SAFE UNWRAPPING
+                                                   expiration: Date(timeIntervalSince1970: TimeInterval(quote!.expiry)),
+                                                   mints: [selectedMint])
                 // -- main thread
                 try await MainActor.run {
                     pendingMintEvent = event
@@ -243,16 +250,21 @@ struct MintView: View {
         Task {
             do {
                 logger.debug("requesting mint for quote with id \(quote.quote)...")
-                
-                print("selectedMint.keyset derivation counter: \(selectedMint.keysets.map({ $0.derivationCounter }))")
-                
-                let proofs: [Proof] = try await CashuSwift.issue(for: quote, on: selectedMint, seed: activeWallet.seed).map { p in
+                                
+                let proofs: [Proof] = try await CashuSwift.issue(for: quote, on: selectedMint,
+                                                                 seed: activeWallet.seed).map { p in
                     let unit = Unit(quote.requestDetail?.unit ?? "other") ?? .other
-                    return Proof(p, unit: unit, inputFeePPK: 0, state: .valid, mint: selectedMint, wallet: activeWallet)
+                    return Proof(p,
+                                 unit: unit,
+                                 inputFeePPK: 0,
+                                 state: .valid,
+                                 mint: selectedMint,
+                                 wallet: activeWallet)
                 }
                 
                 // replace keyset to persist derivation counter
-                selectedMint.increaseDerivationCounterForKeysetWithID(proofs.first!.keysetID, by: proofs.count)
+                selectedMint.increaseDerivationCounterForKeysetWithID(proofs.first!.keysetID,
+                                                                      by: proofs.count)
                 let keysetFee = selectedMint.keysets.first(where: { $0.keysetID == proofs.first?.keysetID })?.inputFeePPK ?? 0
                 proofs.forEach({ $0.inputFeePPK = keysetFee })
                 

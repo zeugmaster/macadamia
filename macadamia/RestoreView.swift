@@ -182,7 +182,7 @@ struct RestoreView: View {
         let event = Event.restoreEvent(shortDescription: "Restore",
                                        wallet: newWallet,
                                        longDescription: """
-                                                        Successfulle recovered ecash \
+                                                        Successfully recovered ecash \
                                                         from \(newWallet.mints.count) mints \
                                                         using a seed phrase! 🤠
                                                         """)

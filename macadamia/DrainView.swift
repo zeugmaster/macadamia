@@ -74,7 +74,10 @@ struct DrainView: View {
                 Text("Create Drain Token")
             }
         } footer: {
-            Text("Create a token that contains all proofs of the selected mints. WARNING: This will remove the proofs from the wallet database.")
+            Text("""
+                 Create a token that contains all proofs of the selected mints. WARNING: This will \
+                 remove the proofs from the wallet database.
+                 """)
         }
         .disabled(selectedMints.isEmpty)
     }
