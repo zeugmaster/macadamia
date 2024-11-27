@@ -198,8 +198,16 @@ struct ReceiveView: View {
                 for mint in mintsInToken {
                     let proofsPerMint = proofsDict[mint.url.absoluteString]!
                     let internalProofs = proofsPerMint.map { p in
-                        let fee = mint.keysets.first(where: { $0.keysetID == p.keysetID } )?.inputFeePPK
-                        return Proof(p, unit: Unit(token.unit) ?? .other,
+                        let keyset = mint.keysets.first(where: { $0.keysetID == p.keysetID } )
+                        let fee = keyset?.inputFeePPK
+                        let unit = Unit(keyset?.unit)
+                        
+                        if unit == nil {
+                            logger.error("wallet could not determine unit for incoming proofs. defaulting to .sat")
+                        }
+                        
+                        return Proof(p,
+                                     unit: unit ?? .sat,
                                      inputFeePPK: fee ?? 0,
                                      state: .valid,
                                      mint: mint,
