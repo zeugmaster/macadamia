@@ -129,7 +129,12 @@ struct WalletView: View {
                            .frame(maxWidth: .infinity) // Ensure it takes up the maximum width
                            .background(Color.secondary.opacity(0.3)) // Apply a semi-transparent background
                            .cornerRadius(10) // Apply rounded corners to the background
+                           .overlay {
+                               RoundedRectangle(cornerRadius: 10)
+                                   .fill(Color.black.opacity(0.3))
+                           }
                     }
+                    .disabled(false)
                     //MARK: - BUTTON "SEND"
                     Templates.Menu(
                         configuration: {
