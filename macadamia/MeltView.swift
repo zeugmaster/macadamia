@@ -1,94 +1,146 @@
-//
-//  MeltView.swift
-//  macadamia
-//
-//  Created by zeugmaster on 05.01.24.
-//
-
-import SwiftUI
+import CashuSwift
 import CodeScanner
+import SwiftData
+import SwiftUI
 
 struct MeltView: View {
-    @ObservedObject var vm:MeltViewModel
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     
-    init(vm: MeltViewModel) {
-        self.vm = vm
+    @Query(filter: #Predicate<Wallet> { wallet in
+        wallet.active == true
+    }) private var wallets: [Wallet]
+    
+    @Query private var mints: [Mint]
+    @Query private var allProofs: [Proof]
+
+    var activeWallet: Wallet? {
+        wallets.first
     }
     
+    var proofsOfSelectedMint:[Proof] {
+        allProofs.filter { $0.mint == selectedMint }
+    }
+
+    var quote: CashuSwift.Bolt11.MeltQuote? {
+        pendingMeltEvent?.bolt11MeltQuote
+    }
+    
+    @State var pendingMeltEvent: Event?
+
+    @State var invoiceString: String = ""
+    @State var loading = false
+    @State var success = false
+    
+    @State private var selectedMint:Mint?
+    
+    @State var selectedMintBalance = 0
+
+    @State var showAlert: Bool = false
+    @State var currentAlert: AlertDetail?
+
+    init(pendingMeltEvent: Event? = nil) {
+        _pendingMeltEvent = State(initialValue: pendingMeltEvent)
+        _invoiceString = State(initialValue: quote?.quote ?? "")
+//        self.quote = pendingMeltEvent?.bolt11MeltQuote
+        
+        if let mint = pendingMeltEvent?.mints?.first {
+            _selectedMint = State(initialValue: mint)
+        }
+    }
+
     var body: some View {
         VStack {
-            //MARK: This check is necessary to prevent a bug in URKit (or the system, who knows)
-            //MARK: from crashing the app when using the camera on an Apple Silicon Mac
-            
-            if !ProcessInfo.processInfo.isiOSAppOnMac {
-                CodeScannerView(codeTypes: [.qr], scanMode: .oncePerCode) { result in
-                    print(result)
-                    vm.processScanViewResult(result: result)
-                }
-                .padding()
-            }
-            List {
-                Section {
-                    TextField("tap to enter LN invoice", text: $vm.invoice)
+            if let pendingMeltEvent {
+                List {
+                    HStack {
+                        Text("Quote created at: ")
+                        Spacer()
+                        Text(pendingMeltEvent.date.formatted())
+                    }
+                    Text(pendingMeltEvent.bolt11MeltQuote?.quoteRequest?.request ?? "No request")
+                        .foregroundStyle(.gray)
                         .monospaced()
-                        .foregroundStyle(.secondary)
-                        .onSubmit() {
-                            vm.checkFee()
-                        }
-                    if !vm.invoice.isEmpty {
-                        HStack {
-                            Text("Amount: ")
-                            Spacer()
-                            Text(String(vm.invoiceAmount ?? 0) + " sats")
-                        }
-                        .foregroundStyle(.secondary)
-                        if vm.fee != nil {
+                        .lineLimit(3)
+                    if let mint = pendingMeltEvent.mints?.first {
+                        Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
+                    }
+                }
+            } else {
+                
+                // This check is necessary to prevent a bug in URKit (or the system, who knows)
+                // from crashing the app when using the camera on an Apple Silicon Mac
+                if !ProcessInfo.processInfo.isiOSAppOnMac {
+                    CodeScannerView(codeTypes: [.qr], scanMode: .oncePerCode) { result in
+                        processScanViewResult(result: result)
+                    }
+                    .padding()
+                }
+                
+                List {
+                    Section {
+                        TextField("tap to enter LN invoice", text: $invoiceString)
+                            .monospaced()
+                            .foregroundStyle(.secondary)
+                            .onSubmit {
+                                getQuote()
+                            }
+                        if !invoiceString.isEmpty {
                             HStack {
-                                Text("Lightning Fee: ")
+                                Text("Amount: ")
                                 Spacer()
-                                Text(String(vm.fee ?? 0) + " sats")
+                                Text(String(invoiceAmount ?? 0) + " sats")
                             }
                             .foregroundStyle(.secondary)
+                            if quote != nil {
+                                HStack {
+                                    Text("Lightning Fee: ")
+                                    Spacer()
+                                    Text(String(quote?.feeReserve ?? 0) + " sats")
+                                }
+                                .foregroundStyle(.secondary)
+                            }
                         }
-                    }
-                    Picker("Mint", selection:$vm.selectedMintString) {
-                        ForEach(vm.mintList, id: \.self) {
-                            Text($0)
+                        if pendingMeltEvent?.mints?.first == nil {
+                            MintPicker(selectedMint: $selectedMint)
+                                .onChange(of: selectedMint) { _, _ in
+                                    updateBalance()
+                                }
                         }
-                    }.onAppear(perform: {
-                        vm.fetchMintInfo()
-                    })
-                    .onChange(of: vm.selectedMintString) { oldValue, newValue in
-                        vm.updateBalance()
+                        HStack {
+                            Text("Balance: ")
+                            Spacer()
+                            Text(String(selectedMintBalance))
+                                .monospaced()
+                            Text("sats")
+                        }
+                        .onAppear {
+                            updateBalance()
+                        }
+                        .foregroundStyle(.secondary)
+                    } footer: {
+                        Text("The invoice will be payed by the mint you select.")
                     }
-                    HStack {
-                        Text("Balance: ")
-                        Spacer()
-                        Text(String(vm.selectedMintBalance))
-                            .monospaced()
-                        Text("sats")
-                    }
-                    .foregroundStyle(.secondary)
-                } footer: {
-                    Text("The invoice will be payed by the mint you select.")
                 }
             }
+            
+            // MARK: - BUTTON
             Button(action: {
-                vm.melt()
+                melt()
             }, label: {
-                if vm.loading {
+                if loading {
                     Text("Melting...")
                         .frame(maxWidth: .infinity)
                         .padding()
-                } else if vm.success {
+                } else if success {
                     Text("Done!")
                         .frame(maxWidth: .infinity)
                         .padding()
                         .foregroundColor(.green)
                 } else {
                     Text("Melt Tokens")
-                    .frame(maxWidth: .infinity)
-                    .padding()
+                        .frame(maxWidth: .infinity)
+                        .padding()
                 }
             })
             .foregroundColor(.white)
@@ -96,49 +148,16 @@ struct MeltView: View {
             .padding()
             .bold()
             .toolbar(.hidden, for: .tabBar)
-            .disabled(vm.invoice.isEmpty || vm.loading || vm.success)
+            .disabled(invoiceString.isEmpty || loading || success)
             .navigationTitle("Melt")
             .navigationBarTitleDisplayMode(.inline)
-            .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
+            .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
     }
-}
 
-#Preview {
-    MeltView(vm: MeltViewModel(navPath: Binding.constant(NavigationPath())))
-}
-
-@MainActor
-class MeltViewModel: ObservableObject {
-    
-    @Published var invoice:String = ""
-    
-    @Published var loading = false
-    @Published var success = false
-    
-    @Published var fee:Int?
-    
-    @Published var mintList:[String] = [""]
-    @Published var selectedMintString:String = ""
-    @Published var selectedMintBalance = 0
-    
-    @Published var showAlert:Bool = false
-    var currentAlert:AlertDetail?
-    var wallet = Wallet.shared
-    
-    private var _navPath: Binding<NavigationPath>  // Changed to non-optional
-        
-    init(navPath: Binding<NavigationPath>) {
-        self._navPath = navPath
-    }
-    
-    var navPath: NavigationPath {
-        get { _navPath.wrappedValue }
-        set { _navPath.wrappedValue = newValue }
-    }
-    
-    func processScanViewResult(result:Result<ScanResult,ScanError>) {
+    func processScanViewResult(result: Result<ScanResult, ScanError>) {
         guard var text = try? result.get().string.lowercased() else {
+            logger.warning("Could not read string while processing camera scan result.")
             return
         }
         if text.hasPrefix("lightning:") {
@@ -146,68 +165,218 @@ class MeltViewModel: ObservableObject {
         }
         guard text.hasPrefix("lnbc") else {
             displayAlert(alert: AlertDetail(title: "Invalid QR",
-                                           description: "The QR code you scanned does not seem to be of a valid Lighning Network invoice. Please try again."))
+                                            description: """
+                                                         The QR code you scanned does not seem to be of \
+                                                         a valid Lighning Network invoice. Please try again.
+                                                         """))
+            logger.warning("Invalid QR. the scanned QR code does not seem to be a LN invoice string. Scan result: \(text)")
             return
         }
-        invoice = text
-        checkFee()
+        invoiceString = text
+        getQuote()
     }
-    
+
     func updateBalance() {
-        if let mint = wallet.database.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) {
-            selectedMintBalance = wallet.balance(mint: mint)
+        guard !proofsOfSelectedMint.isEmpty else {
+            logger.warning("could not update balance, no proofs available")
+            return
         }
+        
+        selectedMintBalance = proofsOfSelectedMint.filter({ $0.state == .valid }).sum
+    }
+
+    var invoiceAmount: Int? {
+        try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString)
     }
     
-    var invoiceAmount:Int? {
-        try? QuoteRequestResponse.satAmountFromInvoice(pr: invoice)
-    }
-    
-    func checkFee() {
-        Task {
-            let selectedMint = wallet.database.mints.first(where: {$0.url.absoluteString.contains(selectedMintString)})!
-            fee = try? await Network.checkFee(mint: selectedMint, invoice: invoice)
+    // getQuote can only be called when UI is not populated
+    func getQuote() {
+        
+        guard let activeWallet, let selectedMint else {
+            logger.warning("unable to get quote, activeWallet or selectedMint is nil")
+            return
         }
-    }
-    
-    func fetchMintInfo() {
-        mintList = []
-        for mint in wallet.database.mints {
-            let readable = mint.url.absoluteString.dropFirst(8)
-            mintList.append(String(readable))
-        }
-        selectedMintString = mintList[0]
-    }
-    
-    func melt() {
-        let selectedMint = wallet.database.mints.first(where: {$0.url.absoluteString.contains(selectedMintString)})!
-        loading = true
+        
+        // needs UI for loading quote, analogous to mint UI
+        
         Task {
             do {
-                let invoicePaid = try await wallet.melt(mint: selectedMint, invoice: invoice)
-                if invoicePaid {
-                    loading = false
-                    success = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        if !self.navPath.isEmpty { self.navPath.removeLast() }
+                let quoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat", // TODO: REMOVE HARD CODED UNIT
+                                                                      request: invoiceString,
+                                                                      options: nil)
+               
+                guard let meltQuote = try await CashuSwift.getQuote(mint: selectedMint,
+                                                                    quoteRequest: quoteRequest) as? CashuSwift.Bolt11.MeltQuote else {
+                    logger.warning("could not parse melt quote as bolt11 quote object")
+                    return
+                }
+                                
+                let event = Event.pendingMeltEvent(unit: .sat,
+                                                   shortDescription: "Melt Quote",
+                                                   wallet: activeWallet,
+                                                   quote: meltQuote,
+                                                   amount: (meltQuote.amount),
+                                                   expiration: Date(timeIntervalSince1970: TimeInterval(meltQuote.expiry)),
+                                                   mints: [selectedMint])
+                // -- main thread
+                await MainActor.run {
+                    self.pendingMeltEvent = event
+                    modelContext.insert(event)
+                    do {
+                        try modelContext.save()
+                    } catch {
+                        print(error)
                     }
-                } else {
-                    loading = false
-                    success = false
-                    displayAlert(alert: AlertDetail(title: "Unsuccessful",
-                                                   description: "The Lighning invoice could not be payed by the mint. Please try again (later)."))
                 }
             } catch {
-                loading = false
-                success = false
-                displayAlert(alert: AlertDetail(title: "Error",
-                                               description: String(describing: error)))
+                logger.warning("Unable to get melt quote. error \(error)")
+                displayAlert(alert: AlertDetail(error))
             }
         }
     }
-    
-    private func displayAlert(alert:AlertDetail) {
+
+    func melt() {
+        guard let selectedMint,
+              let activeWallet,
+              let quote
+        else {
+            logger.warning("""
+                            could not melt, one or more of the following required variables is nil.
+                            selectedWallet: \(selectedMint.debugDescription)
+                            activeWallet: \(activeWallet.debugDescription)
+                            quote: \(quote.debugDescription)
+                            """)
+            return
+        }
+        
+        let selectedUnit:Unit = .sat
+        
+        // TODO: ADD FEE AMOUNT UI AND INFO
+
+        guard let selection = selectedMint.select(allProofs: proofsOfSelectedMint,
+                                                  amount: quote.amount + quote.feeReserve,
+                                                  unit: .sat) else {
+            displayAlert(alert: AlertDetail(title: "Insufficient funds.",
+                                            description: """
+                                                         The wallet could not collect enough \
+                                                         ecash to settle this payment.
+                                                         """))
+            logger.info("""
+                        insufficient funds, mint.select() could not \
+                        collect proofs for the required amount.
+                        """)
+            return
+        }
+        
+        // this works and is reflected in the database
+        selection.selected.forEach { $0.state = .pending }
+        
+        loading = true
+
+        Task {
+            do {
+                
+                logger.debug("Attempting to melt...")
+                
+                let meltResult = try await CashuSwift.melt(mint: selectedMint,
+                                                           quote: quote,
+                                                           proofs: selection.selected,
+                                                           seed: activeWallet.seed)
+                
+                // TODO: temp disable back button (maybe)
+
+                if meltResult.paid {
+                    
+                    logger.debug("Melt function returned a quote with state PAID")
+                    
+                    try await MainActor.run {
+                        
+                        loading = false
+                        success = true
+                        
+                        print(meltResult)
+                        selectedMint.keysets.forEach({ print($0.keysetID) })
+                        
+                        if !meltResult.change.isEmpty,
+                           let changeKeyset = selectedMint.keysets.first(where: { $0.keysetID == meltResult.change.first?.keysetID }) {
+                            
+                            logger.debug("Melt quote includes change, attempting saving to db.")
+                            
+                            let unit = Unit(changeKeyset.unit) ?? .other
+                            let inputFee = changeKeyset.inputFeePPK
+                            
+                            let internalChangeProofs = meltResult.change.map({ Proof($0,
+                                                                                     unit: unit,
+                                                                                     inputFeePPK: inputFee,
+                                                                                     state: .valid,
+                                                                                     mint: selectedMint,
+                                                                                     wallet: activeWallet) })
+                            
+                            selectedMint.proofs?.append(contentsOf: internalChangeProofs)
+                            activeWallet.proofs.append(contentsOf: internalChangeProofs)
+                            internalChangeProofs.forEach({ modelContext.insert($0) })
+                            
+                            selectedMint.increaseDerivationCounterForKeysetWithID(changeKeyset.keysetID,
+                                                                                  by: internalChangeProofs.count)
+                        }
+                        
+                        // this does not seem to work because it is not reflected in the database
+                        selection.selected.forEach { $0.state = .spent }
+
+                        // make pending melt event non visible and create melt event for history
+                        let meltEvent = Event.meltEvent(unit: selectedUnit,
+                                                        shortDescription: "Melt",
+                                                        wallet: activeWallet,
+                                                        amount: (quote.amount),
+                                                        longDescription: "")
+                        
+                        pendingMeltEvent?.visible = false
+                        modelContext.insert(meltEvent)
+                        try modelContext.save()
+                        print(meltResult)
+                    }
+
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        dismiss()
+                    }
+                    
+                } else {
+                    await MainActor.run {
+                        logger.info("""
+                                    Melt function returned a quote with state NOT PAID, \
+                                    probably because the lightning payment failed
+                                    """)
+                        
+                        selection.selected.forEach { $0.state = .valid }
+                        loading = false
+                        success = false
+                        try? modelContext.save()
+                        displayAlert(alert: AlertDetail(title: "Unsuccessful",
+                                                        description: """
+                                                                     The Lighning invoice could not be \
+                                                                     payed by the mint. Please try again later.
+                                                                     """))
+                        
+                    }
+                }
+            } catch {
+                // pending event also remains
+                // TODO: UI for when quote expires etc.
+                
+                logger.error("Melt operation falied with error: \(error)")
+                loading = false
+                success = false
+                displayAlert(alert: AlertDetail(error))
+            }
+        }
+    }
+
+    private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
     }
+}
+
+#Preview {
+    MeltView()
 }

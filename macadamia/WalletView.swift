@@ -1,86 +1,111 @@
-//
-//  WalletView.swift
-//  macadamia
-//
-//  Created by zeugmaster on 13.12.23.
-//
-
-import SwiftUI
+import CashuSwift
 import Popovers
+import SwiftData
+import SwiftUI
 
 let betaDisclaimerURL = URL(string: "https://macadamia.cash/beta.html")!
 
+@MainActor
 struct WalletView: View {
-    @ObservedObject var vm = WalletViewModel()
-    @State var navigationPath = NavigationPath()
-    @Binding var navigationTag: String?
-    @Binding var urlState: String?
+    @Environment(\.modelContext) private var modelContext
     
-    static let buttonPadding:CGFloat = 1
-        
+    @Query(filter: #Predicate<Wallet> { wallet in
+        wallet.active == true
+    }) private var wallets: [Wallet]
+    
+    @Query private var proofs: [Proof]
+    
+    // query events (transactions) if they are visible and in chronological order
+    @Query(filter: #Predicate { event in
+        event.visible == true
+    },
+    sort: [SortDescriptor(\Event.date, order: .reverse)]) private var events: [Event]
+
+    @State var balance: Int?
+
+    @State var showAlert: Bool = false
+    @State var currentAlert: AlertDetail?
+
+    @Binding var urlState: URLState?
+    
+    enum Destination: Identifiable, Hashable {
+        case mint
+        case send
+        case receive(urlString: String?)
+        case melt
+
+        var id: String {
+            switch self {
+            case .mint:
+                return "mint"
+            case .send:
+                return "send"
+            case .receive(let urlString):
+                return "receive_\(urlString ?? "nil")"
+            case .melt:
+                return "melt"
+            }
+        }
+    }
+    
+    @State private var navigationDestination: Destination?
+    
+    static let buttonPadding: CGFloat = 1
+    
+    init(urlState: Binding<URLState?>) {
+        self._urlState = urlState
+    }
+    
+    var activeWallet:Wallet? {
+        set { }
+        get {
+            wallets.first
+        }
+    }
+
     var body: some View {
-        NavigationStack(path:$navigationPath) {
+        NavigationStack {
             VStack {
-                HStack {
-                    Button {
-                        if UIApplication.shared.canOpenURL(betaDisclaimerURL) {
-                            UIApplication.shared.open(betaDisclaimerURL)
-                        }
-                    } label: {
-                        Text("BETA")
-                            .padding(6)
-                            .overlay(
-                            RoundedRectangle(cornerRadius: 4) // Rounded rectangle shape
-                                .stroke(lineWidth: 1) // Thin outline with specified line width
-                        )
-                    }
-                    Spacer()
-                }
-                .padding(EdgeInsets(top: 20, leading: 40, bottom: 0, trailing: 0))
-                Spacer(minLength: 60)
-                HStack(alignment:.bottom) {
-                    Spacer()
-                    Spacer()
-                    Text(vm.balance != nil ? String(vm.balance!) : "...")
+                Spacer(minLength: 20)
+                VStack(alignment: .center) {
+                    Text(balance != nil ? String(balance!) : "...")
                         .monospaced()
                         .bold()
-                        .dynamicTypeSize(.accessibility5)
+                        .font(.system(size: 70))
                     Text("sats")
                         .monospaced()
                         .bold()
-                        .dynamicTypeSize(.accessibility1)
+                        .dynamicTypeSize(.xxxLarge)
                         .padding(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
                         .foregroundStyle(.secondary)
-                        Spacer()
                 }
+                .padding(40)
                 .onAppear(perform: {
-                    print("onAppear called on HStack")
-                    vm.update()
+                    // FIXME: NEEDS TO RESPECT WALLET SELECTION
+                    balance = proofs.filter { $0.state == .valid && $0.wallet == activeWallet }.sum
+
+                    // quick sanity check for uniqueness of C across list of proofs
+                    let uniqueCs = Set(proofs.map( { $0.C }))
+                    if uniqueCs.count != proofs.count {
+                        logger.critical("Wallet seems to contain duplicate proofs.")
+                    }
                 })
                 Spacer()
                 List {
-                    if vm.transactions.isEmpty {
-                        HStack {
-                            Spacer()
-                            Text("No transactions yet")
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                        }
+                    if events.isEmpty {
+                        Text("No transactions yet.")
                     } else {
-                        ForEach(vm.transactions) { transaction in
-                            TransactionListRowView(transaction: transaction)
+                        ForEach(events) { event in
+                            TransactionListRowView(event: event)
                         }
                     }
                 }
-                .id(vm.transactionListRefreshCounter)
-                .padding(EdgeInsets(top: 60, leading: 20, bottom: 20, trailing: 20))
+                .padding(EdgeInsets(top: 0, leading: 20, bottom: 20, trailing: 20))
                 .listStyle(.plain)
-                .refreshable {
-                    vm.checkPending()
-                }
                 Spacer()
                 HStack {
-                    //MARK: - BUTTON "RECEIVE"
+                    // MARK: - BUTTON "RECEIVE"
+
                     Templates.Menu(
                         configuration: {
                             $0.popoverAnchor = .bottom
@@ -89,11 +114,12 @@ struct WalletView: View {
                         }
                     ) {
                         Templates.MenuItem {
-                            navigationPath.append("Receive")
+//                            navigationPath.append("Receive")
+                            navigationDestination = .receive(urlString: nil)
                         } label: { fade in
                             Color.clear.overlay(
                                 HStack {
-                                    Text("Scan or Paste Token")
+                                    Text("Redeem eCash")
                                     Spacer()
                                     Image(systemName: "qrcode")
                                 }
@@ -105,11 +131,12 @@ struct WalletView: View {
                         }
                         .background(Color.black)
                         Templates.MenuItem {
-                            navigationPath.append("Mint")
+//                            navigationPath.append("Mint")
+                            navigationDestination = .mint
                         } label: { fade in
                             Color.clear.overlay(
                                 HStack {
-                                    Text("Create Invoice")
+                                    Text("Mint")
                                     Spacer()
                                     Image(systemName: "bolt.fill")
                                 }
@@ -122,20 +149,17 @@ struct WalletView: View {
                         .background(Color.black)
                     } label: { fade in
                         Text("\(Image(systemName: "arrow.down"))  Receive")
-                           .opacity(fade ? 0.5 : 1) // Apply fading effect based on a condition
-                           .dynamicTypeSize(.xLarge) // Apply dynamic type size for accessibility
-                           .fontWeight(.semibold) // Apply bold font weight
-                           .padding(EdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0)) // Add padding around the text
-                           .frame(maxWidth: .infinity) // Ensure it takes up the maximum width
-                           .background(Color.secondary.opacity(0.3)) // Apply a semi-transparent background
-                           .cornerRadius(10) // Apply rounded corners to the background
-                           .overlay {
-                               RoundedRectangle(cornerRadius: 10)
-                                   .fill(Color.black.opacity(0.3))
-                           }
+                            .opacity(fade ? 0.5 : 1) // Apply fading effect based on a condition
+                            .dynamicTypeSize(.xLarge) // Apply dynamic type size for accessibility
+                            .fontWeight(.semibold) // Apply bold font weight
+                            .padding(EdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0)) // Add padding around the text
+                            .frame(maxWidth: .infinity) // Ensure it takes up the maximum width
+                            .background(Color.secondary.opacity(0.3)) // Apply a semi-transparent background
+                            .cornerRadius(10) // Apply rounded corners to the background
                     }
-                    .disabled(true)
-                    //MARK: - BUTTON "SEND"
+
+                    // MARK: - BUTTON "SEND"
+
                     Templates.Menu(
                         configuration: {
                             $0.popoverAnchor = .bottom
@@ -144,11 +168,12 @@ struct WalletView: View {
                         }
                     ) {
                         Templates.MenuItem {
-                            navigationPath.append("Send")
+//                            navigationPath.append("Send")
+                            navigationDestination = .send
                         } label: { fade in
                             Color.clear.overlay(
                                 HStack {
-                                    Text("Create Cashu Token")
+                                    Text("Send eCash")
                                     Spacer()
                                     Image(systemName: "banknote")
                                 }
@@ -160,11 +185,12 @@ struct WalletView: View {
                         }
                         .background(Color.black)
                         Templates.MenuItem {
-                            navigationPath.append("Melt")
+//                            navigationPath.append("Melt")
+                            navigationDestination = .melt
                         } label: { fade in
                             Color.clear.overlay(
                                 HStack {
-                                    Text("Pay Lightning Invoice")
+                                    Text("Melt")
                                     Spacer()
                                     Image(systemName: "bolt.fill")
                                 }
@@ -177,127 +203,70 @@ struct WalletView: View {
                         .background(Color.black)
                     } label: { fade in
                         Text("\(Image(systemName: "arrow.up"))  Send")
-                           .opacity(fade ? 0.5 : 1) // Apply fading effect based on a condition
-                           .dynamicTypeSize(.xLarge) // Apply dynamic type size for accessibility
-                           .fontWeight(.semibold) // Apply bold font weight
-                           .padding(EdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0))
-                           .frame(maxWidth: .infinity) // Ensure it takes up the maximum width
-                           .background(Color.secondary.opacity(0.3)) // Apply a semi-transparent background
-                           .cornerRadius(10) // Apply rounded corners to the background
+                            .opacity(fade ? 0.5 : 1) // Apply fading effect based on a condition
+                            .dynamicTypeSize(.xLarge) // Apply dynamic type size for accessibility
+                            .fontWeight(.semibold) // Apply bold font weight
+                            .padding(EdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0))
+                            .frame(maxWidth: .infinity) // Ensure it takes up the maximum width
+                            .background(Color.secondary.opacity(0.3)) // Apply a semi-transparent background
+                            .cornerRadius(10) // Apply rounded corners to the background
                     }
                 }
                 .padding(EdgeInsets(top: 20, leading: 20, bottom: 50, trailing: 20))
             }
-            .navigationDestination(for: String.self) { tag in
-                switch tag {
-                case "Send":
-                    SendView(vm: SendViewModel(navPath: navigationPath))
-                case "Receive":
-                    ReceiveView(vm: ReceiveViewModel(navPath: $navigationPath, initialState: urlState))
-                case "Melt":
-                    MeltView(vm: MeltViewModel(navPath: $navigationPath))
-                case "Mint":
-                    MintView(vm: MintViewModel(navPath: $navigationPath))
-                default:
-                    EmptyView()
+            .navigationDestination(item: $navigationDestination) { destination in
+                switch destination {
+                case .mint:
+                    MintView()
+                case .send:
+                    SendView()
+                case .receive (let urlString):
+                    ReceiveView(tokenString: urlString)
+                case .melt:
+                    MeltView()
                 }
             }
-            .onChange(of: navigationTag, { oldValue, newValue in
-                if newValue == "Receive" {
-                    navigationPath.append("Receive")
-                    navigationTag = nil
+            .onChange(of: urlState, { oldValue, newValue in
+                print("url state var did change to \(newValue?.url ?? "nil")")
+                if let newValue {
+                    navigationDestination = .receive(urlString: newValue.url)
+                    urlState = nil
                 }
             })
-            .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
+            .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
+    }
+
+    private func displayAlert(alert: AlertDetail) {
+        currentAlert = alert
+        showAlert = true
     }
 }
 
 struct TransactionListRowView: View {
-    var transaction:Transaction
-    
-    init(transaction: Transaction) {
-        self.transaction = transaction
+    var event: Event
+
+    init(event: Event) {
+        self.event = event
     }
-    
+
     var body: some View {
-        NavigationLink(destination: TransactionDetailView(transaction: transaction)) {
+        NavigationLink(destination: EventDetailView(event: event)) {
             HStack {
-                if transaction.type == .cashu {
-                    Image(systemName: "banknote")
-                    Text(transaction.token ?? "no token")
-                } else if transaction.type == .lightning {
-                    Image(systemName: "bolt.fill")
-                    // hey, it's monospaced. might as well
-                    Text(" " + transaction.invoice!)
-                } else if transaction.type == .drain {
-                    Image(systemName: "arrow.turn.down.right")
-                    Text(transaction.token ?? "Token")
+                Text(event.shortDescription)
+                Spacer()
+                if let amount = event.amount {
+                    Text(amountDisplayString(amount, unit: event.unit))
+                        .foregroundStyle(.secondary)
                 }
-                Spacer(minLength: 10)
-                if transaction.pending {
-                    Image(systemName: "hourglass")
-                }
-                Text(String(transaction.amount))
             }
             .lineLimit(1)
-            .monospaced()
-            .fontWeight(.light)
             .font(.callout)
         }
+        .listRowBackground(Color.clear)
     }
 }
 
 #Preview {
-    WalletView(navigationTag: .constant(nil), urlState: .constant(nil))
-}
-
-@MainActor
-class WalletViewModel:ObservableObject {    
-    var wallet = Wallet.shared
-    
-    @Published var balance:Int?
-    
-    @Published var transactions = [Transaction]()
-    @Published var transactionListRefreshCounter = 0
-    
-    @Published var showAlert:Bool = false
-    var currentAlert:AlertDetail?
-    
-    func update() {
-        Task {
-            try await wallet.updateMints()
-        }
-        
-        balance = wallet.balance()
-        transactions = wallet.database.transactions
-    }
-    
-    func checkPending() {
-        Task {
-            do {
-                for transaction in self.transactions {
-                    if transaction.pending && transaction.type == .cashu && transaction.token != nil {
-                        transaction.pending = try await wallet.checkTokenStatePending(token: transaction.token!)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                            self.transactionListRefreshCounter += 1
-                        }
-                   }
-                }
-            } catch {
-                let detail = String(String(describing: error).prefix(100)) + "..." //ooof
-                displayAlert(alert: AlertDetail(title: "Unable to update",
-                                                description: detail))
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    self.transactionListRefreshCounter += 1
-                }
-            }
-        }
-    }
-    
-    private func displayAlert(alert:AlertDetail) {
-        currentAlert = alert
-        showAlert = true
-    }
-    
+    WalletView(urlState: .constant(nil))
 }

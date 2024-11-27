@@ -1,16 +1,16 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-### Good night, v0.1.0 🌅
+This is the new **macadamia version 0.2.0!**
 
-This will be the last build of the old version of **macadamia**. 
-The beta program has moved to a new account, where development continues!
+It has been completely rebuilt using the newest technologies and APIs of the 🍎 ecosystem to allow for many cool features in the future.
+For now this application is still being developed, please use responsibly.
 
-You can find an amazing new version [here](https://testflight.apple.com/join/RMU6PaRu).
+To move you balance from the old macadamia, use the `Drain Wallet` feature.
 
-This app will no longer support receiving and minting of new ecash and the build will expire within the next 90 days.
+Contributions and feedback are always welcome and can be submitted via GitHub or email (see settings tab). 
 
-Please move any remaining `ecash` to the new **macadamia** using the `Drain Wallet` feature.
+🥜🥜
 
 As always, thanks for testing **macadamia**!
 

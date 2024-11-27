@@ -1,14 +1,7 @@
-//
-//  TokenTextField.swift
-//  AnimatedQR
-//
-//  Created by zm on 08.04.24.
-//
-
-import UIKit
 import SwiftUI
+import UIKit
 
-//TODO: This needs to adjust dynamically to system font size and set its own idealHeight
+// TODO: This needs to adjust dynamically to system font size and set its own idealHeight
 // UIKit component
 class TokenTextField: UIView {
     private var textView: UITextView = {
@@ -26,26 +19,27 @@ class TokenTextField: UIView {
         textView.isSelectable = false
         return textView
     }()
-    
+
     init() {
         super.init(frame: .zero)
         setupViews()
     }
-    
-    required init?(coder: NSCoder) {
+
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     private func setupViews() {
         addSubview(textView)
         NSLayoutConstraint.activate([
             textView.topAnchor.constraint(equalTo: topAnchor),
             textView.bottomAnchor.constraint(equalTo: bottomAnchor),
             textView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            textView.trailingAnchor.constraint(equalTo: trailingAnchor)
+            textView.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
     }
-    
+
     var text: String? {
         get { textView.text }
         set { textView.text = newValue }
@@ -55,11 +49,11 @@ class TokenTextField: UIView {
 struct TokenText: UIViewRepresentable {
     var text: String
 
-    func makeUIView(context: Context) -> TokenTextField {
+    func makeUIView(context _: Context) -> TokenTextField {
         TokenTextField()
     }
 
-    func updateUIView(_ uiView: TokenTextField, context: Context) {
+    func updateUIView(_ uiView: TokenTextField, context _: Context) {
         uiView.text = text
     }
 }

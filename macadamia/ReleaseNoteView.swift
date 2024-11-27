@@ -1,18 +1,11 @@
-//
-//  ReleaseNoteView.swift
-//  macadamia
-//
-//  Created by zm on 08.04.24.
-//
-
+import CryptoKit
+import MarkdownUI
+import secp256k1
 import SwiftUI
 import WebKit
-import MarkdownUI
-import CryptoKit
-import secp256k1
 
-struct ReleaseNote {
-    ///Loads the release notes from file
+enum ReleaseNote {
+    /// Loads the release notes from file
     static func stringFromFile() -> String {
         guard let filePath = Bundle.main.path(forResource: "release-notes", ofType: "md") else {
             return "Markdown file not found."
@@ -24,8 +17,8 @@ struct ReleaseNote {
             return "Error reading markdown file: \(error)"
         }
     }
-    
-    ///Provides the first 16 characters of a hash over the bundle's release notes
+
+    /// Provides the first 16 characters of a hash over the bundle's release notes
     static func hashString() -> String? {
         guard let input = stringFromFile().data(using: .utf8) else {
             return nil
@@ -35,7 +28,7 @@ struct ReleaseNote {
 }
 
 struct ReleaseNoteView: View {
-    var mdWithSubstitutions:String {
+    var mdWithSubstitutions: String {
         // Fetch version and build numbers
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown Version"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown Build"
@@ -45,7 +38,7 @@ struct ReleaseNoteView: View {
         md = md.replacingOccurrences(of: "{{BUILD}}", with: build)
         return md
     }
-    
+
     var body: some View {
         ScrollView {
             Markdown(mdWithSubstitutions)

@@ -1,62 +1,63 @@
-//
-//  SettingView.swift
-//  macadamia
-//
-//  Created by zeugmaster on 13.12.23.
-//
-
 import SwiftUI
 import UIKit
 
 struct SettingsView: View {
-    
     let sourceRepoURL = URL(string: "https://github.com/zeugmaster/macadamia")!
     let mailURL = URL(string: "mailto:contact@macadamia.cash")!
     
-    var appVersion:String {
+    @State private var hiddenMenuShowing: Bool = false
+    @State private var showReleaseNotes: Bool = false
+
+    var appVersion: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown"
         return "Version \(version) (\(build))"
     }
-    
+
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    NavigationLink(destination: MintManagerView()) { Text("Mints") }
                     NavigationLink(destination: MnemonicView()) { Text("Show Seed Phrase") }
                     NavigationLink(destination: RestoreView()) { Text("Restore") }
                     NavigationLink(destination: DrainView()) { Text("Drain Wallet") }
+                    if hiddenMenuShowing {
+                        NavigationLink(destination: MintListView()) { Text("Proof Database") }
+                        NavigationLink(destination: WalletInfoListView()) { Text("Wallet Info") }
+                    }
                 } header: {
                     Text("cashu")
                 }
-                Section {
-                    NavigationLink(destination: RelayManagerView()) { Text("Relays") }
-                    } header: {
-                        Text("nostr")
-                    }
+//                Section {
+//                    NavigationLink(destination: RelayManagerView()) { Text("Relays") }
+//                } header: {
+//                    Text("nostr")
+//                }
                 Section {
                     NavigationLink("About this Release", destination: ReleaseNoteView())
-                    HStack {
-                        Text("View source on Github")
-                        Spacer()
-                        Image(systemName: "rectangle.portrait.and.arrow.right")
-                            .foregroundStyle(.secondary)
-                    }
-                    .onTapGesture {
+                    
+                    Button {
                         if UIApplication.shared.canOpenURL(sourceRepoURL) {
                             UIApplication.shared.open(sourceRepoURL)
                         }
+                    } label: {
+                        HStack {
+                            Text("View source on Github")
+                            Spacer()
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                                .foregroundStyle(.secondary)
+                        }
                     }
-                    HStack {
-                        Text("Contact the developer")
-                        Spacer()
-                        Image(systemName: "envelope")
-                            .foregroundStyle(.secondary)
-                    }
-                    .onTapGesture {
+                    Button {
                         if UIApplication.shared.canOpenURL(mailURL) {
                             UIApplication.shared.open(mailURL)
+                        }
+                    } label: {
+                        HStack {
+                            Text("Contact the developer")
+                            Spacer()
+                            Image(systemName: "envelope")
+                                .foregroundStyle(.secondary)
                         }
                     }
                 } header: {
@@ -70,17 +71,19 @@ struct SettingsView: View {
                     .font(.system(size: 16)) // Adjust the size as needed
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding()
+                    .onTapGesture(count: 3, perform: {
+                        withAnimation {
+                            hiddenMenuShowing.toggle()
+                        }
+                    })
                 }
                 .toolbar(.visible, for: .tabBar)
             }
             .navigationTitle("Settings")
         }
-        
     }
 }
-
 
 #Preview {
     SettingsView()
 }
-

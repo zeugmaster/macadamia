@@ -1,109 +1,88 @@
-//
-//  SendView.swift
-//  macadamia
-//
-//  Created by zeugmaster on 04.01.24.
-//
-
+import CashuSwift
+import SwiftData
 import SwiftUI
 
 struct SendView: View {
+    @Environment(\.modelContext) private var modelContext
     
-    @ObservedObject var vm:SendViewModel
-    @State private var isCopied = false
+    @Query(filter: #Predicate<Wallet> { wallet in
+        wallet.active == true
+    }) private var wallets: [Wallet]
     
-    @FocusState var amountFieldInFocus:Bool
+    @Query private var allProofs:[Proof]
+//    @Environment(\.dismiss) private var dismiss // not actually needed because this view does not self dismiss
     
-    init(vm:SendViewModel) {
-        self.vm = vm
+    var activeWallet: Wallet? {
+        wallets.first
     }
+
+    @State var tokenString: String?
+
+    @State var tokenMemo = ""
     
+    @State private var selectedMint:Mint?
+    
+    @State private var numberString = ""
+    @State private var selectedMintBalance = 0
+
+    @State private var loading = false
+
+    @State private var showAlert: Bool = false
+    @State private var currentAlert: AlertDetail?
+
+    @FocusState var amountFieldInFocus: Bool
+
+    init(token: String? = nil) {
+        tokenString = token
+    }
+
     var body: some View {
         Form {
             Section {
                 HStack {
-                    TextField("enter amount", text: $vm.numberString)
+                    TextField("enter amount", text: $numberString)
                         .keyboardType(.numberPad)
                         .monospaced()
                         .focused($amountFieldInFocus)
                     Text("sats")
                 }
-                Picker("Mint", selection:$vm.selectedMintString) {
-                    ForEach(vm.mintList, id: \.self) {
-                        Text($0)
+                // TODO: CHECK FOR EMPTY MINT LIST
+                MintPicker(selectedMint: $selectedMint)
+                    .onChange(of: selectedMint) { _, _ in
+                    updateBalance()
                     }
-                }
-                .onAppear(perform: {
-                    vm.fetchMintInfo()
-                })
-                .onChange(of: vm.selectedMintString) { oldValue, newValue in
-                    vm.updateBalance()
-                }
                 HStack {
                     Text("Balance: ")
                     Spacer()
-                    Text(String(vm.selectedMintBalance))
+                    Text(String(selectedMintBalance))
                         .monospaced()
                     Text("sats")
                 }
                 .foregroundStyle(.secondary)
             }
-            .disabled(vm.token != nil)
+            .disabled(tokenString != nil)
             Section {
-                TextField("enter note", text: $vm.tokenMemo)
+                TextField("enter note", text: $tokenMemo)
             } footer: {
                 Text("Tap to add a note to the recipient.")
             }
-            .disabled(vm.token != nil)
-            
-            if vm.token != nil {
-                Section {
-                    TokenText(text: vm.token!)
-                        .frame(idealHeight: 70)
-                    Button {
-                        copyToClipboard()
-                    } label: {
-                        HStack {
-                            if isCopied {
-                                Text("Copied!")
-                                        .transition(.opacity)
-                                } else {
-                                    Text("Copy to clipboard")
-                                        .transition(.opacity)
-                                }
-                            Spacer()
-                            Image(systemName: "list.clipboard")
-                        }
-                    }
-                    
-                    Button {
-                        vm.showingShareSheet = true
-                    } label: {
-                        HStack {
-                            Text("Share")
-                            Spacer()
-                            Image(systemName: "square.and.arrow.up")
-                        }
-                    }
-                }
-                Section {
-                    QRView(string: vm.token!)
-                } header: {
-                    Text("Share via QR code")
-                }
+            .disabled(tokenString != nil)
+
+            if let tokenString {
+                TokenShareView(tokenString: tokenString)
             }
         }
         .navigationTitle("Send")
         .navigationBarTitleDisplayMode(.inline)
-        .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         .onAppear(perform: {
             amountFieldInFocus = true
         })
-        
+
         Spacer()
-        
+
         Button(action: {
-            vm.generateToken()
+            generateToken()
         }, label: {
             Text("Generate Token")
                 .frame(maxWidth: .infinity)
@@ -114,100 +93,169 @@ struct SendView: View {
         .buttonStyle(.bordered)
         .padding()
         .toolbar(.hidden, for: .tabBar)
-        .disabled(vm.numberString.isEmpty || vm.amount == 0 || vm.token != nil)
-        .sheet(isPresented: $vm.showingShareSheet, content: {
-            ShareSheet(items: [vm.token ?? "No token provided"])
-        })
-
+        .disabled(numberString.isEmpty || amount == 0 || tokenString != nil)
+        
     }
-    
-    func copyToClipboard() {
-        vm.copyToClipboard()
-        withAnimation {
-            isCopied = true
-        }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            withAnimation {
-                isCopied = false
-            }
-        }
-    }
-    
-}
+    // MARK: - LOGIC
 
-#Preview {
-    SendView(vm: SendViewModel())
-}
+    var proofsOfSelectedMint:[Proof] {
+        allProofs.filter { $0.mint == selectedMint }
+    }
 
-@MainActor
-class SendViewModel: ObservableObject {
     
-    @Published var recipientProfile:Profile?
-    
-    @Published var navPath:NavigationPath?
-    
-    @Published var showingShareSheet = false
-    @Published var tokenMemo = ""
-    
-    @Published var numberString: String = ""
-    @Published var mintList:[String] = [""]
-    @Published var selectedMintString:String = ""
-    @Published var selectedMintBalance = 0
-    
-    @Published var loading = false
-    @Published var succes = false
-    
-    @Published var showAlert:Bool = false
-    var currentAlert:AlertDetail?
-    var wallet = Wallet.shared
-    
-    @Published var token:String?
-    
-    init(navPath:NavigationPath? = nil) {
-        self.navPath = navPath
-    }
-    
-    func fetchMintInfo() {
-        mintList = []
-        for mint in wallet.database.mints {
-            let readable = mint.url.absoluteString.dropFirst(8)
-            mintList.append(String(readable))
-        }
-        selectedMintString = mintList[0]
-    }
-    
+
     func updateBalance() {
-        if let mint = wallet.database.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) {
-            selectedMintBalance = wallet.balance(mint: mint)
+        guard !proofsOfSelectedMint.isEmpty else {
+            logger.warning("could not update balances because proofs of selectedMint is empty.")
+            return
         }
+        selectedMintBalance = proofsOfSelectedMint.filter({ $0.state == .valid }).sum
     }
-    
+
     var amount: Int {
         return Int(numberString) ?? 0
     }
-    
+
     func generateToken() {
-        print(selectedMintString)
-        guard let mint = wallet.database.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) }) else {
-            displayAlert(alert: AlertDetail(title: "Invalid Mint"))
+        guard let activeWallet,
+              let selectedMint
+        else {
+            logger.error("""
+                         unable to generate Token because one or more of the following variables are nil:
+                         selectedMInt: \(selectedMint.debugDescription)
+                         activeWallet: \(activeWallet.debugDescription)
+                         """)
             return
         }
+
         Task {
             do {
-                self.token = try await wallet.sendTokens(from:mint, amount: amount, memo:tokenMemo)
+                let version: CashuSwift.TokenVersion = .V3
+                
+                // using the .pick function to preselect from all proofs of this mint
+                // TODO: check for correct unit
+                let selectedUnit: Unit = .sat
+                
+                // let recipientSwapFee =
+                
+                guard let preSelect = selectedMint.select(allProofs:allProofs,
+                                                          amount: amount,
+                                                          unit: selectedUnit) else {
+                    displayAlert(alert: AlertDetail(title: "Could not select proofs to send."))
+                    logger.warning("no proofs could be selected to generate a token with this amount.")
+                    return
+                }
+                
+                // make input proofs .pending
+                preSelect.selected.forEach({ $0.state = .pending })
+                
+                if amount == preSelect.selected.sum {
+                    logger.debug("Token amount and selected proof sum are an exact match, no swap necessary...")
+                    
+                    // construct token
+                    
+                    let proofContainer = CashuSwift.ProofContainer(mint: selectedMint.url.absoluteString,
+                                                                   proofs: preSelect.selected.map({ CashuSwift.Proof($0) }))
+                    let token = CashuSwift.Token(token: [proofContainer], memo: tokenMemo, unit: selectedUnit.rawValue)
+                    try await MainActor.run {
+                        try tokenString = token.serialize(version)
+                        let event = Event.sendEvent(unit: selectedUnit,
+                                                    shortDescription: "Send",
+                                                    wallet: activeWallet,
+                                                    amount: amount,
+                                                    longDescription: "",
+                                                    proofs: preSelect.selected,
+                                                    memo: tokenMemo,
+                                                    tokens: [TokenInfo(token: tokenString ?? "nil",
+                                                                       mint: selectedMint.url.absoluteString,
+                                                                       amount: amount)])
+                        modelContext.insert(event)
+                        try modelContext.save()
+                    }
+                    
+                } else if preSelect.selected.sum > amount {
+                    logger.debug("Token amount and selected proof are not a match, swapping...")
+                    
+                    // swap to amount specified by user
+                    let (sendProofs, changeProofs) = try await CashuSwift.swap(mint: selectedMint,
+                                                                               proofs: preSelect.selected,
+                                                                               amount: amount,
+                                                                               seed: activeWallet.seed)
+                    
+                    // add return tokens to db, sendProofs: pending, changeProofs valid
+                    let usedKeyset = selectedMint.keysets.first(where: { $0.keysetID == sendProofs.first?.keysetID })
+                    
+                    // if the swap succeeds the input proofs need to be marked as spent
+                    preSelect.selected.forEach({ $0.state = .spent })
+                    
+                    let feeRate = usedKeyset?.inputFeePPK ?? 0
+                    
+                    try await MainActor.run {
+                        let internalSendProofs = sendProofs.map({ Proof($0,
+                                                                        unit: selectedUnit,
+                                                                        inputFeePPK: feeRate,
+                                                                        state: .pending,
+                                                                        mint: selectedMint,
+                                                                        wallet: activeWallet) })
+                        
+                        internalSendProofs.forEach({ modelContext.insert($0) })
+                        activeWallet.proofs.append(contentsOf: internalSendProofs)
+                        
+                        let internalChangeProofs = changeProofs.map({ Proof($0,
+                                                                            unit: selectedUnit,
+                                                                            inputFeePPK: feeRate,
+                                                                            state: .valid,
+                                                                            mint: selectedMint,
+                                                                            wallet: activeWallet) })
+                        
+                        internalChangeProofs.forEach({ modelContext.insert($0) })
+                        activeWallet.proofs.append(contentsOf: internalChangeProofs)
+                        
+                        selectedMint.proofs?.append(contentsOf: internalSendProofs + internalChangeProofs)
+                        
+                        if let usedKeyset {
+                            selectedMint.increaseDerivationCounterForKeysetWithID(usedKeyset.keysetID,
+                                                                                  by: internalSendProofs.count + internalChangeProofs.count)
+                        } else {
+                            logger.error("Could not determine applied keyset! This will lead to issues with det sec counter and fee rates.")
+                        }
+                        
+                        try modelContext.save()
+                        // construct token with sendProofs
+                        let proofContainer = CashuSwift.ProofContainer(mint: selectedMint.url.absoluteString, proofs: sendProofs.map({ CashuSwift.Proof($0) }))
+                        let token = CashuSwift.Token(token: [proofContainer], memo: tokenMemo, unit: selectedUnit.rawValue)
+                        tokenString = try token.serialize(version)
+                        // log event
+                        let event = Event.sendEvent(unit: selectedUnit,
+                                                    shortDescription: "Send",
+                                                    wallet: activeWallet,
+                                                    amount: (amount),
+                                                    longDescription: "",
+                                                    proofs: internalSendProofs,
+                                                    memo: tokenMemo,
+                                                    tokens: [TokenInfo(token: tokenString ?? "nil",
+                                                                       mint: selectedMint.url.absoluteString,
+                                                                       amount: internalSendProofs.sum)])
+                        modelContext.insert(event)
+                        try modelContext.save()
+                        logger.info("successfully created sendable token and saved change to db.")
+                    }
+                } else {
+                    logger.critical("amount must not exceed preselected proof sum. .pick() should have returned nil.")
+                }
             } catch {
-                displayAlert(alert: AlertDetail(title: "Error", description: String(describing: error)))
+                displayAlert(alert: AlertDetail(error))
             }
         }
     }
-    
-    func copyToClipboard() {
-        UIPasteboard.general.string = token
-    }
-    
-    private func displayAlert(alert:AlertDetail) {
+
+    private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
     }
+}
+
+#Preview {
+    SendView()
 }

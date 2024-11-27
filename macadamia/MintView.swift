@@ -1,45 +1,88 @@
+import CashuSwift
+import SwiftData
 import SwiftUI
 
 struct MintView: View {
-    @ObservedObject var vm:MintViewModel
-    @State private var isCopied = false
-    @FocusState var amountFieldInFocus:Bool
+        
+    @State var quote: CashuSwift.Bolt11.MintQuote?
+    @State var pendingMintEvent: Event?
+
+    @Environment(\.modelContext) private var modelContext
+    @Query(filter: #Predicate<Wallet> { wallet in
+        wallet.active == true
+    }) private var wallets: [Wallet]
+
+    @Environment(\.dismiss) private var dismiss
     
-    init(vm:MintViewModel) {
-        self.vm = vm
+    var activeWallet: Wallet? {
+        wallets.first
     }
-    
+
+    @State var amountString = ""
+
+    @State var selectedMint:Mint?
+
+    @State var loadingInvoice = false
+
+    @State var minting = false
+    @State var mintSuccess = false
+
+    @State var showAlert: Bool = false
+    @State var currentAlert: AlertDetail?
+
+    @State private var isCopied = false
+    @FocusState var amountFieldInFocus: Bool
+
+    init(quote: CashuSwift.Bolt11.MintQuote? = nil,
+         pendingMintEvent: Event? = nil) {
+        _quote = State(initialValue: quote)
+        _pendingMintEvent = State(initialValue: pendingMintEvent)
+        
+        if let mint = pendingMintEvent?.mints?.first {
+            _selectedMint = State(initialValue: mint)
+        }
+    }
+
     var body: some View {
         Form {
             Section {
                 HStack {
-                    TextField("enter amount", text: $vm.amountString)
-                        .keyboardType(.numberPad)
-                        .monospaced()
-                        .focused($amountFieldInFocus)
-                        .onSubmit {
-                            amountFieldInFocus = false
-                        }
-                        .onAppear(perform: {
-                            amountFieldInFocus = true
-                        })
-                        .disabled(vm.quote != nil)
-                    Text("sats")
-                        .monospaced()
-                }
-                if !vm.mintList.isEmpty && !vm.selectedMintString.isEmpty {
-                    Picker("Mint", selection: $vm.selectedMintString) {
-                        ForEach(vm.mintList, id: \.self) { mint in
-                            Text(mint)
-                        }
+                    if let quote, let requestDetail = quote.requestDetail {
+                        Text(String(requestDetail.amount))
+                            .monospaced()
+                        Text("sats")
+                            .monospaced()
+                    } else {
+                        TextField("enter amount", text: $amountString)
+                            .keyboardType(.numberPad)
+                            .monospaced()
+                            .focused($amountFieldInFocus)
+                            .onSubmit {
+                                amountFieldInFocus = false
+                            }
+                            .onAppear(perform: {
+                                amountFieldInFocus = true
+                            })
+                            .disabled(quote != nil)
+                        Text("sats")
+                            .monospaced()
                     }
+                }
+                if let mint = pendingMintEvent?.mints?.first {
+                    Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
                 } else {
-                    Text("No mints available")
+                    MintPicker(selectedMint: $selectedMint)
                 }
             }
-            if vm.quote != nil {
+            if let quote {
                 Section {
-                    StaticQR(qrCode: generateQRCode(from: vm.quote!.pr))
+                    HStack {
+                        Text("Expires at: ")
+                        Spacer()
+                        Text(Date(timeIntervalSince1970: TimeInterval(quote.expiry)).formatted())
+                    }
+                    .foregroundStyle(.secondary)
+                    StaticQR(qrCode: generateQRCode(from: quote.request))
                         .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
                     Button {
                         copyToClipboard()
@@ -47,17 +90,17 @@ struct MintView: View {
                         HStack {
                             if isCopied {
                                 Text("Copied!")
-                                        .transition(.opacity)
-                                } else {
-                                    Text("Copy to clipboard")
-                                        .transition(.opacity)
-                                }
+                                    .transition(.opacity)
+                            } else {
+                                Text("Copy to clipboard")
+                                    .transition(.opacity)
+                            }
                             Spacer()
                             Image(systemName: "list.clipboard")
                         }
                     }
                     Button {
-                        vm.reset()
+                        reset()
                     } label: {
                         HStack {
                             Text("Reset")
@@ -70,18 +113,15 @@ struct MintView: View {
         }
         .navigationTitle("Mint")
         .toolbar(.hidden, for: .tabBar)
-        .alertView(isPresented: $vm.showAlert, currentAlert: vm.currentAlert)
-        .onAppear(perform: {
-            vm.fetchMintList()
-        })
-        
-        if vm.quote == nil {
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+
+        if quote == nil {
             Button(action: {
-                vm.requestInvoice()
+                getQuote()
                 amountFieldInFocus = false
             }, label: {
                 HStack {
-                    if !vm.loadingInvoice {
+                    if !loadingInvoice {
                         Text("Request Invoice")
                     } else {
                         ProgressView()
@@ -97,18 +137,18 @@ struct MintView: View {
             })
             .buttonStyle(.bordered)
             .padding()
-            .disabled(vm.amountString.isEmpty || vm.amount == 0 || vm.loadingInvoice)
+            .disabled(amountString.isEmpty || amount == 0 || loadingInvoice)
         } else {
             Button(action: {
-                vm.requestMint()
+                requestMint()
             }, label: {
                 HStack {
-                    if vm.minting {
+                    if minting {
                         ProgressView()
                         Spacer()
                             .frame(width: 10)
                         Text("Minting Tokens...")
-                    } else if vm.mintSuccess {
+                    } else if mintSuccess {
                         Text("Success!")
                             .foregroundStyle(.green)
                     } else {
@@ -122,12 +162,14 @@ struct MintView: View {
             })
             .buttonStyle(.bordered)
             .padding()
-            .disabled(vm.minting || vm.mintSuccess)
+            .disabled(minting || mintSuccess)
         }
     }
+
+    // MARK: - LOGIC
     
     func copyToClipboard() {
-        vm.copyInvoice()
+        UIPasteboard.general.string = quote?.request
         withAnimation {
             isCopied = true
         }
@@ -138,105 +180,136 @@ struct MintView: View {
             }
         }
     }
-}
-//
-//#Preview {
-//    MintView(vm: MintViewModel())
-//}
 
-@MainActor
-class MintViewModel:ObservableObject {
-    
-    @Published var amountString = ""
-    @Published var mintList = [""]
-    @Published var selectedMintString = ""
-    
-    @Published var quote:QuoteRequestResponse?
-    @Published var loadingInvoice = false
-    
-    @Published var minting = false
-    @Published var mintSuccess = false
-    
-    @Published var showAlert:Bool = false
-    var currentAlert:AlertDetail?
-    var wallet = Wallet.shared
-    
-    private var _navPath: Binding<NavigationPath>  // Changed to non-optional
-        
-    init(navPath: Binding<NavigationPath>) {
-        self._navPath = navPath
-    }
-    
-    var navPath: NavigationPath {
-        get { _navPath.wrappedValue }
-        set { _navPath.wrappedValue = newValue }
-    }
-    
-    func fetchMintList() {
-        mintList = wallet.database.mints.map { mint in
-            String(mint.url.absoluteString.dropFirst(8))
-        }
-        if let initial = mintList.first {
-            selectedMintString = initial
-        }
-    }
-    
-    var selectedMint:Mint {
-        wallet.database.mints.first(where: { $0.url.absoluteString.contains(selectedMintString) })!
-    }
-    
     var amount: Int {
         return Int(amountString) ?? 0
     }
     
-    func copyInvoice() {
-        UIPasteboard.general.string = quote?.pr
-    }
-    
-    func requestInvoice() {
+    // getQuote can only be called when UI is not populated
+    func getQuote() { // TODO: check continually whether the quote was paid
+        
+        guard let selectedMint, let activeWallet else {
+            print("could not request quote: selectedMint or activeWallet are nil")
+            logger.error("""
+                         unable to request quote because one or more of the following variables are nil:
+                         selectedMInt: \(selectedMint.debugDescription)
+                         activeWallet: \(activeWallet.debugDescription)
+                         """)
+            return
+        }
+        
         loadingInvoice = true
+        
         Task {
             do {
-                quote = try await wallet.getQuote(from: selectedMint, for: amount)
+                let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
+                                                                      amount: self.amount)
+                quote = try await CashuSwift.getQuote(mint: selectedMint,
+                                                      quoteRequest: quoteRequest) as? CashuSwift.Bolt11.MintQuote
+                
                 loadingInvoice = false
+                
+                logger.info("Successfully requested mint quote from mint.")
+
+                let event = Event.pendingMintEvent(unit: Unit(quote?.requestDetail?.unit) ?? .other,
+                                                   shortDescription: "Mint Quote",
+                                                   wallet: activeWallet,
+                                                   quote: quote!, // FIXME: SAFE UNWRAPPING
+                                                   amount: quote?.requestDetail?.amount ?? 0,
+                                                   expiration: Date(timeIntervalSince1970: TimeInterval(quote!.expiry)),
+                                                   mints: [selectedMint])
+                // -- main thread
+                try await MainActor.run {
+                    pendingMintEvent = event
+                    modelContext.insert(event)
+                    try modelContext.save()
+                }
+                
             } catch {
-                displayAlert(alert: AlertDetail(title: "Error",
-                                               description: String(describing: error)))
+                displayAlert(alert: AlertDetail(error))
+                logger.error("could not get quote from mint \(selectedMint.url.absoluteString) because of error \(error)")
                 loadingInvoice = false
             }
         }
     }
-    
+
     func requestMint() {
-        guard let quote = quote else {
+        guard let quote,        // TODO: improve handling
+              let activeWallet,
+              let selectedMint else {
+            logger.error("""
+                         unable to request melt because one or more of the following variables are nil:
+                         quote: \(quote.debugDescription)
+                         selectedMInt: \(selectedMint.debugDescription)
+                         activeWallet: \(activeWallet.debugDescription)
+                         """)
             return
         }
+        
         minting = true
         Task {
             do {
-                try await wallet.requestMint(from: selectedMint, for: quote, with: amount)
-                minting = false
-                mintSuccess = true
+                logger.debug("requesting mint for quote with id \(quote.quote)...")
+                                
+                let proofs: [Proof] = try await CashuSwift.issue(for: quote, on: selectedMint,
+                                                                 seed: activeWallet.seed).map { p in
+                    let unit = Unit(quote.requestDetail?.unit ?? "other") ?? .other
+                    return Proof(p,
+                                 unit: unit,
+                                 inputFeePPK: 0,
+                                 state: .valid,
+                                 mint: selectedMint,
+                                 wallet: activeWallet)
+                }
+                
+                // replace keyset to persist derivation counter
+                selectedMint.increaseDerivationCounterForKeysetWithID(proofs.first!.keysetID,
+                                                                      by: proofs.count)
+                let keysetFee = selectedMint.keysets.first(where: { $0.keysetID == proofs.first?.keysetID })?.inputFeePPK ?? 0
+                proofs.forEach({ $0.inputFeePPK = keysetFee })
+                
+                // FIXME: for some reason SwiftData does not manage the inverse relationship here, so we have to do it ourselves
+                selectedMint.proofs?.append(contentsOf: proofs)
+                activeWallet.proofs.append(contentsOf: proofs)
+                
+                try await MainActor.run {
+                    proofs.forEach { modelContext.insert($0) }
+                    let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
+                                                shortDescription: "Mint",
+                                                wallet: activeWallet,
+                                                quote: quote,
+                                                amount: quote.requestDetail?.amount ?? 0)
+                    modelContext.insert(event)
+                    if let pendingMintEvent { pendingMintEvent.visible = false }
+                    try modelContext.save()
+                    logger.debug("Added \(proofs.count) proofs to the db.")
+                    minting = false
+                    mintSuccess = true
+                }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    if !self.navPath.isEmpty { self.navPath.removeLast() }
+                    dismiss()
                 }
             } catch {
-                displayAlert(alert: AlertDetail(title: "Error",
-                                                description: String(describing: error)))
+                displayAlert(alert: AlertDetail(error))
+                logger.error("Minting was not successful with mint \(selectedMint.url.absoluteString) due to error \(error)")
                 minting = false
             }
         }
     }
-    
-    private func displayAlert(alert:AlertDetail) {
+
+    func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
     }
-    
+
     func reset() {
         quote = nil
         amountString = ""
         minting = false
         mintSuccess = false
     }
+}
+
+#Preview {
+    MintView()
 }

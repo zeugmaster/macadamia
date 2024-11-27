@@ -11,7 +11,6 @@ macadamia support standard cashu operations such as:
 - __Melting__ tokens (using them to pay a Lightning Network invoice) 
 - Restoring your wallet balance using a 12 word mnemonic __seed phrase backup__
 
-Additionally, macadamia supports sending and receiving/redeeming tokens sent over the __Nostr__ protocol!
 
 You can test it using [Testflight](https://testflight.apple.com/join/FteRYrAZ)
 
