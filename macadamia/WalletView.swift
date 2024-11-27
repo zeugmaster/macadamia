@@ -134,7 +134,7 @@ struct WalletView: View {
                                    .fill(Color.black.opacity(0.3))
                            }
                     }
-                    .disabled(false)
+                    .disabled(true)
                     //MARK: - BUTTON "SEND"
                     Templates.Menu(
                         configuration: {
