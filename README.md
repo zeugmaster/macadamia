@@ -12,7 +12,7 @@ macadamia support standard cashu operations such as:
 - Restoring your wallet balance using a 12 word mnemonic __seed phrase backup__
 
 
-You can test it using [Testflight](https://testflight.apple.com/join/FteRYrAZ)
+You can test it using [Testflight](https://testflight.apple.com/join/RMU6PaRu)
 
 Come join the discussion in the [Telegram channel](https://t.me/macadamiawallet)
 
