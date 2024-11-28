@@ -3,24 +3,41 @@ import SwiftUI
 import URUI
 
 struct QRScanner: View {
-    @ObservedObject var viewModel: QRScannerViewModel
+    let codesPublisher: URCodesPublisher
+
+    @StateObject var videoSession: URVideoSession
+    @StateObject var scanState: URScanState
+
+    @State private var estimatedPercentComplete = 0.0
+    @State private var fragmentStates = [URFragmentBar.FragmentState]()
+    @State private var result: URScanResult?
+    @State private var isScanning = true
+    @State private var hrRes: String?
+
+    var onResult: ((String) -> Void)
+
+    init(onResult: @escaping ((String) -> Void)) {
+        self.onResult = onResult
+        let codesPublisher = URCodesPublisher()
+        self.codesPublisher = codesPublisher
+        _videoSession = StateObject(wrappedValue: URVideoSession(codesPublisher: codesPublisher))
+        _scanState = StateObject(wrappedValue: URScanState(codesPublisher: codesPublisher))
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            if viewModel.isScanning {
-                URVideo(videoSession: viewModel.videoSession)
+            if isScanning {
+                URVideo(videoSession: videoSession)
             }
             VStack {
                 Spacer()
                 HStack {
-                    if viewModel.estimatedPercentComplete > 0 {
-                        Text("\(Int(viewModel.estimatedPercentComplete * 100))%")
+                    if estimatedPercentComplete > 0 {
+                        Text("\(Int(estimatedPercentComplete * 100))%")
                             .padding()
                     }
                     Spacer()
-                    Button {
-                        viewModel.restart()
-                    } label: {
+                    Button(action: restart) {
                         Image(systemName: "arrow.counterclockwise")
                     }
                     .padding()
@@ -29,74 +46,40 @@ struct QRScanner: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 6.0))
-    }
-}
-
-@MainActor
-class QRScannerViewModel: ObservableObject {
-    let codesPublisher = URCodesPublisher()
-    @Published var videoSession: URVideoSession
-    @Published var scanState: URScanState
-    @Published var estimatedPercentComplete = 0.0
-    @Published var fragmentStates = [URFragmentBar.FragmentState]()
-    @Published var result: URScanResult?
-    @Published var isScanning = true
-    @Published var hrRes: String?
-
-    var onResult: ((String) -> Void)?
-
-    init() {
-        videoSession = URVideoSession(codesPublisher: codesPublisher)
-        scanState = URScanState(codesPublisher: codesPublisher)
-        subscribeToScanState()
+        .onReceive(scanState.resultPublisher, perform: handleScanResult)
     }
 
-    func subscribeToScanState() {
-        scanState.resultPublisher.sink { [weak self] result in
-            self?.handleScanResult(result: result)
-        }.store(in: &cancellables)
-    }
-
-    func handleScanResult(result: URScanResult) {
-        // Implement the result handling logic, moving it from the QRScanner view
-
+    private func handleScanResult(result: URScanResult) {
         switch result {
         case .failure:
-            print("failure")
+            print("Failure in scanning")
             estimatedPercentComplete = 0
-        case let .other(result):
-            if let onResult = onResult, result.contains("cashu") {
-                onResult(result)
-            }
+        case let .other(resultString):
+            onResult(resultString)
             isScanning = false
             estimatedPercentComplete = 1
         case let .progress(progress):
-            print(progress)
+            print("Scanning progress: \(progress)")
             estimatedPercentComplete = progress.estimatedPercentComplete
         case .reject:
-            print("rejected")
+            print("Scan rejected")
         case let .ur(ur):
-            if case let .bytes(urBytes) = ur.cbor {
-                if let string = String(data: urBytes, encoding: .utf8),
-                   let onResult = onResult
-                {
-                    onResult(string)
-                    isScanning = false
-                    estimatedPercentComplete = 1
-                } else {
-                    restart()
-                }
+            if case let .bytes(urBytes) = ur.cbor,
+               let resultString = String(data: urBytes, encoding: .utf8) {
+                onResult(resultString)
+                isScanning = false
+                estimatedPercentComplete = 1
+            } else {
+                restart()
             }
         }
     }
 
-    func restart() {
+    private func restart() {
         result = nil
         estimatedPercentComplete = 0
         fragmentStates = [.off]
         isScanning = true
         scanState.restart()
     }
-
-    private var cancellables = Set<AnyCancellable>()
 }

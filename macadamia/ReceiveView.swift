@@ -14,7 +14,7 @@ struct ReceiveView: View {
         wallets.first
     }
 
-    @ObservedObject var qrsVM = QRScannerViewModel()
+//    @ObservedObject var qrsVM = QRScannerViewModel()
 
     @State var tokenString: String?
     @State var token: CashuSwift.Token?
@@ -30,6 +30,7 @@ struct ReceiveView: View {
 
     init(tokenString: String? = nil) {
         self._tokenString = State(initialValue: tokenString)
+//        qrsVM.onResult = scannerDidDecodeString(_:)
     }
 
     var body: some View {
@@ -67,7 +68,6 @@ struct ReceiveView: View {
                     Section {
                         Button {
                             reset()
-                            qrsVM.restart()
                         } label: {
                             HStack {
                                 Text("Reset")
@@ -82,7 +82,7 @@ struct ReceiveView: View {
                     // MARK: from crashing the app when using the camera on an Apple Silicon Mac
 
                     if !ProcessInfo.processInfo.isiOSAppOnMac {
-                        QRScanner(viewModel: qrsVM)
+                        QRScanner(onResult: scannerDidDecodeString(_:))
                             .frame(minHeight: 300, maxHeight: 400)
                             .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
                     }
@@ -99,10 +99,8 @@ struct ReceiveView: View {
                 }
             }
             .onAppear(perform: {
-                qrsVM.onResult = scannerDidDecodeString(_:)
-                
-                if tokenString != nil {
-                    parseTokenString()
+                if let tokenString {
+                    parseTokenString(input: tokenString)
                 }
             })
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
@@ -137,34 +135,40 @@ struct ReceiveView: View {
 
     // MARK: - LOGIC
 
-    func paste() {
+    private func paste() {
         let pasteString = UIPasteboard.general.string ?? ""
-        // TODO: NEEDS TO CHECK AND ALERT USER IF PAST OP IS UNSUCCESSFUL
-        tokenString = pasteString
-        parseTokenString()
+        logger.info("user pasted string \(pasteString.prefix(20) + (pasteString.count < 20 ? "" : "..."))")
+        parseTokenString(input: pasteString)
+    }
+    
+    @MainActor
+    private func scannerDidDecodeString(_ string: String) {
+        parseTokenString(input: string)
     }
 
-    func scannerDidDecodeString(_ string: String) {
-        tokenString = string
-    }
-
-    func parseTokenString() {
-        guard let tokenString,
-              !tokenString.isEmpty else {
+    @MainActor
+    private func parseTokenString(input: String) {
+        
+        guard !input.isEmpty else {
             logger.error("pasted string was empty.")
             return
         }
+        
         do {
-            token = try tokenString.deserializeToken()
-            token?.token.forEach({ totalAmount += $0.proofs.sum })
+            let t = try input.deserializeToken()
+            self.token = t
+            self.totalAmount = 0
+            self.token?.token.forEach({ totalAmount += $0.proofs.sum })
+            self.tokenString = input
         } catch {
-            logger.error("could not decode token from string \(tokenString) \(error)")
+            logger.error("could not decode token from string \(input) \(error)")
             displayAlert(alert: AlertDetail(title: "Could not decode token",
                                             description: String(describing: error)))
+            self.tokenString = nil
         }
     }
 
-    func redeem() {
+    private func redeem() {
         guard let activeWallet, let token, let tokenString else {
             logger.error("""
                          "could not redeem, one or more of the following variables are nil:
@@ -273,7 +277,7 @@ struct ReceiveView: View {
         }
     }
 
-    func reset() {
+    private func reset() {
         tokenString = nil
         tokenMemo = nil
         token = nil
