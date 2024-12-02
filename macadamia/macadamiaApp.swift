@@ -6,6 +6,9 @@ let logger = Logger(subsystem: "macadamia Wallet", category: "Interface & Databa
 
 @main
 struct macadamiaApp: App {
+    
+    @StateObject private var appState = AppState()
+    
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Wallet.self,
@@ -24,6 +27,7 @@ struct macadamiaApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(appState)
         }
         .modelContainer(sharedModelContainer)
     }

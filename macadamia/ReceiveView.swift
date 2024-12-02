@@ -330,8 +330,8 @@ struct TokenFragmentView: View {
                 Text("$")
             case .eur:
                 Text("€")
-            case .other:
-                Text("other")
+            default:
+                EmptyView()
             }
         }
         .onAppear {

@@ -41,6 +41,8 @@
 		379212342B29E7B30081F161 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212332B29E7B30081F161 /* BIP39 */; };
 		3792123A2B2A36830081F161 /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379212392B2A36830081F161 /* WalletView.swift */; };
 		3792123C2B2A36970081F161 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3792123B2B2A36970081F161 /* SettingsView.swift */; };
+		3793B99A2CFBA2BB0077F755 /* BalanceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3793B9992CFBA2BB0077F755 /* BalanceCard.swift */; };
+		3793B99E2CFCC8F80077F755 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3793B99D2CFCC8F80077F755 /* AppState.swift */; };
 		379BDF592B421855008FD0E7 /* NostrSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 379BDF582B421855008FD0E7 /* NostrSDK */; };
 		379BDF622B430775008FD0E7 /* MintManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF612B430775008FD0E7 /* MintManagerView.swift */; };
 		379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379BDF642B447138008FD0E7 /* UIHelpers.swift */; };
@@ -91,6 +93,8 @@
 		3780EEE52B2B5C3F00971AE7 /* QRView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRView.swift; sourceTree = "<group>"; };
 		379212392B2A36830081F161 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
 		3792123B2B2A36970081F161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		3793B9992CFBA2BB0077F755 /* BalanceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceCard.swift; sourceTree = "<group>"; };
+		3793B99D2CFCC8F80077F755 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		379BDF612B430775008FD0E7 /* MintManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintManagerView.swift; sourceTree = "<group>"; };
 		379BDF642B447138008FD0E7 /* UIHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIHelpers.swift; sourceTree = "<group>"; };
 		379BDF662B4696B6008FD0E7 /* MnemonicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MnemonicView.swift; sourceTree = "<group>"; };
@@ -160,6 +164,7 @@
 				372034B92B29E1BC00C4F955 /* macadamiaApp.swift */,
 				372034BB2B29E1BC00C4F955 /* ContentView.swift */,
 				379212392B2A36830081F161 /* WalletView.swift */,
+				3793B9992CFBA2BB0077F755 /* BalanceCard.swift */,
 				37B2C1572B60192100535DAF /* MintView.swift */,
 				379BDF682B46F31E008FD0E7 /* SendView.swift */,
 				371F794B2CEE26A7003EC129 /* TokenShareView.swift */,
@@ -176,6 +181,7 @@
 				374F0DBE2C4978E90031E8CD /* MintInfoView.swift */,
 				370A84082CC1E3440039A413 /* Currency.swift */,
 				3725D4D92CD51FBA0037DD08 /* MintPicker.swift */,
+				3793B99D2CFCC8F80077F755 /* AppState.swift */,
 				379BDF632B430F32008FD0E7 /* Settings */,
 				37DD6E202B618B1400AC5676 /* cashu */,
 				372034BD2B29E1BD00C4F955 /* Assets.xcassets */,
@@ -377,8 +383,10 @@
 				37CC21802B8A71FD00A13F2F /* DrainView.swift in Sources */,
 				377FFF042BC5524700DD2635 /* TokenText.swift in Sources */,
 				377FFEFD2BC41DCF00DD2635 /* ReleaseNoteView.swift in Sources */,
+				3793B99A2CFBA2BB0077F755 /* BalanceCard.swift in Sources */,
 				379BDF652B447138008FD0E7 /* UIHelpers.swift in Sources */,
 				3743CE5A2B485BF800F862AB /* ReceiveView.swift in Sources */,
+				3793B99E2CFCC8F80077F755 /* AppState.swift in Sources */,
 				37F24B2E2CF0D32D007857FB /* WalletInfoListView.swift in Sources */,
 				371F794C2CEE26A7003EC129 /* TokenShareView.swift in Sources */,
 				3743CE5E2B48A94D00F862AB /* MeltView.swift in Sources */,

@@ -66,20 +66,9 @@ struct WalletView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                Spacer(minLength: 20)
-                VStack(alignment: .center) {
-                    Text(balance != nil ? String(balance!) : "...")
-                        .monospaced()
-                        .bold()
-                        .font(.system(size: 70))
-                    Text("sats")
-                        .monospaced()
-                        .bold()
-                        .dynamicTypeSize(.xxxLarge)
-                        .padding(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(40)
+                Spacer().frame(maxHeight: 40)
+                BalanceCard(balance: balance ?? 0,
+                            unit: .sat)
                 .onAppear(perform: {
                     // FIXME: NEEDS TO RESPECT WALLET SELECTION
                     balance = proofs.filter { $0.state == .valid && $0.wallet == activeWallet }.sum
@@ -90,7 +79,7 @@ struct WalletView: View {
                         logger.critical("Wallet seems to contain duplicate proofs.")
                     }
                 })
-                Spacer()
+                Spacer().frame(maxHeight: 30)
                 List {
                     if events.isEmpty {
                         Text("No transactions yet.")
@@ -100,9 +89,9 @@ struct WalletView: View {
                         }
                     }
                 }
-                .padding(EdgeInsets(top: 0, leading: 20, bottom: 20, trailing: 20))
+                .padding(EdgeInsets(top: 0, leading: 30, bottom: 0, trailing: 30))
                 .listStyle(.plain)
-                Spacer()
+                Spacer().frame(maxHeight: 30)
                 HStack {
                     // MARK: - BUTTON "RECEIVE"
 
@@ -212,7 +201,7 @@ struct WalletView: View {
                             .cornerRadius(10) // Apply rounded corners to the background
                     }
                 }
-                .padding(EdgeInsets(top: 20, leading: 20, bottom: 50, trailing: 20))
+                .padding(EdgeInsets(top: 20, leading: 20, bottom: 40, trailing: 20))
             }
             .navigationDestination(item: $navigationDestination) { destination in
                 switch destination {

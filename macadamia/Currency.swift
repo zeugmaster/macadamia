@@ -40,6 +40,14 @@ func amountDisplayString(_ amount: Int, unit: Unit, negative: Bool = false) -> S
             }
         }
         return String(signedAmount) + "other"
+    case .none:
+        var signedAmount = amount
+        if negative && amount > 0 {
+            if let negated = safeNegate(amount) {
+                signedAmount = negated
+            }
+        }
+        return String(signedAmount)
     }
 }
 

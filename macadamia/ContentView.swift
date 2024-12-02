@@ -9,6 +9,7 @@ struct URLState: Equatable {
 }
 
 struct ContentView: View {
+    
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
     
@@ -128,13 +129,7 @@ struct ContentView: View {
     }
 
     func checkReleaseNotes() {
-        let releaseNotesSeenHash = UserDefaults.standard.string(forKey: "LastReleaseNotesAcknoledgedHash")
-        if releaseNotesSeenHash ?? "not set" != ReleaseNote.hashString() {
-            releaseNotesPopoverShowing = true
-            UserDefaults.standard.setValue(ReleaseNote.hashString(),
-                                           forKey: "LastReleaseNotesAcknoledgedHash")
-            logger.info("Release notes have changed and will be shown.")
-        }
+        releaseNotesPopoverShowing = AppState.showReleaseNotes()
     }
 
     func handleUrl(_ url: URL) {

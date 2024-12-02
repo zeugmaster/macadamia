@@ -465,10 +465,12 @@ enum AppSchemaV1: VersionedSchema {
     }
 
     enum Unit: String, Codable, CaseIterable {
+        
         case sat
         case usd
         case eur
-        case other
+        case other // TODO: this should have an associated string as catch all for non standard currency codes
+        case none
 
         init?(_ string: String?) {
             if let match = Unit.allCases.first(where: { $0.rawValue.lowercased() == string?.lowercased() }) {
