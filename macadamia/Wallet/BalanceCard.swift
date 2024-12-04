@@ -72,17 +72,18 @@ struct BalanceCard: View {
         }
         .background(Color.black.edgesIgnoringSafeArea(.all))
         .task(id: balance) {
-            await convert()
+            convert()
         }
         .onChange(of: appState.preferredConversionUnit) { oldValue, newValue in
-            Task {
-                await convert()
-            }
+            convert()
+        }
+        .onChange(of: appState.exchangeRates) { oldValue, newValue in
+            convert()
         }
     }
     
-    
-    private func convert() async {
+    @MainActor
+    private func convert() {
         
         convertedBalance = "..."
 

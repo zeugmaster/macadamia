@@ -28,7 +28,7 @@ class AppState: ObservableObject {
         }
     }
     
-    struct ExchangeRate: Decodable {
+    struct ExchangeRate: Decodable, Equatable {
         let usd: Int
         let eur: Int
     }
