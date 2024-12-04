@@ -141,9 +141,7 @@ enum AppSchemaV1: VersionedSchema {
             guard var proofsSelected = selectWithoutFee(amount: amount, of: proofs) else {
                 return nil
             }
-            
-    //        proofsSelected.sort(by: { $0.amount > $1.amount })
-            
+                        
             var proofsRest:[Proof] = proofs.filter({ !proofsSelected.contains($0) })
             
             proofsRest.sort(by: { $0.amount < $1.amount })
@@ -318,7 +316,7 @@ enum AppSchemaV1: VersionedSchema {
                                      quote: CashuSwift.Bolt11.MintQuote,
                                      amount: Int,
                                      expiration: Date,
-                                     mints: [Mint]) -> Event {
+                                     mint: Mint) -> Event {
             Event(date: Date(),
                   unit: unit,
                   shortDescription: shortDescription,
@@ -328,7 +326,7 @@ enum AppSchemaV1: VersionedSchema {
                   bolt11MintQuote: quote,
                   amount: amount,
                   expiration: expiration,
-                  minta: mints
+                  minta: [mint]
             )
         }
         
@@ -337,6 +335,7 @@ enum AppSchemaV1: VersionedSchema {
                               visible: Bool = true,
                               wallet: Wallet,
                               quote: CashuSwift.Bolt11.MintQuote,
+                              mint: Mint,
                               amount: Int) -> Event {
             Event(date: Date(),
                   unit: unit,
@@ -345,7 +344,8 @@ enum AppSchemaV1: VersionedSchema {
                   kind: .mint,
                   wallet: wallet,
                   bolt11MintQuote: quote,
-                  amount: amount
+                  amount: amount,
+                  minta: [mint]
             )
         }
         
@@ -358,6 +358,7 @@ enum AppSchemaV1: VersionedSchema {
                               proofs: [Proof],
                               memo: String,
                               tokens: [TokenInfo],
+                              mint: Mint,
                               redeemed: Bool = false) -> Event {
             Event(date: Date(),
                   unit: unit,
@@ -370,6 +371,7 @@ enum AppSchemaV1: VersionedSchema {
                   proofs: proofs,
                   memo: memo,
                   tokens: tokens,
+                  minta: [mint],
                   redeemed: redeemed
             )
         }
@@ -382,6 +384,7 @@ enum AppSchemaV1: VersionedSchema {
                                  longDescription: String,
                                  proofs: [Proof],
                                  memo: String,
+                                 mints: [Mint],
                                  tokens: [TokenInfo],
                                  redeemed: Bool) -> Event {
             Event(date: Date(),
@@ -395,6 +398,7 @@ enum AppSchemaV1: VersionedSchema {
                   proofs: proofs,
                   memo: memo,
                   tokens: tokens,
+                  minta: mints,
                   redeemed: redeemed
             )
         }
@@ -425,7 +429,8 @@ enum AppSchemaV1: VersionedSchema {
                               visible: Bool = true,
                               wallet: Wallet,
                               amount: Int,
-                              longDescription: String) -> Event {
+                              longDescription: String,
+                              mints:[Mint]) -> Event {
             Event(date: Date(),
                   unit: unit,
                   shortDescription: shortDescription,
@@ -433,7 +438,8 @@ enum AppSchemaV1: VersionedSchema {
                   kind: .melt,
                   wallet: wallet,
                   amount: amount,
-                  longDescription: longDescription
+                  longDescription: longDescription,
+                  minta: mints
             )
         }
         

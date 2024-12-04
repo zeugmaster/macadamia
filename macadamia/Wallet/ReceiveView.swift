@@ -251,6 +251,7 @@ struct ReceiveView: View {
                                                longDescription: "",
                                                proofs: combinedProofs,
                                                memo: token.memo ?? "",
+                                               mints: mintsInToken,
                                                tokens: [tokenInfo],
                                                redeemed: true)
                 

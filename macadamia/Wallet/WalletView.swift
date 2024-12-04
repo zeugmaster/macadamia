@@ -57,10 +57,11 @@ struct WalletView: View {
     }
     
     var activeWallet:Wallet? {
-        set { }
-        get {
-            wallets.first
-        }
+        wallets.first
+    }
+    
+    var sortedEventsForActiveWallet: [Event] {
+        events.filter({ $0.wallet == activeWallet })
     }
 
     var body: some View {
@@ -70,22 +71,34 @@ struct WalletView: View {
                 BalanceCard(balance: balance ?? 0,
                             unit: .sat)
                 .onAppear(perform: {
-                    // FIXME: NEEDS TO RESPECT WALLET SELECTION
                     balance = proofs.filter { $0.state == .valid && $0.wallet == activeWallet }.sum
 
                     // quick sanity check for uniqueness of C across list of proofs
-                    let uniqueCs = Set(proofs.map( { $0.C }))
-                    if uniqueCs.count != proofs.count {
+                    guard let activeWallet else {
+                        logger.warning("wallet view appeared with no activeWallet. this will give undefined behaviour.")
+                        return
+                    }
+                    let uniqueCs = Set(activeWallet.proofs.map( { $0.C }))
+                    if uniqueCs.count != activeWallet.proofs.count {
                         logger.critical("Wallet seems to contain duplicate proofs.")
                     }
                 })
                 Spacer().frame(maxHeight: 30)
                 List {
-                    if events.isEmpty {
+                    if sortedEventsForActiveWallet.isEmpty {
                         Text("No transactions yet.")
                     } else {
-                        ForEach(events) { event in
+                        ForEach(Array(sortedEventsForActiveWallet.prefix(5))) { event in
                             TransactionListRowView(event: event)
+                        }
+                        if sortedEventsForActiveWallet.count > 5 {
+                            NavigationLink(destination: EventList(),
+                                           label: {
+                                Spacer().frame(width: 27)
+                                Text("Show All")
+                                    .font(.callout)
+                            })
+                                .listRowBackground(Color.clear)
                         }
                     }
                 }
@@ -103,7 +116,6 @@ struct WalletView: View {
                         }
                     ) {
                         Templates.MenuItem {
-//                            navigationPath.append("Receive")
                             navigationDestination = .receive(urlString: nil)
                         } label: { fade in
                             Color.clear.overlay(
@@ -120,7 +132,6 @@ struct WalletView: View {
                         }
                         .background(Color.black)
                         Templates.MenuItem {
-//                            navigationPath.append("Mint")
                             navigationDestination = .mint
                         } label: { fade in
                             Color.clear.overlay(
@@ -157,7 +168,6 @@ struct WalletView: View {
                         }
                     ) {
                         Templates.MenuItem {
-//                            navigationPath.append("Send")
                             navigationDestination = .send
                         } label: { fade in
                             Color.clear.overlay(
@@ -174,7 +184,6 @@ struct WalletView: View {
                         }
                         .background(Color.black)
                         Templates.MenuItem {
-//                            navigationPath.append("Melt")
                             navigationDestination = .melt
                         } label: { fade in
                             Color.clear.overlay(
@@ -242,11 +251,39 @@ struct TransactionListRowView: View {
     var body: some View {
         NavigationLink(destination: EventDetailView(event: event)) {
             HStack {
-                Text(event.shortDescription)
+                Group {
+                    switch event.kind {
+                    case .pendingMelt, .pendingMint:
+                        Image(systemName: "hourglass")
+                    case .mint, .receive:
+                        Image(systemName: "arrow.down.left")
+                    case .melt, .send:
+                        Image(systemName: "arrow.up.right")
+                    case .restore:
+                        Image(systemName: "clock.arrow.circlepath")
+                    case .drain:
+                        Image(systemName: "arrow.uturn.up")
+                    }
+                }
+                .opacity(0.8)
+                .frame(width: 20, alignment: .leading)
+                if let memo = event.memo, !memo.isEmpty {
+                    Text(memo)
+                } else {
+                    Text(event.shortDescription)
+                }
                 Spacer()
                 if let amount = event.amount {
-                    Text(amountDisplayString(amount, unit: event.unit))
-                        .foregroundStyle(.secondary)
+                    if let amount = event.amount {
+                        switch event.kind {
+                        case .send, .drain, .melt, .pendingMelt:
+                            Text(amountDisplayString(amount, unit: event.unit, negative: true))
+                                .foregroundStyle(.secondary)
+                        case .receive, .mint, .restore, .pendingMint:
+                            Text(amountDisplayString(amount, unit: event.unit, negative: false))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
             }
             .lineLimit(1)

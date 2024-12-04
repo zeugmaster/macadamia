@@ -32,11 +32,6 @@ struct SettingsView: View {
                 Section {
                     ConversionPicker()
                 }
-//                Section {
-//                    NavigationLink(destination: RelayManagerView()) { Text("Relays") }
-//                } header: {
-//                    Text("nostr")
-//                }
                 Section {
                     NavigationLink("About this Release", destination: ReleaseNoteView())
                     

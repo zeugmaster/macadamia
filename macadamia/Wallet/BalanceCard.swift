@@ -17,6 +17,7 @@ struct BalanceCard: View {
     @State private var convertedBalance: String = ""
     
     var body: some View {
+        
         let cardWidth = 330.0
         let cardHeight = 150.0
 

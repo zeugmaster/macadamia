@@ -17,8 +17,8 @@ struct ContentView: View {
         get {
             if wallets.filter({ $0.active == true }).count > 1 {
                 logger.critical("""
-                                The database seems to contains more than one wallet marked ACTIVE. \
-                                this will give undefined results.
+                                The database seems to contain more than one wallet marked ACTIVE. \
+                                this will give undefined behaviour.
                                 """)
             }
             if !wallets.isEmpty && wallets.filter({ $0.active == true }).count < 1 {

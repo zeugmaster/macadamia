@@ -54,6 +54,7 @@ class AppState: ObservableObject {
     @Published var exchangeRates: ExchangeRate?
     
     func loadExchangeRates() async {
+        logger.info("loading exchange rates...")
         
         guard let url = URL(string: "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,eur") else {
             logger.warning("could not fetch exchange rates from API due to an invalid URL.")

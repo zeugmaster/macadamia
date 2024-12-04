@@ -328,7 +328,8 @@ struct MeltView: View {
                                                         shortDescription: "Melt",
                                                         wallet: activeWallet,
                                                         amount: (quote.amount),
-                                                        longDescription: "")
+                                                        longDescription: "",
+                                                        mints: [selectedMint])
                         
                         pendingMeltEvent?.visible = false
                         modelContext.insert(meltEvent)
