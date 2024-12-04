@@ -43,8 +43,25 @@ struct EventListRow: View {
         return ""
     }
     
-    var amountString: String {
-        amountDisplayString(event.amount ?? 0, unit: event.unit)
+    var amountString: String? {
+        switch event.kind {
+        case .restore, .drain:
+            return nil
+        case .send, .melt, .pendingMelt:
+            return amountDisplayString(event.amount ?? 0, unit: event.unit, negative: true)
+        case .receive, .mint, .pendingMint:
+            return amountDisplayString(event.amount ?? 0, unit: event.unit)
+        }
+    }
+    
+    var shortenedDateString: String {
+        let now = Date()
+        let dayPassed = Calendar.current.dateComponents([.hour],
+                                                        from: event.date, to: now).hour ?? 0 > 24
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeStyle = .short
+        dateFormatter.dateStyle = dayPassed ? .short : .none
+        return dateFormatter.string(from: event.date)
     }
     
     var body: some View {
@@ -52,7 +69,7 @@ struct EventListRow: View {
             RowLayout(mintLabel: readableMintName,
                       description: event.shortDescription,
                       amountString: amountString,
-                      dateLabel: event.date.formatted(),
+                      dateLabel: shortenedDateString,
                       memo: event.memo)
         }
     }
@@ -62,7 +79,7 @@ struct RowLayout: View {
     
     let mintLabel: String
     let description: String
-    let amountString: String
+    let amountString: String?
     let dateLabel: String
     
     let memo: String?
@@ -83,9 +100,10 @@ struct RowLayout: View {
                     Text(description)
                 }
                 Spacer()
-                Text(amountString)
-                    .monospaced()
-                    .fontWeight(.semibold)
+                if let amountString {
+                    Text(amountString)
+                        .monospaced()
+                }
             }
         }
         .lineLimit(1)

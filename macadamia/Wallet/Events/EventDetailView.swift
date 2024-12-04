@@ -214,7 +214,8 @@ struct SendEventView: View {
     }
     
     private func checkTokenState(with proofs:[Proof]) {
-        guard let firstMint = proofs.first?.mint, proofs.allSatisfy({ $0.mint == firstMint }) else {
+        guard let firstMint = proofs.first?.mint,
+              proofs.allSatisfy({ $0.mint == firstMint }) else {
             logger.error("function to check proofs can not handle proofs from different mints!")
             return
         }
