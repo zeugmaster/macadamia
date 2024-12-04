@@ -266,6 +266,7 @@ struct TransactionListRowView: View {
                     }
                 }
                 .opacity(0.8)
+                .font(.caption)
                 .frame(width: 20, alignment: .leading)
                 if let memo = event.memo, !memo.isEmpty {
                     Text(memo)
@@ -274,15 +275,13 @@ struct TransactionListRowView: View {
                 }
                 Spacer()
                 if let amount = event.amount {
-                    if let amount = event.amount {
-                        switch event.kind {
-                        case .send, .drain, .melt, .pendingMelt:
-                            Text(amountDisplayString(amount, unit: event.unit, negative: true))
-                                .foregroundStyle(.secondary)
-                        case .receive, .mint, .restore, .pendingMint:
-                            Text(amountDisplayString(amount, unit: event.unit, negative: false))
-                                .foregroundStyle(.secondary)
-                        }
+                    switch event.kind {
+                    case .send, .drain, .melt, .pendingMelt:
+                        Text(amountDisplayString(amount, unit: event.unit, negative: true))
+                            .foregroundStyle(.secondary)
+                    case .receive, .mint, .restore, .pendingMint:
+                        Text(amountDisplayString(amount, unit: event.unit, negative: false))
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
