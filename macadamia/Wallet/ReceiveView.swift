@@ -14,8 +14,6 @@ struct ReceiveView: View {
         wallets.first
     }
 
-//    @ObservedObject var qrsVM = QRScannerViewModel()
-
     @State var tokenString: String?
     @State var token: CashuSwift.Token?
     @State var tokenMemo: String?
@@ -30,24 +28,21 @@ struct ReceiveView: View {
 
     init(tokenString: String? = nil) {
         self._tokenString = State(initialValue: tokenString)
-//        qrsVM.onResult = scannerDidDecodeString(_:)
     }
 
     var body: some View {
         VStack {
-            List {
-                if tokenString != nil {
+            if let tokenString {
+                List {
                     Section {
-                        TokenText(text: tokenString!)
+                        TokenText(text: tokenString)
                             .frame(idealHeight: 70)
-                        // TOTAL AMOUNT
                         HStack {
                             Text("Total Amount: ")
                             Spacer()
                             Text(String(totalAmount) + " sats")
                         }
                         .foregroundStyle(.secondary)
-                        // TOKEN MEMO
                         if let tokenMemo, !tokenMemo.isEmpty {
                             Text("Memo: \(tokenMemo)")
                                 .foregroundStyle(.secondary)
@@ -64,7 +59,6 @@ struct ReceiveView: View {
                             }
                         }
                     }
-
                     Section {
                         Button {
                             reset()
@@ -77,35 +71,14 @@ struct ReceiveView: View {
                         }
                         .disabled(addingMint)
                     }
-                } else {
-                    // MARK: This check is necessary to prevent a bug in URKit (or the system, who knows)
-                    // MARK: from crashing the app when using the camera on an Apple Silicon Mac
-
-                    if !ProcessInfo.processInfo.isiOSAppOnMac {
-                        QRScanner(onResult: scannerDidDecodeString(_:))
-                            .frame(minHeight: 300, maxHeight: 400)
-                            .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
-                    }
-
-                    Button {
-                        paste()
-                    } label: {
-                        HStack {
-                            Text("Paste from clipboard")
-                            Spacer()
-                            Image(systemName: "list.clipboard")
-                        }
+                }
+            } else {
+                List {
+                    InputView { result in
+                        parseTokenString(input: result)
                     }
                 }
             }
-            .onAppear(perform: {
-                if let tokenString {
-                    parseTokenString(input: tokenString)
-                }
-            })
-            .alertView(isPresented: $showAlert, currentAlert: currentAlert)
-            .navigationTitle("Receive")
-            .toolbar(.hidden, for: .tabBar)
             Button(action: {
                 redeem()
             }, label: {
@@ -131,20 +104,17 @@ struct ReceiveView: View {
             .toolbar(.hidden, for: .tabBar)
             .disabled(tokenString == nil || loading || success || addingMint)
         }
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+        .navigationTitle("Receive")
+        .toolbar(.hidden, for: .tabBar)
+        .onAppear(perform: {
+            if let tokenString {
+                parseTokenString(input: tokenString)
+            }
+        })
     }
 
     // MARK: - LOGIC
-
-    private func paste() {
-        let pasteString = UIPasteboard.general.string ?? ""
-        logger.info("user pasted string \(pasteString.prefix(20) + (pasteString.count < 20 ? "" : "..."))")
-        parseTokenString(input: pasteString)
-    }
-    
-    @MainActor
-    private func scannerDidDecodeString(_ string: String) {
-        parseTokenString(input: string)
-    }
 
     @MainActor
     private func parseTokenString(input: String) {

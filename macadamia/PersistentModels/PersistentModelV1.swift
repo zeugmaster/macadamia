@@ -78,6 +78,10 @@ enum AppSchemaV1: VersionedSchema {
             self.proofs = []
         }
         
+        var displayName: String {
+            self.nickName ?? self.url.host() ?? self.url.absoluteString
+        }
+        
         func select(allProofs:[Proof], amount:Int, unit:Unit) -> (selected:[Proof], fee:Int)? {
             
             let validProofsOfUnit = allProofs.filter({ $0.unit == unit && $0.state == .valid && $0.mint == self})

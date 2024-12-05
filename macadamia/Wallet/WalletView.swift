@@ -15,12 +15,6 @@ struct WalletView: View {
     
     @Query private var proofs: [Proof]
     
-    // query events (transactions) if they are visible and in chronological order
-    @Query(filter: #Predicate { event in
-        event.visible == true
-    },
-    sort: [SortDescriptor(\Event.date, order: .reverse)]) private var events: [Event]
-
     @State var balance: Int?
 
     @State var showAlert: Bool = false
@@ -59,10 +53,6 @@ struct WalletView: View {
     var activeWallet:Wallet? {
         wallets.first
     }
-    
-    var sortedEventsForActiveWallet: [Event] {
-        events.filter({ $0.wallet == activeWallet })
-    }
 
     var body: some View {
         NavigationStack {
@@ -84,26 +74,7 @@ struct WalletView: View {
                     }
                 })
                 Spacer().frame(maxHeight: 30)
-                List {
-                    if sortedEventsForActiveWallet.isEmpty {
-                        Text("No transactions yet.")
-                    } else {
-                        ForEach(Array(sortedEventsForActiveWallet.prefix(5))) { event in
-                            TransactionListRowView(event: event)
-                        }
-                        if sortedEventsForActiveWallet.count > 5 {
-                            NavigationLink(destination: EventList(),
-                                           label: {
-                                Spacer().frame(width: 27)
-                                Text("Show All")
-                                    .font(.callout)
-                            })
-                                .listRowBackground(Color.clear)
-                        }
-                    }
-                }
-                .padding(EdgeInsets(top: 0, leading: 30, bottom: 0, trailing: 30))
-                .listStyle(.plain)
+                MinimalEventList()
                 Spacer().frame(maxHeight: 30)
                 HStack {
                     // MARK: - BUTTON "RECEIVE"
@@ -238,57 +209,6 @@ struct WalletView: View {
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
-    }
-}
-
-struct TransactionListRowView: View {
-    var event: Event
-
-    init(event: Event) {
-        self.event = event
-    }
-
-    var body: some View {
-        NavigationLink(destination: EventDetailView(event: event)) {
-            HStack {
-                Group {
-                    switch event.kind {
-                    case .pendingMelt, .pendingMint:
-                        Image(systemName: "hourglass")
-                    case .mint, .receive:
-                        Image(systemName: "arrow.down.left")
-                    case .melt, .send:
-                        Image(systemName: "arrow.up.right")
-                    case .restore:
-                        Image(systemName: "clock.arrow.circlepath")
-                    case .drain:
-                        Image(systemName: "arrow.uturn.up")
-                    }
-                }
-                .opacity(0.8)
-                .font(.caption)
-                .frame(width: 20, alignment: .leading)
-                if let memo = event.memo, !memo.isEmpty {
-                    Text(memo)
-                } else {
-                    Text(event.shortDescription)
-                }
-                Spacer()
-                if let amount = event.amount {
-                    switch event.kind {
-                    case .send, .drain, .melt, .pendingMelt:
-                        Text(amountDisplayString(amount, unit: event.unit, negative: true))
-                            .foregroundStyle(.secondary)
-                    case .receive, .mint, .restore, .pendingMint:
-                        Text(amountDisplayString(amount, unit: event.unit, negative: false))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .lineLimit(1)
-            .font(.callout)
-        }
-        .listRowBackground(Color.clear)
     }
 }
 

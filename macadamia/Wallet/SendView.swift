@@ -47,7 +47,7 @@ struct SendView: View {
                     Text("sats")
                 }
                 // TODO: CHECK FOR EMPTY MINT LIST
-                MintPicker(selectedMint: $selectedMint)
+                MintPicker(label: "Send from", selectedMint: $selectedMint)
                     .onChange(of: selectedMint) { _, _ in
                     updateBalance()
                     }

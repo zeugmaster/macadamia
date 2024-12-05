@@ -3,23 +3,60 @@ import SwiftData
 
 struct EventList: View {
     @Environment(\.modelContext) private var modelContext
-    
+
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
     }) private var wallets: [Wallet]
-    
+
     @Query private var allEvents: [Event]
-    
-    var visibleEventsForActiveWallet: [Event] {
-        allEvents.filter({ $0.wallet == wallets.first && $0.visible == true })
-                 .sorted { $0.date > $1.date }
-    }
-    
+
+    @State private var events: [Event] = []
+
     var body: some View {
         List {
-            ForEach(visibleEventsForActiveWallet) { event in
+            ForEach(events) { event in
                 EventListRow(event: event)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button {
+                            deleteEvent(event)
+                        } label: {
+                            Image(systemName: "trash")
+                                .foregroundColor(.white)
+                        }
+                        .tint(Color.black)
+                    }
             }
+        }
+        .onAppear {
+            updateEvents()
+        }
+        .onChange(of: wallets.first) { _, _ in
+            updateEvents()
+        }
+        .onChange(of: allEvents) { _, _ in
+            updateEvents()
+        }
+    }
+
+    private func updateEvents() {
+        if let activeWallet = wallets.first {
+            events = allEvents.filter { $0.wallet == activeWallet && $0.visible == true }
+                              .sorted { $0.date > $1.date }
+        } else {
+            events = []
+        }
+    }
+
+    private func deleteEvent(_ event: Event) {
+        withAnimation {
+            modelContext.delete(event)
+            events.removeAll { $0.id == event.id }
+        }
+
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save context after deletion: \(error)")
         }
     }
 }
@@ -34,7 +71,7 @@ struct EventListRow: View {
                 return ""
             } else if mints.count == 1 {
                 if let mint = mints.first {
-                    return mint.nickName ?? mint.url.host() ?? mint.url.absoluteString
+                    return mint.displayName
                 }
             } else {
                 return "Multiple"
@@ -57,7 +94,8 @@ struct EventListRow: View {
     var shortenedDateString: String {
         let now = Date()
         let dayPassed = Calendar.current.dateComponents([.hour],
-                                                        from: event.date, to: now).hour ?? 0 > 24
+                                                        from: event.date,
+                                                        to: now).hour ?? 0 > 24
         let dateFormatter = DateFormatter()
         dateFormatter.timeStyle = .short
         dateFormatter.dateStyle = dayPassed ? .short : .none

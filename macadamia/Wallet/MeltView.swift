@@ -34,15 +34,14 @@ struct MeltView: View {
     
     @State private var selectedMint:Mint?
     
-    @State var selectedMintBalance = 0
+    @State private var selectedMintBalance = 0
 
-    @State var showAlert: Bool = false
-    @State var currentAlert: AlertDetail?
+    @State private var showAlert: Bool = false
+    @State private var currentAlert: AlertDetail?
 
     init(pendingMeltEvent: Event? = nil) {
         _pendingMeltEvent = State(initialValue: pendingMeltEvent)
-        _invoiceString = State(initialValue: quote?.quote ?? "")
-//        self.quote = pendingMeltEvent?.bolt11MeltQuote
+        _invoiceString = State(initialValue: quote?.quoteRequest?.request ?? "")
         
         if let mint = pendingMeltEvent?.mints?.first {
             _selectedMint = State(initialValue: mint)
@@ -51,75 +50,67 @@ struct MeltView: View {
 
     var body: some View {
         VStack {
-            if let pendingMeltEvent {
-                List {
+            List {
+                Section {
+                    MintPicker(label: "Pay from", selectedMint: $selectedMint)
+                        .onChange(of: selectedMint) { _, _ in
+                            updateBalance()
+                        }.disabled(pendingMeltEvent != nil)
                     HStack {
-                        Text("Quote created at: ")
+                        Text("Balance: ")
                         Spacer()
-                        Text(pendingMeltEvent.date.formatted())
-                    }
-                    Text(pendingMeltEvent.bolt11MeltQuote?.quoteRequest?.request ?? "No request")
-                        .foregroundStyle(.gray)
-                        .monospaced()
-                        .lineLimit(3)
-                    if let mint = pendingMeltEvent.mints?.first {
-                        Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
-                    }
-                }
-            } else {
-                
-                // This check is necessary to prevent a bug in URKit (or the system, who knows)
-                // from crashing the app when using the camera on an Apple Silicon Mac
-                if !ProcessInfo.processInfo.isiOSAppOnMac {
-                    CodeScannerView(codeTypes: [.qr], scanMode: .oncePerCode) { result in
-                        processScanViewResult(result: result)
-                    }
-                    .padding()
-                }
-                
-                List {
-                    Section {
-                        TextField("tap to enter LN invoice", text: $invoiceString)
+                        Text(String(selectedMintBalance))
                             .monospaced()
-                            .foregroundStyle(.secondary)
-                            .onSubmit {
-                                getQuote()
+                        Text("sats")
+                    }
+                    .onAppear {
+                        updateBalance()
+                    }
+                    .foregroundStyle(.secondary)
+                }
+                .onAppear {
+                    if let mint =  pendingMeltEvent?.mints?.first {
+                        print("mint for pending event: \(mint.displayName)")
+                        selectedMint = mint
+                    }
+                }
+                
+                if let pendingMeltEvent {
+                    Section {
+                        HStack {
+                            Text("Quote created at: ")
+                            Spacer()
+                            Text(pendingMeltEvent.date.formatted())
+                        }
+                        Text(pendingMeltEvent.bolt11MeltQuote?.quoteRequest?.request ?? "No request")
+                            .foregroundStyle(.gray)
+                            .monospaced()
+                            .lineLimit(3)
+                        if let mint = pendingMeltEvent.mints?.first {
+                            Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
+                        }
+                        if let quote = pendingMeltEvent.bolt11MeltQuote {
+                            HStack {
+                                Text("Lightning Fee: ")
+                                Spacer()
+                                Text(String(quote.feeReserve) + " sats") // FIXME: remove unit hard code
                             }
+                            .foregroundStyle(.secondary)
+                        }
                         if !invoiceString.isEmpty {
                             HStack {
                                 Text("Amount: ")
                                 Spacer()
-                                Text(String(invoiceAmount ?? 0) + " sats")
+                                Text(String(invoiceAmount ?? 0) + " sats") // FIXME: remove unit hard code
                             }
                             .foregroundStyle(.secondary)
-                            if quote != nil {
-                                HStack {
-                                    Text("Lightning Fee: ")
-                                    Spacer()
-                                    Text(String(quote?.feeReserve ?? 0) + " sats")
-                                }
-                                .foregroundStyle(.secondary)
-                            }
                         }
-                        if pendingMeltEvent?.mints?.first == nil {
-                            MintPicker(selectedMint: $selectedMint)
-                                .onChange(of: selectedMint) { _, _ in
-                                    updateBalance()
-                                }
+                    }
+                } else {
+                    Section {
+                        InputView { string in
+                            processInputViewResult(string)
                         }
-                        HStack {
-                            Text("Balance: ")
-                            Spacer()
-                            Text(String(selectedMintBalance))
-                                .monospaced()
-                            Text("sats")
-                        }
-                        .onAppear {
-                            updateBalance()
-                        }
-                        .foregroundStyle(.secondary)
-                    } footer: {
-                        Text("The invoice will be payed by the mint you select.")
                     }
                 }
             }
@@ -138,7 +129,7 @@ struct MeltView: View {
                         .padding()
                         .foregroundColor(.green)
                 } else {
-                    Text("Melt Tokens")
+                    Text("Melt ecash")
                         .frame(maxWidth: .infinity)
                         .padding()
                 }
@@ -155,24 +146,21 @@ struct MeltView: View {
         }
     }
 
-    func processScanViewResult(result: Result<ScanResult, ScanError>) {
-        guard var text = try? result.get().string.lowercased() else {
-            logger.warning("Could not read string while processing camera scan result.")
-            return
+    func processInputViewResult(_ string: String) {
+        var input = string
+        if input.hasPrefix("lightning:") {
+            input.removeFirst("lightning:".count)
         }
-        if text.hasPrefix("lightning:") {
-            text.removeFirst("lightning:".count)
-        }
-        guard text.hasPrefix("lnbc") else {
+        guard input.hasPrefix("lnbc") else {
             displayAlert(alert: AlertDetail(title: "Invalid QR",
                                             description: """
-                                                         The QR code you scanned does not seem to be of \
+                                                         This input does not seem to be of \
                                                          a valid Lighning Network invoice. Please try again.
                                                          """))
-            logger.warning("Invalid QR. the scanned QR code does not seem to be a LN invoice string. Scan result: \(text)")
+            logger.warning("Invalid invoice input. the given string does not seem to be a LN invoice. Input: \(input)")
             return
         }
-        invoiceString = text
+        invoiceString = input
         getQuote()
     }
 
@@ -273,6 +261,8 @@ struct MeltView: View {
         
         loading = true
 
+        // TODO: refactor this monstrosity
+        
         Task {
             do {
                 
@@ -283,7 +273,7 @@ struct MeltView: View {
                                                            proofs: selection.selected,
                                                            seed: activeWallet.seed)
                 
-                // TODO: temp disable back button (maybe)
+                // TODO: temp disable back button (?)
 
                 if meltResult.paid {
                     
@@ -361,7 +351,6 @@ struct MeltView: View {
                     }
                 }
             } catch {
-                // pending event also remains
                 // TODO: UI for when quote expires etc.
                 
                 logger.error("Melt operation falied with error: \(error)")

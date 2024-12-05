@@ -71,7 +71,7 @@ struct MintView: View {
                 if let mint = pendingMintEvent?.mints?.first {
                     Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
                 } else {
-                    MintPicker(selectedMint: $selectedMint)
+                    MintPicker(label: "Mint", selectedMint: $selectedMint)
                 }
             }
             if let quote {

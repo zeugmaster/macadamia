@@ -23,30 +23,37 @@ struct QRScanner: View {
         _videoSession = StateObject(wrappedValue: URVideoSession(codesPublisher: codesPublisher))
         _scanState = StateObject(wrappedValue: URScanState(codesPublisher: codesPublisher))
     }
-
+    
+    // TODO: add haptic feedback to scan success
+    
     var body: some View {
-        ZStack(alignment: .bottom) {
-            if isScanning {
-                URVideo(videoSession: videoSession)
-            }
-            VStack {
-                Spacer()
-                HStack {
-                    if estimatedPercentComplete > 0 {
-                        Text("\(Int(estimatedPercentComplete * 100))%")
-                            .padding()
-                    }
-                    Spacer()
-                    Button(action: restart) {
-                        Image(systemName: "arrow.counterclockwise")
-                    }
-                    .padding()
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            Text("Animated QR code scanner is unavailable when running on macOS.")
+                .font(.headline)
+        } else {
+            ZStack(alignment: .bottom) {
+                if isScanning {
+                    URVideo(videoSession: videoSession)
                 }
-                .background(Color.black.opacity(0.5))
+                VStack {
+                    Spacer()
+                    HStack {
+                        if estimatedPercentComplete > 0 {
+                            Text("\(Int(estimatedPercentComplete * 100))%")
+                                .padding()
+                        }
+                        Spacer()
+                        Button(action: restart) {
+                            Image(systemName: "arrow.counterclockwise")
+                        }
+                        .padding()
+                    }
+                    .background(Color.black.opacity(0.5))
+                }
             }
+            .clipShape(RoundedRectangle(cornerRadius: 6.0))
+            .onReceive(scanState.resultPublisher, perform: handleScanResult)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 6.0))
-        .onReceive(scanState.resultPublisher, perform: handleScanResult)
     }
 
     private func handleScanResult(result: URScanResult) {
