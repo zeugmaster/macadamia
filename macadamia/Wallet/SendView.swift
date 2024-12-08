@@ -93,7 +93,7 @@ struct SendView: View {
         .buttonStyle(.bordered)
         .padding()
         .toolbar(.hidden, for: .tabBar)
-        .disabled(numberString.isEmpty || amount == 0 || tokenString != nil)
+        .disabled(numberString.isEmpty || amount <= 0 || tokenString != nil)
         
     }
 

@@ -103,6 +103,11 @@ enum AppSchemaV1: VersionedSchema {
         
         private static func selectWithoutFee(amount: Int, of proofs:[Proof]) -> [Proof]? {
             
+            guard amount >= 0 else {
+                logger.error("input selection amount can not be negative")
+                return nil
+            }
+            
             let totalAmount = proofs.reduce(0) { $0 + $1.amount }
             if totalAmount < amount {
                 return nil
@@ -137,6 +142,11 @@ enum AppSchemaV1: VersionedSchema {
         private static func selectIncludingFee(amount: Int, of proofs:[Proof]) -> (selected:[Proof], fee:Int)? {
             
             // TODO: BRUTE FORCE CHECK FOR POSSIBLE
+            
+            guard amount >= 0 else {
+                logger.error("input selection amount can not be negative")
+                return nil
+            }
             
             func fee(_ proofs:[Proof]) -> Int {
                 ((proofs.reduce(0) { $0 + $1.inputFeePPK } + 999) / 1000)

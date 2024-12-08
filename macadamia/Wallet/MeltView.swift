@@ -353,6 +353,11 @@ struct MeltView: View {
             } catch {
                 // TODO: UI for when quote expires etc.
                 
+                await MainActor.run {
+                    selection.selected.forEach { $0.state = .valid }
+                    try? modelContext.save()
+                }
+                
                 logger.error("Melt operation falied with error: \(error)")
                 loading = false
                 success = false

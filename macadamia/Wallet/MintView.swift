@@ -137,7 +137,7 @@ struct MintView: View {
             })
             .buttonStyle(.bordered)
             .padding()
-            .disabled(amountString.isEmpty || amount == 0 || loadingInvoice)
+            .disabled(amountString.isEmpty || amount <= 0 || loadingInvoice)
         } else {
             Button(action: {
                 requestMint()
