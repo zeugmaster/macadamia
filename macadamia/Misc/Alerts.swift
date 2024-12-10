@@ -56,7 +56,7 @@ struct AlertDetail {
             case .inputError(let message):
                 self = AlertDetail(title: "Input Error", description: message)
                 
-            case .insufficientInputs(let message):
+            case .insufficientInputs(_): // associated typa for detail string TODO: utilize
                 self = AlertDetail(title: "Insufficient Funds", description: "The wallet was unable to collect enough ecash for this transaction.")
                 
             case .unknownError(let message):

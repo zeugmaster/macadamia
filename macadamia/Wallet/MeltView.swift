@@ -1,5 +1,4 @@
 import CashuSwift
-import CodeScanner
 import SwiftData
 import SwiftUI
 
