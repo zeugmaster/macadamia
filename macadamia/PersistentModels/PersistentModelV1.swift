@@ -82,103 +82,7 @@ enum AppSchemaV1: VersionedSchema {
             self.nickName ?? self.url.host() ?? self.url.absoluteString
         }
         
-        func select(allProofs:[Proof], amount:Int, unit:Unit) -> (selected:[Proof], fee:Int)? {
-            
-            let validProofsOfUnit = allProofs.filter({ $0.unit == unit && $0.state == .valid && $0.mint == self})
-            
-            guard !validProofsOfUnit.isEmpty else {
-                return nil
-            }
-            
-            if validProofsOfUnit.allSatisfy({ $0.inputFeePPK == 0 }) {
-                if let selection = Mint.selectWithoutFee(amount: amount, of: validProofsOfUnit) {
-                    return (selection, 0)
-                } else {
-                    return nil
-                }
-            } else {
-                return Mint.selectIncludingFee(amount: amount, of: validProofsOfUnit)
-            }
-        }
         
-        private static func selectWithoutFee(amount: Int, of proofs:[Proof]) -> [Proof]? {
-            
-            guard amount >= 0 else {
-                logger.error("input selection amount can not be negative")
-                return nil
-            }
-            
-            let totalAmount = proofs.reduce(0) { $0 + $1.amount }
-            if totalAmount < amount {
-                return nil
-            }
-            
-            // dp[s] will store a subset of proofs that sum up to s
-            var dp = Array<[Proof]?>(repeating: nil, count: totalAmount + 1)
-            dp[0] = []
-            
-            for proof in proofs {
-                let amount = proof.amount
-                if amount > totalAmount {
-                    continue
-                }
-                for s in stride(from: totalAmount, through: amount, by: -1) {
-                    if let previousSubset = dp[s - amount], dp[s] == nil {
-                        dp[s] = previousSubset + [proof]
-                    }
-                }
-            }
-            
-            // Find the minimal total amount that is at least the target amount
-            for s in amount...totalAmount {
-                if let subset = dp[s] {
-                    return subset
-                }
-            }
-            
-            return nil
-        }
-        
-        private static func selectIncludingFee(amount: Int, of proofs:[Proof]) -> (selected:[Proof], fee:Int)? {
-            
-            // TODO: BRUTE FORCE CHECK FOR POSSIBLE
-            
-            guard amount >= 0 else {
-                logger.error("input selection amount can not be negative")
-                return nil
-            }
-            
-            func fee(_ proofs:[Proof]) -> Int {
-                ((proofs.reduce(0) { $0 + $1.inputFeePPK } + 999) / 1000)
-            }
-            
-            guard var proofsSelected = selectWithoutFee(amount: amount, of: proofs) else {
-                return nil
-            }
-                        
-            var proofsRest:[Proof] = proofs.filter({ !proofsSelected.contains($0) })
-            
-            proofsRest.sort(by: { $0.amount < $1.amount })
-            
-            while proofsSelected.sum < amount + fee(proofsSelected) {
-                if proofsRest.isEmpty {
-                    // TODO: LOG INSUFFICIENT FUNDS
-                    return nil
-                } else {
-                    proofsSelected.append(proofsRest.removeFirst())
-                }
-            }
-            
-            return (proofsSelected, fee(proofsSelected))
-        }
-        
-        func increaseDerivationCounterForKeysetWithID(_ keysetID:String, by n:Int) {
-            if let index = self.keysets.firstIndex(where: { $0.keysetID == keysetID }) {
-                var keyset = self.keysets[index]
-                keyset.derivationCounter += n
-                self.keysets[index] = keyset
-            }
-        }
     }
 
     @Model
@@ -203,7 +107,15 @@ enum AppSchemaV1: VersionedSchema {
         @Relationship(inverse: \Wallet.proofs)
         var wallet: Wallet?
 
-        init(keysetID: String, C: String, secret: String, unit: Unit, inputFeePPK:Int, state: State, amount: Int, mint: Mint, wallet: Wallet) {
+        init(keysetID: String,
+             C: String,
+             secret: String,
+             unit: Unit,
+             inputFeePPK:Int,
+             state: State,
+             amount: Int,
+             mint: Mint,
+             wallet: Wallet) {
             self.proofID = UUID()
             self.keysetID = keysetID
             self.C = C
@@ -217,7 +129,12 @@ enum AppSchemaV1: VersionedSchema {
             self.inputFeePPK = inputFeePPK
         }
 
-        init(_ proofRepresenting: ProofRepresenting, unit: Unit, inputFeePPK:Int, state: State, mint: Mint, wallet: Wallet) {
+        init(_ proofRepresenting: ProofRepresenting,
+             unit: Unit,
+             inputFeePPK:Int,
+             state: State,
+             mint: Mint,
+             wallet: Wallet) {
             self.proofID = UUID()
             self.keysetID = proofRepresenting.keysetID
             self.C = proofRepresenting.C
@@ -321,166 +238,6 @@ enum AppSchemaV1: VersionedSchema {
             set {
                 bolt11MeltQuoteData = try? JSONEncoder().encode(newValue)
             }
-        }
-        
-        static func pendingMintEvent(unit: Unit,
-                                     shortDescription: String,
-                                     visible: Bool = true,
-                                     wallet: Wallet,
-                                     quote: CashuSwift.Bolt11.MintQuote,
-                                     amount: Int,
-                                     expiration: Date,
-                                     mint: Mint) -> Event {
-            Event(date: Date(),
-                  unit: unit,
-                  shortDescription: shortDescription,
-                  visible: visible,
-                  kind: .pendingMint,
-                  wallet: wallet,
-                  bolt11MintQuote: quote,
-                  amount: amount,
-                  expiration: expiration,
-                  minta: [mint]
-            )
-        }
-        
-        static func mintEvent(unit: Unit,
-                              shortDescription: String,
-                              visible: Bool = true,
-                              wallet: Wallet,
-                              quote: CashuSwift.Bolt11.MintQuote,
-                              mint: Mint,
-                              amount: Int) -> Event {
-            Event(date: Date(),
-                  unit: unit,
-                  shortDescription: shortDescription,
-                  visible: visible,
-                  kind: .mint,
-                  wallet: wallet,
-                  bolt11MintQuote: quote,
-                  amount: amount,
-                  minta: [mint]
-            )
-        }
-        
-        static func sendEvent(unit: Unit,
-                              shortDescription: String,
-                              visible: Bool = true,
-                              wallet: Wallet,
-                              amount: Int,
-                              longDescription: String,
-                              proofs: [Proof],
-                              memo: String,
-                              tokens: [TokenInfo],
-                              mint: Mint,
-                              redeemed: Bool = false) -> Event {
-            Event(date: Date(),
-                  unit: unit,
-                  shortDescription: shortDescription,
-                  visible: visible,
-                  kind: .send,
-                  wallet: wallet,
-                  amount: amount,
-                  longDescription: longDescription,
-                  proofs: proofs,
-                  memo: memo,
-                  tokens: tokens,
-                  minta: [mint],
-                  redeemed: redeemed
-            )
-        }
-        
-        static func receiveEvent(unit: Unit,
-                                 shortDescription: String,
-                                 visible: Bool = true,
-                                 wallet: Wallet,
-                                 amount: Int,
-                                 longDescription: String,
-                                 proofs: [Proof],
-                                 memo: String,
-                                 mints: [Mint],
-                                 tokens: [TokenInfo],
-                                 redeemed: Bool) -> Event {
-            Event(date: Date(),
-                  unit: unit,
-                  shortDescription: shortDescription,
-                  visible: visible,
-                  kind: .receive,
-                  wallet: wallet,
-                  amount: amount,
-                  longDescription: longDescription,
-                  proofs: proofs,
-                  memo: memo,
-                  tokens: tokens,
-                  minta: mints,
-                  redeemed: redeemed
-            )
-        }
-        
-        static func pendingMeltEvent(unit: Unit,
-                                     shortDescription: String,
-                                     visible: Bool = true,
-                                     wallet: Wallet,
-                                     quote: CashuSwift.Bolt11.MeltQuote,
-                                     amount: Int,
-                                     expiration: Date,
-                                     mints: [Mint]) -> Event {
-            Event(date: Date(),
-                  unit: unit,
-                  shortDescription: shortDescription,
-                  visible: visible,
-                  kind: .pendingMelt,
-                  wallet: wallet,
-                  bolt11MeltQuote: quote,
-                  amount: amount,
-                  expiration: expiration,
-                  minta: mints
-            )
-        }
-        
-        static func meltEvent(unit: Unit,
-                              shortDescription: String,
-                              visible: Bool = true,
-                              wallet: Wallet,
-                              amount: Int,
-                              longDescription: String,
-                              mints:[Mint]) -> Event {
-            Event(date: Date(),
-                  unit: unit,
-                  shortDescription: shortDescription,
-                  visible: visible,
-                  kind: .melt,
-                  wallet: wallet,
-                  amount: amount,
-                  longDescription: longDescription,
-                  minta: mints
-            )
-        }
-        
-        static func drainEvent(shortDescription: String,
-                               visible:Bool = true,
-                               wallet: Wallet,
-                               tokens: [TokenInfo]) -> Event {
-            Event(date: Date(),
-                  unit: .other,
-                  shortDescription: shortDescription,
-                  visible: visible,
-                  kind: .drain,
-                  wallet: wallet,
-                  tokens: tokens)
-        }
-        
-        static func restoreEvent(shortDescription: String,
-                                 visible: Bool = true,
-                                 wallet: Wallet,
-                                 longDescription: String) -> Event {
-            Event(date: Date(),
-                  unit: .other,
-                  shortDescription: shortDescription,
-                  visible: visible,
-                  kind: .restore,
-                  wallet: wallet,
-                  longDescription: longDescription)
         }
     }
 
