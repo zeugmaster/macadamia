@@ -47,7 +47,7 @@ struct SendView: View {
                     Text("sats")
                 }
                 // TODO: CHECK FOR EMPTY MINT LIST
-                MintPicker(selectedMint: $selectedMint)
+                MintPicker(label: "Send from", selectedMint: $selectedMint)
                     .onChange(of: selectedMint) { _, _ in
                     updateBalance()
                     }
@@ -93,7 +93,7 @@ struct SendView: View {
         .buttonStyle(.bordered)
         .padding()
         .toolbar(.hidden, for: .tabBar)
-        .disabled(numberString.isEmpty || amount == 0 || tokenString != nil)
+        .disabled(numberString.isEmpty || amount <= 0 || tokenString != nil)
         
     }
 
@@ -116,6 +116,8 @@ struct SendView: View {
     var amount: Int {
         return Int(numberString) ?? 0
     }
+    
+    // TODO: break this abomination up into managable chunks
 
     func generateToken() {
         guard let activeWallet,
@@ -169,7 +171,8 @@ struct SendView: View {
                                                     memo: tokenMemo,
                                                     tokens: [TokenInfo(token: tokenString ?? "nil",
                                                                        mint: selectedMint.url.absoluteString,
-                                                                       amount: amount)])
+                                                                       amount: amount)],
+                                                    mint: selectedMint)
                         modelContext.insert(event)
                         try modelContext.save()
                     }
@@ -236,7 +239,8 @@ struct SendView: View {
                                                     memo: tokenMemo,
                                                     tokens: [TokenInfo(token: tokenString ?? "nil",
                                                                        mint: selectedMint.url.absoluteString,
-                                                                       amount: internalSendProofs.sum)])
+                                                                       amount: internalSendProofs.sum)],
+                                                    mint: selectedMint)
                         modelContext.insert(event)
                         try modelContext.save()
                         logger.info("successfully created sendable token and saved change to db.")

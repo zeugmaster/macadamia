@@ -59,7 +59,7 @@ struct MintManagerView: View {
                         } footer: {
                             Text("""
                                  Hold and drag to change the order. The first mint will be \
-                                 default selected across the application.
+                                 the default selected across the application.
                                  """)
                         }
                     }

@@ -14,6 +14,7 @@ struct MintPicker: View {
         wallet.active == true
     }) private var wallets: [Wallet]
     
+    var label: String
     @Binding var selectedMint:Mint?
     
     @State private var mintNamesAndIDs = [(name: String, id: UUID)]()
@@ -33,7 +34,7 @@ struct MintPicker: View {
             if mintNamesAndIDs.isEmpty {
                 Text("No mints yet.")
             } else {
-                Picker("Mint", selection: $selectedID) {
+                Picker(label, selection: $selectedID) {
                     ForEach(mintNamesAndIDs, id: \.id) { entry in
                         Text(entry.name)
                     }
@@ -42,16 +43,26 @@ struct MintPicker: View {
         }
         .onAppear {
             populate()
+            if let selectedMint = selectedMint {
+                selectedID = selectedMint.mintID
+            } else if let first = mintNamesAndIDs.first {
+                selectedID = first.id
+                selectedMint = sortedMintsOfActiveWallet.first(where: { $0.mintID == selectedID })
+            }
         }
         .onChange(of: selectedID) { oldValue, newValue in
             selectedMint = sortedMintsOfActiveWallet.first(where: { $0.mintID == newValue })
+        }
+        .onChange(of: selectedMint) { oldValue, newValue in
+            if let newMint = newValue {
+                selectedID = newMint.mintID
+            }
         }
     }
     
     func populate() {
         mintNamesAndIDs = sortedMintsOfActiveWallet.map( { mint in
-            let displayName = mint.nickName ?? mint.url.host() ?? mint.url.absoluteString
-            return (displayName, mint.mintID)
+            (mint.displayName, mint.mintID)
         })
         if let first = mintNamesAndIDs.first {
             selectedID = first.id

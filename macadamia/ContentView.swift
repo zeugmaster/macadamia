@@ -9,6 +9,7 @@ struct URLState: Equatable {
 }
 
 struct ContentView: View {
+    
     @Environment(\.modelContext) private var modelContext
     @Query private var wallets: [Wallet]
     
@@ -16,8 +17,8 @@ struct ContentView: View {
         get {
             if wallets.filter({ $0.active == true }).count > 1 {
                 logger.critical("""
-                                The database seems to contains more than one wallet marked ACTIVE. \
-                                this will give undefined results.
+                                The database seems to contain more than one wallet marked ACTIVE. \
+                                this will give undefined behaviour.
                                 """)
             }
             if !wallets.isEmpty && wallets.filter({ $0.active == true }).count < 1 {
@@ -128,13 +129,7 @@ struct ContentView: View {
     }
 
     func checkReleaseNotes() {
-        let releaseNotesSeenHash = UserDefaults.standard.string(forKey: "LastReleaseNotesAcknoledgedHash")
-        if releaseNotesSeenHash ?? "not set" != ReleaseNote.hashString() {
-            releaseNotesPopoverShowing = true
-            UserDefaults.standard.setValue(ReleaseNote.hashString(),
-                                           forKey: "LastReleaseNotesAcknoledgedHash")
-            logger.info("Release notes have changed and will be shown.")
-        }
+        releaseNotesPopoverShowing = AppState.showReleaseNotes()
     }
 
     func handleUrl(_ url: URL) {

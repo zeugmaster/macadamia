@@ -28,11 +28,10 @@ struct SettingsView: View {
                 } header: {
                     Text("cashu")
                 }
-//                Section {
-//                    NavigationLink(destination: RelayManagerView()) { Text("Relays") }
-//                } header: {
-//                    Text("nostr")
-//                }
+                
+                Section {
+                    ConversionPicker()
+                }
                 Section {
                     NavigationLink("About this Release", destination: ReleaseNoteView())
                     
@@ -80,6 +79,38 @@ struct SettingsView: View {
                 .toolbar(.visible, for: .tabBar)
             }
             .navigationTitle("Settings")
+        }
+    }
+}
+
+struct ConversionPicker: View {
+    @EnvironmentObject private var appState: AppState
+    
+    let units = ["USD", "EUR", "none"]
+    
+    @State private var selectedUnitString:String
+    
+    init() {
+        _selectedUnitString = State(initialValue: "none")
+    }
+    
+    var body: some View {
+        Picker("Display Fiat Value as:", selection: $selectedUnitString) {
+            ForEach(units, id: \.self) { unitString in
+                Text(unitString)
+            }
+        }
+        .onAppear(perform: {
+            if let initial = units.first(where: { $0.lowercased() == appState.preferredConversionUnit.rawValue }) {
+                selectedUnitString = initial
+            } else {
+                logger.warning("Conversion picker could not set initial value from user defaults. this will get wonky")
+            }
+        })
+        .onChange(of: selectedUnitString) { oldValue, newValue in
+            if let unit = Unit(newValue) {
+                appState.preferredConversionUnit = unit
+            }
         }
     }
 }

@@ -71,7 +71,7 @@ struct MintView: View {
                 if let mint = pendingMintEvent?.mints?.first {
                     Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
                 } else {
-                    MintPicker(selectedMint: $selectedMint)
+                    MintPicker(label: "Mint", selectedMint: $selectedMint)
                 }
             }
             if let quote {
@@ -137,7 +137,7 @@ struct MintView: View {
             })
             .buttonStyle(.bordered)
             .padding()
-            .disabled(amountString.isEmpty || amount == 0 || loadingInvoice)
+            .disabled(amountString.isEmpty || amount <= 0 || loadingInvoice)
         } else {
             Button(action: {
                 requestMint()
@@ -217,7 +217,7 @@ struct MintView: View {
                                                    quote: quote!, // FIXME: SAFE UNWRAPPING
                                                    amount: quote?.requestDetail?.amount ?? 0,
                                                    expiration: Date(timeIntervalSince1970: TimeInterval(quote!.expiry)),
-                                                   mints: [selectedMint])
+                                                   mint: selectedMint)
                 // -- main thread
                 try await MainActor.run {
                     pendingMintEvent = event
@@ -278,6 +278,7 @@ struct MintView: View {
                                                 shortDescription: "Mint",
                                                 wallet: activeWallet,
                                                 quote: quote,
+                                                mint: selectedMint,
                                                 amount: quote.requestDetail?.amount ?? 0)
                     modelContext.insert(event)
                     if let pendingMintEvent { pendingMintEvent.visible = false }
