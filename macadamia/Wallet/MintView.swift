@@ -188,12 +188,10 @@ struct MintView: View {
     // getQuote can only be called when UI is not populated
     func getQuote() { // TODO: check continually whether the quote was paid
         
-        guard let selectedMint, let activeWallet else {
-            print("could not request quote: selectedMint or activeWallet are nil")
+        guard let selectedMint else {
             logger.error("""
                          unable to request quote because one or more of the following variables are nil:
                          selectedMInt: \(selectedMint.debugDescription)
-                         activeWallet: \(activeWallet.debugDescription)
                          """)
             return
         }
@@ -204,97 +202,70 @@ struct MintView: View {
             do {
                 let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
                                                                       amount: self.amount)
-                quote = try await CashuSwift.getQuote(mint: selectedMint,
-                                                      quoteRequest: quoteRequest) as? CashuSwift.Bolt11.MintQuote
                 
+                let (quote, event) = try await selectedMint.getQuote(for: quoteRequest)
+                self.quote = quote as? CashuSwift.Bolt11.MintQuote
                 loadingInvoice = false
-                
-                logger.info("Successfully requested mint quote from mint.")
-
-                let event = Event.pendingMintEvent(unit: Unit(quote?.requestDetail?.unit) ?? .other,
-                                                   shortDescription: "Mint Quote",
-                                                   wallet: activeWallet,
-                                                   quote: quote!, // FIXME: SAFE UNWRAPPING
-                                                   amount: quote?.requestDetail?.amount ?? 0,
-                                                   expiration: Date(timeIntervalSince1970: TimeInterval(quote!.expiry)),
-                                                   mint: selectedMint)
-                // -- main thread
-                try await MainActor.run {
-                    pendingMintEvent = event
-                    modelContext.insert(event)
-                    try modelContext.save()
-                }
+                pendingMintEvent = event
+                insert([event])
                 
             } catch {
                 displayAlert(alert: AlertDetail(error))
-                logger.error("could not get quote from mint \(selectedMint.url.absoluteString) because of error \(error)")
+                logger.error("""
+                             could not get quote from mint \(selectedMint.url.absoluteString) \
+                             because of error \(error)
+                             """)
                 loadingInvoice = false
             }
         }
     }
 
     func requestMint() {
+        
         guard let quote,        // TODO: improve handling
-              let activeWallet,
               let selectedMint else {
             logger.error("""
                          unable to request melt because one or more of the following variables are nil:
                          quote: \(quote.debugDescription)
                          selectedMInt: \(selectedMint.debugDescription)
-                         activeWallet: \(activeWallet.debugDescription)
                          """)
             return
         }
         
         minting = true
+        
         Task {
             do {
                 logger.debug("requesting mint for quote with id \(quote.quote)...")
                                 
-                let proofs: [Proof] = try await CashuSwift.issue(for: quote, on: selectedMint,
-                                                                 seed: activeWallet.seed).map { p in
-                    let unit = Unit(quote.requestDetail?.unit ?? "other") ?? .other
-                    return Proof(p,
-                                 unit: unit,
-                                 inputFeePPK: 0,
-                                 state: .valid,
-                                 mint: selectedMint,
-                                 wallet: activeWallet)
-                }
+                let (proofs, event) = try await selectedMint.issue(for: quote)
                 
-                // replace keyset to persist derivation counter
-                selectedMint.increaseDerivationCounterForKeysetWithID(proofs.first!.keysetID,
-                                                                      by: proofs.count)
-                let keysetFee = selectedMint.keysets.first(where: { $0.keysetID == proofs.first?.keysetID })?.inputFeePPK ?? 0
-                proofs.forEach({ $0.inputFeePPK = keysetFee })
+                pendingMintEvent?.visible = false
+                minting = false
+                mintSuccess = true
                 
-                // FIXME: for some reason SwiftData does not manage the inverse relationship here, so we have to do it ourselves
-                selectedMint.proofs?.append(contentsOf: proofs)
-                activeWallet.proofs.append(contentsOf: proofs)
+                insert(proofs + [event])
                 
-                try await MainActor.run {
-                    proofs.forEach { modelContext.insert($0) }
-                    let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
-                                                shortDescription: "Mint",
-                                                wallet: activeWallet,
-                                                quote: quote,
-                                                mint: selectedMint,
-                                                amount: quote.requestDetail?.amount ?? 0)
-                    modelContext.insert(event)
-                    if let pendingMintEvent { pendingMintEvent.visible = false }
-                    try modelContext.save()
-                    logger.debug("Added \(proofs.count) proofs to the db.")
-                    minting = false
-                    mintSuccess = true
-                }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     dismiss()
                 }
+                
             } catch {
+                
                 displayAlert(alert: AlertDetail(error))
                 logger.error("Minting was not successful with mint \(selectedMint.url.absoluteString) due to error \(error)")
                 minting = false
             }
+        }
+    }
+    
+    @MainActor
+    func insert(_ models: [any PersistentModel]) {
+        models.forEach({ modelContext.insert($0) })
+        do {
+            try modelContext.save()
+        } catch {
+            logger.error("Saving SwiftData model context failed with error: \(error)")
         }
     }
 

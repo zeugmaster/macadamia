@@ -63,7 +63,7 @@ struct AlertDetail {
                 self = AlertDetail(title: "Unknown Error", description: message)
                 
             default:
-                self = AlertDetail(title: "Unhandled Error", description: "An unhandled Cashu error occurred.")
+                self = AlertDetail(title: "Unhandled Error", description: String(describing: cashuError))
             }
         default:
             self = AlertDetail(title: "General Error", description: error.localizedDescription)

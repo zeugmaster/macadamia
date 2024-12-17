@@ -2,6 +2,13 @@ import CashuSwift
 import SwiftData
 import SwiftUI
 
+enum PaymentState {
+    case ready
+    case loading
+    case success
+    case failed
+}
+
 struct MeltView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -28,8 +35,7 @@ struct MeltView: View {
     @State var pendingMeltEvent: Event?
 
     @State var invoiceString: String = ""
-    @State var loading = false
-    @State var success = false
+    @State var paymenState: PaymentState = .ready
     
     @State private var selectedMint:Mint?
     
@@ -118,19 +124,20 @@ struct MeltView: View {
             Button(action: {
                 melt()
             }, label: {
-                if loading {
+                switch paymenState {
+                case .ready, .failed:
+                    Text("Melt ecash")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                case .loading:
                     Text("Melting...")
                         .frame(maxWidth: .infinity)
                         .padding()
-                } else if success {
+                case .success:
                     Text("Done!")
                         .frame(maxWidth: .infinity)
                         .padding()
                         .foregroundColor(.green)
-                } else {
-                    Text("Melt ecash")
-                        .frame(maxWidth: .infinity)
-                        .padding()
                 }
             })
             .foregroundColor(.white)
@@ -138,7 +145,7 @@ struct MeltView: View {
             .padding()
             .bold()
             .toolbar(.hidden, for: .tabBar)
-            .disabled(invoiceString.isEmpty || loading || success)
+            .disabled(invoiceString.isEmpty || paymenState == .loading || paymenState == .success)
             .navigationTitle("Melt")
             .navigationBarTitleDisplayMode(.inline)
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
@@ -164,11 +171,6 @@ struct MeltView: View {
     }
 
     func updateBalance() {
-        guard !proofsOfSelectedMint.isEmpty else {
-            logger.warning("could not update balance, no proofs available")
-            return
-        }
-        
         selectedMintBalance = proofsOfSelectedMint.filter({ $0.state == .valid }).sum
     }
 
@@ -176,45 +178,24 @@ struct MeltView: View {
         try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString)
     }
     
-    // getQuote can only be called when UI is not populated
     func getQuote() {
         
-        guard let activeWallet, let selectedMint else {
+        guard let selectedMint else {
             logger.warning("unable to get quote, activeWallet or selectedMint is nil")
             return
         }
-        
-        // needs UI for loading quote, analogous to mint UI
         
         Task {
             do {
                 let quoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat", // TODO: REMOVE HARD CODED UNIT
                                                                       request: invoiceString,
                                                                       options: nil)
-               
-                guard let meltQuote = try await CashuSwift.getQuote(mint: selectedMint,
-                                                                    quoteRequest: quoteRequest) as? CashuSwift.Bolt11.MeltQuote else {
-                    logger.warning("could not parse melt quote as bolt11 quote object")
-                    return
-                }
-                                
-                let event = Event.pendingMeltEvent(unit: .sat,
-                                                   shortDescription: "Melt Quote",
-                                                   wallet: activeWallet,
-                                                   quote: meltQuote,
-                                                   amount: (meltQuote.amount),
-                                                   expiration: Date(timeIntervalSince1970: TimeInterval(meltQuote.expiry)),
-                                                   mints: [selectedMint])
-                // -- main thread
-                await MainActor.run {
-                    self.pendingMeltEvent = event
-                    modelContext.insert(event)
-                    do {
-                        try modelContext.save()
-                    } catch {
-                        print(error)
-                    }
-                }
+                
+                let (quote, event) = try await selectedMint.getQuote(for: quoteRequest)
+                
+                self.pendingMeltEvent = event
+                insert([event])
+                
             } catch {
                 logger.warning("Unable to get melt quote. error \(error)")
                 displayAlert(alert: AlertDetail(error))
@@ -224,7 +205,6 @@ struct MeltView: View {
 
     func melt() {
         guard let selectedMint,
-              let activeWallet,
               let quote
         else {
             logger.warning("""
@@ -255,100 +235,33 @@ struct MeltView: View {
             return
         }
         
-        // this works and is reflected in the database
         selection.selected.forEach { $0.state = .pending }
         
-        loading = true
-
-        // TODO: refactor this monstrosity
+        paymenState = .loading
         
         Task {
             do {
                 
-                logger.debug("Attempting to melt...")
-                
-                let meltResult = try await CashuSwift.melt(mint: selectedMint,
-                                                           quote: quote,
-                                                           proofs: selection.selected,
-                                                           seed: activeWallet.seed)
-                
-                // TODO: temp disable back button (?)
-
-                if meltResult.paid {
+                if let (changeProofs, event) = try await selectedMint.melt(for: quote,
+                                                                           with: selection.selected) {
+                    // melt was successful
+                    paymenState = .success
+                    pendingMeltEvent?.visible = false
+                    insert(changeProofs + [event])
                     
-                    logger.debug("Melt function returned a quote with state PAID")
-                    
-                    try await MainActor.run {
-                        
-                        loading = false
-                        success = true
-                        
-                        print(meltResult)
-                        selectedMint.keysets.forEach({ print($0.keysetID) })
-                        
-                        if !meltResult.change.isEmpty,
-                           let changeKeyset = selectedMint.keysets.first(where: { $0.keysetID == meltResult.change.first?.keysetID }) {
-                            
-                            logger.debug("Melt quote includes change, attempting saving to db.")
-                            
-                            let unit = Unit(changeKeyset.unit) ?? .other
-                            let inputFee = changeKeyset.inputFeePPK
-                            
-                            let internalChangeProofs = meltResult.change.map({ Proof($0,
-                                                                                     unit: unit,
-                                                                                     inputFeePPK: inputFee,
-                                                                                     state: .valid,
-                                                                                     mint: selectedMint,
-                                                                                     wallet: activeWallet) })
-                            
-                            selectedMint.proofs?.append(contentsOf: internalChangeProofs)
-                            activeWallet.proofs.append(contentsOf: internalChangeProofs)
-                            internalChangeProofs.forEach({ modelContext.insert($0) })
-                            
-                            selectedMint.increaseDerivationCounterForKeysetWithID(changeKeyset.keysetID,
-                                                                                  by: internalChangeProofs.count)
-                        }
-                        
-                        // this does not seem to work because it is not reflected in the database
-                        selection.selected.forEach { $0.state = .spent }
-
-                        // make pending melt event non visible and create melt event for history
-                        let meltEvent = Event.meltEvent(unit: selectedUnit,
-                                                        shortDescription: "Melt",
-                                                        wallet: activeWallet,
-                                                        amount: (quote.amount),
-                                                        longDescription: "",
-                                                        mints: [selectedMint])
-                        
-                        pendingMeltEvent?.visible = false
-                        modelContext.insert(meltEvent)
-                        try modelContext.save()
-                        print(meltResult)
-                    }
-
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                         dismiss()
                     }
-                    
                 } else {
-                    await MainActor.run {
-                        logger.info("""
-                                    Melt function returned a quote with state NOT PAID, \
-                                    probably because the lightning payment failed
-                                    """)
-                        
-                        selection.selected.forEach { $0.state = .valid }
-                        loading = false
-                        success = false
-                        try? modelContext.save()
-                        displayAlert(alert: AlertDetail(title: "Unsuccessful",
-                                                        description: """
-                                                                     The Lighning invoice could not be \
-                                                                     payed by the mint. Please try again later.
-                                                                     """))
-                        
-                    }
+                    // melt was NOT successful
+                    paymenState = .failed
+                    displayAlert(alert: AlertDetail(title: "Unsuccessful",
+                                                    description: """
+                                                                 The Lighning invoice could not be \
+                                                                 payed by the mint. Please try again later.
+                                                                 """))
                 }
+
             } catch {
                 // TODO: UI for when quote expires etc.
                 
@@ -358,13 +271,23 @@ struct MeltView: View {
                 }
                 
                 logger.error("Melt operation falied with error: \(error)")
-                loading = false
-                success = false
+                paymenState = .ready
                 displayAlert(alert: AlertDetail(error))
             }
         }
     }
-
+    
+    @MainActor
+    func insert(_ models: [any PersistentModel]) {
+        models.forEach({ modelContext.insert($0) })
+        do {
+            try modelContext.save()
+            logger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
+        } catch {
+            logger.error("Saving SwiftData model context failed with error: \(error)")
+        }
+    }
+    
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true

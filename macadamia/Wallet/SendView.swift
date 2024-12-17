@@ -120,9 +120,8 @@ struct SendView: View {
     // TODO: break this abomination up into managable chunks
 
     func generateToken() {
-        guard let activeWallet,
-              let selectedMint
-        else {
+        
+        guard let selectedMint else {
             logger.error("""
                          unable to generate Token because one or more of the following variables are nil:
                          selectedMInt: \(selectedMint.debugDescription)
@@ -133,14 +132,10 @@ struct SendView: View {
 
         Task {
             do {
-                let version: CashuSwift.TokenVersion = .V3
                 
-                // using the .pick function to preselect from all proofs of this mint
                 // TODO: check for correct unit
                 let selectedUnit: Unit = .sat
-                
-                // let recipientSwapFee =
-                
+                                
                 guard let preSelect = selectedMint.select(allProofs:allProofs,
                                                           amount: amount,
                                                           unit: selectedUnit) else {
@@ -149,108 +144,28 @@ struct SendView: View {
                     return
                 }
                 
-                // make input proofs .pending
-                preSelect.selected.forEach({ $0.state = .pending })
+                let (token, swappedProofs, event) = try await selectedMint.send(proofs: preSelect.selected,
+                                                                                targetAmount: amount,
+                                                                                memo: tokenMemo)
                 
-                if amount == preSelect.selected.sum {
-                    logger.debug("Token amount and selected proof sum are an exact match, no swap necessary...")
-                    
-                    // construct token
-                    
-                    let proofContainer = CashuSwift.ProofContainer(mint: selectedMint.url.absoluteString,
-                                                                   proofs: preSelect.selected.map({ CashuSwift.Proof($0) }))
-                    let token = CashuSwift.Token(token: [proofContainer], memo: tokenMemo, unit: selectedUnit.rawValue)
-                    try await MainActor.run {
-                        try tokenString = token.serialize(version)
-                        let event = Event.sendEvent(unit: selectedUnit,
-                                                    shortDescription: "Send",
-                                                    wallet: activeWallet,
-                                                    amount: amount,
-                                                    longDescription: "",
-                                                    proofs: preSelect.selected,
-                                                    memo: tokenMemo,
-                                                    tokens: [TokenInfo(token: tokenString ?? "nil",
-                                                                       mint: selectedMint.url.absoluteString,
-                                                                       amount: amount)],
-                                                    mint: selectedMint)
-                        modelContext.insert(event)
-                        try modelContext.save()
-                    }
-                    
-                } else if preSelect.selected.sum > amount {
-                    logger.debug("Token amount and selected proof are not a match, swapping...")
-                    
-                    // swap to amount specified by user
-                    let (sendProofs, changeProofs) = try await CashuSwift.swap(mint: selectedMint,
-                                                                               proofs: preSelect.selected,
-                                                                               amount: amount,
-                                                                               seed: activeWallet.seed)
-                    
-                    // add return tokens to db, sendProofs: pending, changeProofs valid
-                    let usedKeyset = selectedMint.keysets.first(where: { $0.keysetID == sendProofs.first?.keysetID })
-                    
-                    // if the swap succeeds the input proofs need to be marked as spent
-                    preSelect.selected.forEach({ $0.state = .spent })
-                    
-                    let feeRate = usedKeyset?.inputFeePPK ?? 0
-                    
-                    try await MainActor.run {
-                        let internalSendProofs = sendProofs.map({ Proof($0,
-                                                                        unit: selectedUnit,
-                                                                        inputFeePPK: feeRate,
-                                                                        state: .pending,
-                                                                        mint: selectedMint,
-                                                                        wallet: activeWallet) })
-                        
-                        internalSendProofs.forEach({ modelContext.insert($0) })
-                        activeWallet.proofs.append(contentsOf: internalSendProofs)
-                        
-                        let internalChangeProofs = changeProofs.map({ Proof($0,
-                                                                            unit: selectedUnit,
-                                                                            inputFeePPK: feeRate,
-                                                                            state: .valid,
-                                                                            mint: selectedMint,
-                                                                            wallet: activeWallet) })
-                        
-                        internalChangeProofs.forEach({ modelContext.insert($0) })
-                        activeWallet.proofs.append(contentsOf: internalChangeProofs)
-                        
-                        selectedMint.proofs?.append(contentsOf: internalSendProofs + internalChangeProofs)
-                        
-                        if let usedKeyset {
-                            selectedMint.increaseDerivationCounterForKeysetWithID(usedKeyset.keysetID,
-                                                                                  by: internalSendProofs.count + internalChangeProofs.count)
-                        } else {
-                            logger.error("Could not determine applied keyset! This will lead to issues with det sec counter and fee rates.")
-                        }
-                        
-                        try modelContext.save()
-                        // construct token with sendProofs
-                        let proofContainer = CashuSwift.ProofContainer(mint: selectedMint.url.absoluteString, proofs: sendProofs.map({ CashuSwift.Proof($0) }))
-                        let token = CashuSwift.Token(token: [proofContainer], memo: tokenMemo, unit: selectedUnit.rawValue)
-                        tokenString = try token.serialize(version)
-                        // log event
-                        let event = Event.sendEvent(unit: selectedUnit,
-                                                    shortDescription: "Send",
-                                                    wallet: activeWallet,
-                                                    amount: (amount),
-                                                    longDescription: "",
-                                                    proofs: internalSendProofs,
-                                                    memo: tokenMemo,
-                                                    tokens: [TokenInfo(token: tokenString ?? "nil",
-                                                                       mint: selectedMint.url.absoluteString,
-                                                                       amount: internalSendProofs.sum)],
-                                                    mint: selectedMint)
-                        modelContext.insert(event)
-                        try modelContext.save()
-                        logger.info("successfully created sendable token and saved change to db.")
-                    }
-                } else {
-                    logger.critical("amount must not exceed preselected proof sum. .pick() should have returned nil.")
-                }
+                insert(swappedProofs + [event])
+                
+                tokenString = try token.serialize(.V3)
+                
             } catch {
                 displayAlert(alert: AlertDetail(error))
             }
+        }
+    }
+    
+    @MainActor
+    func insert(_ models: [any PersistentModel]) {
+        models.forEach({ modelContext.insert($0) })
+        do {
+            try modelContext.save()
+            logger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
+        } catch {
+            logger.error("Saving SwiftData model context failed with error: \(error)")
         }
     }
 

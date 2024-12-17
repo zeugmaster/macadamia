@@ -20,6 +20,7 @@
 		376F43B22B4FEC0D00E55B0F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 376F43B12B4FEC0D00E55B0F /* README.md */; };
 		377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377FFEFF2BC43B6900DD2635 /* MarkdownUI */; };
 		377FFF022BC451AB00DD2635 /* release-notes.md in Resources */ = {isa = PBXBuildFile; fileRef = 377FFF012BC451AB00DD2635 /* release-notes.md */; };
+		378B20482D09F3FD003FEEBD /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
 		3792122E2B29E7520081F161 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 3792122D2B29E7520081F161 /* BigNumber */; };
 		379212342B29E7B30081F161 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212332B29E7B30081F161 /* BIP39 */; };
 		3793B99E2CFCC8F80077F755 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3793B99D2CFCC8F80077F755 /* AppState.swift */; };
@@ -48,6 +49,7 @@
 		3725D4D72CD5001A0037DD08 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		376F43B12B4FEC0D00E55B0F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		377FFF012BC451AB00DD2635 /* release-notes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "release-notes.md"; sourceTree = "<group>"; };
+		378B20472D09F3FD003FEEBD /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
 		3793B99D2CFCC8F80077F755 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		37DC18A12B8669A900F9B37B /* macadamiaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macadamiaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		37DC18A32B8669A900F9B37B /* macadamiaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macadamiaTests.swift; sourceTree = "<group>"; };
@@ -116,6 +118,7 @@
 			children = (
 				37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */,
 				372034B92B29E1BC00C4F955 /* macadamiaApp.swift */,
+				378B20472D09F3FD003FEEBD /* Error.swift */,
 				3793B99D2CFCC8F80077F755 /* AppState.swift */,
 				372034BB2B29E1BC00C4F955 /* ContentView.swift */,
 				3793B9A12D0047140077F755 /* Wallet */,
@@ -286,6 +289,7 @@
 			files = (
 				372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */,
 				372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */,
+				378B20482D09F3FD003FEEBD /* Error.swift in Sources */,
 				3793B99E2CFCC8F80077F755 /* AppState.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
