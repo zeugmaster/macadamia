@@ -1,10 +1,3 @@
-//
-//  melt.swift
-//  macadamia
-//
-//  Created by zm on 12.12.24.
-//
-
 import Foundation
 import CashuSwift
 
@@ -55,7 +48,7 @@ extension AppSchemaV1.Mint {
                 wallet.proofs.append(contentsOf: internalChangeProofs)
                 
                 self.increaseDerivationCounterForKeysetWithID(changeKeyset.keysetID,
-                                                                      by: internalChangeProofs.count)
+                                                              by: meltResult.derivationCounterIncrease)
             }
             
             // this does not seem to work because it is not reflected in the database
