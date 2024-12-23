@@ -61,10 +61,18 @@ extension AppSchemaV1.Mint {
             logger.debug("Token amount and selected proof are not a match, swapping...")
             
             // swap to amount specified by user
-            let (sendProofs, changeProofs) = try await CashuSwift.swap(mint: self,
-                                                                       proofs: proofs,
-                                                                       amount: targetAmount,
-                                                                       seed: wallet.seed)
+            let sendProofs: [ProofRepresenting]
+            let changeProofs: [ProofRepresenting]
+            
+            do {
+                (sendProofs, changeProofs) = try await CashuSwift.swap(mint: self,
+                                                         proofs: proofs,
+                                                         amount: targetAmount,
+                                                         seed: wallet.seed)
+            } catch {
+                proofs.forEach({ $0.state = .valid })
+                throw error
+            }
             
             // increase derivation counter BEFORE any more failure prone operations
             let usedKeyset = self.keysets.first(where: { $0.keysetID == sendProofs.first?.keysetID })
