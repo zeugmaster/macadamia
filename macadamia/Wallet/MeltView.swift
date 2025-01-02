@@ -191,7 +191,7 @@ struct MeltView: View {
                                                                       request: invoiceString,
                                                                       options: nil)
                 
-                let (quote, event) = try await selectedMint.getQuote(for: quoteRequest)
+                let (_, event) = try await selectedMint.getQuote(for: quoteRequest)
                 
                 self.pendingMeltEvent = event
                 insert([event])
@@ -216,7 +216,7 @@ struct MeltView: View {
             return
         }
         
-        let selectedUnit:Unit = .sat
+//        let selectedUnit:Unit = .sat
         
         // TODO: ADD FEE AMOUNT UI AND INFO
 

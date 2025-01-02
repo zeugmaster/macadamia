@@ -139,7 +139,7 @@ struct ReceiveView: View {
     }
 
     private func redeem() {
-        guard let activeWallet, let token, let tokenString else {
+        guard let activeWallet, let token else {
             logger.error("""
                          "could not redeem, one or more of the following variables are nil:
                          activeWallet: \(activeWallet.debugDescription)
