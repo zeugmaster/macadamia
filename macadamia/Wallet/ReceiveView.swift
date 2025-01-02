@@ -14,8 +14,6 @@ struct ReceiveView: View {
         wallets.first
     }
 
-//    @ObservedObject var qrsVM = QRScannerViewModel()
-
     @State var tokenString: String?
     @State var token: CashuSwift.Token?
     @State var tokenMemo: String?
@@ -30,24 +28,21 @@ struct ReceiveView: View {
 
     init(tokenString: String? = nil) {
         self._tokenString = State(initialValue: tokenString)
-//        qrsVM.onResult = scannerDidDecodeString(_:)
     }
 
     var body: some View {
         VStack {
-            List {
-                if tokenString != nil {
+            if let tokenString {
+                List {
                     Section {
-                        TokenText(text: tokenString!)
+                        TokenText(text: tokenString)
                             .frame(idealHeight: 70)
-                        // TOTAL AMOUNT
                         HStack {
                             Text("Total Amount: ")
                             Spacer()
                             Text(String(totalAmount) + " sats")
                         }
                         .foregroundStyle(.secondary)
-                        // TOKEN MEMO
                         if let tokenMemo, !tokenMemo.isEmpty {
                             Text("Memo: \(tokenMemo)")
                                 .foregroundStyle(.secondary)
@@ -64,7 +59,6 @@ struct ReceiveView: View {
                             }
                         }
                     }
-
                     Section {
                         Button {
                             reset()
@@ -77,35 +71,14 @@ struct ReceiveView: View {
                         }
                         .disabled(addingMint)
                     }
-                } else {
-                    // MARK: This check is necessary to prevent a bug in URKit (or the system, who knows)
-                    // MARK: from crashing the app when using the camera on an Apple Silicon Mac
-
-                    if !ProcessInfo.processInfo.isiOSAppOnMac {
-                        QRScanner(onResult: scannerDidDecodeString(_:))
-                            .frame(minHeight: 300, maxHeight: 400)
-                            .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
-                    }
-
-                    Button {
-                        paste()
-                    } label: {
-                        HStack {
-                            Text("Paste from clipboard")
-                            Spacer()
-                            Image(systemName: "list.clipboard")
-                        }
+                }
+            } else {
+                List {
+                    InputView { result in
+                        parseTokenString(input: result)
                     }
                 }
             }
-            .onAppear(perform: {
-                if let tokenString {
-                    parseTokenString(input: tokenString)
-                }
-            })
-            .alertView(isPresented: $showAlert, currentAlert: currentAlert)
-            .navigationTitle("Receive")
-            .toolbar(.hidden, for: .tabBar)
             Button(action: {
                 redeem()
             }, label: {
@@ -131,20 +104,17 @@ struct ReceiveView: View {
             .toolbar(.hidden, for: .tabBar)
             .disabled(tokenString == nil || loading || success || addingMint)
         }
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+        .navigationTitle("Receive")
+        .toolbar(.hidden, for: .tabBar)
+        .onAppear(perform: {
+            if let tokenString {
+                parseTokenString(input: tokenString)
+            }
+        })
     }
 
     // MARK: - LOGIC
-
-    private func paste() {
-        let pasteString = UIPasteboard.general.string ?? ""
-        logger.info("user pasted string \(pasteString.prefix(20) + (pasteString.count < 20 ? "" : "..."))")
-        parseTokenString(input: pasteString)
-    }
-    
-    @MainActor
-    private func scannerDidDecodeString(_ string: String) {
-        parseTokenString(input: string)
-    }
 
     @MainActor
     private func parseTokenString(input: String) {
@@ -178,90 +148,17 @@ struct ReceiveView: View {
             return
         }
 
-        let mintsInToken = activeWallet.mints.filter { mint in
-            token.token.contains { fragment in
-                mint.url.absoluteString == fragment.mint
-            }
-        }
-
-        guard mintsInToken.count == token.token.count else {
-            logger.error("mintsInToken.count does not equal token.token.count")
-            displayAlert(alert: AlertDetail(title: "Unable to redeem",
-                                            description: "Are all mints from this token known to the wallet?"))
-            return
-        }
-
         loading = true
-
-        var combinedProofs: [Proof] = []
 
         Task {
             do {
-                logger.debug("attempting to receive token...")
-                let proofsDict = try await mintsInToken.receive(token: token, seed: activeWallet.seed)
-                for mint in mintsInToken {
-                    let proofsPerMint = proofsDict[mint.url.absoluteString]!
-                    let internalProofs = proofsPerMint.map { p in
-                        let keyset = mint.keysets.first(where: { $0.keysetID == p.keysetID } )
-                        let fee = keyset?.inputFeePPK
-                        let unit = Unit(keyset?.unit)
-                        
-                        if unit == nil {
-                            logger.error("wallet could not determine unit for incoming proofs. defaulting to .sat")
-                        }
-                        
-                        return Proof(p,
-                                     unit: unit ?? .sat,
-                                     inputFeePPK: fee ?? 0,
-                                     state: .valid,
-                                     mint: mint,
-                                     wallet: activeWallet)
-                    }
-                    
-                    if let usedKeyset = mint.keysets.first(where: { $0.keysetID == internalProofs.first?.keysetID }) {
-                        mint.increaseDerivationCounterForKeysetWithID(usedKeyset.keysetID, by: internalProofs.count)
-                    } else {
-                        logger.error("""
-                                     Could not determine applied keyset! \
-                                     This will lead to issues with det sec counter and fee rates.
-                                     """)
-                    }
-                    
-                    mint.proofs?.append(contentsOf: internalProofs)
-                    activeWallet.proofs.append(contentsOf: internalProofs)
-                    
-                    internalProofs.forEach { modelContext.insert($0) }
-                    
-                    combinedProofs.append(contentsOf: internalProofs)
-                    
-                    logger.info("""
-                                receiving \(internalProofs.count) proof(s) with sum \
-                                \(internalProofs.sum) from mint \(mint.url.absoluteString)
-                                """)
-                }
+                let (combinedProofs, event) = try await activeWallet.redeem(token)
                 
-                let tokenInfo = TokenInfo(token: tokenString,
-                                          mint: mintsInToken.count == 1 ? mintsInToken.first!.url.absoluteString : "Multi Mint",
-                                          amount: combinedProofs.sum)
+                insert(combinedProofs + [event])
+                try modelContext.save()
                 
-                let event = Event.receiveEvent(unit: .sat,
-                                               shortDescription: "Receive",
-                                               wallet: activeWallet,
-                                               amount: combinedProofs.sum,
-                                               longDescription: "",
-                                               proofs: combinedProofs,
-                                               memo: token.memo ?? "",
-                                               tokens: [tokenInfo],
-                                               redeemed: true)
-                
-                try await MainActor.run {
-                    modelContext.insert(event)
-                    try modelContext.save()
-                    
-                    logger.info("successfully added ecash to the database.")
-                    self.loading = false
-                    self.success = true
-                }
+                self.loading = false
+                self.success = true
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     dismiss()
@@ -274,6 +171,17 @@ struct ReceiveView: View {
                 self.loading = false
                 self.success = false
             }
+        }
+    }
+    
+    @MainActor
+    func insert(_ models: [any PersistentModel]) {
+        models.forEach({ modelContext.insert($0) })
+        do {
+            try modelContext.save()
+            logger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
+        } catch {
+            logger.error("Saving SwiftData model context failed with error: \(error)")
         }
     }
 
@@ -330,8 +238,8 @@ struct TokenFragmentView: View {
                 Text("$")
             case .eur:
                 Text("€")
-            case .other:
-                Text("other")
+            default:
+                EmptyView()
             }
         }
         .onAppear {

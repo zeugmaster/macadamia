@@ -15,12 +15,6 @@ struct WalletView: View {
     
     @Query private var proofs: [Proof]
     
-    // query events (transactions) if they are visible and in chronological order
-    @Query(filter: #Predicate { event in
-        event.visible == true
-    },
-    sort: [SortDescriptor(\Event.date, order: .reverse)]) private var events: [Event]
-
     @State var balance: Int?
 
     @State var showAlert: Bool = false
@@ -57,52 +51,31 @@ struct WalletView: View {
     }
     
     var activeWallet:Wallet? {
-        set { }
-        get {
-            wallets.first
-        }
+        wallets.first
     }
 
     var body: some View {
         NavigationStack {
             VStack {
-                Spacer(minLength: 20)
-                VStack(alignment: .center) {
-                    Text(balance != nil ? String(balance!) : "...")
-                        .monospaced()
-                        .bold()
-                        .font(.system(size: 70))
-                    Text("sats")
-                        .monospaced()
-                        .bold()
-                        .dynamicTypeSize(.xxxLarge)
-                        .padding(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(40)
+                Spacer().frame(maxHeight: 40)
+                BalanceCard(balance: balance ?? 0,
+                            unit: .sat)
                 .onAppear(perform: {
-                    // FIXME: NEEDS TO RESPECT WALLET SELECTION
                     balance = proofs.filter { $0.state == .valid && $0.wallet == activeWallet }.sum
-
+                    
                     // quick sanity check for uniqueness of C across list of proofs
-                    let uniqueCs = Set(proofs.map( { $0.C }))
-                    if uniqueCs.count != proofs.count {
+                    guard let activeWallet else {
+                        logger.warning("wallet view appeared with no activeWallet. this will give undefined behaviour.")
+                        return
+                    }
+                    let uniqueCs = Set(activeWallet.proofs.map( { $0.C }))
+                    if uniqueCs.count != activeWallet.proofs.count {
                         logger.critical("Wallet seems to contain duplicate proofs.")
                     }
                 })
-                Spacer()
-                List {
-                    if events.isEmpty {
-                        Text("No transactions yet.")
-                    } else {
-                        ForEach(events) { event in
-                            TransactionListRowView(event: event)
-                        }
-                    }
-                }
-                .padding(EdgeInsets(top: 0, leading: 20, bottom: 20, trailing: 20))
-                .listStyle(.plain)
-                Spacer()
+                Spacer().frame(maxHeight: 30)
+                MinimalEventList()
+                Spacer().frame(maxHeight: 30)
                 HStack {
                     // MARK: - BUTTON "RECEIVE"
 
@@ -114,7 +87,6 @@ struct WalletView: View {
                         }
                     ) {
                         Templates.MenuItem {
-//                            navigationPath.append("Receive")
                             navigationDestination = .receive(urlString: nil)
                         } label: { fade in
                             Color.clear.overlay(
@@ -131,7 +103,6 @@ struct WalletView: View {
                         }
                         .background(Color.black)
                         Templates.MenuItem {
-//                            navigationPath.append("Mint")
                             navigationDestination = .mint
                         } label: { fade in
                             Color.clear.overlay(
@@ -168,7 +139,6 @@ struct WalletView: View {
                         }
                     ) {
                         Templates.MenuItem {
-//                            navigationPath.append("Send")
                             navigationDestination = .send
                         } label: { fade in
                             Color.clear.overlay(
@@ -185,7 +155,6 @@ struct WalletView: View {
                         }
                         .background(Color.black)
                         Templates.MenuItem {
-//                            navigationPath.append("Melt")
                             navigationDestination = .melt
                         } label: { fade in
                             Color.clear.overlay(
@@ -212,7 +181,7 @@ struct WalletView: View {
                             .cornerRadius(10) // Apply rounded corners to the background
                     }
                 }
-                .padding(EdgeInsets(top: 20, leading: 20, bottom: 50, trailing: 20))
+                .padding(EdgeInsets(top: 20, leading: 20, bottom: 40, trailing: 20))
             }
             .navigationDestination(item: $navigationDestination) { destination in
                 switch destination {
@@ -240,30 +209,6 @@ struct WalletView: View {
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
-    }
-}
-
-struct TransactionListRowView: View {
-    var event: Event
-
-    init(event: Event) {
-        self.event = event
-    }
-
-    var body: some View {
-        NavigationLink(destination: EventDetailView(event: event)) {
-            HStack {
-                Text(event.shortDescription)
-                Spacer()
-                if let amount = event.amount {
-                    Text(amountDisplayString(amount, unit: event.unit))
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .lineLimit(1)
-            .font(.callout)
-        }
-        .listRowBackground(Color.clear)
     }
 }
 

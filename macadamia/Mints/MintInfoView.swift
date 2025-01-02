@@ -114,6 +114,7 @@ struct MintInfoView: View {
     // Function to delete the mint
     private func deleteMint() {
         // Delete the mint from the context
+        mint.proofs?.forEach({ $0.state = .pending })
         modelContext.delete(mint)
 
         do {
