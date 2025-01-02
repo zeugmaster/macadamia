@@ -17,7 +17,6 @@ You can test it using [Testflight](https://testflight.apple.com/join/RMU6PaRu)
 Come join the discussion in the [Telegram channel](https://t.me/macadamiawallet)
 
 ### WARNING: 
-This project is in the very early beta stages and propably contains bugs that can lead to a loss of funds. Please only experiment with amounts of sats you are ready to lose!
+This project is in the very early beta stages and propably contains bugs that can lead to a loss of funds. 
+Please only experiment with amounts of sats you are ready to lose!
 
-## Goal:
-Really polished UI that hides all unnecessary complexity from casual users, but still provides advanced features to power users
