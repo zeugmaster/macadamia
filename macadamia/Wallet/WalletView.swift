@@ -62,7 +62,7 @@ struct WalletView: View {
                             unit: .sat)
                 .onAppear(perform: {
                     balance = proofs.filter { $0.state == .valid && $0.wallet == activeWallet }.sum
-
+                    
                     // quick sanity check for uniqueness of C across list of proofs
                     guard let activeWallet else {
                         logger.warning("wallet view appeared with no activeWallet. this will give undefined behaviour.")
