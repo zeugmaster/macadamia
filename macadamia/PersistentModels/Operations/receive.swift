@@ -13,12 +13,12 @@ extension AppSchemaV1.Wallet {
     func redeem(_ token: CashuSwift.Token) async throws -> (combinedProofs: [Proof], event: Event) {
         
         let mintsInToken = self.mints.filter { mint in
-            token.token.contains { fragment in
-                mint.url.absoluteString == fragment.mint
+            token.proofsByMint.keys.contains { keyURL in
+                mint.url.absoluteString == keyURL
             }
         }
 
-        guard mintsInToken.count == token.token.count else {
+        guard mintsInToken.count == token.proofsByMint.count else {
             logger.error("mintsInToken.count does not equal token.token.count")
             throw macadamiaError.unknownMint("""
                                              The wallet does not have one or more of the mints \
@@ -72,7 +72,7 @@ extension AppSchemaV1.Wallet {
         }
         
         // FIXME: we should not save the token as a string in the db, also not as this TokenInfo object that was only meant for UI
-        let tokenInfo = TokenInfo(token: try token.serialize(.V3),
+        let tokenInfo = TokenInfo(token: try token.serialize(to: .V3),
                                   mint: mintsInToken.count == 1 ? mintsInToken.first!.url.absoluteString : "Multi Mint",
                                   amount: combinedProofs.sum)
         

@@ -179,6 +179,8 @@ enum AppSchemaV1: VersionedSchema {
 //        @Attribute(.transformable)
         var tokens: [TokenInfo]?
         
+        var token: CashuSwift.Token?
+        
         var mints: [Mint]?
         
         var redeemed: Bool?

@@ -36,14 +36,18 @@ extension AppSchemaV1.Mint {
             logger.debug("target amount and selected proof sum are an exact match, no swap necessary...")
             
             // construct token
-            let proofContainer = CashuSwift.ProofContainer(mint: self.url.absoluteString,
-                                                           proofs: proofs.map({ CashuSwift.Proof($0) }))
+//            let proofContainer = CashuSwift.ProofContainer(mint: self.url.absoluteString,
+//                                                           proofs: proofs.map({ CashuSwift.Proof($0) }))
             
-            token = CashuSwift.Token(token: [proofContainer], memo: memo, unit: unit.rawValue)
+            token = CashuSwift.Token(proofs: [self.url.absoluteString: proofs],
+                                     unit: unit.rawValue,
+                                     memo: memo)
             
-                
-                // TODO: change to general token object, not serialized
-            let tokenString = try token.serialize(.V3)
+            let tokenString = try token.serialize(to: .V3)
+            
+
+#warning("here we need to write the generalized token instead of a string")
+            
             event = Event.sendEvent(unit: unit,
                                     shortDescription: "Send",
                                     wallet: wallet,
@@ -107,14 +111,16 @@ extension AppSchemaV1.Mint {
             wallet.proofs.append(contentsOf: internalChangeProofs + internalSendProofs)
             self.proofs?.append(contentsOf: internalSendProofs + internalChangeProofs)
 
-            let proofContainer = CashuSwift.ProofContainer(mint: self.url.absoluteString,
-                                                           proofs: sendProofs.map({ CashuSwift.Proof($0) }))
+//            let proofContainer = CashuSwift.ProofContainer(mint: self.url.absoluteString,
+//                                                           proofs: sendProofs.map({ CashuSwift.Proof($0) }))
             
-            token = CashuSwift.Token(token: [proofContainer],
-                                         memo: memo,
-                                         unit: unit.rawValue)
+            token = CashuSwift.Token(proofs: [self.url.absoluteString: internalSendProofs],
+                                     unit: unit.rawValue,
+                                     memo: memo)
             
-            let tokenString = try token.serialize(.V3)
+#warning("here we need to write the generalized token instead of a string")
+            
+            let tokenString = try token.serialize(to: .V3)
             
             event = Event.sendEvent(unit: unit,
                                         shortDescription: "Send",

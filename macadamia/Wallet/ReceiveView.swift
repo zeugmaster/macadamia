@@ -51,11 +51,12 @@ struct ReceiveView: View {
                         Text("cashu Token")
                     }
                     if let token, let activeWallet {
-                        ForEach(token.token, id: \.proofs.first?.C) { fragment in
+                        ForEach(token.proofsByMint.keys.sorted(), id: \.self) { key in
                             Section {
                                 TokenFragmentView(activeWallet: activeWallet,
-                                                  fragment: fragment,
-                                                  unit: Unit(token.unit) ?? .sat)
+                                                 fragment: ProofContainer(mint: key,
+                                                                        proofs: (token.proofsByMint[key] ?? []) as [any ProofRepresenting]),
+                                                 unit: Unit(token.unit) ?? .sat)
                             }
                         }
                     }
@@ -128,7 +129,14 @@ struct ReceiveView: View {
             let t = try input.deserializeToken()
             self.token = t
             self.totalAmount = 0
-            self.token?.token.forEach({ totalAmount += $0.proofs.sum })
+
+            // calculate total balance
+            for prooflist in t.proofsByMint.values {
+                for p in prooflist {
+                    totalAmount += p.amount
+                }
+            }
+            
             self.tokenString = input
         } catch {
             logger.error("could not decode token from string \(input) \(error)")
@@ -201,6 +209,16 @@ struct ReceiveView: View {
     }
 }
 
+public struct ProofContainer {
+    public let mint:String
+    public let proofs:[any ProofRepresenting]
+    
+    public init(mint: String, proofs: [any ProofRepresenting]) {
+        self.mint = mint
+        self.proofs = proofs
+    }
+}
+
 struct TokenFragmentView: View {
     enum FragmentState {
         case spendable
@@ -211,7 +229,7 @@ struct TokenFragmentView: View {
     @Environment(\.modelContext) private var modelContext
 
     @State var fragmentState: FragmentState? = .mintUnavailable
-    @State var fragment: CashuSwift.ProofContainer
+    @State var fragment: ProofContainer
     @State var amount: Int = 0 // will need to change to decimal representation
     @State var unit: Unit = .sat
     @State var addingMint: Bool = false
@@ -220,7 +238,7 @@ struct TokenFragmentView: View {
 
     var activeWallet: Wallet
 
-    init(activeWallet: Wallet, fragment: CashuSwift.ProofContainer, unit: Unit = .sat) {
+    init(activeWallet: Wallet, fragment: ProofContainer, unit: Unit = .sat) {
         self.activeWallet = activeWallet
         self.fragment = fragment
         self.unit = unit
@@ -277,7 +295,10 @@ struct TokenFragmentView: View {
             return
         }
         
-        amount = fragment.proofs.sum //
+        amount = 0
+        for p in fragment.proofs {
+            amount += p.amount
+        }
 
         if activeWallet.mints.contains(where: { $0.url == url }) {
             unknownMint = false

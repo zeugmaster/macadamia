@@ -150,7 +150,8 @@ struct SendView: View {
                 
                 insert(swappedProofs + [event])
                 
-                tokenString = try token.serialize(.V3)
+#warning("let user decide which formatting")
+                tokenString = try token.serialize(to: .V3)
                 
             } catch {
                 displayAlert(alert: AlertDetail(error))

@@ -120,44 +120,41 @@ struct DrainView: View {
         guard let activeWallet else { return } // TODO: WARNING TO USER
         tokens = []
         do {
-            print()
             guard !activeWallet.proofs.filter({ $0.state == .valid }).isEmpty else {
                 displayAlert(alert: AlertDetail(title: "Empty Wallet",
                                                 description: "No drain token can be created from an empty wallet."))
                 return
             }
 
-            var proofContainers: [CashuSwift.ProofContainer] = []
+            var proofsByMint: [String: [Proof]] = [:]
             for mint in activeWallet.mints {
                 guard let validProofs = mint.proofs?.filter({ $0.state == .valid }), !validProofs.isEmpty else {
                     continue
                 }
-                let libProofs = validProofs.map { CashuSwift.Proof($0) }
-                let proofContainer = CashuSwift.ProofContainer(mint: mint.url.absoluteString,
-                                                               proofs: libProofs)
+                
                 validProofs.forEach { $0.state = .pending }
-                proofContainers.append(proofContainer)
+                proofsByMint[mint.url.absoluteString] = validProofs
             }
             
             var event:Event
 
             if makeTokenMultiMint {
-                let token = CashuSwift.Token(token: proofContainers, memo: "Wallet Drain")
+                let token = CashuSwift.Token(proofs: proofsByMint, unit: Unit.sat.rawValue, memo: "Wallet Drain") // FIXME: REMOVE HARD CODED UNIT OR FEATURE ALLTOGETHER
                 var sum = 0
-                for proofContainer in proofContainers {
-                    sum += proofContainer.proofs.sum
+                for proofList in proofsByMint.values {
+                    sum += proofList.sum
                 }
-                tokens = try [TokenInfo(token: token.serialize(.V3), mint: "Multi Mint", amount: sum)]
+                tokens = try [TokenInfo(token: token.serialize(to: .V3), mint: "Multi Mint", amount: sum)]
                 
                 event = Event.drainEvent(shortDescription: "Wallet Drain",
                                          wallet: activeWallet,
                                          tokens: tokens)
             } else {
-                for proofContainer in proofContainers {
-                    let token = CashuSwift.Token(token: [proofContainer])
-                    try tokens.append(TokenInfo(token: token.serialize(.V3),
-                                                mint: proofContainer.mint,
-                                                amount: proofContainer.proofs.sum))
+                for proofContainer in proofsByMint {
+                    let singleMintToken = CashuSwift.Token(proofs: [proofContainer.key: proofContainer.value], unit: Unit.sat.rawValue)
+                    try tokens.append(TokenInfo(token: singleMintToken.serialize(to: .V3),
+                                                mint: proofContainer.key,
+                                                amount: proofContainer.value.sum))
                 }
                 
                 event = Event.drainEvent(shortDescription: "Wallet Drain",
