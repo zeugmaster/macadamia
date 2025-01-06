@@ -127,6 +127,12 @@ struct ReceiveView: View {
         
         do {
             let t = try input.deserializeToken()
+            
+            guard t.proofsByMint.count == 1 else {
+                displayAlert(alert: AlertDetail(title: "Multi Mint Token 🚫", description: "V3 Tokens that contain ecash from multiple mints are no longer supported in macadamia. If you are trying to redeem a Drain Token please instead restore using your seed phrase."))
+                return
+            }
+            
             self.token = t
             self.totalAmount = 0
 
@@ -147,7 +153,14 @@ struct ReceiveView: View {
     }
 
     private func redeem() {
-        guard let activeWallet, let token else {
+        guard token?.proofsByMint.count == 1 else {
+            displayAlert(alert: AlertDetail(title: "Multi Mint Token 🚫", description: "V3 Tokens that contain ecash from multiple mints are no longer supported in macadamia. If you are trying to redeem a Drain Token please instead restore using your seed phrase."))
+            return
+        }
+        
+        guard let activeWallet,
+              let token,
+              let mint = activeWallet.mints.first(where: { $0.url.absoluteString == token.proofsByMint.keys.first }) else { // TODO: REFACTOR THIS MONSTROSITY
             logger.error("""
                          "could not redeem, one or more of the following variables are nil:
                          activeWallet: \(activeWallet.debugDescription)
@@ -160,9 +173,9 @@ struct ReceiveView: View {
 
         Task {
             do {
-                let (combinedProofs, event) = try await activeWallet.redeem(token)
+                let (proofs, event) = try await mint.redeem(token)
                 
-                insert(combinedProofs + [event])
+                insert(proofs + [event])
                 try modelContext.save()
                 
                 self.loading = false

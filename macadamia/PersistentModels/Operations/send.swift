@@ -55,9 +55,7 @@ extension AppSchemaV1.Mint {
                                     longDescription: "",
                                     proofs: proofs,
                                     memo: memo ?? "",
-                                    tokens: [TokenInfo(token: tokenString,
-                                                       mint: self.url.absoluteString,
-                                                       amount: targetAmount)],
+                                    token: token,
                                     mint: self)
             swapped = []
         
@@ -111,28 +109,19 @@ extension AppSchemaV1.Mint {
             wallet.proofs.append(contentsOf: internalChangeProofs + internalSendProofs)
             self.proofs?.append(contentsOf: internalSendProofs + internalChangeProofs)
 
-//            let proofContainer = CashuSwift.ProofContainer(mint: self.url.absoluteString,
-//                                                           proofs: sendProofs.map({ CashuSwift.Proof($0) }))
-            
             token = CashuSwift.Token(proofs: [self.url.absoluteString: internalSendProofs],
                                      unit: unit.rawValue,
                                      memo: memo)
             
-#warning("here we need to write the generalized token instead of a string")
-            
-            let tokenString = try token.serialize(to: .V3)
-            
             event = Event.sendEvent(unit: unit,
-                                        shortDescription: "Send",
-                                        wallet: wallet,
-                                        amount: targetAmount,
-                                        longDescription: "",
-                                        proofs: internalSendProofs,
-                                        memo: memo ?? "",
-                                        tokens: [TokenInfo(token: tokenString,
-                                                           mint: self.url.absoluteString,
-                                                           amount: internalSendProofs.sum)],
-                                        mint: self)
+                                    shortDescription: "Send",
+                                    wallet: wallet,
+                                    amount: targetAmount,
+                                    longDescription: "",
+                                    proofs: internalSendProofs,
+                                    memo: memo ?? "",
+                                    token: token,
+                                    mint: self)
             
             swapped = internalSendProofs + internalChangeProofs
 

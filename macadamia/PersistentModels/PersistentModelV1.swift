@@ -176,11 +176,9 @@ enum AppSchemaV1: VersionedSchema {
         var proofs: [Proof]?
         var memo: String?
         
-//        @Attribute(.transformable)
+        @available(*, deprecated, message: "deprecated in V1 Schema. macadamia uses other event information to build tokens (mint(s), proofs, memo)")
         var tokens: [TokenInfo]?
-        
-        var token: CashuSwift.Token?
-        
+                
         var mints: [Mint]?
         
         var redeemed: Bool?
@@ -209,6 +207,7 @@ enum AppSchemaV1: VersionedSchema {
              longDescription: String? = nil,
              proofs: [Proof]? = nil,
              memo: String? = nil,
+             token: CashuSwift.Token? = nil,
              tokens: [TokenInfo]? = nil,
              minta: [Mint]? = nil,
              redeemed: Bool? = nil) {
@@ -227,7 +226,7 @@ enum AppSchemaV1: VersionedSchema {
             self.longDescription = longDescription
             self.proofs = proofs
             self.memo = memo
-            self.tokens = tokens
+            self.tokens = tokens        // TODO: REMOVE TOGETHER WITH DRAIN FUNCTION
             self.mints = minta
             self.redeemed = redeemed
         }

@@ -57,7 +57,7 @@ extension AppSchemaV1.Event {
                           longDescription: String,
                           proofs: [Proof],
                           memo: String,
-                          tokens: [TokenInfo],
+                          token: CashuSwift.Token,
                           mint: Mint,
                           redeemed: Bool = false) -> Event {
         Event(date: Date(),
@@ -70,7 +70,7 @@ extension AppSchemaV1.Event {
               longDescription: longDescription,
               proofs: proofs,
               memo: memo,
-              tokens: tokens,
+              token: token,
               minta: [mint],
               redeemed: redeemed
         )
@@ -84,8 +84,8 @@ extension AppSchemaV1.Event {
                              longDescription: String,
                              proofs: [Proof],
                              memo: String,
-                             mints: [Mint],
-                             tokens: [TokenInfo],
+                             mint: Mint,
+                             token: CashuSwift.Token,
                              redeemed: Bool) -> Event {
         Event(date: Date(),
               unit: unit,
@@ -97,8 +97,8 @@ extension AppSchemaV1.Event {
               longDescription: longDescription,
               proofs: proofs,
               memo: memo,
-              tokens: tokens,
-              minta: mints,
+              token: token,
+              minta: [mint],
               redeemed: redeemed
         )
     }
@@ -143,6 +143,7 @@ extension AppSchemaV1.Event {
         )
     }
     
+    // TODO: REMOVE DRAIN FEATURE AND ASSOCIATED FUNCTIONS
     static func drainEvent(shortDescription: String,
                            visible:Bool = true,
                            wallet: Wallet,

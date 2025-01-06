@@ -8,85 +8,68 @@
 import Foundation
 import CashuSwift
 
-extension AppSchemaV1.Wallet {
+extension AppSchemaV1.Mint {
     
     func redeem(_ token: CashuSwift.Token) async throws -> (combinedProofs: [Proof], event: Event) {
         
-        let mintsInToken = self.mints.filter { mint in
-            token.proofsByMint.keys.contains { keyURL in
-                mint.url.absoluteString == keyURL
-            }
-        }
-
-        guard mintsInToken.count == token.proofsByMint.count else {
-            logger.error("mintsInToken.count does not equal token.token.count")
-            throw macadamiaError.unknownMint("""
-                                             The wallet does not have one or more of the mints \
-                                             involved in this operation saved in the database. \
-                                             Please make sure all mints are added.
-                                             """)
+        guard token.proofsByMint.count == 1 else {
+            throw macadamiaError.multiMintToken
         }
         
-        var combinedProofs: [Proof] = []
-        
+        guard let wallet = self.wallet else {
+            throw macadamiaError.databaseError("mint \(self.url.absoluteString) does not have an associated wallet.")
+        }
+                
         logger.debug("attempting to receive token...")
         
-        let proofsDict = try await mintsInToken.receive(token: token, seed: self.seed)
-        for mint in mintsInToken {
-            let proofsPerMint = proofsDict[mint.url.absoluteString]!
-            let internalProofs = proofsPerMint.map { p in
-                let keyset = mint.keysets.first(where: { $0.keysetID == p.keysetID } )
-                let fee = keyset?.inputFeePPK
-                let unit = Unit(keyset?.unit)
-                
-                if unit == nil {
-                    logger.error("wallet could not determine unit for incoming proofs. defaulting to .sat")
-                }
-                
-                return Proof(p,
-                             unit: unit ?? .sat,
-                             inputFeePPK: fee ?? 0,
-                             state: .valid,
-                             mint: mint,
-                             wallet: self)
+        let proofs = try await CashuSwift.receive(mint: self, token: token, seed: wallet.seed)
+        
+        let internalProofs = proofs.map({ p in
+            let keyset = self.keysets.first(where: { $0.keysetID == p.keysetID } )
+            let fee = keyset?.inputFeePPK
+            let unit = Unit(keyset?.unit)
+            
+            if unit == nil {
+                logger.error("wallet could not determine unit for incoming proofs. defaulting to .sat")
             }
             
-            if let usedKeyset = mint.keysets.first(where: { $0.keysetID == internalProofs.first?.keysetID }) {
-                mint.increaseDerivationCounterForKeysetWithID(usedKeyset.keysetID, by: internalProofs.count)
-            } else {
-                logger.error("""
-                             Could not determine applied keyset! \
-                             This will lead to issues with det sec counter and fee rates.
-                             """)
-            }
-            
-            mint.proofs?.append(contentsOf: internalProofs)
-            self.proofs.append(contentsOf: internalProofs)
-                        
-            combinedProofs.append(contentsOf: internalProofs)
-            
-            logger.info("""
-                        receiving \(internalProofs.count) proof(s) with sum \
-                        \(internalProofs.sum) from mint \(mint.url.absoluteString)
-                        """)
+            return Proof(p,
+                         unit: unit ?? .sat,
+                         inputFeePPK: fee ?? 0,
+                         state: .valid,
+                         mint: self,
+                         wallet: wallet)
+        })
+        
+        if let usedKeyset = self.keysets.first(where: { $0.keysetID == internalProofs.first?.keysetID }) {
+            self.increaseDerivationCounterForKeysetWithID(usedKeyset.keysetID, by: internalProofs.count)
+        } else {
+            logger.error("""
+                         Could not determine applied keyset! \
+                         This will lead to issues with det sec counter and fee rates.
+                         """)
         }
         
-        // FIXME: we should not save the token as a string in the db, also not as this TokenInfo object that was only meant for UI
-        let tokenInfo = TokenInfo(token: try token.serialize(to: .V3),
-                                  mint: mintsInToken.count == 1 ? mintsInToken.first!.url.absoluteString : "Multi Mint",
-                                  amount: combinedProofs.sum)
+        self.proofs?.append(contentsOf: internalProofs)
+        wallet.proofs.append(contentsOf: internalProofs)
+                    
         
+        logger.info("""
+                    receiving \(internalProofs.count) proof(s) with sum \
+                    \(internalProofs.sum) from mint \(self.url.absoluteString)
+                    """)
+
         let event = Event.receiveEvent(unit: .sat,
                                        shortDescription: "Receive",
-                                       wallet: self,
-                                       amount: combinedProofs.sum,
+                                       wallet: wallet,
+                                       amount: internalProofs.sum,
                                        longDescription: "",
-                                       proofs: combinedProofs,
+                                       proofs: internalProofs,
                                        memo: token.memo ?? "",
-                                       mints: mintsInToken,
-                                       tokens: [tokenInfo],
+                                       mint: self,
+                                       token: token,
                                        redeemed: true)
         
-        return (combinedProofs, event)
+        return (internalProofs, event)
     }
 }

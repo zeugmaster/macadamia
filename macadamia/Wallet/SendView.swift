@@ -16,9 +16,9 @@ struct SendView: View {
         wallets.first
     }
 
-    @State var tokenString: String?
+    @State private var token: CashuSwift.Token?
 
-    @State var tokenMemo = ""
+    @State private var tokenMemo = ""
     
     @State private var selectedMint:Mint?
     
@@ -32,8 +32,8 @@ struct SendView: View {
 
     @FocusState var amountFieldInFocus: Bool
 
-    init(token: String? = nil) {
-        tokenString = token
+    init(token: CashuSwift.Token? = nil) {
+        self.token = token
     }
 
     var body: some View {
@@ -60,16 +60,16 @@ struct SendView: View {
                 }
                 .foregroundStyle(.secondary)
             }
-            .disabled(tokenString != nil)
+            .disabled(token != nil)
             Section {
                 TextField("enter note", text: $tokenMemo)
             } footer: {
                 Text("Tap to add a note to the recipient.")
             }
-            .disabled(tokenString != nil)
+            .disabled(token != nil)
 
-            if let tokenString {
-                TokenShareView(tokenString: tokenString)
+            if let token {
+                TokenShareView(token: token)
             }
         }
         .navigationTitle("Send")
@@ -93,7 +93,7 @@ struct SendView: View {
         .buttonStyle(.bordered)
         .padding()
         .toolbar(.hidden, for: .tabBar)
-        .disabled(numberString.isEmpty || amount <= 0 || tokenString != nil)
+        .disabled(numberString.isEmpty || amount <= 0 || token != nil)
         
     }
 
@@ -148,11 +148,10 @@ struct SendView: View {
                                                                                 targetAmount: amount,
                                                                                 memo: tokenMemo)
                 
+                self.token = token
+                
                 insert(swappedProofs + [event])
-                
-#warning("let user decide which formatting")
-                tokenString = try token.serialize(to: .V3)
-                
+                                
             } catch {
                 displayAlert(alert: AlertDetail(error))
             }

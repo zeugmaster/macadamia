@@ -10,4 +10,5 @@ import Foundation
 enum macadamiaError: Error {
     case databaseError(String)
     case unknownMint(String)
+    case multiMintToken
 }
