@@ -20,7 +20,6 @@ struct SettingsView: View {
                 Section {
                     NavigationLink(destination: MnemonicView()) { Text("Show Seed Phrase") }
                     NavigationLink(destination: RestoreView()) { Text("Restore") }
-                    NavigationLink(destination: DrainView()) { Text("Drain Wallet") }
                     if hiddenMenuShowing {
                         NavigationLink(destination: MintListView()) { Text("Proof Database") }
                         NavigationLink(destination: WalletInfoListView()) { Text("Wallet Info") }

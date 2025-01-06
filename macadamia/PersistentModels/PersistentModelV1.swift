@@ -81,8 +81,6 @@ enum AppSchemaV1: VersionedSchema {
         var displayName: String {
             self.nickName ?? self.url.host() ?? self.url.absoluteString
         }
-        
-        
     }
 
     @Model
@@ -208,7 +206,6 @@ enum AppSchemaV1: VersionedSchema {
              proofs: [Proof]? = nil,
              memo: String? = nil,
              token: CashuSwift.Token? = nil,
-             tokens: [TokenInfo]? = nil,
              minta: [Mint]? = nil,
              redeemed: Bool? = nil) {
             
@@ -226,7 +223,6 @@ enum AppSchemaV1: VersionedSchema {
             self.longDescription = longDescription
             self.proofs = proofs
             self.memo = memo
-            self.tokens = tokens        // TODO: REMOVE TOGETHER WITH DRAIN FUNCTION
             self.mints = minta
             self.redeemed = redeemed
         }
@@ -260,4 +256,12 @@ enum AppSchemaV1: VersionedSchema {
     }
 }
 
+// this relic of drain view only remains for SwiftData model integrity
+@available(*, deprecated)
+struct TokenInfo: Identifiable, Hashable, Codable {
+    let token: String
+    let mint: String
+    let amount: Int
 
+    var id: String { token }
+}

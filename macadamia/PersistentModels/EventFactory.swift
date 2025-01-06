@@ -143,20 +143,6 @@ extension AppSchemaV1.Event {
         )
     }
     
-    // TODO: REMOVE DRAIN FEATURE AND ASSOCIATED FUNCTIONS
-    static func drainEvent(shortDescription: String,
-                           visible:Bool = true,
-                           wallet: Wallet,
-                           tokens: [TokenInfo]) -> Event {
-        Event(date: Date(),
-              unit: .other,
-              shortDescription: shortDescription,
-              visible: visible,
-              kind: .drain,
-              wallet: wallet,
-              tokens: tokens)
-    }
-    
     static func restoreEvent(shortDescription: String,
                              visible: Bool = true,
                              wallet: Wallet,
