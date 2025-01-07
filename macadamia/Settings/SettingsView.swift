@@ -20,12 +20,17 @@ struct SettingsView: View {
                 Section {
                     NavigationLink(destination: MnemonicView()) { Text("Show Seed Phrase") }
                     NavigationLink(destination: RestoreView()) { Text("Restore") }
-                    if hiddenMenuShowing {
-                        NavigationLink(destination: MintListView()) { Text("Proof Database") }
-                        NavigationLink(destination: WalletInfoListView()) { Text("Wallet Info") }
-                    }
                 } header: {
                     Text("cashu")
+                }
+                
+                if hiddenMenuShowing {
+                    Section {
+                        NavigationLink(destination: MintListView()) { Text("Proof Database") }
+                        NavigationLink(destination: WalletInfoListView()) { Text("Wallet Info") }
+                    } header: {
+                        Text("Debugging")
+                    }
                 }
                 
                 Section {
