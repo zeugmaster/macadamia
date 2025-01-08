@@ -169,6 +169,9 @@ struct SendEventView: View {
     }
     
     var token: CashuSwift.Token? {
+        
+//        print(event.proofs, event.mints)
+        
         if let proofs = event.proofs,
            !proofs.isEmpty,
            let mints = event.mints,
@@ -189,8 +192,19 @@ struct SendEventView: View {
                     Spacer()
                     Text(event.date.formatted())
                 }
-                if let memo = event.memo {
-                    Text("Memo: \(memo)")
+                if let mint = event.mints?.first {
+                    HStack {
+                        Text("Mint: ")
+                        Spacer()
+                        Text(mint.displayName)
+                    }
+                }
+                if let memo = event.memo, !memo.isEmpty {
+                    HStack {
+                        Text("Memo: ")
+                        Spacer()
+                        Text(memo)
+                    }
                 }
                 if let proofs = event.proofs {
                         switch tokenState {

@@ -26,7 +26,7 @@ extension AppSchemaV1.Event {
               bolt11MintQuote: quote,
               amount: amount,
               expiration: expiration,
-              minta: [mint]
+              mints: [mint]
         )
     }
     
@@ -45,7 +45,7 @@ extension AppSchemaV1.Event {
               wallet: wallet,
               bolt11MintQuote: quote,
               amount: amount,
-              minta: [mint]
+              mints: [mint]
         )
     }
     
@@ -57,7 +57,6 @@ extension AppSchemaV1.Event {
                           longDescription: String,
                           proofs: [Proof],
                           memo: String,
-                          token: CashuSwift.Token,
                           mint: Mint,
                           redeemed: Bool = false) -> Event {
         Event(date: Date(),
@@ -70,8 +69,7 @@ extension AppSchemaV1.Event {
               longDescription: longDescription,
               proofs: proofs,
               memo: memo,
-              token: token,
-              minta: [mint],
+              mints: [mint],
               redeemed: redeemed
         )
     }
@@ -85,7 +83,6 @@ extension AppSchemaV1.Event {
                              proofs: [Proof],
                              memo: String,
                              mint: Mint,
-                             token: CashuSwift.Token,
                              redeemed: Bool) -> Event {
         Event(date: Date(),
               unit: unit,
@@ -97,8 +94,7 @@ extension AppSchemaV1.Event {
               longDescription: longDescription,
               proofs: proofs,
               memo: memo,
-              token: token,
-              minta: [mint],
+              mints: [mint],
               redeemed: redeemed
         )
     }
@@ -120,7 +116,7 @@ extension AppSchemaV1.Event {
               bolt11MeltQuote: quote,
               amount: amount,
               expiration: expiration,
-              minta: mints
+              mints: mints
         )
     }
     
@@ -139,7 +135,7 @@ extension AppSchemaV1.Event {
               wallet: wallet,
               amount: amount,
               longDescription: longDescription,
-              minta: mints
+              mints: mints
         )
     }
     

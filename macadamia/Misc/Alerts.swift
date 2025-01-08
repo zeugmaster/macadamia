@@ -31,7 +31,7 @@ struct AlertDetail {
     
     // TODO: expand error handling to all cases and communicate common cases more effectively
     
-    init(_ error: Swift.Error) {
+    init(with error: Swift.Error) {
         switch error {
         case let cashuError as CashuError:
             switch cashuError {
@@ -75,7 +75,7 @@ struct AlertDetail {
                 self = AlertDetail(title: "Locked Token 🔒", description: "macadamia can not yet redeem locked tokens. This feature is coming soon™.")
             case .unsupportedUnit:
                 self = AlertDetail(title: "Unit Error 💵", description: "macadamia can only redeem tokens denominated in Satoshis. Multi unit support is coming soon™.")
-            case .unknownMint(let message):
+            case .unknownMint(_):
                 self = AlertDetail(title: "Unknown Mint 🥷", description: "You are trying to redeem from a mint that is not known to the wallet. Please add it first.")
             }
         default:

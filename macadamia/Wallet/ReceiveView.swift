@@ -13,18 +13,25 @@ struct ReceiveView: View {
     var activeWallet: Wallet? {
         wallets.first
     }
+    
+    enum MintState {
+        case none
+        case known
+        case unknown
+        case adding
+        case unavailable
+    }
 
-    @State var tokenString: String?
-    @State var token: CashuSwift.Token?
-    @State var tokenMemo: String?
-    @State var unit: Unit = .other
-    @State var loading = false
-    @State var success = false
-    @State var totalAmount: Int = 0
-    @State var addingMint = false
-
-    @State var showAlert: Bool = false
-    @State var currentAlert: AlertDetail?
+    @State private var tokenString: String?
+    @State private var token: CashuSwift.Token?
+    @State private var unit: Unit = .other
+    @State private var loading = false
+    @State private var success = false
+    @State private var totalAmount: Int = 0
+    @State private var mintState: MintState = .none
+    
+    @State private var showAlert: Bool = false
+    @State private var currentAlert: AlertDetail?
 
     init(tokenString: String? = nil) {
         self._tokenString = State(initialValue: tokenString)
@@ -32,10 +39,10 @@ struct ReceiveView: View {
 
     var body: some View {
         VStack {
-            if let tokenString {
+            if let token {
                 List {
                     Section {
-                        TokenText(text: tokenString)
+                        TokenText(text: tokenString ?? "")
                             .frame(idealHeight: 70)
                         HStack {
                             Text("Total Amount: ")
@@ -43,20 +50,35 @@ struct ReceiveView: View {
                             Text(String(totalAmount) + " sats")
                         }
                         .foregroundStyle(.secondary)
-                        if let tokenMemo, !tokenMemo.isEmpty {
+                        if let tokenMemo = token.memo, !tokenMemo.isEmpty {
                             Text("Memo: \(tokenMemo)")
                                 .foregroundStyle(.secondary)
                         }
                     } header: {
                         Text("cashu Token")
                     }
-                    if let token, let activeWallet {
-                        ForEach(token.proofsByMint.keys.sorted(), id: \.self) { key in
-                            Section {
-                                TokenFragmentView(activeWallet: activeWallet,
-                                                 fragment: ProofContainer(mint: key,
-                                                                        proofs: (token.proofsByMint[key] ?? []) as [any ProofRepresenting]),
-                                                 unit: Unit(token.unit) ?? .sat)
+                    Section {
+                        switch mintState {
+                        case .none, .known:
+                            EmptyView()
+                        case .unknown:
+                            HStack {
+                                Button {
+                                    addMint()
+                                } label: {
+                                    Text("Unknown Mint. Add it?")
+                                }
+                                Spacer()
+                                Image(systemName: "plus")
+                            }
+                        case .adding:
+                            Text("Adding...")
+                        case .unavailable:
+                            Button {
+                                addMint()
+                            } label: {
+                                Text("Mint unavailable. Try again?")
+                                    .foregroundStyle(.red)
                             }
                         }
                     }
@@ -70,7 +92,7 @@ struct ReceiveView: View {
                                 Image(systemName: "trash")
                             }
                         }
-                        .disabled(addingMint)
+                        .disabled(mintState == .adding)
                     }
                 }
             } else {
@@ -103,7 +125,7 @@ struct ReceiveView: View {
             .padding()
             .bold()
             .toolbar(.hidden, for: .tabBar)
-            .disabled(tokenString == nil || loading || success || addingMint)
+            .disabled(tokenString == nil || loading || success || mintState == .adding)
         }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         .navigationTitle("Receive")
@@ -125,11 +147,15 @@ struct ReceiveView: View {
             return
         }
         
+        guard let activeWallet else {
+            return
+        }
+        
         do {
             let t = try input.deserializeToken()
             
             guard t.proofsByMint.count == 1 else {
-                displayAlert(alert: AlertDetail(title: "Multi Mint Token 🚫", description: "V3 Tokens that contain ecash from multiple mints are no longer supported in macadamia. If you are trying to redeem a Drain Token please instead restore using your seed phrase."))
+                displayAlert(alert: AlertDetail(with: macadamiaError.multiMintToken))
                 return
             }
             
@@ -144,28 +170,77 @@ struct ReceiveView: View {
             }
             
             self.tokenString = input
+            
+            // check if mint is known
+            let urlFromToken = t.proofsByMint.keys.first
+            if activeWallet.mints.contains(where: { m in
+                m.url.absoluteString == urlFromToken
+            }) {
+                mintState = .known
+            } else {
+                mintState = .unknown
+            }
+            
         } catch {
             logger.error("could not decode token from string \(input) \(error)")
-            displayAlert(alert: AlertDetail(title: "Could not decode token",
-                                            description: String(describing: error)))
+            displayAlert(alert: AlertDetail(with: error))
             self.tokenString = nil
+        }
+    }
+    
+    func addMint() {
+        Task {
+            guard let urlString = token?.proofsByMint.keys.first else {
+                return
+            }
+            
+            withAnimation {
+                mintState = .adding
+            }
+            
+            do {
+                guard let url = URL(string: urlString) else {
+                    logger.error("mint URL to add does not seem valid.")
+                    return
+                }
+                
+                let mint: Mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
+                mint.wallet = activeWallet
+                mint.proofs = []
+                modelContext.insert(mint) // TODO: move to main queue
+                try modelContext.save()
+                logger.info("added mint \(mint.url.absoluteString) while trying to redeem a token")
+                
+                withAnimation {
+                    mintState = .known
+                }
+            } catch {
+                logger.error("failed to add mint due to error \(error)")
+                
+                withAnimation {
+                    mintState = .unavailable
+                }
+            }
         }
     }
 
     private func redeem() {
-        guard token?.proofsByMint.count == 1 else {
-            displayAlert(alert: AlertDetail(title: "Multi Mint Token 🚫", description: "V3 Tokens that contain ecash from multiple mints are no longer supported in macadamia. If you are trying to redeem a Drain Token please instead restore using your seed phrase."))
-            return
-        }
         
         guard let activeWallet,
-              let token,
-              let mint = activeWallet.mints.first(where: { $0.url.absoluteString == token.proofsByMint.keys.first }) else { // TODO: REFACTOR THIS MONSTROSITY
+              let token else {
             logger.error("""
                          "could not redeem, one or more of the following variables are nil:
                          activeWallet: \(activeWallet.debugDescription)
                          token: \(token.debugDescription)
                          """)
+            return
+        }
+        
+        guard let mint = activeWallet.mints.first(where: { $0.url.absoluteString == token.proofsByMint.keys.first }) else {
+            logger.error("unable to determinw mint to redeem from.")
+            
+            // TODO: RE CHECK MINT KNOWN OR ADD
+            
             return
         }
 
@@ -188,7 +263,7 @@ struct ReceiveView: View {
             } catch {
                 // receive unsuccessful
                 logger.error("could not receive token due to error \(error)")
-                displayAlert(alert: AlertDetail(error))
+                displayAlert(alert: AlertDetail(with: error))
                 self.loading = false
                 self.success = false
             }
@@ -208,154 +283,15 @@ struct ReceiveView: View {
 
     private func reset() {
         tokenString = nil
-        tokenMemo = nil
         token = nil
-        tokenMemo = nil
         success = false
-        addingMint = false
         totalAmount = 0
+        mintState = .none
     }
 
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
-    }
-}
-
-public struct ProofContainer {
-    public let mint:String
-    public let proofs:[any ProofRepresenting]
-    
-    public init(mint: String, proofs: [any ProofRepresenting]) {
-        self.mint = mint
-        self.proofs = proofs
-    }
-}
-
-struct TokenFragmentView: View {
-    enum FragmentState {
-        case spendable
-        case notSpendable
-        case mintUnavailable
-    }
-
-    @Environment(\.modelContext) private var modelContext
-
-    @State var fragmentState: FragmentState? = .mintUnavailable
-    @State var fragment: ProofContainer
-    @State var amount: Int = 0 // will need to change to decimal representation
-    @State var unit: Unit = .sat
-    @State var addingMint: Bool = false
-
-    @State var unknownMint: Bool?
-
-    var activeWallet: Wallet
-
-    init(activeWallet: Wallet, fragment: ProofContainer, unit: Unit = .sat) {
-        self.activeWallet = activeWallet
-        self.fragment = fragment
-        self.unit = unit
-    }
-
-    var body: some View {
-        HStack {
-            Text("Amount:")
-            Spacer()
-            Text(String(amount))
-            switch unit {
-            case .sat:
-                Text("sat")
-            case .usd:
-                Text("$")
-            case .eur:
-                Text("€")
-            default:
-                EmptyView()
-            }
-        }
-        .onAppear {
-            checkFragmentState()
-        }
-        switch fragmentState {
-        case .spendable:
-            Text("Token part is valid.")
-        case .notSpendable:
-            Text("Token part is invalid.")
-        case .mintUnavailable:
-            Text("Mint unavailable")
-        case .none:
-            Text("Checking...")
-        }
-        if let unknownMint {
-            if unknownMint {
-                Button {
-                    addMint()
-                } label: {
-                    if addingMint {
-                        Text("Adding,,,") // TODO: communicate success or failure to the user
-                    } else {
-                        Text("Unknowm mint. Add it?")
-                    }
-                }
-                .disabled(addingMint)
-            }
-        }
-    }
-
-    func checkFragmentState() {
-        guard let url = URL(string: fragment.mint) else {
-            fragmentState = .mintUnavailable
-            return
-        }
-        
-        amount = 0
-        for p in fragment.proofs {
-            amount += p.amount
-        }
-
-        if activeWallet.mints.contains(where: { $0.url == url }) {
-            unknownMint = false
-        } else {
-            unknownMint = true
-        }
-
-        Task {
-            do {
-                let proofStates = try await CashuSwift.check(fragment.proofs, url: url)
-                if proofStates.allSatisfy({ $0 == .unspent }) {
-                    fragmentState = .spendable
-                } else {
-                    fragmentState = .notSpendable
-                }
-            } catch {
-                fragmentState = .mintUnavailable
-            }
-        }
-    }
-
-    func addMint() {
-        Task {
-            do {
-                addingMint = true
-                guard let url = URL(string: fragment.mint) else {
-                    logger.error("mint URL to add does not seem valid.")
-                    addingMint = false
-                    return
-                }
-                let mint: Mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
-                mint.wallet = activeWallet
-                mint.proofs = []
-                modelContext.insert(mint)
-                try modelContext.save()
-                logger.info("added mint \(mint.url.absoluteString) while trying to redeem a token")
-                unknownMint = false
-                checkFragmentState()
-            } catch {
-                logger.error("failed to add mint due to error \(error)")
-                unknownMint = true
-            }
-            addingMint = false
-        }
     }
 }
 

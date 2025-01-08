@@ -69,6 +69,8 @@ enum AppSchemaV1: VersionedSchema {
         var userIndex: Int?
 
         var proofs: [Proof]?
+        
+        var events: [Event]?
 
         required init(url: URL, keysets: [CashuSwift.Keyset]) {
             self.mintID = UUID()
@@ -176,7 +178,8 @@ enum AppSchemaV1: VersionedSchema {
         
         @available(*, deprecated, message: "deprecated in V1 Schema. macadamia uses other event information to build tokens (mint(s), proofs, memo)")
         var tokens: [TokenInfo]?
-                
+        
+        @Relationship(deleteRule: .noAction, inverse: \Mint.events)
         var mints: [Mint]?
         
         var redeemed: Bool?
@@ -206,7 +209,7 @@ enum AppSchemaV1: VersionedSchema {
              proofs: [Proof]? = nil,
              memo: String? = nil,
              token: CashuSwift.Token? = nil,
-             minta: [Mint]? = nil,
+             mints: [Mint]? = nil,
              redeemed: Bool? = nil) {
             
             self.eventID = UUID()
@@ -223,7 +226,7 @@ enum AppSchemaV1: VersionedSchema {
             self.longDescription = longDescription
             self.proofs = proofs
             self.memo = memo
-            self.mints = minta
+            self.mints = Array(mints ?? [])
             self.redeemed = redeemed
         }
         

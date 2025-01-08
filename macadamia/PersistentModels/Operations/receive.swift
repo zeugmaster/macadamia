@@ -67,7 +67,6 @@ extension AppSchemaV1.Mint {
                                        proofs: internalProofs,
                                        memo: token.memo ?? "",
                                        mint: self,
-                                       token: token,
                                        redeemed: true)
         
         return (internalProofs, event)

@@ -34,19 +34,10 @@ extension AppSchemaV1.Mint {
         
         if targetAmount == proofs.sum {
             logger.debug("target amount and selected proof sum are an exact match, no swap necessary...")
-            
-            // construct token
-//            let proofContainer = CashuSwift.ProofContainer(mint: self.url.absoluteString,
-//                                                           proofs: proofs.map({ CashuSwift.Proof($0) }))
-            
+                        
             token = CashuSwift.Token(proofs: [self.url.absoluteString: proofs],
                                      unit: unit.rawValue,
                                      memo: memo)
-            
-            let tokenString = try token.serialize(to: .V3)
-            
-
-#warning("here we need to write the generalized token instead of a string")
             
             event = Event.sendEvent(unit: unit,
                                     shortDescription: "Send",
@@ -55,7 +46,6 @@ extension AppSchemaV1.Mint {
                                     longDescription: "",
                                     proofs: proofs,
                                     memo: memo ?? "",
-                                    token: token,
                                     mint: self)
             swapped = []
         
@@ -120,7 +110,6 @@ extension AppSchemaV1.Mint {
                                     longDescription: "",
                                     proofs: internalSendProofs,
                                     memo: memo ?? "",
-                                    token: token,
                                     mint: self)
             
             swapped = internalSendProofs + internalChangeProofs
