@@ -168,6 +168,22 @@ struct SendEventView: View {
         case pending
     }
     
+    var token: CashuSwift.Token? {
+        
+//        print(event.proofs, event.mints)
+        
+        if let proofs = event.proofs,
+           !proofs.isEmpty,
+           let mints = event.mints,
+           mints.count == 1 {
+            
+            return CashuSwift.Token(proofs: [mints.first!.url.absoluteString: proofs],
+                                    unit: Unit.sat.rawValue,
+                                    memo: event.memo)
+        }
+        return nil
+    }
+    
     var body: some View {
         List {
             Section {
@@ -176,8 +192,19 @@ struct SendEventView: View {
                     Spacer()
                     Text(event.date.formatted())
                 }
-                if let memo = event.memo {
-                    Text("Memo: \(memo)")
+                if let mint = event.mints?.first {
+                    HStack {
+                        Text("Mint: ")
+                        Spacer()
+                        Text(mint.displayName)
+                    }
+                }
+                if let memo = event.memo, !memo.isEmpty {
+                    HStack {
+                        Text("Memo: ")
+                        Spacer()
+                        Text(memo)
+                    }
                 }
                 if let proofs = event.proofs {
                         switch tokenState {
@@ -207,9 +234,12 @@ struct SendEventView: View {
                     }
             }
             
-            if let tokenInfo = event.tokens?.first /*, tokenState != .spent */ {
-                TokenShareView(tokenString: tokenInfo.token)
+            if let token {
+                TokenShareView(token: token)
             }
+        }
+        .onAppear {
+            print(String(describing: token))
         }
     }
     

@@ -16,9 +16,9 @@ struct SendView: View {
         wallets.first
     }
 
-    @State var tokenString: String?
+    @State private var token: CashuSwift.Token?
 
-    @State var tokenMemo = ""
+    @State private var tokenMemo = ""
     
     @State private var selectedMint:Mint?
     
@@ -32,8 +32,8 @@ struct SendView: View {
 
     @FocusState var amountFieldInFocus: Bool
 
-    init(token: String? = nil) {
-        tokenString = token
+    init(token: CashuSwift.Token? = nil) {
+        self.token = token
     }
 
     var body: some View {
@@ -60,16 +60,16 @@ struct SendView: View {
                 }
                 .foregroundStyle(.secondary)
             }
-            .disabled(tokenString != nil)
+            .disabled(token != nil)
             Section {
                 TextField("enter note", text: $tokenMemo)
             } footer: {
                 Text("Tap to add a note to the recipient.")
             }
-            .disabled(tokenString != nil)
+            .disabled(token != nil)
 
-            if let tokenString {
-                TokenShareView(tokenString: tokenString)
+            if let token {
+                TokenShareView(token: token)
             }
         }
         .navigationTitle("Send")
@@ -93,7 +93,7 @@ struct SendView: View {
         .buttonStyle(.bordered)
         .padding()
         .toolbar(.hidden, for: .tabBar)
-        .disabled(numberString.isEmpty || amount <= 0 || tokenString != nil)
+        .disabled(numberString.isEmpty || amount <= 0 || token != nil)
         
     }
 
@@ -117,10 +117,7 @@ struct SendView: View {
         return Int(numberString) ?? 0
     }
     
-    // TODO: break this abomination up into managable chunks
-
     func generateToken() {
-        
         guard let selectedMint else {
             logger.error("""
                          unable to generate Token because one or more of the following variables are nil:
@@ -130,34 +127,31 @@ struct SendView: View {
             return
         }
 
-        Task {
+        Task { @MainActor in
             do {
-                
-                // TODO: check for correct unit
                 let selectedUnit: Unit = .sat
                                 
                 guard let preSelect = selectedMint.select(allProofs:allProofs,
-                                                          amount: amount,
-                                                          unit: selectedUnit) else {
+                                                      amount: amount,
+                                                      unit: selectedUnit) else {
                     displayAlert(alert: AlertDetail(title: "Could not select proofs to send."))
                     logger.warning("no proofs could be selected to generate a token with this amount.")
                     return
                 }
                 
                 let (token, swappedProofs, event) = try await selectedMint.send(proofs: preSelect.selected,
-                                                                                targetAmount: amount,
-                                                                                memo: tokenMemo)
+                                                                            targetAmount: amount,
+                                                                            memo: tokenMemo)
                 
+                self.token = token
                 insert(swappedProofs + [event])
-                
-                tokenString = try token.serialize(.V3)
-                
+                                
             } catch {
-                displayAlert(alert: AlertDetail(error))
+                displayAlert(alert: AlertDetail(with: error))
             }
         }
     }
-    
+
     @MainActor
     func insert(_ models: [any PersistentModel]) {
         models.forEach({ modelContext.insert($0) })

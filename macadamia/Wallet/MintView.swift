@@ -210,7 +210,7 @@ struct MintView: View {
                 insert([event])
                 
             } catch {
-                displayAlert(alert: AlertDetail(error))
+                displayAlert(alert: AlertDetail(with: error))
                 logger.error("""
                              could not get quote from mint \(selectedMint.url.absoluteString) \
                              because of error \(error)
@@ -252,7 +252,7 @@ struct MintView: View {
                 
             } catch {
                 
-                displayAlert(alert: AlertDetail(error))
+                displayAlert(alert: AlertDetail(with: error))
                 logger.error("Minting was not successful with mint \(selectedMint.url.absoluteString) due to error \(error)")
                 minting = false
             }

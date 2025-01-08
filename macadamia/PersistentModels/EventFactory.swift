@@ -26,7 +26,7 @@ extension AppSchemaV1.Event {
               bolt11MintQuote: quote,
               amount: amount,
               expiration: expiration,
-              minta: [mint]
+              mints: [mint]
         )
     }
     
@@ -45,7 +45,7 @@ extension AppSchemaV1.Event {
               wallet: wallet,
               bolt11MintQuote: quote,
               amount: amount,
-              minta: [mint]
+              mints: [mint]
         )
     }
     
@@ -57,7 +57,6 @@ extension AppSchemaV1.Event {
                           longDescription: String,
                           proofs: [Proof],
                           memo: String,
-                          tokens: [TokenInfo],
                           mint: Mint,
                           redeemed: Bool = false) -> Event {
         Event(date: Date(),
@@ -70,8 +69,7 @@ extension AppSchemaV1.Event {
               longDescription: longDescription,
               proofs: proofs,
               memo: memo,
-              tokens: tokens,
-              minta: [mint],
+              mints: [mint],
               redeemed: redeemed
         )
     }
@@ -84,8 +82,7 @@ extension AppSchemaV1.Event {
                              longDescription: String,
                              proofs: [Proof],
                              memo: String,
-                             mints: [Mint],
-                             tokens: [TokenInfo],
+                             mint: Mint,
                              redeemed: Bool) -> Event {
         Event(date: Date(),
               unit: unit,
@@ -97,8 +94,7 @@ extension AppSchemaV1.Event {
               longDescription: longDescription,
               proofs: proofs,
               memo: memo,
-              tokens: tokens,
-              minta: mints,
+              mints: [mint],
               redeemed: redeemed
         )
     }
@@ -120,7 +116,7 @@ extension AppSchemaV1.Event {
               bolt11MeltQuote: quote,
               amount: amount,
               expiration: expiration,
-              minta: mints
+              mints: mints
         )
     }
     
@@ -139,21 +135,8 @@ extension AppSchemaV1.Event {
               wallet: wallet,
               amount: amount,
               longDescription: longDescription,
-              minta: mints
+              mints: mints
         )
-    }
-    
-    static func drainEvent(shortDescription: String,
-                           visible:Bool = true,
-                           wallet: Wallet,
-                           tokens: [TokenInfo]) -> Event {
-        Event(date: Date(),
-              unit: .other,
-              shortDescription: shortDescription,
-              visible: visible,
-              kind: .drain,
-              wallet: wallet,
-              tokens: tokens)
     }
     
     static func restoreEvent(shortDescription: String,

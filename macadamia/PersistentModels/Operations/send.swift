@@ -34,16 +34,11 @@ extension AppSchemaV1.Mint {
         
         if targetAmount == proofs.sum {
             logger.debug("target amount and selected proof sum are an exact match, no swap necessary...")
+                        
+            token = CashuSwift.Token(proofs: [self.url.absoluteString: proofs],
+                                     unit: unit.rawValue,
+                                     memo: memo)
             
-            // construct token
-            let proofContainer = CashuSwift.ProofContainer(mint: self.url.absoluteString,
-                                                           proofs: proofs.map({ CashuSwift.Proof($0) }))
-            
-            token = CashuSwift.Token(token: [proofContainer], memo: memo, unit: unit.rawValue)
-            
-                
-                // TODO: change to general token object, not serialized
-            let tokenString = try token.serialize(.V3)
             event = Event.sendEvent(unit: unit,
                                     shortDescription: "Send",
                                     wallet: wallet,
@@ -51,9 +46,6 @@ extension AppSchemaV1.Mint {
                                     longDescription: "",
                                     proofs: proofs,
                                     memo: memo ?? "",
-                                    tokens: [TokenInfo(token: tokenString,
-                                                       mint: self.url.absoluteString,
-                                                       amount: targetAmount)],
                                     mint: self)
             swapped = []
         
@@ -107,26 +99,18 @@ extension AppSchemaV1.Mint {
             wallet.proofs.append(contentsOf: internalChangeProofs + internalSendProofs)
             self.proofs?.append(contentsOf: internalSendProofs + internalChangeProofs)
 
-            let proofContainer = CashuSwift.ProofContainer(mint: self.url.absoluteString,
-                                                           proofs: sendProofs.map({ CashuSwift.Proof($0) }))
-            
-            token = CashuSwift.Token(token: [proofContainer],
-                                         memo: memo,
-                                         unit: unit.rawValue)
-            
-            let tokenString = try token.serialize(.V3)
+            token = CashuSwift.Token(proofs: [self.url.absoluteString: internalSendProofs],
+                                     unit: unit.rawValue,
+                                     memo: memo)
             
             event = Event.sendEvent(unit: unit,
-                                        shortDescription: "Send",
-                                        wallet: wallet,
-                                        amount: targetAmount,
-                                        longDescription: "",
-                                        proofs: internalSendProofs,
-                                        memo: memo ?? "",
-                                        tokens: [TokenInfo(token: tokenString,
-                                                           mint: self.url.absoluteString,
-                                                           amount: internalSendProofs.sum)],
-                                        mint: self)
+                                    shortDescription: "Send",
+                                    wallet: wallet,
+                                    amount: targetAmount,
+                                    longDescription: "",
+                                    proofs: internalSendProofs,
+                                    memo: memo ?? "",
+                                    mint: self)
             
             swapped = internalSendProofs + internalChangeProofs
 

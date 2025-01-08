@@ -61,7 +61,7 @@ struct WalletView: View {
                 BalanceCard(balance: balance ?? 0,
                             unit: .sat)
                 .onAppear(perform: {
-                    balance = proofs.filter { $0.state == .valid && $0.wallet == activeWallet }.sum
+                    balance = proofs.filter { $0.state == .valid && $0.wallet == activeWallet && $0.mint?.hidden ?? true == false}.sum
                     
                     // quick sanity check for uniqueness of C across list of proofs
                     guard let activeWallet else {

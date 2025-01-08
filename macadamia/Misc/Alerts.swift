@@ -31,7 +31,7 @@ struct AlertDetail {
     
     // TODO: expand error handling to all cases and communicate common cases more effectively
     
-    init(_ error: Swift.Error) {
+    init(with error: Swift.Error) {
         switch error {
         case let cashuError as CashuError:
             switch cashuError {
@@ -65,8 +65,21 @@ struct AlertDetail {
             default:
                 self = AlertDetail(title: "Unhandled Error", description: String(describing: cashuError))
             }
+        case let macadamiaError as macadamiaError:
+            switch macadamiaError {
+            case .multiMintToken:
+                self = AlertDetail(title: "Multi Mint Token 📑", description: "macadamia no longer supports tokens that contain ecash from multiple mints. Please use separate tokens and the seed phrase for restoring ecash.")
+            case .databaseError(let message):
+                self = AlertDetail(title: "Database Error 📂", description: "The operation could not be completed due to an unexpected database inconsistency. \(message)")
+            case .lockedToken:
+                self = AlertDetail(title: "Locked Token 🔒", description: "macadamia can not yet redeem locked tokens. This feature is coming soon™.")
+            case .unsupportedUnit:
+                self = AlertDetail(title: "Unit Error 💵", description: "macadamia can only redeem tokens denominated in Satoshis. Multi unit support is coming soon™.")
+            case .unknownMint(_):
+                self = AlertDetail(title: "Unknown Mint 🥷", description: "You are trying to redeem from a mint that is not known to the wallet. Please add it first.")
+            }
         default:
-            self = AlertDetail(title: "General Error", description: error.localizedDescription)
+            self = AlertDetail(title: "Unknown Error", description: error.localizedDescription)
         }
     }
 }

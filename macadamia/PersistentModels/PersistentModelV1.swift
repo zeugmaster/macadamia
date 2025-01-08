@@ -69,6 +69,10 @@ enum AppSchemaV1: VersionedSchema {
         var userIndex: Int?
 
         var proofs: [Proof]?
+        
+        var events: [Event]?
+        
+        var hidden: Bool = false
 
         required init(url: URL, keysets: [CashuSwift.Keyset]) {
             self.mintID = UUID()
@@ -81,8 +85,6 @@ enum AppSchemaV1: VersionedSchema {
         var displayName: String {
             self.nickName ?? self.url.host() ?? self.url.absoluteString
         }
-        
-        
     }
 
     @Model
@@ -176,9 +178,10 @@ enum AppSchemaV1: VersionedSchema {
         var proofs: [Proof]?
         var memo: String?
         
-//        @Attribute(.transformable)
+        @available(*, deprecated, message: "deprecated in V1 Schema. macadamia uses other event information to build tokens (mint(s), proofs, memo)")
         var tokens: [TokenInfo]?
         
+        @Relationship(deleteRule: .noAction, inverse: \Mint.events)
         var mints: [Mint]?
         
         var redeemed: Bool?
@@ -207,8 +210,8 @@ enum AppSchemaV1: VersionedSchema {
              longDescription: String? = nil,
              proofs: [Proof]? = nil,
              memo: String? = nil,
-             tokens: [TokenInfo]? = nil,
-             minta: [Mint]? = nil,
+             token: CashuSwift.Token? = nil,
+             mints: [Mint]? = nil,
              redeemed: Bool? = nil) {
             
             self.eventID = UUID()
@@ -225,8 +228,7 @@ enum AppSchemaV1: VersionedSchema {
             self.longDescription = longDescription
             self.proofs = proofs
             self.memo = memo
-            self.tokens = tokens
-            self.mints = minta
+            self.mints = Array(mints ?? [])
             self.redeemed = redeemed
         }
         
@@ -259,4 +261,12 @@ enum AppSchemaV1: VersionedSchema {
     }
 }
 
+// this relic of drain view only remains for SwiftData model integrity
+@available(*, deprecated)
+struct TokenInfo: Identifiable, Hashable, Codable {
+    let token: String
+    let mint: String
+    let amount: Int
 
+    var id: String { token }
+}

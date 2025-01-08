@@ -198,7 +198,7 @@ struct MeltView: View {
                 
             } catch {
                 logger.warning("Unable to get melt quote. error \(error)")
-                displayAlert(alert: AlertDetail(error))
+                displayAlert(alert: AlertDetail(with: error))
             }
         }
     }
@@ -272,7 +272,7 @@ struct MeltView: View {
                 
                 logger.error("Melt operation falied with error: \(error)")
                 paymenState = .ready
-                displayAlert(alert: AlertDetail(error))
+                displayAlert(alert: AlertDetail(with: error))
             }
         }
     }
