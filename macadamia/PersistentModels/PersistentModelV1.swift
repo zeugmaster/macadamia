@@ -71,6 +71,8 @@ enum AppSchemaV1: VersionedSchema {
         var proofs: [Proof]?
         
         var events: [Event]?
+        
+        var hidden: Bool = false
 
         required init(url: URL, keysets: [CashuSwift.Keyset]) {
             self.mintID = UUID()

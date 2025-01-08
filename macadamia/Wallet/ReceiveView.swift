@@ -27,7 +27,7 @@ struct ReceiveView: View {
     @State private var unit: Unit = .other
     @State private var loading = false
     @State private var success = false
-    @State private var totalAmount: Int = 0
+    @State private var totalAmount: Int = 0 // TODO: SHOULD BE A COMPUTED PROPERTY
     @State private var mintState: MintState = .none
     
     @State private var showAlert: Bool = false
@@ -47,7 +47,7 @@ struct ReceiveView: View {
                         HStack {
                             Text("Total Amount: ")
                             Spacer()
-                            Text(String(totalAmount) + " sats")
+                            Text(amountDisplayString(totalAmount, unit: Unit(token.unit) ?? .sat))
                         }
                         .foregroundStyle(.secondary)
                         if let tokenMemo = token.memo, !tokenMemo.isEmpty {
@@ -243,6 +243,12 @@ struct ReceiveView: View {
                   p.secret.contains("P2PK")
               }) else {
             displayAlert(alert: AlertDetail(with: macadamiaError.lockedToken))
+            return
+        }
+        
+        // make sure token is only sat for now
+        if token.unit != "sat" {
+            displayAlert(alert: AlertDetail(with: macadamiaError.unsupportedUnit))
             return
         }
         
