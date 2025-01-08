@@ -597,7 +597,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/zeugmaster/cashu-swift.git";
 			requirement = {
-				branch = TokenV4;
+				branch = main;
 				kind = branch;
 			};
 		};
