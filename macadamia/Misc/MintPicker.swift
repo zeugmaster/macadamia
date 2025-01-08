@@ -25,7 +25,7 @@ struct MintPicker: View {
     }
     
     var sortedMintsOfActiveWallet: [Mint] {
-        mints.filter({ $0.wallet == activeWallet })
+        mints.filter({ $0.wallet == activeWallet && $0.hidden == false })
              .sorted(by: { $0.userIndex ?? 0 < $1.userIndex ?? 0})
     }
         

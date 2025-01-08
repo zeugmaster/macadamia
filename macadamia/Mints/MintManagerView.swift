@@ -24,7 +24,7 @@ struct MintManagerView: View {
     }
     
     var sortedMintsOfActiveWallet: [Mint] {
-        mints.filter({ $0.wallet == activeWallet })
+        mints.filter({ $0.wallet == activeWallet && $0.hidden == false})
              .sorted(by: { $0.userIndex ?? 0 < $1.userIndex ?? 0})
     }
 
@@ -92,6 +92,7 @@ struct MintManagerView: View {
                 }
                 .onAppear {
                     calculateBalanceStrings()
+                    reIndex()
                 }
             } else {
                 Text("No wallet initialized yet.")
@@ -135,6 +136,15 @@ struct MintManagerView: View {
             return
         }
         
+        if let knownMint = activeWallet.mints.first(where: { $0.url.absoluteString == trimmedURLString && $0.hidden == true}) {
+            // unhide and re-index
+            logger.info("user added mint that is already known. \(knownMint.url.absoluteString)")
+            knownMint.userIndex = activeWallet.mints.filter({ $0.hidden == false }).count
+            knownMint.hidden = false
+            newMintURLString = ""
+            return
+        }
+        
         guard !activeWallet.mints.contains(where: { $0.url == url }) else {
             logger.warning("user tried to add a mint with a url that is already in the list of mints.")
             displayAlert(alert: AlertDetail(title: "Duplicate Mint",
@@ -149,7 +159,7 @@ struct MintManagerView: View {
             do {
                 let mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
                 mint.wallet = activeWallet
-                mint.userIndex = activeWallet.mints.count
+                mint.userIndex = activeWallet.mints.count - 1
                 modelContext.insert(mint)
                 try modelContext.save()
                 logger.info("added new mint with URL \(mint.url.absoluteString)")
@@ -162,6 +172,15 @@ struct MintManagerView: View {
                     displayAlert(alert: AlertDetail(title: "Could not add mint.", description: "The wallet was unable to load this mint's keysets. Please make sure the URL is correct and the mint online, then try again."))
                 }
             }
+        }
+    }
+    
+    // fixes wrong indexing
+    private func reIndex() {
+        var current = 0
+        for mint in sortedMintsOfActiveWallet {
+            mint.userIndex = current
+            current += 1
         }
     }
 
@@ -194,6 +213,8 @@ struct MintInfoRowView: View {
                 Text(amountDisplayString ?? "No Balance")
                     .foregroundStyle(.gray)
             }
+            Spacer()
+            Text(String(mint.userIndex ?? 404))
         }
     }
 }
