@@ -236,6 +236,17 @@ struct ReceiveView: View {
             return
         }
         
+        // make sure the token is not P2PK locked
+        
+        guard let proofsInToken = token.proofsByMint.values.first,
+              !proofsInToken.contains(where: { p in
+                  p.secret.contains("P2PK")
+              }) else {
+            displayAlert(alert: AlertDetail(with: macadamiaError.lockedToken))
+            return
+        }
+        
+        // make sure the mint is known
         guard let mint = activeWallet.mints.first(where: { $0.url.absoluteString == token.proofsByMint.keys.first }) else {
             logger.error("unable to determinw mint to redeem from.")
             
