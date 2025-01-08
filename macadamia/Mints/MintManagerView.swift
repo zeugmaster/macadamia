@@ -142,6 +142,8 @@ struct MintManagerView: View {
             knownMint.userIndex = activeWallet.mints.filter({ $0.hidden == false }).count
             knownMint.hidden = false
             newMintURLString = ""
+            
+            try? modelContext.save()
             return
         }
         
@@ -213,8 +215,8 @@ struct MintInfoRowView: View {
                 Text(amountDisplayString ?? "No Balance")
                     .foregroundStyle(.gray)
             }
-            Spacer()
-            Text(String(mint.userIndex ?? 404))
+//            Spacer()
+//            Text(String(mint.userIndex ?? 404))
         }
     }
 }
