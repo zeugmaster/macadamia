@@ -1,4 +1,4 @@
-# macadamia Wallet for iOS <img align="left" width="40" height="40" src="https://macadamia.cash/images/Artboard%201@1024x-8.png" alt="logo">
+# macadamia Wallet for iOS <img align="left" width="40" height="40" src="https://cypherbase.cc/images/logo_w256.png" alt="logo">
 
 
 This is __macadamia__, a native iOS client for [cashu](https://github.com/cashubtc).

@@ -1,12 +1,12 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-This is the new **macadamia version 0.2.0!**
+**✔ V4 Token Support**
 
-It has been completely rebuilt using the newest technologies and APIs of the 🍎 ecosystem to allow for many cool features in the future.
-For now this application is still being developed, please use responsibly.
+This build adds support for redeeming and creating V4 tokens.
 
-To move you balance from the old macadamia, use the `Drain Wallet` feature.
+The ability to `Drain Wallet` and receiving ecash from a multi-mint V3 token have been removed. 🗑️ 
+Error messages have also been improved. 
 
 Contributions and feedback are always welcome and can be submitted via GitHub or email (see settings tab). 
 
