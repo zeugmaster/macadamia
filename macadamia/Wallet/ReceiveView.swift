@@ -165,6 +165,11 @@ struct ReceiveView: View {
             return
         }
         
+        guard !input.hasPrefix("creq") else {
+            displayAlert(alert: AlertDetail(title: "Cashu Payment Request 🫴", description: "macadamia does not yet support payment requests, but will soon™."))
+            return
+        }
+        
         do {
             let t = try input.deserializeToken()
             
