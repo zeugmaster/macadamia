@@ -106,7 +106,8 @@ extension AppSchemaV1.Event {
                                  quote: CashuSwift.Bolt11.MeltQuote,
                                  amount: Int,
                                  expiration: Date,
-                                 mints: [Mint]) -> Event {
+                                 mints: [Mint],
+                                 proofs: [Proof]) -> Event {
         Event(date: Date(),
               unit: unit,
               shortDescription: shortDescription,
@@ -116,6 +117,7 @@ extension AppSchemaV1.Event {
               bolt11MeltQuote: quote,
               amount: amount,
               expiration: expiration,
+              proofs: proofs,
               mints: mints
         )
     }

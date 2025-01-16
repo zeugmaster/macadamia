@@ -20,7 +20,7 @@ enum AppSchemaV1: VersionedSchema {
     }
     
     @Model
-    final class Wallet {
+    final class Wallet: Sendable {
         
         @Attribute(.unique)
         var walletID: UUID
@@ -184,6 +184,9 @@ enum AppSchemaV1: VersionedSchema {
         @Relationship(deleteRule: .noAction, inverse: \Mint.events)
         var mints: [Mint]?
         
+        // Persistence for NUT-08 blank outputs and secrets, blinding factors to allow for melt operation repeatability
+        var blankOutputs: BlankOutputSet?
+        
         var redeemed: Bool?
         
         enum Kind: Codable {
@@ -243,8 +246,23 @@ enum AppSchemaV1: VersionedSchema {
         }
     }
 
-    enum Unit: String, Codable, CaseIterable {
+    @Model
+    final class BlankOutputSet {
+        var outputs: [CashuSwift.Output]
+        var blindingFactors: [String]
+        var secrets: [String]
         
+        var event: Event?
+        
+        init(outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String], event: Event? = nil) {
+            self.outputs = outputs
+            self.blindingFactors = blindingFactors
+            self.secrets = secrets
+            self.event = event
+        }
+    }
+    
+    enum Unit: String, Codable, CaseIterable {
         case sat
         case usd
         case eur
@@ -258,6 +276,46 @@ enum AppSchemaV1: VersionedSchema {
                 return nil
             }
         }
+    }
+}
+
+// concrete type that is sendable so we can pass mints across concurrency boundaries
+struct SendableMint:  Sendable, MintRepresenting {
+    var url: URL
+    
+    var keysets: [CashuSwift.Keyset]
+    
+    init(url: URL, keysets: [CashuSwift.Keyset]) {
+        self.url = url
+        self.keysets = keysets
+    }
+    
+    init(from mint: MintRepresenting) {
+        self.url = mint.url
+        self.keysets = mint.keysets
+    }
+}
+
+struct SendableProof: Sendable, ProofRepresenting {
+    var keysetID: String
+    
+    var C: String
+    
+    var secret: String
+    
+    var amount: Int
+    
+    init(from proof: some ProofRepresenting) {
+        self.keysetID = proof.keysetID
+        self.C = proof.C
+        self.secret = proof.secret
+        self.amount = proof.amount
+    }
+}
+
+extension Mint {
+    var sendable: SendableMint {
+        return SendableMint(from: self)
     }
 }
 

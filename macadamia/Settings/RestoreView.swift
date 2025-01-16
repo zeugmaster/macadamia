@@ -42,6 +42,11 @@ struct RestoreView: View {
                      """)
             }
         }
+        .navigationTitle("Restore")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
+        .navigationBarBackButtonHidden(loading)
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         Button(action: {
             attemptRestore()
         }, label: {
@@ -69,27 +74,12 @@ struct RestoreView: View {
         .bold()
         .toolbar(.hidden, for: .tabBar)
         .disabled(mnemonic.isEmpty || loading || success)
-        .navigationTitle("Restore")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .tabBar)
-        .navigationBarBackButtonHidden(loading)
-        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
      
     private func attemptRestore() {
         guard let activeWallet else {
             displayAlert(alert: AlertDetail(title: "No Wallet",
                                            description: "."))
-            return
-        }
-        
-        if activeWallet.proofs.contains(where: { $0.state == .valid }) {
-            displayAlert(alert: AlertDetail(title: "Wallet not empty!",
-                                            description: """
-                                                         This wallet still contains valid ecash \
-                                                         that would become inaccessible if you restore now. \
-                                                         Please empty the wallet first.
-                                                         """))
             return
         }
         
@@ -103,11 +93,30 @@ struct RestoreView: View {
             return
         }
         
+        if activeWallet.proofs.contains(where: { $0.state == .valid }) {
+            displayAlert(alert: AlertDetail(title: "Wallet not empty!",
+                                            description: """
+                                                         This wallet still contains valid ecash \
+                                                         that will become inaccessible if you restore now. \
+                                                         Are you sure? 
+                                                         """,
+                                            primaryButtonText: "Cancel",
+                                            affirmText: "Restore",
+                                            onAffirm: {
+                initiateRestore()
+                return
+            }))
+        }
+        
+//        initiateRestore()
+    }
+    
+    private func initiateRestore() {
         Task {
             do {
                 loading = true
 
-                try await initiateRestore(mints: activeWallet.mints)
+                try await restore(mints: activeWallet!.mints)
 
                 success = true
                 loading = false
@@ -122,7 +131,7 @@ struct RestoreView: View {
         }
     }
     
-    private func initiateRestore(mints: [Mint]) async throws {
+    private func restore(mints: [Mint]) async throws {
         let words = mnemonic.components(separatedBy: CharacterSet.whitespacesAndNewlines)
         
         guard words.count == 12 else {
@@ -147,7 +156,6 @@ struct RestoreView: View {
                                                         with: seed)
             
             modelContext.insert(newWallet)
-            
             modelContext.insert(newMint)
             
             for result in results {
@@ -168,7 +176,6 @@ struct RestoreView: View {
                 print("newMint.keyset derivation counter: \(newMint.keysets.map({ $0.derivationCounter }))")
                                 
                 newMint.proofs?.append(contentsOf: internalProofs)
-                
                 newWallet.proofs.append(contentsOf: internalProofs)
             }
             newWallet.mints.append(newMint)

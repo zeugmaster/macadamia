@@ -205,7 +205,8 @@ struct MeltView: View {
 
     func melt() {
         guard let selectedMint,
-              let quote
+              let quote,
+              let pendingMeltEvent
         else {
             logger.warning("""
                             could not melt, one or more of the following required variables is nil.
@@ -217,6 +218,7 @@ struct MeltView: View {
         }
         
 //        let selectedUnit:Unit = .sat
+        // TODO: check if this is a repeated attempt, and use CashuSwift.meltState to check quote state and either A) mark paid and save change or B) attempt melt for the nth time
         
         // TODO: ADD FEE AMOUNT UI AND INFO
 
@@ -236,6 +238,7 @@ struct MeltView: View {
         }
         
         selection.selected.forEach { $0.state = .pending }
+        pendingMeltEvent.proofs = selection.selected
         
         paymenState = .loading
         
@@ -246,7 +249,7 @@ struct MeltView: View {
                                                                            with: selection.selected) {
                     // melt was successful
                     paymenState = .success
-                    pendingMeltEvent?.visible = false
+                    pendingMeltEvent.visible = false
                     insert(changeProofs + [event])
                     
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {

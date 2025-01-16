@@ -198,18 +198,19 @@ struct MintView: View {
         
         loadingInvoice = true
         
-        Task {
-            do {
-                let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
-                                                                      amount: self.amount)
-                
-                let (quote, event) = try await selectedMint.getQuote(for: quoteRequest)
+        let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
+                                                              amount: self.amount)
+        
+        selectedMint.getQuote(for: quoteRequest) { result in
+            print("completion handler exec on main thread: \(Thread.isMainThread)")
+            switch result {
+            case .success(let (quote, event)):
                 self.quote = quote as? CashuSwift.Bolt11.MintQuote
                 loadingInvoice = false
                 pendingMintEvent = event
                 insert([event])
                 
-            } catch {
+            case .failure(let error):
                 displayAlert(alert: AlertDetail(with: error))
                 logger.error("""
                              could not get quote from mint \(selectedMint.url.absoluteString) \
@@ -233,13 +234,10 @@ struct MintView: View {
         }
         
         minting = true
-        
-        Task {
-            do {
-                logger.debug("requesting mint for quote with id \(quote.quote)...")
-                                
-                let (proofs, event) = try await selectedMint.issue(for: quote)
                 
+        selectedMint.issue(for: quote) { result in
+            switch result {
+            case .success(let (proofs, event)):
                 pendingMintEvent?.visible = false
                 minting = false
                 mintSuccess = true
@@ -250,8 +248,7 @@ struct MintView: View {
                     dismiss()
                 }
                 
-            } catch {
-                
+            case .failure(let error):
                 displayAlert(alert: AlertDetail(with: error))
                 logger.error("Minting was not successful with mint \(selectedMint.url.absoluteString) due to error \(error)")
                 minting = false
@@ -259,8 +256,9 @@ struct MintView: View {
         }
     }
     
-    @MainActor
+//    @MainActor
     func insert(_ models: [any PersistentModel]) {
+        print(models)
         models.forEach({ modelContext.insert($0) })
         do {
             try modelContext.save()
