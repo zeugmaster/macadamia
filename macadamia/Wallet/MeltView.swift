@@ -242,6 +242,8 @@ struct MeltView: View {
         
         paymenState = .loading
         
+#warning("must update derivation counter after receiving blank outputs")
+        
         Task {
             do {
                 

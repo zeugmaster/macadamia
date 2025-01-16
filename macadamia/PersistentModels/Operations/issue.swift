@@ -48,7 +48,7 @@ extension AppSchemaV1.Mint {
         return (proofs, event)
     }
     
-    func issue (for quote: CashuSwift.Bolt11.MintQuote,
+    func issue(for quote: CashuSwift.Bolt11.MintQuote,
                 completion: @escaping (Result<(proofs: [Proof],
                                                event: Event), Error>) -> Void) {
         
@@ -62,8 +62,9 @@ extension AppSchemaV1.Mint {
         
         Task {
             do {
-                print("Starting issuance on thread: \(Thread.current)")
+                // runs on a background thread
                 let sendableProofs = try await CashuSwift.issue(for: quote, on: sendableMint, seed: seed).map({ SendableProof(from: $0) })
+                // and safely back to main using sendable types
                 DispatchQueue.main.sync {
                     print("Completing issuance on thread: \(Thread.current)")
                     

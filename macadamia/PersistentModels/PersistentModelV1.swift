@@ -7,6 +7,7 @@ typealias Mint = AppSchemaV1.Mint
 typealias Proof = AppSchemaV1.Proof
 typealias Event = AppSchemaV1.Event
 typealias Unit = AppSchemaV1.Unit
+typealias BlankOutputSet = AppSchemaV1.BlankOutputSet
 
 enum AppSchemaV1: VersionedSchema {
     
