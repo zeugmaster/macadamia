@@ -160,6 +160,10 @@ extension AppSchemaV1.Mint {
         }
         
         if let blankOutputs {
+            if let blankOutputKeysetID = Set(blankOutputs.outputs.map({ $0.id })).first {
+                self.increaseDerivationCounterForKeysetWithID(blankOutputKeysetID, by: blankOutputs.outputs.count)
+            }
+            
             return BlankOutputSet(outputs: blankOutputs.outputs,
                                   blindingFactors: blankOutputs.blindingFactors,
                                   secrets: blankOutputs.secrets)

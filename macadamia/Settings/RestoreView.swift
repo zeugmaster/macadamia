@@ -107,8 +107,6 @@ struct RestoreView: View {
                 return
             }))
         }
-        
-//        initiateRestore()
     }
     
     private func initiateRestore() {
@@ -137,65 +135,39 @@ struct RestoreView: View {
         guard words.count == 12 else {
             throw CashuError.restoreError("Could not convert text input to twelve word seed phrase. Please try again.")
         }
+                
+        // TODO: insert wallet, new mints, proofs.
         
-        guard let mnemo = try? Mnemonic(phrase: words) else {
-            throw CashuError.restoreError("Could not generate seed from text input. Please try again.")
-        }
-        
-        let seed = String(bytes: mnemo.seed)
-        
-        let newWallet = Wallet(mnemonic: mnemo.phrase.joined(separator: " "),
-                               seed: seed)
+        macadamiaApp.restore(from: mints,
+                             with: words) { result in
+            switch result {
+            case .success(let (proofs, newWallet, newMints, event)):
                 
-        for mint in mints {
-            let newMint = Mint(url: mint.url, keysets: mint.keysets)
-            newMint.userIndex = mint.userIndex
-            newMint.nickName = mint.nickName
-            
-            let results = try await CashuSwift.restore(mint: newMint,
-                                                        with: seed)
-            
-            modelContext.insert(newWallet)
-            modelContext.insert(newMint)
-            
-            for result in results {
-                let fee = newMint.keysets.first(where: { $0.keysetID == result.keysetID })?.inputFeePPK ?? 0 // FIXME: ugly
+                insert(proofs + newMints + [newWallet, event])
                 
-                let internalProofs = result.proofs.map({ p in
-                    Proof(p,
-                          unit: Unit(result.unitString) ?? .sat,
-                          inputFeePPK: fee,
-                          state: .valid,
-                          mint: newMint,
-                          wallet: newWallet)
-                })
-                
-                newMint.increaseDerivationCounterForKeysetWithID(result.keysetID,
-                                                                 by: result.derivationCounter)
-                
-                print("newMint.keyset derivation counter: \(newMint.keysets.map({ $0.derivationCounter }))")
-                                
-                newMint.proofs?.append(contentsOf: internalProofs)
-                newWallet.proofs.append(contentsOf: internalProofs)
+                wallets.forEach({ $0.active = false })
+                newWallet.active = true
+                try? modelContext.save()
+
+            case .failure(let error):
+                logger.error("restoring failed with error: \(error)")
+                displayAlert(alert: AlertDetail(with: error))
             }
-            newWallet.mints.append(newMint)
-            newMint.wallet = newWallet
         }
         
-        wallets.forEach({ $0.active = false })
-        
-        newWallet.active = true
-        
-        let event = Event.restoreEvent(shortDescription: "Restore",
-                                       wallet: newWallet,
-                                       longDescription: """
-                                                        Successfully recovered ecash \
-                                                        from \(newWallet.mints.count) mints \
-                                                        using a seed phrase! 🤠
-                                                        """)
-        modelContext.insert(event)
+        // TODO: auto dismiss view
                 
-        try modelContext.save()
+    }
+    
+    @MainActor
+    func insert(_ models: [any PersistentModel]) {
+        models.forEach({ modelContext.insert($0) })
+        do {
+            try modelContext.save()
+            logger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
+        } catch {
+            logger.error("Saving SwiftData model context failed with error: \(error)")
+        }
     }
 
     private func displayAlert(alert:AlertDetail) {

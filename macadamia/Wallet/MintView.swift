@@ -256,12 +256,12 @@ struct MintView: View {
         }
     }
     
-//    @MainActor
+    @MainActor
     func insert(_ models: [any PersistentModel]) {
-        print(models)
         models.forEach({ modelContext.insert($0) })
         do {
             try modelContext.save()
+            logger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
         } catch {
             logger.error("Saving SwiftData model context failed with error: \(error)")
         }
