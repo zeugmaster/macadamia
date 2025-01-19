@@ -103,38 +103,28 @@ struct RestoreView: View {
                                             primaryButtonText: "Cancel",
                                             affirmText: "Restore",
                                             onAffirm: {
-                initiateRestore()
+                restore()
                 return
             }))
+        } else {
+            restore()
         }
     }
     
-    private func initiateRestore() {
-        Task {
-            do {
-                loading = true
-
-                try await restore(mints: activeWallet!.mints)
-
-                success = true
-                loading = false
-            } catch {
-                displayAlert(alert: AlertDetail(title: "Error",
-                                                description: """
-                                                             There was an error when attempting to restore. \
-                                                             Detail: \(String(describing: error))
-                                                             """))
-                loading = false
-            }
+    private func restore() {
+        guard let mints = activeWallet?.mints else {
+            return
         }
-    }
-    
-    private func restore(mints: [Mint]) async throws {
+        
         let words = mnemonic.components(separatedBy: CharacterSet.whitespacesAndNewlines)
         
         guard words.count == 12 else {
-            throw CashuError.restoreError("Could not convert text input to twelve word seed phrase. Please try again.")
+            logger.error("The entered test does not appear to be a properly formmatted syeed phrase.")
+            displayAlert(alert: AlertDetail(title: "Restore Error", description: "The entered text does not appear to be a properly formmatted seed phrase. Make sure its twelve words, separated by spaces or line breaks."))
+            return
         }
+        
+        loading = true
                 
         // TODO: insert wallet, new mints, proofs.
         
@@ -148,10 +138,15 @@ struct RestoreView: View {
                 wallets.forEach({ $0.active = false })
                 newWallet.active = true
                 try? modelContext.save()
+                
+                success = true
+                loading = false
 
             case .failure(let error):
                 logger.error("restoring failed with error: \(error)")
                 displayAlert(alert: AlertDetail(with: error))
+                loading = false
+                success = false
             }
         }
         
