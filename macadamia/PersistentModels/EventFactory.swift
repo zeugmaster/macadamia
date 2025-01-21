@@ -107,7 +107,7 @@ extension AppSchemaV1.Event {
                                  amount: Int,
                                  expiration: Date,
                                  mints: [Mint],
-                                 proofs: [Proof]) -> Event {
+                                 proofs: [Proof]? = nil) -> Event {
         Event(date: Date(),
               unit: unit,
               shortDescription: shortDescription,

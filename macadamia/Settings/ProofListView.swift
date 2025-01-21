@@ -7,9 +7,13 @@ struct MintListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var mints: [Mint]
     
+    var mintOfActiveWallet: [Mint] {
+        mints.filter { $0.wallet?.active == true }
+    }
+    
     var body: some View {
         List {
-            ForEach(mints) { m in
+            ForEach(mintOfActiveWallet) { m in
                 NavigationLink(destination: ProofListView(mint: m),
                                label: {
                     Text(m.url.absoluteString)

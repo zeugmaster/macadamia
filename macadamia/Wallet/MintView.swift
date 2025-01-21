@@ -208,7 +208,7 @@ struct MintView: View {
                 self.quote = quote as? CashuSwift.Bolt11.MintQuote
                 loadingInvoice = false
                 pendingMintEvent = event
-                insert([event])
+                AppSchemaV1.insert([event], into: modelContext)
                 
             case .failure(let error):
                 displayAlert(alert: AlertDetail(with: error))
@@ -242,7 +242,7 @@ struct MintView: View {
                 minting = false
                 mintSuccess = true
                 
-                insert(proofs + [event])
+                AppSchemaV1.insert(proofs + [event], into: modelContext)
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     dismiss()
@@ -253,17 +253,6 @@ struct MintView: View {
                 logger.error("Minting was not successful with mint \(selectedMint.url.absoluteString) due to error \(error)")
                 minting = false
             }
-        }
-    }
-    
-    @MainActor
-    func insert(_ models: [any PersistentModel]) {
-        models.forEach({ modelContext.insert($0) })
-        do {
-            try modelContext.save()
-            logger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
-        } catch {
-            logger.error("Saving SwiftData model context failed with error: \(error)")
         }
     }
 

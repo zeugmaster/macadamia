@@ -265,20 +265,16 @@ struct ReceiveView: View {
         // make sure the mint is known
         guard let mint = activeWallet.mints.first(where: { $0.url.absoluteString == token.proofsByMint.keys.first }) else {
             logger.error("unable to determinw mint to redeem from.")
-            
-            // TODO: RE CHECK MINT KNOWN OR ADD
-            
+            displayAlert(alert: AlertDetail(with: macadamiaError.unknownMint(nil)))
             return
         }
 
         loading = true
 
-        Task {
-            do {
-                let (proofs, event) = try await mint.redeem(token)
-                
-                insert(proofs + [event])
-                try modelContext.save()
+        mint.redeem(token: token) { result in
+            switch result {
+            case .success(let (proofs, event)):
+                AppSchemaV1.insert(proofs + [event], into: modelContext)
                 
                 self.loading = false
                 self.success = true
@@ -286,25 +282,14 @@ struct ReceiveView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     dismiss()
                 }
-
-            } catch {
-                // receive unsuccessful
+                
+            case .failure(let error):
                 logger.error("could not receive token due to error \(error)")
                 displayAlert(alert: AlertDetail(with: error))
                 self.loading = false
                 self.success = false
+                
             }
-        }
-    }
-    
-    @MainActor
-    func insert(_ models: [any PersistentModel]) {
-        models.forEach({ modelContext.insert($0) })
-        do {
-            try modelContext.save()
-            logger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
-        } catch {
-            logger.error("Saving SwiftData model context failed with error: \(error)")
         }
     }
 

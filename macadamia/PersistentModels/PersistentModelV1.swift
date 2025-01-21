@@ -247,20 +247,40 @@ enum AppSchemaV1: VersionedSchema {
         }
     }
 
-    @Model
-    final class BlankOutputSet {
-        var outputs: [CashuSwift.Output]
-        var blindingFactors: [String]
-        var secrets: [String]
+//    @Model
+//    final class BlankOutputSet {
+//        var outputs: [CashuSwift.Output]
+//        var blindingFactors: [String]
+//        var secrets: [String]
+//        
+//        var event: Event?
+//        
+//        init(outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String], event: Event? = nil) {
+//            self.outputs = outputs
+//            self.blindingFactors = blindingFactors
+//            self.secrets = secrets
+//            self.event = event
+//        }
+//        
+//        init(tuple: (outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String]), event: Event? = nil) {
+//            self.outputs = tuple.outputs
+//            self.blindingFactors = tuple.blindingFactors
+//            self.secrets = tuple.secrets
+//            self.event = event
+//        }
+//    }
+    
+    struct BlankOutputSet: Codable {
+        let outputs: [CashuSwift.Output]
+        let blindingFactors: [String]
+        let secrets: [String]
         
-        var event: Event?
-        
-        init(outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String], event: Event? = nil) {
-            self.outputs = outputs
-            self.blindingFactors = blindingFactors
-            self.secrets = secrets
-            self.event = event
+        init(tuple: (outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String]), event: Event? = nil) {
+            self.outputs = tuple.outputs
+            self.blindingFactors = tuple.blindingFactors
+            self.secrets = tuple.secrets
         }
+
     }
     
     enum Unit: String, Codable, CaseIterable {
@@ -276,6 +296,17 @@ enum AppSchemaV1: VersionedSchema {
             } else {
                 return nil
             }
+        }
+    }
+    
+    @MainActor
+    static func insert(_ models: [any PersistentModel], into modelContext: ModelContext) {
+        models.forEach({ modelContext.insert($0) })
+        do {
+            try modelContext.save()
+            logger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
+        } catch {
+            logger.error("Saving SwiftData model context failed with error: \(error)")
         }
     }
 }
@@ -328,4 +359,18 @@ struct TokenInfo: Identifiable, Hashable, Codable {
     let amount: Int
 
     var id: String { token }
+}
+
+extension Array where Element == ProofRepresenting {
+    var sendable: [SendableProof] {
+        self.map { p in
+            SendableProof(from: p)
+        }
+    }
+}
+
+extension Array where Element == Proof {
+    func setState(_ state: Proof.State) {
+        self.forEach { $0.state = state }
+    }
 }

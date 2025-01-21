@@ -252,12 +252,5 @@ extension AppSchemaV1.Mint {
     }
 }
 
-extension Array where Element == ProofRepresenting {
-    var sendable: [SendableProof] {
-        self.map { p in
-            SendableProof(from: p)
-        }
-    }
-}
 
 

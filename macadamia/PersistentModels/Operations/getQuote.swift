@@ -90,7 +90,7 @@ extension AppSchemaV1.Mint {
                                                        amount: (quote.amount),
                                                        expiration: Date(timeIntervalSince1970: TimeInterval(quote.expiry)),
                                                        mints: [self],
-                                                       proofs: [])
+                                                       proofs: nil) // will later be used to determine if melt has already been attempted
                         completion(.success((quote, event)))
                         
                     default:
