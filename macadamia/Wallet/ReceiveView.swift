@@ -27,11 +27,23 @@ struct ReceiveView: View {
     @State private var unit: Unit = .other
     @State private var loading = false
     @State private var success = false
-    @State private var totalAmount: Int = 0 // TODO: SHOULD BE A COMPUTED PROPERTY
     @State private var mintState: MintState = .none
     
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
+    
+    private var totalAmount: Int {
+        if let token {
+            var amount = 0
+            for prooflist in token.proofsByMint.values {
+                for p in prooflist {
+                    amount += p.amount
+                }
+            }
+            return amount
+        }
+        return 0
+    }
 
     init(tokenString: String? = nil) {
         self._tokenString = State(initialValue: tokenString)
@@ -50,6 +62,8 @@ struct ReceiveView: View {
                             Text(amountDisplayString(totalAmount, unit: Unit(token.unit) ?? .sat))
                         }
                         .foregroundStyle(.secondary)
+                        Text(token.proofsByMint.keys.first ?? "")
+                            .foregroundStyle(.secondary)
                         if let tokenMemo = token.memo, !tokenMemo.isEmpty {
                             Text("Memo: \(tokenMemo)")
                                 .foregroundStyle(.secondary)
@@ -151,6 +165,11 @@ struct ReceiveView: View {
             return
         }
         
+        guard !input.hasPrefix("creq") else {
+            displayAlert(alert: AlertDetail(title: "Cashu Payment Request 🫴", description: "macadamia does not yet support payment requests, but will soon™."))
+            return
+        }
+        
         do {
             let t = try input.deserializeToken()
             
@@ -160,15 +179,6 @@ struct ReceiveView: View {
             }
             
             self.token = t
-            self.totalAmount = 0
-
-            // calculate total balance
-            for prooflist in t.proofsByMint.values {
-                for p in prooflist {
-                    totalAmount += p.amount
-                }
-            }
-            
             self.tokenString = input
             
             // check if mint is known
@@ -302,7 +312,6 @@ struct ReceiveView: View {
         tokenString = nil
         token = nil
         success = false
-        totalAmount = 0
         mintState = .none
     }
 

@@ -80,7 +80,7 @@ struct MintInfoView: View {
                 // Confirmation alert for deletion
                 .alert("Remove Mint", isPresented: $showDeleteConfirmation) {
                     Button("Delete", role: .destructive) {
-                        deleteMint()
+                        removeMint()
                     }
                     Button("Cancel", role: .cancel) { }
                 } message: {
@@ -112,15 +112,16 @@ struct MintInfoView: View {
     }
 
     // Function to delete the mint
-    private func deleteMint() {
-        // Delete the mint from the context
-        mint.proofs?.forEach({ $0.state = .pending })
-        modelContext.delete(mint)
-
+    private func removeMint() {
+        
+        // hide and re-index, then dismiss
+        mint.hidden = true
+        if mint.userIndex != nil {
+            mint.userIndex! += 10000
+        }
+        
         do {
-            // Save the context to persist changes
             try modelContext.save()
-            // Dismiss the view to go back
             dismiss()
         } catch {
             // Handle errors and show an alert

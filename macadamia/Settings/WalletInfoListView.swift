@@ -26,7 +26,8 @@ struct WalletInfoListView: View {
                     Text("Seed hex: ...\(wallet.seed.dropFirst(wallet.seed.count - 16))")
                     Text("Name: \(wallet.name ?? "nil")")
                     Text("ID: \(wallet.walletID)")
-                    Text("Mints: \(wallet.mints.count), Proofs: \(wallet.proofs.count)")
+                    Text("Mints (including hidden): \(wallet.mints.count)")
+                    Text("Proofs: \(wallet.proofs.count)")
                     Text("Active: \(wallet.active ? "true" : "false")")
                 }
             }
