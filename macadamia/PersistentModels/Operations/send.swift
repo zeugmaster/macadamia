@@ -176,7 +176,7 @@ extension AppSchemaV1.Mint {
                     let sendProofs: [ProofRepresenting]
                     let changeProofs: [ProofRepresenting]
                     
-                    (sendProofs, changeProofs) = try await CashuSwift.swap(mint: self,
+                    (sendProofs, changeProofs) = try await CashuSwift.swap(mint: sendableMint,
                                                                            proofs: proofs,
                                                                            amount: targetAmount,
                                                                            seed: wallet.seed)

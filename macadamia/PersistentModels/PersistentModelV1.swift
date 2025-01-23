@@ -186,7 +186,9 @@ enum AppSchemaV1: VersionedSchema {
         var mints: [Mint]?
         
         // Persistence for NUT-08 blank outputs and secrets, blinding factors to allow for melt operation repeatability
-        var blankOutputs: BlankOutputSet?
+        // another case where SwiftData refuses to store the "complex" codable struct
+        // so we need to (de-) serialize it ourselves
+        var blankOutputData: Data?
         
         var redeemed: Bool?
         
@@ -245,35 +247,28 @@ enum AppSchemaV1: VersionedSchema {
                 bolt11MeltQuoteData = try? JSONEncoder().encode(newValue)
             }
         }
+        
+        var blankOutputs: BlankOutputSet? {
+            get {
+                guard let data = blankOutputData else { return nil }
+                return try? JSONDecoder().decode(BlankOutputSet.self, from: data)
+            }
+            set {
+                blankOutputData = try? JSONEncoder().encode(newValue)
+            }
+        }
     }
-
-//    @Model
-//    final class BlankOutputSet {
-//        var outputs: [CashuSwift.Output]
-//        var blindingFactors: [String]
-//        var secrets: [String]
-//        
-//        var event: Event?
-//        
-//        init(outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String], event: Event? = nil) {
-//            self.outputs = outputs
-//            self.blindingFactors = blindingFactors
-//            self.secrets = secrets
-//            self.event = event
-//        }
-//        
-//        init(tuple: (outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String]), event: Event? = nil) {
-//            self.outputs = tuple.outputs
-//            self.blindingFactors = tuple.blindingFactors
-//            self.secrets = tuple.secrets
-//            self.event = event
-//        }
-//    }
     
     struct BlankOutputSet: Codable {
         let outputs: [CashuSwift.Output]
         let blindingFactors: [String]
         let secrets: [String]
+        
+        enum CodingKeys: String, CodingKey {
+            case outputs
+            case blindingFactors
+            case secrets
+        }
         
         init(tuple: (outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String]), event: Event? = nil) {
             self.outputs = tuple.outputs
