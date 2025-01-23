@@ -111,6 +111,24 @@ struct MeltView: View {
                             .foregroundStyle(.secondary)
                         }
                     }
+                    
+                    Section {
+                        Button(role: .destructive) {
+                            removeQuote()
+                        } label: {
+                            HStack {
+                                Text("Remove Quote")
+                                Spacer()
+                                Image(systemName: "trash")
+                            }
+                        }
+                        .disabled(paymenState != .failed)
+                    } footer: {
+                        Text("""
+                             An attempted payment reserves ecash. When a payment fails \
+                             you can reclaim this ecash by removing the melt quote.
+                             """)
+                    }
                 } else {
                     Section {
                         InputView { string in
@@ -122,7 +140,7 @@ struct MeltView: View {
             
             // MARK: - BUTTON
             Button(action: {
-                melt()
+                initiateMelt()
             }, label: {
                 switch paymenState {
                 case .ready, .failed:
@@ -152,7 +170,7 @@ struct MeltView: View {
         }
     }
 
-    func processInputViewResult(_ string: String) {
+    private func processInputViewResult(_ string: String) {
         var input = string
         if input.hasPrefix("lightning:") {
             input.removeFirst("lightning:".count)
@@ -170,42 +188,41 @@ struct MeltView: View {
         getQuote()
     }
 
-    func updateBalance() {
+    private func updateBalance() {
         selectedMintBalance = proofsOfSelectedMint.filter({ $0.state == .valid }).sum
     }
 
-    var invoiceAmount: Int? {
+    private var invoiceAmount: Int? {
         try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString)
     }
     
-    func getQuote() {
+    private func getQuote() {
         
         guard let selectedMint else {
             logger.warning("unable to get quote, activeWallet or selectedMint is nil")
             return
         }
         
-        Task {
-            do {
-                let quoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat", // TODO: REMOVE HARD CODED UNIT
-                                                                      request: invoiceString,
-                                                                      options: nil)
-                
-                let (_, event) = try await selectedMint.getQuote(for: quoteRequest)
-                
+        let quoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat",
+                                                              request: invoiceString,
+                                                              options: nil)
+        selectedMint.getQuote(for: quoteRequest) { result in
+            switch result {
+            case .success(let (_, event)):
                 self.pendingMeltEvent = event
-                insert([event])
-                
-            } catch {
+                AppSchemaV1.insert([event], into: modelContext)
+            case .failure(let error):
                 logger.warning("Unable to get melt quote. error \(error)")
                 displayAlert(alert: AlertDetail(with: error))
             }
         }
     }
-
-    func melt() {
+    
+    private func initiateMelt() {
         guard let selectedMint,
-              let quote
+              let quote,
+              let pendingMeltEvent,
+              let wallet = selectedMint.wallet
         else {
             logger.warning("""
                             could not melt, one or more of the following required variables is nil.
@@ -216,76 +233,130 @@ struct MeltView: View {
             return
         }
         
-//        let selectedUnit:Unit = .sat
-        
-        // TODO: ADD FEE AMOUNT UI AND INFO
-
-        guard let selection = selectedMint.select(allProofs: proofsOfSelectedMint,
-                                                  amount: quote.amount + quote.feeReserve,
-                                                  unit: .sat) else {
-            displayAlert(alert: AlertDetail(title: "Insufficient funds.",
-                                            description: """
-                                                         The wallet could not collect enough \
-                                                         ecash to settle this payment.
-                                                         """))
-            logger.info("""
-                        insufficient funds, mint.select() could not \
-                        collect proofs for the required amount.
-                        """)
-            return
-        }
-        
-        selection.selected.forEach { $0.state = .pending }
+        logger.debug("starting melt attempt for quote \(quote.quote)")
         
         paymenState = .loading
         
-        Task {
-            do {
-                
-                if let (changeProofs, event) = try await selectedMint.melt(for: quote,
-                                                                           with: selection.selected) {
-                    // melt was successful
-                    paymenState = .success
-                    pendingMeltEvent?.visible = false
-                    insert(changeProofs + [event])
-                    
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        dismiss()
-                    }
-                } else {
-                    // melt was NOT successful
-                    paymenState = .failed
-                    displayAlert(alert: AlertDetail(title: "Unsuccessful",
-                                                    description: """
-                                                                 The Lighning invoice could not be \
-                                                                 payed by the mint. Please try again later.
-                                                                 """))
-                }
-
-            } catch {
-                // TODO: UI for when quote expires etc.
-                
-                await MainActor.run {
-                    selection.selected.forEach { $0.state = .valid }
-                    try? modelContext.save()
-                }
-                
-                logger.error("Melt operation falied with error: \(error)")
-                paymenState = .ready
+        if let proofs = pendingMeltEvent.proofs, !proofs.isEmpty {
+            // check melt state
+            checkState(mint: selectedMint, quote: quote, proofs: proofs, pendingMeltEvent: pendingMeltEvent, seed: wallet.seed)
+        } else {
+            // select proofs, assign proofs, mark .pending, persist
+            // use .melt
+            logger.debug("quote does not have proofs assigned, selecting and melting via .melt()...")
+            
+            guard let selection = selectedMint.select(allProofs: proofsOfSelectedMint,
+                                                      amount: quote.amount + quote.feeReserve,
+                                                      unit: .sat) else {
+                displayAlert(alert: AlertDetail(title: "Insufficient funds.",
+                                                description: """
+                                                             The wallet could not collect enough \
+                                                             ecash to settle this payment.
+                                                             """))
+                logger.info("""
+                            insufficient funds, mint.select() could not \
+                            collect proofs for the required amount.
+                            """)
+                return
+            }
+            
+            selection.selected.setState(.pending)
+            pendingMeltEvent.proofs = selection.selected
+            try? modelContext.save()
+            
+            melt(mint: selectedMint, quote: quote, proofs: selection.selected, pendingMeltEvent: pendingMeltEvent, seed: wallet.seed)
+        }
+    }
+    
+    private func checkState(mint: Mint, quote: CashuSwift.Bolt11.MeltQuote, proofs: [Proof], pendingMeltEvent: Event, seed: String) {
+        logger.debug("quote already has proofs assigned, melting via .checkMelt()...")
+        
+        mint.checkMelt(for: quote,
+                               blankOutputSet: pendingMeltEvent.blankOutputs) { result in
+            switch result {
+            case .error(let error):
+                self.paymenState = .failed
+                logger.error("attempt to check and melt failed due to error: \(error)")
                 displayAlert(alert: AlertDetail(with: error))
+                proofs.setState(.pending)
+            case .failure:
+                logger.info("payment on mint \(mint.url.absoluteString) failed, trying again...")
+                melt(mint: mint, quote: quote, proofs: proofs, pendingMeltEvent: pendingMeltEvent, seed: seed)
+                proofs.setState(.pending)
+            case .success(let (change, event)):
+                logger.debug("melt operation was successful.")
+                paymentDidSucceed(with: change, event: event)
+                proofs.setState(.spent)
+            }
+        }
+    }
+
+    func melt(mint: Mint, quote: CashuSwift.Bolt11.MeltQuote, proofs: [Proof], pendingMeltEvent: Event, seed: String) {
+        // generate blankOutputs, increase counter, assign to event and persist (insert)
+        if pendingMeltEvent.blankOutputs == nil,
+            let outputs = try? CashuSwift.generateBlankOutputs(quote: quote,
+                                                               proofs: proofs,
+                                                               mint: mint,
+                                                               unit: quote.quoteRequest?.unit ?? "sat",
+                                                               seed: seed) {
+            logger.debug("no blank outputs were assigned, creating new")
+            let blankOutputSet = BlankOutputSet(tuple: outputs)
+            pendingMeltEvent.blankOutputs = blankOutputSet
+            if let keysetID = outputs.outputs.first?.id {
+                mint.increaseDerivationCounterForKeysetWithID(keysetID, by: outputs.outputs.count)
+            }
+            try? modelContext.save()
+        }
+        
+        mint.melt(for: quote,
+                  with: proofs,
+                  blankOutputSet: pendingMeltEvent.blankOutputs) { result in
+            switch result {
+            case .error(let error):
+                // remove assoc proofs, mark valid, display error
+                pendingMeltEvent.proofs = nil
+                proofs.setState(.valid)
+                logger.error("melt operation failed with error: \(error)")
+                displayAlert(alert: AlertDetail(with: error))
+                self.paymenState = .failed
+            case .failure:
+                proofs.setState(.pending)
+                logger.info("payment on mint \(mint.url.absoluteString) failed")
+                displayAlert(alert: AlertDetail(title: "Payment unsussessful 🚫", description: "Please try again."))
+                self.paymenState = .failed
+            case .success(let (change, event)):
+                logger.debug("melt operation was successful.")
+                paymentDidSucceed(with: change, event: event)
             }
         }
     }
     
-    @MainActor
-    func insert(_ models: [any PersistentModel]) {
-        models.forEach({ modelContext.insert($0) })
-        do {
-            try modelContext.save()
-            logger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
-        } catch {
-            logger.error("Saving SwiftData model context failed with error: \(error)")
+    private func paymentDidSucceed(with change: [Proof], event: Event) {
+        logger.info("change from payment: \(change.count), sum \(change.sum)")
+        self.paymenState = .success
+        self.pendingMeltEvent?.visible = false
+        AppSchemaV1.insert(change + [event], into: modelContext)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            dismiss()
         }
+    }
+    
+    private func removeQuote() {
+        displayAlert(alert: AlertDetail(title: "Are you sure?",
+                                        description: "Removing this melt quote will also free up any associated pending ecash.",
+                                        primaryButtonText: "Cancel",
+                                        affirmText: "Remove",
+                                        onAffirm: {
+            guard let pendingMeltEvent else {
+                return
+            }
+            if let proofs = pendingMeltEvent.proofs {
+                proofs.setState(.valid)
+                pendingMeltEvent.proofs = nil
+            }
+            pendingMeltEvent.visible = false
+            dismiss()
+        }))
     }
     
     private func displayAlert(alert: AlertDetail) {

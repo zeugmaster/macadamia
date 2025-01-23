@@ -82,7 +82,7 @@ struct TransactionListRow: View {
                 .frame(width: 20, alignment: .leading)
                 Group {
                     if let memo = event.memo, !memo.isEmpty {
-                        Text(memo)
+                        Text("\"" + memo + "\"")
                     } else {
                         Text(event.shortDescription)
                     }

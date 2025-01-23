@@ -126,40 +126,29 @@ struct SendView: View {
                          """)
             return
         }
-
-        Task { @MainActor in
-            do {
-                let selectedUnit: Unit = .sat
-                                
-                guard let preSelect = selectedMint.select(allProofs:allProofs,
-                                                      amount: amount,
-                                                      unit: selectedUnit) else {
-                    displayAlert(alert: AlertDetail(title: "Could not select proofs to send."))
-                    logger.warning("no proofs could be selected to generate a token with this amount.")
-                    return
-                }
-                
-                let (token, swappedProofs, event) = try await selectedMint.send(proofs: preSelect.selected,
-                                                                            targetAmount: amount,
-                                                                            memo: tokenMemo)
-                
+        
+        let selectedUnit: Unit = .sat
+        
+        guard let preSelect = selectedMint.select(allProofs:allProofs,
+                                              amount: amount,
+                                              unit: selectedUnit) else {
+            displayAlert(alert: AlertDetail(title: "Insufficient funds"))
+            logger.warning("no proofs could be selected to generate a token with this amount.")
+            return
+        }
+        
+        selectedMint.send(proofs: preSelect.selected,
+                          targetAmount: amount,
+                          memo: tokenMemo) { result in
+            switch result {
+            case .success(let (token, swappedProofs, event)):
                 self.token = token
-                insert(swappedProofs + [event])
-                                
-            } catch {
+                AppSchemaV1.insert(swappedProofs + [event], into: modelContext)
+                
+            case .failure(let error):
+                logger.error("unable to generate token due to error: \(error)")
                 displayAlert(alert: AlertDetail(with: error))
             }
-        }
-    }
-
-    @MainActor
-    func insert(_ models: [any PersistentModel]) {
-        models.forEach({ modelContext.insert($0) })
-        do {
-            try modelContext.save()
-            logger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
-        } catch {
-            logger.error("Saving SwiftData model context failed with error: \(error)")
         }
     }
 

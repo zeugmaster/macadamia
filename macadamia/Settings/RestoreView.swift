@@ -42,6 +42,11 @@ struct RestoreView: View {
                      """)
             }
         }
+        .navigationTitle("Restore")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
+        .navigationBarBackButtonHidden(loading)
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         Button(action: {
             attemptRestore()
         }, label: {
@@ -69,27 +74,12 @@ struct RestoreView: View {
         .bold()
         .toolbar(.hidden, for: .tabBar)
         .disabled(mnemonic.isEmpty || loading || success)
-        .navigationTitle("Restore")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .tabBar)
-        .navigationBarBackButtonHidden(loading)
-        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
      
     private func attemptRestore() {
         guard let activeWallet else {
             displayAlert(alert: AlertDetail(title: "No Wallet",
                                            description: "."))
-            return
-        }
-        
-        if activeWallet.proofs.contains(where: { $0.state == .valid }) {
-            displayAlert(alert: AlertDetail(title: "Wallet not empty!",
-                                            description: """
-                                                         This wallet still contains valid ecash \
-                                                         that would become inaccessible if you restore now. \
-                                                         Please empty the wallet first.
-                                                         """))
             return
         }
         
@@ -103,92 +93,76 @@ struct RestoreView: View {
             return
         }
         
-        Task {
-            do {
-                loading = true
-
-                try await initiateRestore(mints: activeWallet.mints)
-
-                success = true
-                loading = false
-            } catch {
-                displayAlert(alert: AlertDetail(title: "Error",
-                                                description: """
-                                                             There was an error when attempting to restore. \
-                                                             Detail: \(String(describing: error))
-                                                             """))
-                loading = false
-            }
+        if activeWallet.proofs.contains(where: { $0.state == .valid }) {
+            displayAlert(alert: AlertDetail(title: "Wallet not empty!",
+                                            description: """
+                                                         This wallet still contains valid ecash \
+                                                         that will become inaccessible if you restore now. \
+                                                         Are you sure? 
+                                                         """,
+                                            primaryButtonText: "Cancel",
+                                            affirmText: "Restore",
+                                            onAffirm: {
+                restore()
+                return
+            }))
+        } else {
+            restore()
         }
     }
     
-    private func initiateRestore(mints: [Mint]) async throws {
+    private func restore() {
+        guard let mints = activeWallet?.mints else {
+            return
+        }
+        
         let words = mnemonic.components(separatedBy: CharacterSet.whitespacesAndNewlines)
         
         guard words.count == 12 else {
-            throw CashuError.restoreError("Could not convert text input to twelve word seed phrase. Please try again.")
+            logger.error("The entered test does not appear to be a properly formmatted syeed phrase.")
+            displayAlert(alert: AlertDetail(title: "Restore Error", description: "The entered text does not appear to be a properly formmatted seed phrase. Make sure its twelve words, separated by spaces or line breaks."))
+            return
         }
         
-        guard let mnemo = try? Mnemonic(phrase: words) else {
-            throw CashuError.restoreError("Could not generate seed from text input. Please try again.")
-        }
+        loading = true
+                
+        // TODO: insert wallet, new mints, proofs.
         
-        let seed = String(bytes: mnemo.seed)
-        
-        let newWallet = Wallet(mnemonic: mnemo.phrase.joined(separator: " "),
-                               seed: seed)
+        macadamiaApp.restore(from: mints,
+                             with: words) { result in
+            switch result {
+            case .success(let (proofs, newWallet, newMints, event)):
                 
-        for mint in mints {
-            let newMint = Mint(url: mint.url, keysets: mint.keysets)
-            newMint.userIndex = mint.userIndex
-            newMint.nickName = mint.nickName
-            
-            let results = try await CashuSwift.restore(mint: newMint,
-                                                        with: seed)
-            
-            modelContext.insert(newWallet)
-            
-            modelContext.insert(newMint)
-            
-            for result in results {
-                let fee = newMint.keysets.first(where: { $0.keysetID == result.keysetID })?.inputFeePPK ?? 0 // FIXME: ugly
+                insert(proofs + newMints + [newWallet, event])
                 
-                let internalProofs = result.proofs.map({ p in
-                    Proof(p,
-                          unit: Unit(result.unitString) ?? .sat,
-                          inputFeePPK: fee,
-                          state: .valid,
-                          mint: newMint,
-                          wallet: newWallet)
-                })
+                wallets.forEach({ $0.active = false })
+                newWallet.active = true
+                try? modelContext.save()
                 
-                newMint.increaseDerivationCounterForKeysetWithID(result.keysetID,
-                                                                 by: result.derivationCounter)
-                
-                print("newMint.keyset derivation counter: \(newMint.keysets.map({ $0.derivationCounter }))")
-                                
-                newMint.proofs?.append(contentsOf: internalProofs)
-                
-                newWallet.proofs.append(contentsOf: internalProofs)
+                success = true
+                loading = false
+
+            case .failure(let error):
+                logger.error("restoring failed with error: \(error)")
+                displayAlert(alert: AlertDetail(with: error))
+                loading = false
+                success = false
             }
-            newWallet.mints.append(newMint)
-            newMint.wallet = newWallet
         }
         
-        wallets.forEach({ $0.active = false })
-        
-        newWallet.active = true
-        
-        let event = Event.restoreEvent(shortDescription: "Restore",
-                                       wallet: newWallet,
-                                       longDescription: """
-                                                        Successfully recovered ecash \
-                                                        from \(newWallet.mints.count) mints \
-                                                        using a seed phrase! 🤠
-                                                        """)
-        modelContext.insert(event)
+        // TODO: auto dismiss view
                 
-        try modelContext.save()
+    }
+    
+    @MainActor
+    func insert(_ models: [any PersistentModel]) {
+        models.forEach({ modelContext.insert($0) })
+        do {
+            try modelContext.save()
+            logger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
+        } catch {
+            logger.error("Saving SwiftData model context failed with error: \(error)")
+        }
     }
 
     private func displayAlert(alert:AlertDetail) {

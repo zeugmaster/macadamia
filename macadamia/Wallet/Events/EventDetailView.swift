@@ -83,7 +83,6 @@ struct EventDetailView: View {
             
         case .pendingMelt:
             MeltView(pendingMeltEvent: event)
-//            Text(event.bolt11MeltQuote.debugDescription)
             
         case .melt:
             List {

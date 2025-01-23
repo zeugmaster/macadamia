@@ -7,6 +7,7 @@ typealias Mint = AppSchemaV1.Mint
 typealias Proof = AppSchemaV1.Proof
 typealias Event = AppSchemaV1.Event
 typealias Unit = AppSchemaV1.Unit
+typealias BlankOutputSet = AppSchemaV1.BlankOutputSet
 
 enum AppSchemaV1: VersionedSchema {
     
@@ -20,7 +21,7 @@ enum AppSchemaV1: VersionedSchema {
     }
     
     @Model
-    final class Wallet {
+    final class Wallet: Sendable {
         
         @Attribute(.unique)
         var walletID: UUID
@@ -184,6 +185,11 @@ enum AppSchemaV1: VersionedSchema {
         @Relationship(deleteRule: .noAction, inverse: \Mint.events)
         var mints: [Mint]?
         
+        // Persistence for NUT-08 blank outputs and secrets, blinding factors to allow for melt operation repeatability
+        // another case where SwiftData refuses to store the "complex" codable struct
+        // so we need to (de-) serialize it ourselves
+        var blankOutputData: Data?
+        
         var redeemed: Bool?
         
         enum Kind: Codable {
@@ -241,10 +247,38 @@ enum AppSchemaV1: VersionedSchema {
                 bolt11MeltQuoteData = try? JSONEncoder().encode(newValue)
             }
         }
-    }
-
-    enum Unit: String, Codable, CaseIterable {
         
+        var blankOutputs: BlankOutputSet? {
+            get {
+                guard let data = blankOutputData else { return nil }
+                return try? JSONDecoder().decode(BlankOutputSet.self, from: data)
+            }
+            set {
+                blankOutputData = try? JSONEncoder().encode(newValue)
+            }
+        }
+    }
+    
+    struct BlankOutputSet: Codable {
+        let outputs: [CashuSwift.Output]
+        let blindingFactors: [String]
+        let secrets: [String]
+        
+        enum CodingKeys: String, CodingKey {
+            case outputs
+            case blindingFactors
+            case secrets
+        }
+        
+        init(tuple: (outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String]), event: Event? = nil) {
+            self.outputs = tuple.outputs
+            self.blindingFactors = tuple.blindingFactors
+            self.secrets = tuple.secrets
+        }
+
+    }
+    
+    enum Unit: String, Codable, CaseIterable {
         case sat
         case usd
         case eur
@@ -259,6 +293,57 @@ enum AppSchemaV1: VersionedSchema {
             }
         }
     }
+    
+    @MainActor
+    static func insert(_ models: [any PersistentModel], into modelContext: ModelContext) {
+        models.forEach({ modelContext.insert($0) })
+        do {
+            try modelContext.save()
+            logger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
+        } catch {
+            logger.error("Saving SwiftData model context failed with error: \(error)")
+        }
+    }
+}
+
+// concrete type that is sendable so we can pass mints across concurrency boundaries
+struct SendableMint:  Sendable, MintRepresenting {
+    var url: URL
+    
+    var keysets: [CashuSwift.Keyset]
+    
+    init(url: URL, keysets: [CashuSwift.Keyset]) {
+        self.url = url
+        self.keysets = keysets
+    }
+    
+    init(from mint: MintRepresenting) {
+        self.url = mint.url
+        self.keysets = mint.keysets
+    }
+}
+
+struct SendableProof: Sendable, ProofRepresenting {
+    var keysetID: String
+    
+    var C: String
+    
+    var secret: String
+    
+    var amount: Int
+    
+    init(from proof: some ProofRepresenting) {
+        self.keysetID = proof.keysetID
+        self.C = proof.C
+        self.secret = proof.secret
+        self.amount = proof.amount
+    }
+}
+
+extension Mint {
+    var sendable: SendableMint {
+        return SendableMint(from: self)
+    }
 }
 
 // this relic of drain view only remains for SwiftData model integrity
@@ -269,4 +354,18 @@ struct TokenInfo: Identifiable, Hashable, Codable {
     let amount: Int
 
     var id: String { token }
+}
+
+extension Array where Element == ProofRepresenting {
+    var sendable: [SendableProof] {
+        self.map { p in
+            SendableProof(from: p)
+        }
+    }
+}
+
+extension Array where Element == Proof {
+    func setState(_ state: Proof.State) {
+        self.forEach { $0.state = state }
+    }
 }
