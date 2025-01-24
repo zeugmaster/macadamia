@@ -1,5 +1,5 @@
 import Foundation
-import CashuSwift
+@preconcurrency import CashuSwift
 
 extension AppSchemaV1.Mint {
     
