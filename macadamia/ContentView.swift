@@ -8,6 +8,11 @@ struct URLState: Equatable {
     let timestamp = Date() // prevents .onChange from not firing if you open the same URL twice
 }
 
+enum OnboardingUIState {
+    case hidden
+    case shown([String])
+}
+
 struct ContentView: View {
     
     @Environment(\.modelContext) private var modelContext
@@ -33,6 +38,8 @@ struct ContentView: View {
     }
 
     @State private var releaseNotesPopoverShowing = false
+    @State private var onboardingState: OnboardingUIState = .hidden
+    
     @State private var selectedTab: Tab = .wallet
     
     @State private var urlState: URLState?
@@ -72,13 +79,24 @@ struct ContentView: View {
             }
             .persistentSystemOverlays(.hidden)
             .background(Color.black)
+            switch onboardingState {
+            case .hidden:
+                EmptyView()
+            case .shown(let words):
+                Onboarding(seedPhrase: words) {
+                    // TODO: SET PERSISTENT FLAG
+                    withAnimation {
+                        onboardingState = .hidden
+                    }
+                }
+            }
         }
         .ignoresSafeArea()
         .onAppear(perform: {
-            checkReleaseNotes()
             if wallets.isEmpty {
                 initializeWallet()
             }
+            checkReleaseNotesAndOnboarding()
             selectedTab = .wallet
         })
         .task {
@@ -128,8 +146,21 @@ struct ContentView: View {
         }
     }
 
-    func checkReleaseNotes() {
-        releaseNotesPopoverShowing = AppState.showReleaseNotes()
+    func checkReleaseNotesAndOnboarding() {
+        if AppState.showOnboarding {
+            _ = AppState.showReleaseNotes() // marks last release notes as seen if first open
+            if let mnemonic = activeWallet?.mnemonic {
+                let words = mnemonic.components(separatedBy: " ")
+                if words.count == 12 {
+                    print("should show with animation")
+                    withAnimation {
+                        onboardingState = .shown(words)
+                    }
+                }
+            }
+        } else {
+            releaseNotesPopoverShowing = AppState.showReleaseNotes()
+        }
     }
 
     func handleUrl(_ url: URL) {
