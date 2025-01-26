@@ -84,11 +84,13 @@ struct ContentView: View {
                 EmptyView()
             case .shown(let words):
                 Onboarding(seedPhrase: words) {
-                    // TODO: SET PERSISTENT FLAG
+                    AppState.showOnboarding = false
                     withAnimation {
                         onboardingState = .hidden
                     }
                 }
+                .transition(.opacity.animation(.easeInOut(duration: 0.3)))
+                .zIndex(1) // uuuuhhmmm ???
             }
         }
         .ignoresSafeArea()

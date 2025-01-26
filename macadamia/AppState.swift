@@ -33,7 +33,7 @@ class AppState: ObservableObject {
         get {
             return !UserDefaults.standard.bool(forKey: firstLaunchFlag)
         } set {
-            UserDefaults.standard.set(true, forKey: firstLaunchFlag)
+            UserDefaults.standard.set(!newValue, forKey: firstLaunchFlag)
         }
     }
     

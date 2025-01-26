@@ -141,31 +141,35 @@ struct SeedPhrasePage: View {
                 Markdown("""
                          This is your newly generated **seed phrase** backup. \
                          Write these twelve words down or save them in a password \ 
-                         manager and use them to restore ecash from the mints you used.
+                         manager and use them to restore ecash from the mints known to this wallet (write those down, too). \n 
                          """)
                 Spacer()
-                HStack {
-                    VStack(alignment: .leading) {
-                        ForEach(phrase.indices.dropLast(6), id: \.self) { index in
-                            HStack {
-                                Text(String(index + 1) + ".")
-                                    .frame(minWidth: 30)
-                                Text(phrase[index])
+                if phrase.count == 12 {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            ForEach(phrase.indices.dropLast(6), id: \.self) { index in
+                                HStack {
+                                    Text(String(index + 1) + ".")
+                                        .frame(minWidth: 30)
+                                    Text(phrase[index])
+                                }
                             }
                         }
-                    }
-                    .padding()
-                    VStack(alignment: .leading) {
-                        ForEach(phrase.indices.dropFirst(6), id: \.self) { index in
-                            HStack {
-                                Text(String(index + 1) + ".").frame(minWidth: 30)
-                                Text(phrase[index])
+                        .padding()
+                        VStack(alignment: .leading) {
+                            ForEach(phrase.indices.dropFirst(6), id: \.self) { index in
+                                HStack {
+                                    Text(String(index + 1) + ".").frame(minWidth: 30)
+                                    Text(phrase[index])
+                                }
                             }
                         }
+                        .padding()
                     }
-                    .padding()
+                    .monospaced()
+                } else {
+                    Text("Not a valid mnemonic.")
                 }
-                .monospaced()
                 Button {
                     withAnimation {
                         copied = true
@@ -221,8 +225,10 @@ struct CheckboxToggleStyle: ToggleStyle {
                 .frame(width: 22, height: 22)
                 .cornerRadius(5.0)
                 .overlay {
-                    Image(systemName: configuration.isOn ? "checkmark" : "")
-                        .bold()
+                    if configuration.isOn {
+                        Image(systemName: "checkmark")
+                            .bold()
+                    }
                 }
             configuration.label
         }
