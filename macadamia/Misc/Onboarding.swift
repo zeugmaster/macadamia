@@ -205,7 +205,7 @@ struct TOSPage: View {
         OnboardingPageLayout(title: "Terms") {
             VStack {
                 ScrollView {
-                    Text(tos)
+                    Text(tos_rev1)
                 }
                 .font(.footnote)
                 Spacer(minLength: 20)
