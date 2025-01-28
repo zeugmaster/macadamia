@@ -21,7 +21,7 @@ enum AppSchemaV1: VersionedSchema {
     }
     
     @Model
-    final class Wallet: Sendable {
+    final class Wallet {
         
         @Attribute(.unique)
         var walletID: UUID

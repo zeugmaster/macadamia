@@ -11,6 +11,7 @@ class AppState: ObservableObject {
     
     private static let conversionUnitKey = "PreferredCurrencyConversionUnit"
     private static let lastRNackHashKey = "LastReleaseNotesAcknoledgedHash"
+    private static let firstLaunchFlag = "HasLaunchedBefore"
     
     struct ExchangeRateResponse: Decodable {
         let bitcoin: ExchangeRate
@@ -25,6 +26,14 @@ class AppState: ObservableObject {
             return true
         } else {
             return false
+        }
+    }
+    
+    static var showOnboarding: Bool {
+        get {
+            return !UserDefaults.standard.bool(forKey: firstLaunchFlag)
+        } set {
+            UserDefaults.standard.set(!newValue, forKey: firstLaunchFlag)
         }
     }
     
