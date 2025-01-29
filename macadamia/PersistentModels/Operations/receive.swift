@@ -89,7 +89,7 @@ extension AppSchemaV1.Mint {
                 let sendableProofs = try await CashuSwift.receive(mint: sendableMint,
                                                                   token: token,
                                                                   seed: seed)
-                DispatchQueue.main.async {
+                await MainActor.run {
                     let internalProofs = sendableProofs.map { p in
                         let keyset = self.keysets.first(where: { $0.keysetID == p.keysetID } )
                         let fee = keyset?.inputFeePPK

@@ -65,7 +65,7 @@ extension AppSchemaV1.Mint {
                 // runs on a background thread
                 let sendableProofs = try await CashuSwift.issue(for: quote, on: sendableMint, seed: seed).map({ SendableProof(from: $0) })
                 // and safely back to main using sendable types
-                DispatchQueue.main.sync {
+                await MainActor.run {
                     print("Completing issuance on thread: \(Thread.current)")
                     
                     let proofs = sendableProofs.map { p in
@@ -101,7 +101,6 @@ extension AppSchemaV1.Mint {
                 }
             }
         }
-        
     }
 }
 

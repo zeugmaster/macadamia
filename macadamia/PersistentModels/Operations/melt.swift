@@ -1,5 +1,5 @@
 import Foundation
-@preconcurrency import CashuSwift
+import CashuSwift
 
 extension AppSchemaV1.Mint {
     
@@ -16,7 +16,9 @@ extension AppSchemaV1.Mint {
         }
         
         let sendableMint = self.sendable
-        let unit = Unit(quote.quoteRequest?.unit) ?? .sat
+        
+        // TODO: ALLOW FOR DIFFERENT UNITS (from mint quote)
+        _ = Unit(quote.quoteRequest?.unit) ?? .sat
         
         let blankOutputs: (outputs: [CashuSwift.Output], blindingFactors: [String], secrets:[String])?
         
@@ -39,12 +41,12 @@ extension AppSchemaV1.Mint {
                     // make sendable change proofs
                     let sendableProofs = meltResult.change?.sendable
                     // ON MAIN: create event and return internal change proofs
-                    DispatchQueue.main.async {
+                    await MainActor.run {
                         var internalChangeProofs = [Proof]()
                         
                         if let sendableProofs,
                            !sendableProofs.isEmpty,
-                           let changeKeyset = self.keysets.first(where: { $0.keysetID == sendableProofs.first?.keysetID }) {
+                           let changeKeyset = sendableMint.keysets.first(where: { $0.keysetID == sendableProofs.first?.keysetID }) {
                             
                             logger.debug("Melt quote includes change, attempting saving to db.")
                             
@@ -123,11 +125,11 @@ extension AppSchemaV1.Mint {
                     // make sendable change proofs
                     let sendableProofs = meltResult.change?.sendable
                     // ON MAIN: create event and return internal change proofs
-                    DispatchQueue.main.async {
+                    await MainActor.run {
                         var internalChangeProofs = [Proof]()
                         
                         if let sendableProofs, !sendableProofs.isEmpty,
-                           let changeKeyset = self.keysets.first(where: { $0.keysetID == sendableProofs.first?.keysetID }) {
+                           let changeKeyset = sendableMint.keysets.first(where: { $0.keysetID == sendableProofs.first?.keysetID }) {
                             
                             logger.debug("Melt quote includes change, attempting saving to db.")
                             
@@ -138,8 +140,8 @@ extension AppSchemaV1.Mint {
                                                                               unit: unit,
                                                                               inputFeePPK: inputFee,
                                                                               state: .valid,
-                                                                              mint: self,
-                                                                              wallet: wallet) })
+                                                                              mint: self,           // TODO: this does not actually cross thread boundaries, find a way to silence warning
+                                                                              wallet: wallet) })    // TODO: same here
                             
                             self.proofs?.append(contentsOf: internalChangeProofs)
                             wallet.proofs.append(contentsOf: internalChangeProofs)

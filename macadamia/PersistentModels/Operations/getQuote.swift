@@ -67,7 +67,7 @@ extension AppSchemaV1.Mint {
             do {
                 let quote = try await CashuSwift.getQuote(mint: sendableMint, quoteRequest: quoteRequest)
                 
-                DispatchQueue.main.async {
+                await MainActor.run {
                     let event: Event
                     switch quote {
                     case let quote as CashuSwift.Bolt11.MintQuote:
@@ -98,7 +98,7 @@ extension AppSchemaV1.Mint {
                     }
                 }
             } catch {
-                DispatchQueue.main.async {
+                await MainActor.run {
                     completion(.failure(error))
                 }
             }

@@ -1,10 +1,3 @@
-//
-//  send.swift
-//  macadamia
-//
-//  Created by zm on 12.12.24.
-//
-
 import Foundation
 import CashuSwift
 
@@ -137,7 +130,6 @@ extension AppSchemaV1.Mint {
         }
         
         let sendableMint = self.sendable
-        let seed = wallet.seed
         
         let units = Set(proofs.map({ $0.unit }))
         
@@ -184,7 +176,7 @@ extension AppSchemaV1.Mint {
                     let sendableSendProofs = sendProofs.sendable
                     let sendableChangeProofs = changeProofs.sendable
                     
-                    DispatchQueue.main.async {
+                    await MainActor.run {
                         // if the swap succeeds the input proofs need to be marked as spent
                         proofs.forEach({ $0.state = .spent })
                         
@@ -237,7 +229,7 @@ extension AppSchemaV1.Mint {
                         return
                     }
                 } catch {
-                    DispatchQueue.main.async {
+                    await MainActor.run {
                         proofs.forEach({ $0.state = .valid })
                         completion(.failure(error))
                     }

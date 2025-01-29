@@ -179,8 +179,8 @@ enum AppSchemaV1: VersionedSchema {
         var proofs: [Proof]?
         var memo: String?
         
-        @available(*, deprecated, message: "deprecated in V1 Schema. macadamia uses other event information to build tokens (mint(s), proofs, memo)")
-        var tokens: [TokenInfo]?
+//        @available(*, deprecated, message: "deprecated in V1 Schema. macadamia uses other event information to build tokens (mint(s), proofs, memo)")
+//        var tokens: [TokenInfo]?
         
         @Relationship(deleteRule: .noAction, inverse: \Mint.events)
         var mints: [Mint]?

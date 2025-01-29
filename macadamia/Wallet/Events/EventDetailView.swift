@@ -66,19 +66,6 @@ struct EventDetailView: View {
                     Spacer()
                     Text(event.unit.rawValue)
                 }
-                if let tokenInfo = event.tokens?.first {
-                    TokenText(text: tokenInfo.token)
-                        .frame(idealHeight: 70)
-                        .contextMenu {
-                            Button(action: {
-                                UIPasteboard.general.string = tokenInfo.token
-                            }) {
-                                Text("Copy")
-                                Spacer()
-                                Image(systemName: "clipboard")
-                            }
-                        }
-                }
             }
             
         case .pendingMelt:
@@ -133,24 +120,6 @@ struct EventDetailView: View {
                     Spacer()
                     Text(event.date.formatted())
                 }
-                if let tokens = event.tokens, !tokens.isEmpty {
-                    ForEach(tokens, id: \.self) { tokenInfo in
-                        Section {
-                            TokenText(text: tokenInfo.token)
-                                .frame(idealHeight: 70)
-                                .contextMenu {
-                                    Button(action: {
-                                        UIPasteboard.general.string = tokenInfo.token
-                                    }) {
-                                        Text("Copy")
-                                        Spacer()
-                                        Image(systemName: "clipboard")
-                                    }
-                                }
-                            Text(tokenInfo.mint)
-                        }
-                    }
-                }
             }
         }
     }
@@ -168,9 +137,7 @@ struct SendEventView: View {
     }
     
     var token: CashuSwift.Token? {
-        
-//        print(event.proofs, event.mints)
-        
+                
         if let proofs = event.proofs,
            !proofs.isEmpty,
            let mints = event.mints,
