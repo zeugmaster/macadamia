@@ -166,6 +166,7 @@ struct MeltView: View {
             .disabled(invoiceString.isEmpty || paymenState == .loading || paymenState == .success)
             .navigationTitle("Melt")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(paymenState == .loading)
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
     }
