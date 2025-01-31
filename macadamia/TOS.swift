@@ -1,13 +1,4 @@
-//
-//  TOS.swift
-//  macadamia
-//
-//  Created by zm on 25.01.25.
-//
-
-import Foundation
-
-#warning("PRELIMINARY TOS")
+#warning("PRELIMINARY ToS")
 
 let tos_rev1 =
 """
