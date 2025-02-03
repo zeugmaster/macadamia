@@ -7,8 +7,6 @@
 
 import Foundation
 
-#warning("PRELIMINARY TOS")
-
 let tos_rev1 =
 """
 Last Updated: 27.01.2025
