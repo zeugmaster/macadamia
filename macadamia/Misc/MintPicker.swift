@@ -1,10 +1,3 @@
-//
-//  MintPicker.swift
-//  macadamia
-//
-//  Created by zm on 01.11.24.
-//
-
 import SwiftUI
 import SwiftData
 
@@ -70,6 +63,3 @@ struct MintPicker: View {
     }
 }
 
-//#Preview {
-//    MintPicker()
-//}

@@ -159,13 +159,14 @@ struct MintManagerView: View {
 
         Task {
             do {
-                let mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
-                mint.wallet = activeWallet
-                mint.userIndex = activeWallet.mints.count - 1
-                modelContext.insert(mint)
-                try modelContext.save()
-                logger.info("added new mint with URL \(mint.url.absoluteString)")
-                DispatchQueue.main.async {
+                let sendableMint = try await CashuSwift.loadMint(url: url)
+                try await MainActor.run {
+                    let mint = Mint(url: sendableMint.url, keysets: sendableMint.keysets)
+                    mint.wallet = activeWallet
+                    mint.userIndex = activeWallet.mints.count - 1
+                    modelContext.insert(mint)
+                    try modelContext.save()
+                    logger.info("added new mint with URL \(mint.url.absoluteString)")
                     newMintURLString = ""
                 }
             } catch {
