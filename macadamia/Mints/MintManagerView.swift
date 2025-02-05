@@ -172,7 +172,12 @@ struct MintManagerView: View {
             } catch {
                 logger.error("could not add mint due to error \(error)")
                 DispatchQueue.main.async {
-                    displayAlert(alert: AlertDetail(title: "Could not add mint.", description: "The wallet was unable to load this mint's keysets. Please make sure the URL is correct and the mint online, then try again."))
+                    displayAlert(alert: AlertDetail(title: "Could not add mint.",
+                                                    description: """
+                                                                 The wallet was unable to load this mint's keysets. 
+                                                                 Please make sure the URL is correct and 
+                                                                 the mint online, then try again.
+                                                                 """))
                 }
             }
         }
