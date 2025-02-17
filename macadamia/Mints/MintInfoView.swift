@@ -103,9 +103,11 @@ struct MintInfoView: View {
                 logger.warning("could not load mint info \(error)")
             }
             // show MOTD if changed
-            if let infoV_0_16 = info as? CashuSwift.MintInfo0_16 {
-                if mint.lastDismissedMOTDHash != infoV_0_16.motd.hashString() {
-                    motd = infoV_0_16.motd
+            await MainActor.run {
+                if let infoV_0_16 = info as? CashuSwift.MintInfo0_16 {
+                    if mint.lastDismissedMOTDHash != infoV_0_16.motd.hashString() {
+                        motd = infoV_0_16.motd
+                    }
                 }
             }
         }
@@ -153,7 +155,6 @@ struct MintInfoDetailV0_16_0: View {
             }
         }
         if let infoV_0_16 = info as? CashuSwift.MintInfo0_16 {
-            
             Section {
                 HFlow {
                     Tag(text: "Mint", enabled: !(infoV_0_16.nuts["4"]?.disabled ?? true))
@@ -201,7 +202,6 @@ struct MOTDCell: View {
                 )
         )
         .overlay(
-            // Close Button positioned at the top-right corner
             Button(action: onDismiss) {
                 Image(systemName: "xmark")
                     .foregroundColor(.orange)
@@ -214,9 +214,7 @@ struct MOTDCell: View {
         .onTapGesture {
             // Consume taps on the entire cell to prevent default selection
         }
-        // Match default cell insets
         .listRowInsets(EdgeInsets(top: 0, leading: 2, bottom: 0, trailing: 2))
-        // Add vertical padding to prevent clipping
         .padding(.vertical, 4)
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)

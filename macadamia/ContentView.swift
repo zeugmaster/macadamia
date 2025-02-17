@@ -105,7 +105,10 @@ struct ContentView: View {
             if let activeWallet {
                 for mint in activeWallet.mints {
                     do {
-                        mint.keysets = try await CashuSwift.updatedKeysetsForMint(mint)
+                        let newKeysets = try await CashuSwift.updatedKeysetsForMint(mint)
+                        await MainActor.run {
+                            mint.keysets = newKeysets
+                        }
                     } catch {
                         logger.warning("""
                                        Could not update keyset information for mint at \

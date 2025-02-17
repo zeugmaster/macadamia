@@ -159,19 +159,25 @@ struct MintManagerView: View {
 
         Task {
             do {
-                let mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
-                mint.wallet = activeWallet
-                mint.userIndex = activeWallet.mints.count - 1
-                modelContext.insert(mint)
-                try modelContext.save()
-                logger.info("added new mint with URL \(mint.url.absoluteString)")
-                DispatchQueue.main.async {
+                let sendableMint = try await CashuSwift.loadMint(url: url)
+                try await MainActor.run {
+                    let mint = Mint(url: sendableMint.url, keysets: sendableMint.keysets)
+                    mint.wallet = activeWallet
+                    mint.userIndex = activeWallet.mints.count - 1
+                    modelContext.insert(mint)
+                    try modelContext.save()
+                    logger.info("added new mint with URL \(mint.url.absoluteString)")
                     newMintURLString = ""
                 }
             } catch {
                 logger.error("could not add mint due to error \(error)")
                 DispatchQueue.main.async {
-                    displayAlert(alert: AlertDetail(title: "Could not add mint.", description: "The wallet was unable to load this mint's keysets. Please make sure the URL is correct and the mint online, then try again."))
+                    displayAlert(alert: AlertDetail(title: "Could not add mint.",
+                                                    description: """
+                                                                 The wallet was unable to load this mint's keysets. 
+                                                                 Please make sure the URL is correct and 
+                                                                 the mint online, then try again.
+                                                                 """))
                 }
             }
         }
