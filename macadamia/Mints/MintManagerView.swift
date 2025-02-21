@@ -64,6 +64,21 @@ struct MintManagerView: View {
                         }
                     }
                     Section {
+                        NavigationLink(destination: SwapView()) {
+                            HStack {
+                                Image(systemName: "arrow.down.left.arrow.up.right")
+                                    .imageScale(.small)
+                                Text("Mint Swap")
+                            }
+                        }
+                    } footer: {
+                        Text("""
+                             An inter-mint swap allows you to move an amount of ecash from \
+                             one trusted mint to another via Lightning.
+                             """)
+                    }
+                    .disabled(sortedMintsOfActiveWallet.count < 2)
+                    Section {
                         TextField("Add new Mint URL...", text: $newMintURLString)
                             .textInputAutocapitalization(.never)
                             .keyboardType(.URL)
