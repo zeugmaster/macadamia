@@ -7,29 +7,42 @@ struct MintPicker: View {
         wallet.active == true
     }) private var wallets: [Wallet]
     
-    var label: String
-    @Binding var selectedMint:Mint?
+    @Binding private var selectedMint: Mint?
+    @Binding private var hide: Mint?
+    private var allowsNoneState: Bool = false
+    private var label: String
     
     @State private var mintNamesAndIDs = [(name: String, id: UUID)]()
-    @State private var selectedID = UUID()
+    @State private var selectedID: UUID? = nil
     
     var activeWallet: Wallet? {
         wallets.first
     }
     
     var sortedMintsOfActiveWallet: [Mint] {
-        mints.filter({ $0.wallet == activeWallet && $0.hidden == false })
-             .sorted(by: { $0.userIndex ?? 0 < $1.userIndex ?? 0})
+        mints.filter { $0.wallet == activeWallet && !$0.hidden }
+             .sorted { ($0.userIndex ?? 0) < ($1.userIndex ?? 0) }
     }
-        
+    
+    init(label: String, selectedMint: Binding<Mint?>, allowsNoneState: Bool = false, hide: Binding<Mint?>? = nil) {
+        self.label = label
+        self._selectedMint = selectedMint
+        self.allowsNoneState = allowsNoneState
+        self._hide = hide ?? .constant(nil)
+    }
+    
     var body: some View {
         Group {
             if mintNamesAndIDs.isEmpty {
                 Text("No mints yet.")
             } else {
                 Picker(label, selection: $selectedID) {
+                    if allowsNoneState {
+                        Text("Select...")
+                            .tag(UUID?.none)
+                    }
                     ForEach(mintNamesAndIDs, id: \.id) { entry in
-                        Text(entry.name)
+                        Text(entry.name).tag(Optional(entry.id))
                     }
                 }
             }
@@ -38,28 +51,38 @@ struct MintPicker: View {
             populate()
             if let selectedMint = selectedMint {
                 selectedID = selectedMint.mintID
-            } else if let first = mintNamesAndIDs.first {
-                selectedID = first.id
-                selectedMint = sortedMintsOfActiveWallet.first(where: { $0.mintID == selectedID })
             }
         }
-        .onChange(of: selectedID) { oldValue, newValue in
-            selectedMint = sortedMintsOfActiveWallet.first(where: { $0.mintID == newValue })
-        }
-        .onChange(of: selectedMint) { oldValue, newValue in
-            if let newMint = newValue {
-                selectedID = newMint.mintID
+        .onChange(of: selectedID) { _, newValue in
+            if let id = newValue {
+                selectedMint = sortedMintsOfActiveWallet.first { $0.mintID == id }
+            } else {
+                selectedMint = nil
             }
+        }
+        .onChange(of: selectedMint) { _, newValue in
+            if let mint = newValue {
+                selectedID = mint.mintID
+            } else {
+                selectedID = nil
+            }
+        }
+        .onChange(of: hide) { oldValue, newValue in
+            populate()
         }
     }
     
     func populate() {
-        mintNamesAndIDs = sortedMintsOfActiveWallet.map( { mint in
+        mintNamesAndIDs = sortedMintsOfActiveWallet.map { mint in
             (mint.displayName, mint.mintID)
-        })
-        if let first = mintNamesAndIDs.first {
+        }
+        if let hide {
+            mintNamesAndIDs = mintNamesAndIDs.filter { (name: String, id: UUID) in
+                id != hide.mintID
+            }
+        }
+        if let first = mintNamesAndIDs.first, !allowsNoneState {
             selectedID = first.id
         }
     }
 }
-
