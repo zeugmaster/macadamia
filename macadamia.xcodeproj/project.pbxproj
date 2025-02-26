@@ -61,7 +61,7 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3793B9A12D0047140077F755 /* Wallet */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Wallet; sourceTree = "<group>"; };
 		3793B9A22D0049AD0077F755 /* Mints */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Mints; sourceTree = "<group>"; };
-		3793B9A42D0049F60077F755 /* PersistentModels */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = PersistentModels; sourceTree = "<group>"; };
+		3793B9A42D0049F60077F755 /* PersistentModelV1 */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = PersistentModelV1; sourceTree = "<group>"; };
 		3793B9A62D004A490077F755 /* Settings */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Settings; sourceTree = "<group>"; };
 		3793B9A72D004ADA0077F755 /* Misc */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Misc; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -128,7 +128,7 @@
 				3793B9A22D0049AD0077F755 /* Mints */,
 				3793B9A62D004A490077F755 /* Settings */,
 				3793B9A72D004ADA0077F755 /* Misc */,
-				3793B9A42D0049F60077F755 /* PersistentModels */,
+				3793B9A42D0049F60077F755 /* PersistentModelV1 */,
 				372034BD2B29E1BD00C4F955 /* Assets.xcassets */,
 				372034BF2B29E1BD00C4F955 /* Preview Content */,
 			);
@@ -177,7 +177,7 @@
 			fileSystemSynchronizedGroups = (
 				3793B9A12D0047140077F755 /* Wallet */,
 				3793B9A22D0049AD0077F755 /* Mints */,
-				3793B9A42D0049F60077F755 /* PersistentModels */,
+				3793B9A42D0049F60077F755 /* PersistentModelV1 */,
 				3793B9A62D004A490077F755 /* Settings */,
 				3793B9A72D004ADA0077F755 /* Misc */,
 			);
