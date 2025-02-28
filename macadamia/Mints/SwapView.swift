@@ -5,7 +5,7 @@ import CashuSwift
 struct SwapView: View {
     
     enum PaymentState {
-        case none, ready, mintQuote, melting, minting, success, fail
+        case none, ready, setup, melting, minting, success, fail
     }
     
     @State private var state: PaymentState = .none
@@ -58,20 +58,23 @@ struct SwapView: View {
                             .monospaced()
                     }
                 } footer: {
-                    Text("The mint from which the ecash originates will charge fees for this operation")
+                    Text("""
+                         The mint from which the ecash originates will charge fees for this operation. 
+                         IMPORTANT: If a swap fails during the Lightning payment you can manually retry from the transaction history.
+                         """)
                 }
                 
                 Section {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            if state == .mintQuote {
+                            if state == .setup {
                                 ProgressView()
                                     .scaleEffect(0.8)
                             } else if state == .melting || state == .minting || state == .success {
                                 Image(systemName: "checkmark.circle.fill")
                             }
                             Text("Getting mint quote...")
-                                .opacity(state == .mintQuote ? 1 : 0.5)
+                                .opacity(state == .setup ? 1 : 0.5)
                         }
                         
                         HStack {
@@ -96,7 +99,7 @@ struct SwapView: View {
                                 .opacity(state == .minting ? 1 : 0.5)
                         }
                     }
-                    .opacity(state == .melting || state == .mintQuote || state == .minting || state == .success ? 1.0 : 0)
+                    .opacity(state == .melting || state == .setup || state == .minting || state == .success ? 1.0 : 0)
                     .animation(.easeInOut(duration: 0.2), value: state)
                     .listRowBackground(Color.clear)
                 }
@@ -122,9 +125,9 @@ struct SwapView: View {
             }, label: {
                 HStack {
                     switch state {
-                    case .ready, .fail, .none:
+                    case .ready, .none:
                         Text("Swap")
-                    case .mintQuote, .melting, .minting:
+                    case .setup, .melting, .minting:
                         ProgressView()
                         Spacer()
                             .frame(width: 10)
@@ -132,6 +135,9 @@ struct SwapView: View {
                     case .success:
                         Text("Success!")
                             .foregroundStyle(.green)
+                    case .fail:
+                        Text("Swap Failed")
+                            .foregroundStyle(.red)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -179,14 +185,53 @@ struct SwapView: View {
             // TODO: LOG ERROR
         }
         
-        guard let selection = fromMint.select(allProofs: allProofs, amount: amount, unit: .sat) else {
-            displayAlert(alert: AlertDetail(title: "Insufficient funds 💸", description: "The wallet was unable to collect enough ecash from \(fromMint.displayName) to complete this transaction."))
-            return
-        }
+        state = .setup
         
         let mintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat", amount: amount)
-        
-        // errors up to this point should not lead to anything being persisted
+        toMint.getQuote(for: mintQuoteRequest) { result in
+            switch result {
+            case .success((let quote, let mintAttemptEvent)):
+                guard let mintQuote = quote as? CashuSwift.Bolt11.MintQuote else {
+                    logger.error("returned quote was not a bolt11 mint quote. aborting swap.")
+                    return
+                }
+                
+                let meltQuoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat",
+                                                                          request: mintQuote.request,
+                                                                          options: nil)
+                fromMint.getQuote(for: meltQuoteRequest) { result in
+                    switch result {
+                    case .success((let quote, let meltAttemptEvent)):
+                        guard let meltQuote = quote as? CashuSwift.Bolt11.MeltQuote else {
+                            logger.error("returned quote was not a bolt11 mint quote. aborting swap.")
+                            return
+                        }
+                        
+                        guard let selection = fromMint.select(allProofs: allProofs,
+                                                              amount: amount + meltQuote.feeReserve,
+                                                              unit: .sat) else {
+                            displayAlert(alert: AlertDetail(title: "Insufficient funds 💸",
+                                                            description: "The wallet was unable to collect enough ecash from \(fromMint.displayName) to complete this transaction."))
+                            state = .ready
+                            return
+                        }
+                        
+                        selection.selected.setState(.pending)
+                        
+                        setupDidSucceed(mintAttemptEvent: mintAttemptEvent,
+                                        meltAttemptEvent: meltAttemptEvent,
+                                        selectedProofs: selection.selected)
+                        
+                    case .failure(let error):
+                        displayAlert(alert: AlertDetail(with: error))
+                        state = .ready
+                    }
+                }
+            case .failure(let error):
+                displayAlert(alert: AlertDetail(with: error))
+                state = .ready
+            }
+        }
     }
     
     ///Mint and melt quotes were loaded successully
@@ -196,23 +241,110 @@ struct SwapView: View {
         // save attempt events
         // update UI
         // start melt
+        AppSchemaV1.insert([mintAttemptEvent, meltAttemptEvent], into: modelContext)
+        
+        guard let meltQuote = meltAttemptEvent.bolt11MeltQuote,
+//              let toMint,
+              let fromMint,
+              let seed = activeWallet?.seed else {
+            return
+        }
+        
+        state = .melting
+        
+        if meltAttemptEvent.blankOutputs == nil,
+           let outputs = try? CashuSwift.generateBlankOutputs(quote: meltQuote,
+                                                              proofs: selectedProofs,
+                                                              mint: fromMint,
+                                                              unit: meltQuote.quoteRequest?.unit ?? "sat",
+                                                              seed: seed) {
+            logger.debug("no blank outputs were assigned, creating new")
+            let blankOutputSet = BlankOutputSet(tuple: outputs)
+            meltAttemptEvent.blankOutputs = blankOutputSet
+            if let keysetID = outputs.outputs.first?.id {
+                fromMint.increaseDerivationCounterForKeysetWithID(keysetID,
+                                                                  by: outputs.outputs.count)
+            }
+            try? modelContext.save()
+        }
+        
+        fromMint.melt(for: meltQuote,
+                      with: selectedProofs,
+                      blankOutputSet: meltAttemptEvent.blankOutputs) { result in
+            switch result {
+            case .error(let error):
+                meltAttemptEvent.proofs = nil
+                selectedProofs.setState(.valid)
+                logger.error("melt operation failed with error: \(error)")
+                displayAlert(alert: AlertDetail(with: error))
+                state = .fail
+            case .failure:
+                selectedProofs.setState(.pending)
+                logger.info("payment on mint \(fromMint.url.absoluteString) failed")
+                displayAlert(alert: AlertDetail(title: "Swap unsussessful 🚫",
+                                                description: """
+                                                             The swap operation failed during the Lightning payment, \
+                                                             but you can manually retry from the transaction history \
+                                                             (first the melt and then the associated mint operation.
+                                                             """))
+                state = .fail
+            case .success(let (change, event)):
+                logger.debug("melt operation was successful.")
+                meltingDidSucceed(mintAttemptEvent: mintAttemptEvent,
+                                  meltAttemptEvent: meltAttemptEvent,
+                                  meltEvent: event,
+                                  change: change)
+            }
+        }
         
     }
     
     ///Melt operation did succeed
     private func meltingDidSucceed(mintAttemptEvent: Event,
-                                   meltAttemptEvent: Event) {
+                                   meltAttemptEvent: Event,
+                                   meltEvent: Event,
+                                   change: [Proof]) {
+        // hide meltAttemptEvent
         // save melt event
         // update UI
         // start minting
+        // save new proofs
+        // save mint event
+        meltAttemptEvent.visible = false
+        AppSchemaV1.insert([meltEvent] + change, into: modelContext)
+        state = .minting
         
+        guard let toMint, let mintQuote = mintAttemptEvent.bolt11MintQuote else {
+            state = .fail
+            logger.error("toMint was nil, could not complete minting")
+            return
+        }
+        
+        toMint.issue(for: mintQuote) { result in
+            switch result {
+            case .success((let proofs, let mintEvent)):
+                mintingDidSucceed(mintAttemptEvent: mintAttemptEvent,
+                                  mintEvent: mintEvent,
+                                  proofs: proofs)
+            case .failure(let error):
+                logger.warning("minting for mint swap failed due to error: \(error)")
+                displayAlert(alert: AlertDetail(with: error))
+            }
+        }
     }
     
     ///Minting proofs on the new mint succeeded as well, finishes swap operation
-    private func mintingDidSucceed() {
+    private func mintingDidSucceed(mintAttemptEvent: Event, mintEvent: Event, proofs: [Proof]) {
+        // hide mintAttemptEvent
         // save mint event and new proofs
         // update UI
         
+        mintAttemptEvent.visible = false
+        AppSchemaV1.insert(proofs + [mintEvent], into: modelContext)
+        state = .success
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            dismiss()
+        }
     }
     
     private func displayAlert(alert: AlertDetail) {
