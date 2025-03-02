@@ -74,7 +74,6 @@ extension AppSchemaV1.Mint {
                         completion(.success((internalChangeProofs, meltEvent)))
                     }
                 } else {
-                    
                     DispatchQueue.main.async {
                         logger.info("""
                                     Melt function returned a quote with state NOT PAID, \
@@ -174,8 +173,6 @@ extension AppSchemaV1.Mint {
         }
     }
 }
-
-
 
 enum PaymentResult {
     case success((change:[Proof], event: Event))

@@ -305,6 +305,8 @@ struct MeltView: View {
             pendingMeltEvent.blankOutputs = blankOutputSet
             if let keysetID = outputs.outputs.first?.id {
                 mint.increaseDerivationCounterForKeysetWithID(keysetID, by: outputs.outputs.count)
+            } else {
+                logger.error("unable to determine correct keyset to increase det sec counter.")
             }
             try? modelContext.save()
         }
@@ -326,6 +328,7 @@ struct MeltView: View {
                 displayAlert(alert: AlertDetail(title: "Payment unsussessful 🚫", description: "Please try again."))
                 self.paymenState = .failed
             case .success(let (change, event)):
+                proofs.setState(.spent)
                 logger.debug("melt operation was successful.")
                 paymentDidSucceed(with: change, event: event)
             }
