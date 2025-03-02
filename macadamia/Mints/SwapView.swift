@@ -244,7 +244,6 @@ struct SwapView: View {
         AppSchemaV1.insert([mintAttemptEvent, meltAttemptEvent], into: modelContext)
         
         guard let meltQuote = meltAttemptEvent.bolt11MeltQuote,
-//              let toMint,
               let fromMint,
               let seed = activeWallet?.seed else {
             return
@@ -264,6 +263,8 @@ struct SwapView: View {
             if let keysetID = outputs.outputs.first?.id {
                 fromMint.increaseDerivationCounterForKeysetWithID(keysetID,
                                                                   by: outputs.outputs.count)
+            } else {
+                logger.error("unable to determine correct keyset to increase det sec counter.")
             }
             try? modelContext.save()
         }
@@ -290,6 +291,7 @@ struct SwapView: View {
                 state = .fail
             case .success(let (change, event)):
                 logger.debug("melt operation was successful.")
+                selectedProofs.setState(.spent)
                 meltingDidSucceed(mintAttemptEvent: mintAttemptEvent,
                                   meltAttemptEvent: meltAttemptEvent,
                                   meltEvent: event,
@@ -334,7 +336,9 @@ struct SwapView: View {
     }
     
     ///Minting proofs on the new mint succeeded as well, finishes swap operation
-    private func mintingDidSucceed(mintAttemptEvent: Event, mintEvent: Event, proofs: [Proof]) {
+    private func mintingDidSucceed(mintAttemptEvent: Event,
+                                   mintEvent: Event,
+                                   proofs: [Proof]) {
         // hide mintAttemptEvent
         // save mint event and new proofs
         // update UI
