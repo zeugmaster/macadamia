@@ -15,9 +15,9 @@ struct MintManagerView: View {
     
     @State private var balanceStrings = [UUID: String?]()
     
-    @State var newMintURLString = ""
-    @State var showAlert: Bool = false
-    @State var currentAlert: AlertDetail?
+    @State private var newMintURLString = ""
+    @State private var showAlert: Bool = false
+    @State private var currentAlert: AlertDetail?
 
     var activeWallet: Wallet? {
         wallets.first
@@ -159,6 +159,15 @@ struct MintManagerView: View {
             newMintURLString = ""
             
             try? modelContext.save()
+            
+            DispatchQueue.main.async {
+                withAnimation {
+                    reIndex() // This calls your existing reIndex method
+                    calculateBalanceStrings()
+                }
+            }
+
+            
             return
         }
         
