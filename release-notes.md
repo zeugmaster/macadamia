@@ -1,9 +1,11 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Hot Fix Update 🛠️**
+**Mint Swaps! ↔**
 
-This build contains the fix for a bug that could lead to **ecash not being properly restored** by macadamia Wallet.
+This version of the wallet allows you to swap amounts between mints.
+
+It also includes numerous bug fixes.  
 
 🥜🥜
 

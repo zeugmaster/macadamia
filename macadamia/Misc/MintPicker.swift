@@ -73,15 +73,23 @@ struct MintPicker: View {
     }
     
     func populate() {
+        // Save current selection
+        let currentSelection = selectedID
+        
         mintNamesAndIDs = sortedMintsOfActiveWallet.map { mint in
             (mint.displayName, mint.mintID)
         }
+        
         if let hide {
             mintNamesAndIDs = mintNamesAndIDs.filter { (name: String, id: UUID) in
                 id != hide.mintID
             }
         }
-        if let first = mintNamesAndIDs.first, !allowsNoneState {
+        
+        // Only auto-select if we don't already have a valid selection
+        if (selectedID == nil || !mintNamesAndIDs.contains(where: { $0.id == selectedID })),
+           let first = mintNamesAndIDs.first,
+           !allowsNoneState {
             selectedID = first.id
         }
     }
