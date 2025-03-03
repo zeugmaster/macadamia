@@ -57,10 +57,19 @@ struct MeltView: View {
         VStack {
             List {
                 Section {
-                    MintPicker(label: "Pay from", selectedMint: $selectedMint)
-                        .onChange(of: selectedMint) { _, _ in
-                            updateBalance()
-                        }.disabled(pendingMeltEvent != nil)
+                    if let pendingMeltEvent {
+                        HStack {
+                            Text("Mint: ")
+                            Spacer()
+                            Text(pendingMeltEvent.mints?.first?.displayName ?? "") //FIXME: horrible
+                        }
+                        .foregroundStyle(.gray)
+                    } else {
+                        MintPicker(label: "Pay from", selectedMint: $selectedMint)
+                            .onChange(of: selectedMint) { _, _ in
+                                updateBalance()
+                            }
+                    }
                     HStack {
                         Text("Balance: ")
                         Spacer()
@@ -177,7 +186,7 @@ struct MeltView: View {
             input.removeFirst("lightning:".count)
         }
         guard input.hasPrefix("lnbc") else {
-            displayAlert(alert: AlertDetail(title: "Invalid QR",
+            displayAlert(alert: AlertDetail(title: "Invalid Input",
                                             description: """
                                                          This input does not seem to be of \
                                                          a valid Lighning Network invoice. Please try again.
@@ -240,7 +249,11 @@ struct MeltView: View {
         
         if let proofs = pendingMeltEvent.proofs, !proofs.isEmpty {
             // check melt state
-            checkState(mint: selectedMint, quote: quote, proofs: proofs, pendingMeltEvent: pendingMeltEvent, seed: wallet.seed)
+            checkState(mint: selectedMint,
+                       quote: quote,
+                       proofs: proofs,
+                       pendingMeltEvent: pendingMeltEvent,
+                       seed: wallet.seed)
         } else {
             // select proofs, assign proofs, mark .pending, persist
             // use .melt
@@ -348,9 +361,7 @@ struct MeltView: View {
     private func removeQuote() {
         displayAlert(alert: AlertDetail(title: "Are you sure?",
                                         description: "Removing this melt quote will also free up any associated pending ecash.",
-                                        primaryButtonText: "Cancel",
-                                        affirmText: "Remove",
-                                        onAffirm: {
+                                        primaryButton: AlertButton(title: "Remove", role: .destructive, action: {
             guard let pendingMeltEvent else {
                 return
             }
@@ -360,7 +371,9 @@ struct MeltView: View {
             }
             pendingMeltEvent.visible = false
             dismiss()
-        }))
+        }),                             secondaryButton: AlertButton(title: "Cancel", role: .cancel, action: {
+            
+        })))
     }
     
     private func displayAlert(alert: AlertDetail) {

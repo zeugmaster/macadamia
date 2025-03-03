@@ -19,6 +19,7 @@ struct ReceiveView: View {
         case known
         case unknown
         case adding
+        case added
         case unavailable
     }
 
@@ -87,6 +88,8 @@ struct ReceiveView: View {
                             }
                         case .adding:
                             Text("Adding...")
+                        case .added:
+                            Text("Success!")
                         case .unavailable:
                             Button {
                                 addMint()
@@ -120,7 +123,7 @@ struct ReceiveView: View {
                 redeem()
             }, label: {
                 if loading {
-                    Text("Sending...")
+                    Text("Redeeming...")
                         .frame(maxWidth: .infinity)
                         .padding()
                 } else if success {
@@ -184,7 +187,7 @@ struct ReceiveView: View {
             // check if mint is known
             let urlFromToken = t.proofsByMint.keys.first
             if activeWallet.mints.contains(where: { m in
-                m.url.absoluteString == urlFromToken
+                m.url.absoluteString == urlFromToken && m.hidden == false
             }) {
                 mintState = .known
             } else {
@@ -200,7 +203,12 @@ struct ReceiveView: View {
     
     func addMint() {
         Task {
+            guard let activeWallet else {
+                logger.error("inconsistent state: trying to add mint but activeWallet is nil")
+                return
+            }
             guard let urlString = token?.proofsByMint.keys.first else {
+                logger.warning("user tried to add mint from a token that does not contain anything (?)")
                 return
             }
             
@@ -214,6 +222,24 @@ struct ReceiveView: View {
                     return
                 }
                 
+                if let knownMint = activeWallet.mints.first(where: { $0.url.absoluteString == urlString && $0.hidden == true}) {
+                    // unhide and re-index
+                    logger.info("user added mint that is already known. \(knownMint.url.absoluteString)")
+                    knownMint.userIndex = activeWallet.mints.filter({ $0.hidden == false }).count
+                    knownMint.hidden = false
+                    
+                    try? modelContext.save()
+                    
+                    withAnimation {
+                        mintState = .added
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            mintState = .known
+                        }
+                    }
+                    
+                    return
+                }
+                
                 let mint: Mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
                 mint.wallet = activeWallet
                 mint.proofs = []
@@ -222,8 +248,12 @@ struct ReceiveView: View {
                 logger.info("added mint \(mint.url.absoluteString) while trying to redeem a token")
                 
                 withAnimation {
-                    mintState = .known
+                    mintState = .added
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        mintState = .known
+                    }
                 }
+                
             } catch {
                 logger.error("failed to add mint due to error \(error)")
                 
@@ -262,10 +292,14 @@ struct ReceiveView: View {
             return
         }
         
-        // make sure the mint is known
-        guard let mint = activeWallet.mints.first(where: { $0.url.absoluteString == token.proofsByMint.keys.first }) else {
+        // make sure the mint is known AND NOT HIDDEN
+        guard let mint = activeWallet.mints.first(where: { $0.url.absoluteString == token.proofsByMint.keys.first && $0.hidden == false}) else {
             logger.error("unable to determinw mint to redeem from.")
-            displayAlert(alert: AlertDetail(with: macadamiaError.unknownMint(nil)))
+            displayAlert(alert: AlertDetail(title: "Unknown Mint 🥷",
+                                            description: "You are trying to redeem from a mint that is not known to the wallet.",
+                                            primaryButton: AlertButton(title: "Trust & Add", role: nil, action: {
+                addMint()
+            }), secondaryButton: AlertButton(title: "Cancel", role: .cancel, action: {})))
             return
         }
 
@@ -288,7 +322,6 @@ struct ReceiveView: View {
                 displayAlert(alert: AlertDetail(with: error))
                 self.loading = false
                 self.success = false
-                
             }
         }
     }

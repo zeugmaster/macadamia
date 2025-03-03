@@ -89,33 +89,19 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .receive(urlString: nil)
                         } label: { fade in
-                            Color.clear.overlay(
-                                HStack {
-                                    Text("Redeem eCash")
-                                    Spacer()
-                                    Image(systemName: "qrcode")
-                                }
-                                .foregroundStyle(.white)
-                                .dynamicTypeSize(.large)
-                            )
-                            .padding(20)
-                            .opacity(fade ? 0.5 : 1)
+                            MenuButtonLabel(title: "Redeem",
+                                            subtitle: "Claim Ecash from a Token",
+                                            imageSystemName: "qrcode",
+                                            fade: fade)
                         }
                         .background(Color.black)
                         Templates.MenuItem {
                             navigationDestination = .mint
                         } label: { fade in
-                            Color.clear.overlay(
-                                HStack {
-                                    Text("Mint")
-                                    Spacer()
-                                    Image(systemName: "bolt.fill")
-                                }
-                                .foregroundStyle(.white)
-                                .dynamicTypeSize(.large)
-                            )
-                            .padding(20)
-                            .opacity(fade ? 0.5 : 1)
+                            MenuButtonLabel(title: "Mint",
+                                            subtitle: "Create Lightning Invoice",
+                                            imageSystemName: "bolt.fill",
+                                            fade: fade)
                         }
                         .background(Color.black)
                     } label: { fade in
@@ -141,33 +127,19 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .send
                         } label: { fade in
-                            Color.clear.overlay(
-                                HStack {
-                                    Text("Send eCash")
-                                    Spacer()
-                                    Image(systemName: "banknote")
-                                }
-                                .foregroundStyle(.white)
-                                .dynamicTypeSize(.large)
-                            )
-                            .padding(20)
-                            .opacity(fade ? 0.5 : 1)
+                            MenuButtonLabel(title: "Send",
+                                            subtitle: "Create Token to Share",
+                                            imageSystemName: "banknote",
+                                            fade: fade)
                         }
                         .background(Color.black)
                         Templates.MenuItem {
                             navigationDestination = .melt
                         } label: { fade in
-                            Color.clear.overlay(
-                                HStack {
-                                    Text("Melt")
-                                    Spacer()
-                                    Image(systemName: "bolt.fill")
-                                }
-                                .foregroundStyle(.white)
-                                .dynamicTypeSize(.large)
-                            )
-                            .padding(20)
-                            .opacity(fade ? 0.5 : 1)
+                            MenuButtonLabel(title: "Melt",
+                                            subtitle: "Pay Lightning Invoice",
+                                            imageSystemName: "bolt.fill",
+                                            fade: fade)
                         }
                         .background(Color.black)
                     } label: { fade in
@@ -205,10 +177,38 @@ struct WalletView: View {
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
     }
+    
+    
 
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
+    }
+}
+
+struct MenuButtonLabel: View {
+    let title: String
+    let subtitle: String
+    let imageSystemName: String
+    var fade: Bool
+    
+    var body: some View {
+        Color.clear.overlay(
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(title)
+                        .foregroundStyle(.white)
+                        .dynamicTypeSize(.large)
+                    Text(subtitle)
+                        .dynamicTypeSize(.xSmall)
+                        .foregroundStyle(.gray)
+                }
+                Spacer()
+                Image(systemName: imageSystemName)
+            }
+        )
+        .opacity(fade ? 0.5 : 1)
+        .padding(24)
     }
 }
 
