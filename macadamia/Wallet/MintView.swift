@@ -3,6 +3,8 @@ import SwiftData
 import SwiftUI
 
 struct MintView: View {
+    
+    @State private var buttonState: ActionButtonState = .idle("Request Invoice")
         
     @State var quote: CashuSwift.Bolt11.MintQuote?
     @State var pendingMintEvent: Event?
@@ -21,11 +23,6 @@ struct MintView: View {
     @State var amountString = ""
 
     @State var selectedMint:Mint?
-
-    @State var loadingInvoice = false
-
-    @State var minting = false
-    @State var mintSuccess = false
 
     @State var showAlert: Bool = false
     @State var currentAlert: AlertDetail?
@@ -112,58 +109,10 @@ struct MintView: View {
             }
         }
         .navigationTitle("Mint")
-        .toolbar(.hidden, for: .tabBar)
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
 
-        if quote == nil {
-            Button(action: {
-                getQuote()
-                amountFieldInFocus = false
-            }, label: {
-                HStack {
-                    if !loadingInvoice {
-                        Text("Request Invoice")
-                    } else {
-                        ProgressView()
-                        Spacer()
-                            .frame(width: 10)
-                        Text("Loading Invoice...")
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .bold()
-                .foregroundColor(.white)
-            })
-            .buttonStyle(.bordered)
-            .padding()
-            .disabled(amountString.isEmpty || amount <= 0 || loadingInvoice)
-        } else {
-            Button(action: {
-                requestMint()
-            }, label: {
-                HStack {
-                    if minting {
-                        ProgressView()
-                        Spacer()
-                            .frame(width: 10)
-                        Text("Minting Tokens...")
-                    } else if mintSuccess {
-                        Text("Success!")
-                            .foregroundStyle(.green)
-                    } else {
-                        Text("I have paid the \(Image(systemName: "bolt.fill")) Invoice")
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .bold()
-                .foregroundColor(.white)
-            })
-            .buttonStyle(.bordered)
-            .padding()
-            .disabled(minting || mintSuccess)
-        }
+        ActionButton(state: $buttonState)
+            .actionDisabled(amount < 1 || selectedMint == nil)
     }
 
     // MARK: - LOGIC
@@ -196,8 +145,6 @@ struct MintView: View {
             return
         }
         
-        loadingInvoice = true
-        
         let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
                                                               amount: self.amount)
         
@@ -206,7 +153,7 @@ struct MintView: View {
             switch result {
             case .success(let (quote, event)):
                 self.quote = quote as? CashuSwift.Bolt11.MintQuote
-                loadingInvoice = false
+//                loadingInvoice = false
                 pendingMintEvent = event
                 AppSchemaV1.insert([event], into: modelContext)
                 
@@ -216,7 +163,7 @@ struct MintView: View {
                              could not get quote from mint \(selectedMint.url.absoluteString) \
                              because of error \(error)
                              """)
-                loadingInvoice = false
+//                loadingInvoice = false
             }
         }
     }
@@ -233,14 +180,14 @@ struct MintView: View {
             return
         }
         
-        minting = true
+//        minting = true
                 
         selectedMint.issue(for: quote) { result in
             switch result {
             case .success(let (proofs, event)):
                 pendingMintEvent?.visible = false
-                minting = false
-                mintSuccess = true
+//                minting = false
+//                mintSuccess = true
                 
                 AppSchemaV1.insert(proofs + [event], into: modelContext)
                 
@@ -251,7 +198,7 @@ struct MintView: View {
             case .failure(let error):
                 displayAlert(alert: AlertDetail(with: error))
                 logger.error("Minting was not successful with mint \(selectedMint.url.absoluteString) due to error \(error)")
-                minting = false
+//                minting = false
             }
         }
     }
@@ -264,8 +211,6 @@ struct MintView: View {
     func reset() {
         quote = nil
         amountString = ""
-        minting = false
-        mintSuccess = false
     }
 }
 

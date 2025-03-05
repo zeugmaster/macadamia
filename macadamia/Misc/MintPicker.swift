@@ -72,10 +72,7 @@ struct MintPicker: View {
         }
     }
     
-    func populate() {
-        // Save current selection
-        let currentSelection = selectedID
-        
+    func populate() {        
         mintNamesAndIDs = sortedMintsOfActiveWallet.map { mint in
             (mint.displayName, mint.mintID)
         }
