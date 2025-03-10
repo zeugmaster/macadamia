@@ -132,7 +132,7 @@ struct SendView: View {
         guard let preSelect = selectedMint.select(allProofs:allProofs,
                                               amount: amount,
                                               unit: selectedUnit) else {
-            displayAlert(alert: AlertDetail(title: "Insufficient funds"))
+            displayAlert(alert: AlertDetail(with: CashuError.insufficientInputs("")))
             logger.warning("no proofs could be selected to generate a token with this amount.")
             return
         }

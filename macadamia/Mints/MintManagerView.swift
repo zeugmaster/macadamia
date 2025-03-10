@@ -15,9 +15,9 @@ struct MintManagerView: View {
     
     @State private var balanceStrings = [UUID: String?]()
     
-    @State var newMintURLString = ""
-    @State var showAlert: Bool = false
-    @State var currentAlert: AlertDetail?
+    @State private var newMintURLString = ""
+    @State private var showAlert: Bool = false
+    @State private var currentAlert: AlertDetail?
 
     var activeWallet: Wallet? {
         wallets.first
@@ -63,6 +63,21 @@ struct MintManagerView: View {
                                  """)
                         }
                     }
+                    Section {
+                        NavigationLink(destination: SwapView()) {
+                            HStack {
+                                Image(systemName: "arrow.down.left.arrow.up.right")
+                                    .imageScale(.small)
+                                Text("Mint Swap")
+                            }
+                        }
+                    } footer: {
+                        Text("""
+                             An inter-mint swap allows you to move an amount of ecash from \
+                             one trusted mint to another via Lightning.
+                             """)
+                    }
+                    .disabled(sortedMintsOfActiveWallet.count < 2)
                     Section {
                         TextField("Add new Mint URL...", text: $newMintURLString)
                             .textInputAutocapitalization(.never)
@@ -144,6 +159,15 @@ struct MintManagerView: View {
             newMintURLString = ""
             
             try? modelContext.save()
+            
+            DispatchQueue.main.async {
+                withAnimation {
+                    reIndex() // This calls your existing reIndex method
+                    calculateBalanceStrings()
+                }
+            }
+
+            
             return
         }
         

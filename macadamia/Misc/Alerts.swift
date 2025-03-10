@@ -12,24 +12,18 @@ import CashuSwift
 struct AlertDetail {
     let title: String
     let alertDescription: String?
-    let primaryButtonText: String?
-    let affirmText: String?
-    let onAffirm: (() -> Void)?
-
+    let primaryButton: AlertButton?
+    let secondaryButton: AlertButton?
+    
     init(title: String,
          description: String? = nil,
-         primaryButtonText: String? = nil,
-         affirmText: String? = nil,
-         onAffirm: (() -> Void)? = nil)
-    {
+         primaryButton: AlertButton? = nil,
+         secondaryButton: AlertButton? = nil) {
         self.title = title
-        alertDescription = description
-        self.primaryButtonText = primaryButtonText
-        self.affirmText = affirmText
-        self.onAffirm = onAffirm
+        self.alertDescription = description
+        self.primaryButton = primaryButton
+        self.secondaryButton = secondaryButton
     }
-    
-    // TODO: expand error handling to all cases and communicate common cases more effectively
     
     init(with error: Swift.Error) {
         switch error {
@@ -57,7 +51,7 @@ struct AlertDetail {
                 self = AlertDetail(title: "Input Error", description: message)
                 
             case .insufficientInputs(_): // associated typa for detail string TODO: utilize
-                self = AlertDetail(title: "Insufficient Funds", description: "The wallet was unable to collect enough ecash for this transaction.")
+                self = AlertDetail(title: "Insufficient Funds 💰", description: "The wallet was unable to collect enough ecash for this transaction.")
                 
             case .unknownError(let message):
                 self = AlertDetail(title: "Unknown Error", description: message)
@@ -84,30 +78,37 @@ struct AlertDetail {
     }
 }
 
-
 struct AlertViewModifier: ViewModifier {
     @Binding var isPresented: Bool
-    var currentAlert: AlertDetail?
+    var currentAlert: AlertDetail? // optional because SwiftUI view modifier requires it
 
     func body(content: Content) -> some View {
         content
             .alert(currentAlert?.title ?? "Error", isPresented: $isPresented) {
-                Button(role: .cancel) {
-                    // This button could potentially reset or handle cancel logic
-                } label: {
-                    Text(currentAlert?.primaryButtonText ?? "OK")
-                }
-                if let affirmText = currentAlert?.affirmText, let onAffirm = currentAlert?.onAffirm {
-                    Button(role: .destructive) {
-                        onAffirm()
+                if let primaryButton = currentAlert?.primaryButton {
+                    Button(role: primaryButton.role) {
+                        primaryButton.action()
                     } label: {
-                        Text(affirmText)
+                        Text(primaryButton.title)
+                    }
+                } 
+                if let secondaryButton = currentAlert?.secondaryButton {
+                    Button(role: secondaryButton.role) {
+                        secondaryButton.action()
+                    } label: {
+                        Text(secondaryButton.title)
                     }
                 }
             } message: {
                 Text(currentAlert?.alertDescription ?? "")
             }
     }
+}
+
+struct AlertButton {
+    var title: String
+    var role: ButtonRole?
+    var action: () -> Void
 }
 
 extension View {

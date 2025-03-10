@@ -294,6 +294,7 @@ enum AppSchemaV1: VersionedSchema {
         }
     }
     
+    ///Insert the specified list of SwiftData model objects into the model context and save the new state.
     @MainActor
     static func insert(_ models: [any PersistentModel], into modelContext: ModelContext) {
         models.forEach({ modelContext.insert($0) })
