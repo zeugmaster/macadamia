@@ -11,7 +11,7 @@ import CashuSwift
 struct TokenShareView: View {
     var token: CashuSwift.Token
     
-    @State private var preferredTokenVersion: CashuSwift.TokenVersion = .V3
+    @State private var preferredTokenVersion: CashuSwift.TokenVersion = .V4
     
     @State private var showingShareSheet = false
     @State private var isCopied = false
