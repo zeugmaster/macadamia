@@ -27,6 +27,7 @@ struct ActionButtonState: Equatable {
     
     static func == (lhs: ActionButtonState, rhs: ActionButtonState) -> Bool {
         (lhs.type == rhs.type)
+        && (lhs.title == rhs.title)
     }
     
     var type: StateType
@@ -96,6 +97,7 @@ struct ActionButton: View {
                 }
                 .font(.title3)
                 .bold()
+                .monospaced()
                 .padding(EdgeInsets(top: 22, leading: 0, bottom: 22, trailing: 0))
                 .foregroundStyle(textColor)
                 
@@ -140,6 +142,7 @@ struct ActionButton: View {
         withAnimation(Animation.spring(duration: 0.4)) {
             circleLineWidth = 350.0
             circleScale = 5
+            backgroundColor = .gray.opacity(0.1)
             
         } completion: {
             borderColor = animationColor.opacity(0.7)
@@ -153,7 +156,7 @@ struct ActionButton: View {
     }
     
     private func basicAnimation() {
-        withAnimation {
+        withAnimation(.linear(duration: 0.1)) {
             animationColor = .clear
             borderColor = .clear
             textColor = .white.opacity(isDisabled ? 0.3 : 0.8)
@@ -174,8 +177,11 @@ struct ActionButton: View {
     }
     
     private func performAction() {
-        print("perform action")
-        state.action?()
+        if let action = state.action {
+            action()
+        } else {
+            logger.warning("ActionButton registered button press but no action closure is specified via state.action")
+        }
     }
 }
 
@@ -203,7 +209,7 @@ struct TestView: View {
     func pressed() {
         buttonState = .loading()
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            buttonState = .success()
+            buttonState = .fail()
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 buttonState = .idle("Hello World!", action: pressed)
             }

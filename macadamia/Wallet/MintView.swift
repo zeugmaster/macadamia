@@ -4,7 +4,7 @@ import SwiftUI
 
 struct MintView: View {
     
-    @State private var buttonState: ActionButtonState = .idle("Request Invoice")
+    @State private var buttonState: ActionButtonState
         
     @State var quote: CashuSwift.Bolt11.MintQuote?
     @State var pendingMintEvent: Event?
@@ -21,7 +21,6 @@ struct MintView: View {
     }
 
     @State var amountString = ""
-
     @State var selectedMint:Mint?
 
     @State var showAlert: Bool = false
@@ -34,6 +33,7 @@ struct MintView: View {
          pendingMintEvent: Event? = nil) {
         _quote = State(initialValue: quote)
         _pendingMintEvent = State(initialValue: pendingMintEvent)
+        _buttonState = State(initialValue: .idle("No Action"))
         
         if let mint = pendingMintEvent?.mints?.first {
             _selectedMint = State(initialValue: mint)
@@ -41,78 +41,81 @@ struct MintView: View {
     }
 
     var body: some View {
-        Form {
-            Section {
-                HStack {
-                    if let quote, let requestDetail = quote.requestDetail {
-                        Text(String(requestDetail.amount))
-                            .monospaced()
-                        Text("sats")
-                            .monospaced()
-                    } else {
-                        TextField("enter amount", text: $amountString)
-                            .keyboardType(.numberPad)
-                            .monospaced()
-                            .focused($amountFieldInFocus)
-                            .onSubmit {
-                                amountFieldInFocus = false
-                            }
-                            .onAppear(perform: {
-                                amountFieldInFocus = true
-                            })
-                            .disabled(quote != nil)
-                        Text("sats")
-                            .monospaced()
-                    }
-                }
-                if let mint = pendingMintEvent?.mints?.first {
-                    Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
-                } else {
-                    MintPicker(label: "Mint", selectedMint: $selectedMint)
-                }
-            }
-            if let quote {
+        VStack {
+            Form {
                 Section {
                     HStack {
-                        Text("Expires at: ")
-                        Spacer()
-                        Text(Date(timeIntervalSince1970: TimeInterval(quote.expiry)).formatted())
-                    }
-                    .foregroundStyle(.secondary)
-                    StaticQR(qrCode: generateQRCode(from: quote.request))
-                        .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
-                    Button {
-                        copyToClipboard()
-                    } label: {
-                        HStack {
-                            if isCopied {
-                                Text("Copied!")
-                                    .transition(.opacity)
-                            } else {
-                                Text("Copy to clipboard")
-                                    .transition(.opacity)
-                            }
-                            Spacer()
-                            Image(systemName: "list.clipboard")
+                        if let quote, let requestDetail = quote.requestDetail {
+                            Text(String(requestDetail.amount))
+                                .monospaced()
+                            Text("sats")
+                                .monospaced()
+                        } else {
+                            TextField("enter amount", text: $amountString)
+                                .keyboardType(.numberPad)
+                                .monospaced()
+                                .focused($amountFieldInFocus)
+                                .onSubmit {
+                                    amountFieldInFocus = false
+                                }
+                                .onAppear(perform: {
+                                    amountFieldInFocus = true
+                                })
+                                .disabled(quote != nil)
+                            Text("sats")
+                                .monospaced()
                         }
                     }
-                    Button {
-                        reset()
-                    } label: {
+                    if let mint = pendingMintEvent?.mints?.first {
+                        Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
+                    } else {
+                        MintPicker(label: "Mint", selectedMint: $selectedMint)
+                    }
+                }
+                if let quote {
+                    Section {
                         HStack {
-                            Text("Reset")
+                            Text("Expires at: ")
                             Spacer()
-                            Image(systemName: "trash")
+                            Text(Date(timeIntervalSince1970: TimeInterval(quote.expiry)).formatted())
+                        }
+                        .foregroundStyle(.secondary)
+                        QRView(string: quote.request)
+                        Button {
+                            copyToClipboard()
+                        } label: {
+                            HStack {
+                                if isCopied {
+                                    Text("Copied!")
+                                        .transition(.opacity)
+                                } else {
+                                    Text("Copy to clipboard")
+                                        .transition(.opacity)
+                                }
+                                Spacer()
+                                Image(systemName: "list.clipboard")
+                            }
+                        }
+                        Button {
+                            reset()
+                        } label: {
+                            HStack {
+                                Text("Reset")
+                                Spacer()
+                                Image(systemName: "trash")
+                            }
                         }
                     }
                 }
             }
+            .navigationTitle("Mint")
+            .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+            .onAppear {
+                buttonState = .idle("Request Invoice", action: getQuote)
+            }
+            ActionButton(state: $buttonState)
+                .actionDisabled(amount < 1 || selectedMint == nil)
         }
-        .navigationTitle("Mint")
-        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
-
-        ActionButton(state: $buttonState)
-            .actionDisabled(amount < 1 || selectedMint == nil)
     }
 
     // MARK: - LOGIC
@@ -148,22 +151,28 @@ struct MintView: View {
         let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
                                                               amount: self.amount)
         
+        buttonState = .loading()
         selectedMint.getQuote(for: quoteRequest) { result in
             print("completion handler exec on main thread: \(Thread.isMainThread)")
             switch result {
             case .success(let (quote, event)):
                 self.quote = quote as? CashuSwift.Bolt11.MintQuote
-//                loadingInvoice = false
                 pendingMintEvent = event
                 AppSchemaV1.insert([event], into: modelContext)
                 
+                buttonState = .idle("I paid the Invoice", action: {
+                    requestMint()
+                })
             case .failure(let error):
                 displayAlert(alert: AlertDetail(with: error))
                 logger.error("""
                              could not get quote from mint \(selectedMint.url.absoluteString) \
                              because of error \(error)
                              """)
-//                loadingInvoice = false
+                buttonState = .fail()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    getQuote()
+                }
             }
         }
     }
@@ -180,25 +189,30 @@ struct MintView: View {
             return
         }
         
-//        minting = true
+        buttonState = .loading()
                 
         selectedMint.issue(for: quote) { result in
             switch result {
             case .success(let (proofs, event)):
                 pendingMintEvent?.visible = false
-//                minting = false
-//                mintSuccess = true
                 
                 AppSchemaV1.insert(proofs + [event], into: modelContext)
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                buttonState = .success()
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     dismiss()
                 }
                 
             case .failure(let error):
                 displayAlert(alert: AlertDetail(with: error))
                 logger.error("Minting was not successful with mint \(selectedMint.url.absoluteString) due to error \(error)")
-//                minting = false
+                buttonState = .fail()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    buttonState = .idle("I paid the Invoice", action: {
+                        requestMint()
+                    })
+                }
             }
         }
     }
