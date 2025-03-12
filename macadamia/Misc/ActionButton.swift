@@ -97,7 +97,6 @@ struct ActionButton: View {
                 }
                 .font(.title3)
                 .bold()
-                .monospaced()
                 .padding(EdgeInsets(top: 22, leading: 0, bottom: 22, trailing: 0))
                 .foregroundStyle(textColor)
                 
