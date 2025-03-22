@@ -26,8 +26,9 @@ struct ReceiveView: View {
     @State private var tokenString: String?
     @State private var token: CashuSwift.Token?
     @State private var unit: Unit = .other
-    @State private var loading = false
-    @State private var success = false
+//    @State private var loading = false
+//    @State private var success = false
+    @State private var buttonState: ActionButtonState = .idle("")
     @State private var mintState: MintState = .none
     
     @State private var showAlert: Bool = false
@@ -119,35 +120,39 @@ struct ReceiveView: View {
                     }
                 }
             }
-            Button(action: {
-                redeem()
-            }, label: {
-                if loading {
-                    Text("Redeeming...")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                } else if success {
-                    Text("Done!")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .foregroundColor(.green)
-                } else {
-                    Text("Redeem")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                }
-            })
-            .foregroundColor(.white)
-            .buttonStyle(.bordered)
-            .padding()
-            .bold()
-            .toolbar(.hidden, for: .tabBar)
-            .disabled(tokenString == nil || loading || success || mintState == .adding)
+//            Button(action: {
+//                redeem()
+//            }, label: {
+//                if loading {
+//                    Text("Redeeming...")
+//                        .frame(maxWidth: .infinity)
+//                        .padding()
+//                } else if success {
+//                    Text("Done!")
+//                        .frame(maxWidth: .infinity)
+//                        .padding()
+//                        .foregroundColor(.green)
+//                } else {
+//                    Text("Redeem")
+//                        .frame(maxWidth: .infinity)
+//                        .padding()
+//                }
+//            })
+//            .foregroundColor(.white)
+//            .buttonStyle(.bordered)
+//            .padding()
+//            .bold()
+//            .toolbar(.hidden, for: .tabBar)
+//            .disabled(tokenString == nil || loading || success || mintState == .adding)
+            ActionButton(state: $buttonState)
+                .actionDisabled(tokenString == nil || mintState == .adding)
         }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         .navigationTitle("Receive")
-        .toolbar(.hidden, for: .tabBar)
         .onAppear(perform: {
+            buttonState = .idle("Receive", action: {
+                redeem()
+            })
             if let tokenString {
                 parseTokenString(input: tokenString)
             }
@@ -303,25 +308,33 @@ struct ReceiveView: View {
             return
         }
 
-        loading = true
+//        loading = true
+        buttonState = .loading()
 
         mint.redeem(token: token) { result in
             switch result {
             case .success(let (proofs, event)):
                 AppSchemaV1.insert(proofs + [event], into: modelContext)
                 
-                self.loading = false
-                self.success = true
+//                self.loading = false
+//                self.success = true
+                buttonState = .success()
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     dismiss()
                 }
                 
             case .failure(let error):
+                buttonState = .fail()
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    buttonState = .idle("Receive", action: redeem)
+                }
+                
                 logger.error("could not receive token due to error \(error)")
                 displayAlert(alert: AlertDetail(with: error))
-                self.loading = false
-                self.success = false
+//                self.loading = false
+//                self.success = false
             }
         }
     }
@@ -329,7 +342,7 @@ struct ReceiveView: View {
     private func reset() {
         tokenString = nil
         token = nil
-        success = false
+//        success = false
         mintState = .none
     }
 

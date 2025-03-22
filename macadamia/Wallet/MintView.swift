@@ -160,7 +160,7 @@ struct MintView: View {
                 pendingMintEvent = event
                 AppSchemaV1.insert([event], into: modelContext)
                 
-                buttonState = .idle("I paid the Invoice", action: {
+                buttonState = .idle("Mint", action: {
                     requestMint()
                 })
             case .failure(let error):
@@ -171,7 +171,7 @@ struct MintView: View {
                              """)
                 buttonState = .fail()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    getQuote()
+                    buttonState = .idle("Request Invoice", action: getQuote)
                 }
             }
         }
@@ -209,9 +209,7 @@ struct MintView: View {
                 logger.error("Minting was not successful with mint \(selectedMint.url.absoluteString) due to error \(error)")
                 buttonState = .fail()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    buttonState = .idle("I paid the Invoice", action: {
-                        requestMint()
-                    })
+                    buttonState = .idle("Mint", action: requestMint)
                 }
             }
         }

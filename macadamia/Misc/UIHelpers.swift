@@ -2,20 +2,6 @@ import Foundation
 import SwiftUI
 import UIKit
 
-
-struct ShareSheet: UIViewControllerRepresentable {
-    var items: [Any]
-
-    func makeUIViewController(context _: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        return controller
-    }
-
-    func updateUIViewController(_: UIActivityViewController, context _: Context) {
-        // No need to update the controller here
-    }
-}
-
 extension URL {
     func absoluteStringWithoutPrefix(_ prefix: String) -> String {
         var modifiedURL = absoluteString
@@ -82,47 +68,3 @@ struct AdaptiveDynamicTypeModifier: ViewModifier {
         }
     }
 }
-
-
-//import SwiftData
-//
-//struct MintPicker: View {
-//    // Observed query to fetch Mints from SwiftData
-//    @Query private var mints: [Mint]
-//    
-//    // Binding to selected Mint
-//    @Binding var selectedMint: Mint?
-//    
-//    init(selectedMint: Binding<Mint?>, sortBy: SortDescriptor<Mint> = SortDescriptor(\Mint.dateAdded, order: .reverse)) {
-//        self._selectedMint = selectedMint
-//        // Configure the query with sorting
-//        _mints = Query(sort: [sortBy])
-//    }
-//    
-//    var body: some View {
-//        Picker("Select Mint", selection: $selectedMint) {
-//            // Optional "No Selection" option
-//            Text("None")
-//                .tag(Optional<Mint>.none)
-//            ForEach(mints) { mint in
-//                MintRowView(mint: mint)
-//                    .tag(Optional(mint))
-//            }
-//        }
-//    }
-//}
-//
-//// Separate view for each mint row in the picker
-//struct MintRowView: View {
-//    let mint: Mint
-//    
-//    var body: some View {
-//        HStack {
-//            // Display nickname if available, otherwise show URL
-//            Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
-//            
-//            // You can add additional information if needed
-//            
-//        }
-//    }
-//}

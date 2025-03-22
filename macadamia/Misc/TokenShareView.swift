@@ -13,9 +13,7 @@ struct TokenShareView: View {
     
     @State private var preferredTokenVersion: CashuSwift.TokenVersion = .V4
     
-    @State private var showingShareSheet = false
     @State private var isCopied = false
-    
     
     var tokenString: String {
         do {
@@ -55,10 +53,7 @@ struct TokenShareView: View {
                     Image(systemName: "list.clipboard")
                 }
             }
-
-            Button {
-                showingShareSheet = true
-            } label: {
+            ShareLink(item: URL(string: "cashu:" + tokenString)!) {
                 HStack {
                     Text("Share")
                     Spacer()
@@ -66,9 +61,6 @@ struct TokenShareView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingShareSheet, content: {
-            ShareSheet(items: [tokenString])
-        })
         Section {
             QRView(string: tokenString)
         } header: {
@@ -82,8 +74,6 @@ struct TokenShareView: View {
             isCopied = true
         }
         
-        
-
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             withAnimation {
                 isCopied = false
@@ -91,7 +81,3 @@ struct TokenShareView: View {
         }
     }
 }
-
-//#Preview {
-//    TokenShareView()
-//}
