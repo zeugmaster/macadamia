@@ -5,7 +5,7 @@
 
 This version of the wallet allows you to swap amounts between mints.
 
-It also includes numerous bug fixes.  
+It also includes numerous bug fixes and improvements to UI and stability. 🛠️
 
 🥜🥜
 
