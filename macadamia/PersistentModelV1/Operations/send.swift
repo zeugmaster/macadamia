@@ -138,7 +138,7 @@ extension AppSchemaV1.Mint {
             return
         }
                 
-        proofs.forEach({ $0.state = .pending })
+        proofs.setState(.pending)
         
         if targetAmount == proofs.sum {
             
@@ -160,7 +160,6 @@ extension AppSchemaV1.Mint {
             completion(.success((token, [], event)))
             return
         } else if proofs.sum > targetAmount {
-            
             Task {
                 do {
                     // swap on background thread

@@ -10,7 +10,6 @@ struct SendView: View {
     }) private var wallets: [Wallet]
     
     @Query private var allProofs:[Proof]
-//    @Environment(\.dismiss) private var dismiss // not actually needed because this view does not self dismiss
     
     var activeWallet: Wallet? {
         wallets.first
@@ -25,7 +24,7 @@ struct SendView: View {
     @State private var numberString = ""
     @State private var selectedMintBalance = 0
 
-    @State private var loading = false
+    @State private var buttonState: ActionButtonState = .idle("")
 
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
@@ -58,7 +57,8 @@ struct SendView: View {
                         .monospaced()
                     Text("sats")
                 }
-                .foregroundStyle(.secondary)
+                .foregroundStyle(amount > selectedMintBalance ? .failureRed : .secondary)
+                .animation(.linear(duration: 0.2), value: amount > selectedMintBalance)
             }
             .disabled(token != nil)
             Section {
@@ -77,24 +77,11 @@ struct SendView: View {
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         .onAppear(perform: {
             amountFieldInFocus = true
+            buttonState = .idle("Generate Token", action: generateToken)
         })
 
-        Spacer()
-
-        Button(action: {
-            generateToken()
-        }, label: {
-            Text("Generate Token")
-                .frame(maxWidth: .infinity)
-                .padding()
-                .bold()
-                .foregroundColor(.white)
-        })
-        .buttonStyle(.bordered)
-        .padding()
-        .toolbar(.hidden, for: .tabBar)
-        .disabled(numberString.isEmpty || amount <= 0 || token != nil)
-        
+        ActionButton(state: $buttonState)
+            .actionDisabled(numberString.isEmpty || amount <= 0)
     }
 
     // MARK: - LOGIC
@@ -102,8 +89,6 @@ struct SendView: View {
     var proofsOfSelectedMint:[Proof] {
         allProofs.filter { $0.mint == selectedMint }
     }
-
-    
 
     func updateBalance() {
         guard !proofsOfSelectedMint.isEmpty else {
@@ -124,6 +109,7 @@ struct SendView: View {
                          selectedMInt: \(selectedMint.debugDescription)
                          activeWallet: \(activeWallet.debugDescription)
                          """)
+            tokenGenerationFailed()
             return
         }
         
@@ -134,8 +120,11 @@ struct SendView: View {
                                               unit: selectedUnit) else {
             displayAlert(alert: AlertDetail(with: CashuError.insufficientInputs("")))
             logger.warning("no proofs could be selected to generate a token with this amount.")
+            tokenGenerationFailed()
             return
         }
+        
+        buttonState = .loading()
         
         selectedMint.send(proofs: preSelect.selected,
                           targetAmount: amount,
@@ -144,12 +133,20 @@ struct SendView: View {
             case .success(let (token, swappedProofs, event)):
                 self.token = token
                 AppSchemaV1.insert(swappedProofs + [event], into: modelContext)
-                
+                buttonState = .success()
             case .failure(let error):
                 logger.error("unable to generate token due to error: \(error)")
                 displayAlert(alert: AlertDetail(with: error))
+                tokenGenerationFailed()
             }
         }
+    }
+                                          
+    private func tokenGenerationFailed() {
+        buttonState = .fail()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: {
+            buttonState = .idle("Generate Token", action: generateToken)
+        })
     }
 
     private func displayAlert(alert: AlertDetail) {

@@ -2,13 +2,6 @@ import CashuSwift
 import SwiftData
 import SwiftUI
 
-enum PaymentState {
-    case ready
-    case loading
-    case success
-    case failed
-}
-
 struct MeltView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -35,7 +28,9 @@ struct MeltView: View {
     @State var pendingMeltEvent: Event?
 
     @State var invoiceString: String = ""
-    @State var paymenState: PaymentState = .ready
+//    @State var paymentState: PaymentState = .ready
+    
+    @State private var buttonState: ActionButtonState = .idle("")
     
     @State private var selectedMint:Mint?
     
@@ -77,9 +72,6 @@ struct MeltView: View {
                             .monospaced()
                         Text("sats")
                     }
-                    .onAppear {
-                        updateBalance()
-                    }
                     .foregroundStyle(.secondary)
                 }
                 .onAppear {
@@ -87,6 +79,8 @@ struct MeltView: View {
                         print("mint for pending event: \(mint.displayName)")
                         selectedMint = mint
                     }
+                    buttonState = .idle("Melt", action: initiateMelt)
+                    updateBalance()
                 }
                 
                 if let pendingMeltEvent {
@@ -131,7 +125,7 @@ struct MeltView: View {
                                 Image(systemName: "trash")
                             }
                         }
-                        .disabled(paymenState != .failed)
+                        .disabled(buttonState.type == .fail)
                     } footer: {
                         Text("""
                              An attempted payment reserves ecash. When a payment fails \
@@ -148,34 +142,11 @@ struct MeltView: View {
             }
             
             // MARK: - BUTTON
-            Button(action: {
-                initiateMelt()
-            }, label: {
-                switch paymenState {
-                case .ready, .failed:
-                    Text("Melt ecash")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                case .loading:
-                    Text("Melting...")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                case .success:
-                    Text("Done!")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .foregroundColor(.green)
-                }
-            })
-            .foregroundColor(.white)
-            .buttonStyle(.bordered)
-            .padding()
-            .bold()
-            .toolbar(.hidden, for: .tabBar)
-            .disabled(invoiceString.isEmpty || paymenState == .loading || paymenState == .success)
+            ActionButton(state: $buttonState)
+                .actionDisabled(invoiceString.isEmpty)
             .navigationTitle("Melt")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(paymenState == .loading)
+            .navigationBarBackButtonHidden(buttonState.type == .loading)
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
     }
@@ -216,6 +187,7 @@ struct MeltView: View {
         let quoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat",
                                                               request: invoiceString,
                                                               options: nil)
+        buttonState = .loading()
         selectedMint.getQuote(for: quoteRequest) { result in
             switch result {
             case .success(let (_, event)):
@@ -225,6 +197,7 @@ struct MeltView: View {
                 logger.warning("Unable to get melt quote. error \(error)")
                 displayAlert(alert: AlertDetail(with: error))
             }
+            buttonState = .idle("Melt", action: initiateMelt)
         }
     }
     
@@ -245,7 +218,7 @@ struct MeltView: View {
         
         logger.debug("starting melt attempt for quote \(quote.quote)")
         
-        paymenState = .loading
+        buttonState = .loading()
         
         if let proofs = pendingMeltEvent.proofs, !proofs.isEmpty {
             // check melt state
@@ -289,7 +262,7 @@ struct MeltView: View {
                                blankOutputSet: pendingMeltEvent.blankOutputs) { result in
             switch result {
             case .error(let error):
-                self.paymenState = .failed
+                paymentDidFail()
                 logger.error("attempt to check and melt failed due to error: \(error)")
                 displayAlert(alert: AlertDetail(with: error))
                 proofs.setState(.pending)
@@ -334,12 +307,12 @@ struct MeltView: View {
                 proofs.setState(.valid)
                 logger.error("melt operation failed with error: \(error)")
                 displayAlert(alert: AlertDetail(with: error))
-                self.paymenState = .failed
+                paymentDidFail()
             case .failure:
                 proofs.setState(.pending)
                 logger.info("payment on mint \(mint.url.absoluteString) failed")
                 displayAlert(alert: AlertDetail(title: "Payment unsussessful 🚫", description: "Please try again."))
-                self.paymenState = .failed
+                paymentDidFail()
             case .success(let (change, event)):
                 proofs.setState(.spent)
                 logger.debug("melt operation was successful.")
@@ -350,11 +323,18 @@ struct MeltView: View {
     
     private func paymentDidSucceed(with change: [Proof], event: Event) {
         logger.info("change from payment: \(change.count), sum \(change.sum)")
-        self.paymenState = .success
+        buttonState = .success()
         self.pendingMeltEvent?.visible = false
         AppSchemaV1.insert(change + [event], into: modelContext)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             dismiss()
+        }
+    }
+    
+    private func paymentDidFail() {
+        buttonState = .fail()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            buttonState = .idle("Melt", action: initiateMelt)
         }
     }
     

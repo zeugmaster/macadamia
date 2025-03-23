@@ -79,7 +79,7 @@
       "location" : "https://github.com/zeugmaster/cashu-swift.git",
       "state" : {
         "branch" : "main",
-        "revision" : "6dbcd1e352b4fdeb70bcbeae2baf755b5ddeab74"
+        "revision" : "b33f85368fe7f02d38d21cc545636d1ee583cca6"
       }
     },
     {
@@ -132,8 +132,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GigaBitcoin/secp256k1.swift.git",
       "state" : {
-        "revision" : "57ce9af6db14e0114af631ace25231a9d0ccccbd",
-        "version" : "0.18.0"
+        "revision" : "6c50e65ec9959d9ab0039df9ffc31707ad19c01b",
+        "version" : "0.18.1"
       }
     },
     {

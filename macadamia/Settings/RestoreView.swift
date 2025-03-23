@@ -11,12 +11,14 @@ import CashuSwift
 import BIP39
 
 struct RestoreView: View {
+    @Environment(\.dismiss) private var dismiss
+    
     @State var mnemonic = ""
-    @State var loading = false
-    @State var success = false
+    
+    @State private var buttonState: ActionButtonState = .idle("")
 
-    @State var showAlert:Bool = false
-    @State var currentAlert:AlertDetail?
+    @State private var showAlert:Bool = false
+    @State private var currentAlert:AlertDetail?
 
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<Wallet> { wallet in
@@ -42,44 +44,22 @@ struct RestoreView: View {
                      """)
             }
         }
+        .onAppear {
+            buttonState = .idle("Restore", action: initiateRestore)
+        }
         .navigationTitle("Restore")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
-        .navigationBarBackButtonHidden(loading)
+        .navigationBarBackButtonHidden(buttonState.type == .loading)
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
-        Button(action: {
-            attemptRestore()
-        }, label: {
-            HStack(spacing:0) {
-                Spacer()
-                if loading {
-                    ProgressView()
-                    Text("Restoring...")
-                        .padding()
-                } else if success {
-                    Text("Done!")
-                        .padding()
-                        .foregroundColor(.green)
-                } else {
-                    Text("Restore")
-                    .padding()
-                }
-                Spacer()
-            }
-        })
-        .frame(maxWidth: .infinity)
-        .foregroundColor(.white)
-        .buttonStyle(.bordered)
-        .padding()
-        .bold()
-        .toolbar(.hidden, for: .tabBar)
-        .disabled(mnemonic.isEmpty || loading || success)
+        
+        ActionButton(state: $buttonState)
+            .actionDisabled(mnemonic.isEmpty)
     }
      
-    private func attemptRestore() {
+    private func initiateRestore() {
         guard let activeWallet else {
-            displayAlert(alert: AlertDetail(title: "No Wallet",
-                                           description: "."))
+            displayAlert(alert: AlertDetail(title: "No Wallet Initialized"))
             return
         }
         
@@ -90,6 +70,7 @@ struct RestoreView: View {
                                                         You can do so in the 'Mints' tab of the app.
                                                         """))
             logger.warning("user tried to restore wallet with no known mints. aborted.")
+            restoreDidFail()
             return
         }
         
@@ -121,10 +102,11 @@ struct RestoreView: View {
         guard words.count == 12 else {
             logger.error("The entered test does not appear to be a properly formmatted syeed phrase.")
             displayAlert(alert: AlertDetail(title: "Restore Error", description: "The entered text does not appear to be a properly formmatted seed phrase. Make sure its twelve words, separated by spaces or line breaks."))
+            restoreDidFail()
             return
         }
         
-        loading = true
+        buttonState = .loading()
                 
         // TODO: insert wallet, new mints, proofs.
         
@@ -139,19 +121,21 @@ struct RestoreView: View {
                 newWallet.active = true
                 try? modelContext.save()
                 
-                success = true
-                loading = false
-
+                buttonState = .success()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: { dismiss() })
             case .failure(let error):
                 logger.error("restoring failed with error: \(error)")
                 displayAlert(alert: AlertDetail(with: error))
-                loading = false
-                success = false
+                restoreDidFail()
             }
         }
-        
-        // TODO: auto dismiss view
-                
+    }
+    
+    private func restoreDidFail() {
+        buttonState = .fail()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+            buttonState = .idle("Restore", action: initiateRestore)
+        })
     }
     
     @MainActor
