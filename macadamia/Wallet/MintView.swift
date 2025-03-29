@@ -111,7 +111,12 @@ struct MintView: View {
             .navigationTitle("Mint")
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
             .onAppear {
-                buttonState = .idle("Request Invoice", action: getQuote)
+                if let quote {
+                    amountString = String(quote.requestDetail?.amount ?? 1) // dirty little hack so the button is not disabled
+                    buttonState = .idle("Mint", action: requestMint)
+                } else {
+                    buttonState = .idle("Request Invoice", action: getQuote)
+                }
             }
             ActionButton(state: $buttonState)
                 .actionDisabled(amount < 1 || selectedMint == nil)
