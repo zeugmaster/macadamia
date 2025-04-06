@@ -5,6 +5,7 @@ extension AppSchemaV1.Mint {
     
     ///This function performs database related operations and library calls for a melt.
     ///Returns a payment result type
+    @MainActor
     func melt(for quote: CashuSwift.Bolt11.MeltQuote,
               with proofs: [Proof],
               blankOutputSet: BlankOutputSet?,
@@ -15,7 +16,7 @@ extension AppSchemaV1.Mint {
             return
         }
         
-        let sendableMint = self.sendable
+        let sendableMint = CashuSwift.Mint(self)
         
         // TODO: ALLOW FOR DIFFERENT UNITS (from mint quote)
         _ = Unit(quote.quoteRequest?.unit) ?? .sat
@@ -34,12 +35,12 @@ extension AppSchemaV1.Mint {
                 
                 let meltResult = try await CashuSwift.melt(mint: sendableMint,
                                                            quote: quote,
-                                                           proofs: proofs,
+                                                           proofs: proofs.sendable(),
                                                            blankOutputs: blankOutputs)
                 
                 if meltResult.paid {
                     // make sendable change proofs
-                    let sendableProofs = meltResult.change?.sendable
+                    let sendableProofs = meltResult.change
                     // ON MAIN: create event and return internal change proofs
                     await MainActor.run {
                         var internalChangeProofs = [Proof]()
@@ -93,6 +94,7 @@ extension AppSchemaV1.Mint {
     
     
     // MARK: - GET Melt (Quote State) with completion handler
+    @MainActor
     func checkMelt(for quote: CashuSwift.Bolt11.MeltQuote,
                    blankOutputSet: BlankOutputSet?,
                    completion: @escaping (PaymentResult) -> Void)  {
@@ -102,7 +104,7 @@ extension AppSchemaV1.Mint {
             return
         }
         
-        let sendableMint = self.sendable
+        let sendableMint = CashuSwift.Mint(self)
 //        let seed = wallet.seed
 //        let unit = Unit(quote.quoteRequest?.unit) ?? .sat
         
@@ -116,13 +118,14 @@ extension AppSchemaV1.Mint {
             do {
                 logger.debug("Attempting to melt...")
                 
+                
                 let meltResult = try await CashuSwift.meltState(mint: sendableMint,
                                                                 quoteID: quote.quote,
                                                                 blankOutputs: blankOutputs)
                 
                 if meltResult.paid {
                     // make sendable change proofs
-                    let sendableProofs = meltResult.change?.sendable
+                    let sendableProofs = meltResult.change
                     // ON MAIN: create event and return internal change proofs
                     await MainActor.run {
                         var internalChangeProofs = [Proof]()

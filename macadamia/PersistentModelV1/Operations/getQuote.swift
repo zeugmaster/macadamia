@@ -52,6 +52,7 @@ extension AppSchemaV1.Mint {
         return (quote, event)
     }
     
+    @MainActor
     func getQuote(for quoteRequest: CashuSwift.QuoteRequest,
                   completion: @escaping (Result<(quote: CashuSwift.Quote,
                                                  event: Event), Error>) -> Void) {
@@ -61,7 +62,7 @@ extension AppSchemaV1.Mint {
             return
         }
         
-        let sendableMint = self.sendable
+        let sendableMint = CashuSwift.Mint(self)
         
         Task {
             do {

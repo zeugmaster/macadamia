@@ -9,6 +9,31 @@ typealias Event = AppSchemaV1.Event
 typealias Unit = AppSchemaV1.Unit
 typealias BlankOutputSet = AppSchemaV1.BlankOutputSet
 
+class DatabaseManager {
+    static let shared = DatabaseManager()
+    
+    private(set) var container: ModelContainer
+    
+    private init() {
+        let schema = Schema([
+            Wallet.self,
+            Proof.self,
+            Mint.self,
+            Event.self,
+        ])
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        do {
+            container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
+    }
+    
+    func newContext() -> ModelContext {
+        return ModelContext(container)
+    }
+}
+
 enum AppSchemaV1: VersionedSchema {
     
     static var versionIdentifier = Schema.Version(1,0,0)
@@ -109,7 +134,8 @@ enum AppSchemaV1: VersionedSchema {
 
         @Relationship(inverse: \Wallet.proofs)
         var wallet: Wallet?
-
+        
+        @MainActor
         init(keysetID: String,
              C: String,
              secret: String,
@@ -132,6 +158,7 @@ enum AppSchemaV1: VersionedSchema {
             self.inputFeePPK = inputFeePPK
         }
 
+        @MainActor
         init(_ proofRepresenting: ProofRepresenting,
              unit: Unit,
              inputFeePPK:Int,
@@ -308,44 +335,44 @@ enum AppSchemaV1: VersionedSchema {
 }
 
 // concrete type that is sendable so we can pass mints across concurrency boundaries
-struct SendableMint:  Sendable, MintRepresenting {
-    var url: URL
-    
-    var keysets: [CashuSwift.Keyset]
-    
-    init(url: URL, keysets: [CashuSwift.Keyset]) {
-        self.url = url
-        self.keysets = keysets
-    }
-    
-    init(from mint: MintRepresenting) {
-        self.url = mint.url
-        self.keysets = mint.keysets
-    }
-}
-
-struct SendableProof: Sendable, ProofRepresenting {
-    var keysetID: String
-    
-    var C: String
-    
-    var secret: String
-    
-    var amount: Int
-    
-    init(from proof: some ProofRepresenting) {
-        self.keysetID = proof.keysetID
-        self.C = proof.C
-        self.secret = proof.secret
-        self.amount = proof.amount
-    }
-}
-
-extension Mint {
-    var sendable: SendableMint {
-        return SendableMint(from: self)
-    }
-}
+//struct SendableMint:  Sendable, MintRepresenting {
+//    var url: URL
+//    
+//    var keysets: [CashuSwift.Keyset]
+//    
+//    init(url: URL, keysets: [CashuSwift.Keyset]) {
+//        self.url = url
+//        self.keysets = keysets
+//    }
+//    
+//    init(from mint: MintRepresenting) {
+//        self.url = mint.url
+//        self.keysets = mint.keysets
+//    }
+//}
+//
+//struct SendableProof: Sendable, ProofRepresenting {
+//    var keysetID: String
+//    
+//    var C: String
+//    
+//    var secret: String
+//    
+//    var amount: Int
+//    
+//    init(from proof: some ProofRepresenting) {
+//        self.keysetID = proof.keysetID
+//        self.C = proof.C
+//        self.secret = proof.secret
+//        self.amount = proof.amount
+//    }
+//}
+//
+//extension Mint {
+//    var sendable: SendableMint {
+//        return SendableMint(from: self)
+//    }
+//}
 
 // this relic of drain view only remains for SwiftData model integrity
 @available(*, deprecated)
@@ -357,10 +384,10 @@ struct TokenInfo: Identifiable, Hashable, Codable {
     var id: String { token }
 }
 
-extension Array where Element == ProofRepresenting {
-    var sendable: [SendableProof] {
+extension Array where Element == Proof {
+    func sendable() -> [CashuSwift.Proof] {
         self.map { p in
-            SendableProof(from: p)
+            CashuSwift.Proof(p)
         }
     }
 }

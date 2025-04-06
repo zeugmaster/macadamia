@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum macadamiaError: Error {
+enum macadamiaError: Error, Sendable {
     case databaseError(String)
     case unknownMint(String?)
     case multiMintToken

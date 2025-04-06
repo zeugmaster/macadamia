@@ -8,27 +8,12 @@ let logger = Logger(subsystem: "macadamia Wallet", category: "Interface & Databa
 struct macadamiaApp: App {
     
     @StateObject private var appState = AppState()
-    
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Wallet.self,
-            Proof.self,
-            Mint.self,
-            Event.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
         }
-        .modelContainer(sharedModelContainer)
+        .modelContainer(DatabaseManager.shared.container)
     }
 }
