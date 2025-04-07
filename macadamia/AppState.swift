@@ -7,6 +7,7 @@
 
 import Foundation
 
+@MainActor
 class AppState: ObservableObject {
     
     private static let conversionUnitKey = "PreferredCurrencyConversionUnit"
@@ -55,14 +56,12 @@ class AppState: ObservableObject {
             preferredConversionUnit = .usd
         }
         
-        Task {
-            await loadExchangeRates()
-        }
+        loadExchangeRates()
     }
     
     @Published var exchangeRates: ExchangeRate?
     
-    func loadExchangeRates() async {
+    func loadExchangeRates() {
         logger.info("loading exchange rates...")
         
         guard let url = URL(string: "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,eur") else {
@@ -70,18 +69,20 @@ class AppState: ObservableObject {
             return
         }
         
-        guard let (data, _) = try? await URLSession.shared.data(from: url) else {
-            logger.warning("unable to load conversion data.")
-            return
-        }
-        
-        guard let prices = try? JSONDecoder().decode(ExchangeRateResponse.self, from: data).bitcoin else {
-            logger.warning("unable to decode exchange rate data from request response.")
-            return
-        }
-        
-        await MainActor.run {
-            self.exchangeRates = prices
+        Task {
+            guard let (data, _) = try? await URLSession.shared.data(from: url) else {
+                logger.warning("unable to load conversion data.")
+                return
+            }
+            
+            guard let prices = try? JSONDecoder().decode(ExchangeRateResponse.self, from: data).bitcoin else {
+                logger.warning("unable to decode exchange rate data from request response.")
+                return
+            }
+            
+            await MainActor.run {
+                self.exchangeRates = prices
+            }
         }
     }
 }

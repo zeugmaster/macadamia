@@ -217,7 +217,7 @@ struct SendEventView: View {
         }
         
         Task {
-            let result = try await CashuSwift.check(proofs, mint: firstMint)
+            let result = try await CashuSwift.check(proofs.sendable(), mint: CashuSwift.Mint(firstMint))
             await MainActor.run {
                 withAnimation {
                     if result.allSatisfy({ $0 == CashuSwift.Proof.ProofState.unspent }) {
