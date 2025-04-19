@@ -158,7 +158,7 @@ struct ActionButton: View {
         withAnimation(.linear(duration: 0.1)) {
             animationColor = .clear
             borderColor = .clear
-            textColor = .white.opacity(isDisabled ? 0.3 : 0.8)
+            textColor = .white.opacity(isDisabled ? 0.3 : 1)
             backgroundColor = .gray.opacity(isDisabled ? 0.15 : 0.25)
         }
     }

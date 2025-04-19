@@ -24,7 +24,6 @@
 		3792122E2B29E7520081F161 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 3792122D2B29E7520081F161 /* BigNumber */; };
 		379212342B29E7B30081F161 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212332B29E7B30081F161 /* BIP39 */; };
 		3793B99E2CFCC8F80077F755 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3793B99D2CFCC8F80077F755 /* AppState.swift */; };
-		379BDF592B421855008FD0E7 /* NostrSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 379BDF582B421855008FD0E7 /* NostrSDK */; };
 		379ED0412D4580A900D432D0 /* TOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379ED0402D4580A900D432D0 /* TOS.swift */; };
 		37DC18A42B8669A900F9B37B /* macadamiaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DC18A32B8669A900F9B37B /* macadamiaTests.swift */; };
 		37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */; };
@@ -72,7 +71,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */,
-				379BDF592B421855008FD0E7 /* NostrSDK in Frameworks */,
 				37049E262BD54A2E00BBAC4E /* URUI in Frameworks */,
 				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
 				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
@@ -185,7 +183,6 @@
 			packageProductDependencies = (
 				3792122D2B29E7520081F161 /* BigNumber */,
 				379212332B29E7B30081F161 /* BIP39 */,
-				379BDF582B421855008FD0E7 /* NostrSDK */,
 				377FFEFF2BC43B6900DD2635 /* MarkdownUI */,
 				37049E252BD54A2E00BBAC4E /* URUI */,
 				376E88422BE5468B0026FF8D /* Popovers */,
@@ -245,7 +242,6 @@
 			packageReferences = (
 				3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */,
 				379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */,
-				379BDF572B421855008FD0E7 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */,
 				377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				37049E242BD54A2E00BBAC4E /* XCRemoteSwiftPackageReference "URUI" */,
 				376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */,
@@ -621,7 +617,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/zeugmaster/cashu-swift.git";
 			requirement = {
-				branch = main;
+				branch = dleq;
 				kind = branch;
 			};
 		};
@@ -638,14 +634,6 @@
 			repositoryURL = "https://github.com/pengpengliu/BIP39";
 			requirement = {
 				branch = master;
-				kind = branch;
-			};
-		};
-		379BDF572B421855008FD0E7 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/zeugmaster/nostr-sdk-ios.git";
-			requirement = {
-				branch = main;
 				kind = branch;
 			};
 		};
@@ -686,11 +674,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */;
 			productName = BIP39;
-		};
-		379BDF582B421855008FD0E7 /* NostrSDK */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 379BDF572B421855008FD0E7 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */;
-			productName = NostrSDK;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

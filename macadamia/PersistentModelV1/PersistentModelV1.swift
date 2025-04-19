@@ -122,6 +122,9 @@ enum AppSchemaV1: VersionedSchema {
         var C: String
         var secret: String
         var amount: Int
+        
+        var dleq: CashuSwift.DLEQ?
+        
         var state: Proof.State
         var unit: Unit
         
@@ -170,6 +173,7 @@ enum AppSchemaV1: VersionedSchema {
             self.C = proofRepresenting.C
             self.amount = proofRepresenting.amount
             self.secret = proofRepresenting.secret
+            self.dleq = proofRepresenting.dleq
             self.wallet = wallet
             self.mint = mint
             self.unit = unit
@@ -334,45 +338,6 @@ enum AppSchemaV1: VersionedSchema {
     }
 }
 
-// concrete type that is sendable so we can pass mints across concurrency boundaries
-//struct SendableMint:  Sendable, MintRepresenting {
-//    var url: URL
-//    
-//    var keysets: [CashuSwift.Keyset]
-//    
-//    init(url: URL, keysets: [CashuSwift.Keyset]) {
-//        self.url = url
-//        self.keysets = keysets
-//    }
-//    
-//    init(from mint: MintRepresenting) {
-//        self.url = mint.url
-//        self.keysets = mint.keysets
-//    }
-//}
-//
-//struct SendableProof: Sendable, ProofRepresenting {
-//    var keysetID: String
-//    
-//    var C: String
-//    
-//    var secret: String
-//    
-//    var amount: Int
-//    
-//    init(from proof: some ProofRepresenting) {
-//        self.keysetID = proof.keysetID
-//        self.C = proof.C
-//        self.secret = proof.secret
-//        self.amount = proof.amount
-//    }
-//}
-//
-//extension Mint {
-//    var sendable: SendableMint {
-//        return SendableMint(from: self)
-//    }
-//}
 
 // this relic of drain view only remains for SwiftData model integrity
 @available(*, deprecated)

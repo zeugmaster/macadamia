@@ -53,35 +53,40 @@ struct ProofListView: View {
     var body: some View {
         List {
             ForEach(sortedProofs) { proof in
-                VStack(alignment:.leading) {
-                    HStack {
-                        switch proof.state {
-                        case .valid:
-                            Circle()
-                                .frame(width: 10)
-                                .foregroundStyle(.green)
-                        case .pending:
-                            Circle()
-                                .frame(width: 10)
-                                .foregroundStyle(.yellow)
-                        case .spent:
-                            Circle()
-                                .frame(width: 10)
-                                .foregroundStyle(.red)
+                NavigationLink {
+                    ProofDataView(proof: proof)
+                } label: {
+                    VStack(alignment:.leading) {
+                        HStack {
+                            switch proof.state {
+                            case .valid:
+                                Circle()
+                                    .frame(width: 10)
+                                    .foregroundStyle(.green)
+                            case .pending:
+                                Circle()
+                                    .frame(width: 10)
+                                    .foregroundStyle(.yellow)
+                            case .spent:
+                                Circle()
+                                    .frame(width: 10)
+                                    .foregroundStyle(.red)
+                            }
+                            Text(proof.C.prefix(10) + "...")
+                            Spacer()
+                            Text(String(proof.amount))
                         }
-                        Text(proof.C.prefix(10) + "...")
-                        Spacer()
-                        Text(String(proof.amount))
-                    }
-                    .bold()
-                    .font(.title3)
-                    .monospaced()
-                    HFlow() {
-                        TagView(text: proof.keysetID)
-                        TagView(text: proof.unit.rawValue)
-                        TagView(text: String(proof.inputFeePPK))
+                        .bold()
+                        .font(.title3)
+                        .monospaced()
+                        HFlow() {
+                            TagView(text: proof.keysetID)
+                            TagView(text: proof.unit.rawValue)
+                            TagView(text: String(proof.inputFeePPK))
+                        }
                     }
                 }
+
             }
         }
         .navigationTitle(mint.url.host(percentEncoded:false) ?? "")
