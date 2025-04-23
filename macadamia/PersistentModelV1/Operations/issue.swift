@@ -47,7 +47,7 @@ extension AppSchemaV1.Mint {
 //        
 //        return (proofs, event)
 //    }
-//
+
     @MainActor
     func issue(for quote: CashuSwift.Bolt11.MintQuote,
                 completion: @escaping (Result<(proofs: [Proof],
@@ -64,7 +64,9 @@ extension AppSchemaV1.Mint {
         Task {
             do {
                 // runs on a background thread
-                let sendableProofs = try await CashuSwift.issue(for: quote, on: sendableMint, seed: seed)
+                let (sendableProofs, dleqPassed) = try await CashuSwift.issue(for: quote, with: sendableMint, seed: seed)
+                logger.info("DLEQ check on newly minted proofs was\(dleqPassed ? " " : " NOT ")successful.")
+                
                 // and safely back to main using sendable types
                 
                 await MainActor.run {

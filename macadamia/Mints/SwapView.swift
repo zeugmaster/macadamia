@@ -346,7 +346,7 @@ struct SwapView: View {
         mintAttemptEvent.visible = false
         AppSchemaV1.insert(proofs + [mintEvent], into: modelContext)
         state = .success
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             dismiss()
         }
     }

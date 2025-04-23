@@ -33,10 +33,12 @@ extension AppSchemaV1.Mint {
             do {
                 logger.debug("Attempting to melt...")
                 
-                let meltResult = try await CashuSwift.melt(mint: sendableMint,
-                                                           quote: quote,
+                let meltResult = try await CashuSwift.melt(with: quote,
+                                                           mint: sendableMint,
                                                            proofs: proofs.sendable(),
                                                            blankOutputs: blankOutputs)
+                
+                logger.info("DLEQ check on melt change proofs was\(meltResult.dleqValid ? " " : " NOT ")successful.")
                 
                 if meltResult.paid {
                     // make sendable change proofs

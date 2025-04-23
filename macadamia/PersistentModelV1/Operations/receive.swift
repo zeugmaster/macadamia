@@ -87,9 +87,12 @@ extension AppSchemaV1.Mint {
         
         Task {
             do {
-                let sendableProofs = try await CashuSwift.receive(mint: sendableMint,
-                                                                  token: token,
-                                                                  seed: seed)
+                let (sendableProofs, dleqPassed) = try await CashuSwift.receive(token: token,
+                                                                                with: sendableMint,
+                                                                                seed: seed)
+                
+                logger.info("DLEQ check on incoming proofs was\(dleqPassed ? " " : " NOT ")successful.")
+                
                 await MainActor.run {
                     let internalProofs = sendableProofs.map { p in
                         let keyset = self.keysets.first(where: { $0.keysetID == p.keysetID } )

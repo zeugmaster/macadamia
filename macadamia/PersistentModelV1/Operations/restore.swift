@@ -29,9 +29,12 @@ extension macadamiaApp {
                 var resultsListPerMint = [String: [CashuSwift.KeysetRestoreResult]]() // this should be the only object passed across thread boundaries TODO: make explicitly sendable
         
                 for oldMint in mints {
-                    let proofsByKeyset = try await CashuSwift.restore(mint: CashuSwift.Mint(oldMint),
-                                                                      with: seed,
-                                                                      batchSize: 50)
+                    let (proofsByKeyset, dleqPassed) = try await CashuSwift.restore(from: CashuSwift.Mint(oldMint),
+                                                                                    with: seed,
+                                                                                    batchSize: 50)
+                    
+                    logger.info("DLEQ check on restore proofs from mint \(oldMint.url.absoluteString) was\(dleqPassed ? " " : " NOT ")successful.")
+                    
                     resultsListPerMint[oldMint.url.absoluteString] = proofsByKeyset
                 }
         

@@ -28,7 +28,6 @@ struct MeltView: View {
     @State var pendingMeltEvent: Event?
 
     @State var invoiceString: String = ""
-//    @State var paymentState: PaymentState = .ready
     
     @State private var buttonState: ActionButtonState = .idle("")
     
