@@ -12,15 +12,10 @@ struct TokenShareView: View {
     var token: CashuSwift.Token
     
     @State private var preferredTokenVersion: CashuSwift.TokenVersion = .V4
-    
     @State private var isCopied = false
     
-    var tokenString: String {
-        do {
-            return try token.serialize(to: preferredTokenVersion)
-        } catch {
-            return "Failed token serialization"
-        }
+    private var tokenString: String? {
+        try? token.serialize(to: preferredTokenVersion)
     }
     
     var body: some View {
@@ -36,7 +31,7 @@ struct TokenShareView: View {
                 .fixedSize()
             }
             
-            TokenText(text: tokenString)
+            TokenText(text: tokenString ?? "")
                 .frame(idealHeight: 70)
             Button {
                 copyToClipboard()
@@ -53,7 +48,7 @@ struct TokenShareView: View {
                     Image(systemName: "list.clipboard")
                 }
             }
-            ShareLink(item: URL(string: "cashu:" + tokenString)!) {
+            ShareLink(item: URL(string: "cashu:" + (tokenString ?? ""))!) {
                 HStack {
                     Text("Share")
                     Spacer()
@@ -61,8 +56,11 @@ struct TokenShareView: View {
                 }
             }
         }
+        
         Section {
             QRView(string: tokenString)
+                .frame(maxWidth: .infinity, minHeight: 300, maxHeight: .infinity)
+                .listRowBackground(Color.clear)
         } header: {
             Text("Share via QR code")
         }
