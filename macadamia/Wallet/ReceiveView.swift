@@ -137,9 +137,11 @@ struct ReceiveView: View {
 
     @MainActor
     private func parseTokenString(input: String) {
+        var string = input.lowercased()
         
-        guard !input.isEmpty else {
+        guard !string.isEmpty else {
             logger.error("pasted string was empty.")
+            displayAlert(alert: AlertDetail(title: "Empty String 🕳️", description: "Looks like you tried to enter an empty string."))
             return
         }
         
@@ -147,13 +149,17 @@ struct ReceiveView: View {
             return
         }
         
-        guard !input.hasPrefix("creq") else {
+        if string.hasPrefix("cashu:") {
+            string.removeFirst("cashu:".count)
+        }
+        
+        guard !string.hasPrefix("creq") else {
             displayAlert(alert: AlertDetail(title: "Cashu Payment Request 🫴", description: "macadamia does not yet support payment requests, but will soon™."))
             return
         }
         
         do {
-            let t = try input.deserializeToken()
+            let t = try string.deserializeToken()
             
             guard t.proofsByMint.count == 1 else {
                 displayAlert(alert: AlertDetail(with: macadamiaError.multiMintToken))
@@ -219,17 +225,21 @@ struct ReceiveView: View {
                     return
                 }
                 
-                let mint: Mint = try await CashuSwift.loadMint(url: url, type: Mint.self)
-                mint.wallet = activeWallet
-                mint.proofs = []
-                modelContext.insert(mint) // TODO: move to main queue
-                try modelContext.save()
-                logger.info("added mint \(mint.url.absoluteString) while trying to redeem a token")
+                let sendableMint = try await CashuSwift.loadMint(url: url)
                 
-                withAnimation {
-                    mintState = .added
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        mintState = .known
+                try await MainActor.run {
+                    let mint = Mint(sendableMint)
+                    mint.wallet = activeWallet
+                    mint.proofs = []
+                    modelContext.insert(mint) // TODO: move to main queue
+                    try modelContext.save()
+                    logger.info("added mint \(mint.url.absoluteString) while trying to redeem a token")
+                    
+                    withAnimation {
+                        mintState = .added
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            mintState = .known
+                        }
                     }
                 }
                 

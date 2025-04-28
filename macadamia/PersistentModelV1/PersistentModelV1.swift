@@ -108,6 +108,14 @@ enum AppSchemaV1: VersionedSchema {
             self.proofs = []
         }
         
+        init(_ representation: MintRepresenting) {
+            self.mintID = UUID()
+            self.url = representation.url
+            self.keysets = representation.keysets
+            self.dateAdded = Date()
+            self.proofs = []
+        }
+        
         var displayName: String {
             self.nickName ?? self.url.host() ?? self.url.absoluteString
         }

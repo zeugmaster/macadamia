@@ -151,11 +151,16 @@ struct MeltView: View {
     }
 
     private func processInputViewResult(_ string: String) {
-        var input = string
+        var input = string.lowercased()
+        
         if input.hasPrefix("lightning:") {
             input.removeFirst("lightning:".count)
         }
-        guard input.hasPrefix("lnbc") else {
+        
+        guard input.hasPrefix("lnbc") || // TODO: replace this check with proper invoice decoding
+              input.hasPrefix("lntbs") ||
+              input.hasPrefix("lntb") ||
+              input.hasPrefix("lnbcrt") else {
             displayAlert(alert: AlertDetail(title: "Invalid Input",
                                             description: """
                                                          This input does not seem to be of \
@@ -164,6 +169,7 @@ struct MeltView: View {
             logger.warning("Invalid invoice input. the given string does not seem to be a LN invoice. Input: \(input)")
             return
         }
+        
         invoiceString = input
         getQuote()
     }
