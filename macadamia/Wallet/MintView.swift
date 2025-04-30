@@ -20,14 +20,17 @@ struct MintView: View {
         wallets.first
     }
 
-    @State var amountString = ""
-    @State var selectedMint:Mint?
+    @State private var amountString = ""
+    @State private var selectedMint:Mint?
 
-    @State var showAlert: Bool = false
-    @State var currentAlert: AlertDetail?
+    @State private var showAlert: Bool = false
+    @State private var currentAlert: AlertDetail?
 
     @State private var isCopied = false
-    @FocusState var amountFieldInFocus: Bool
+    @FocusState private var amountFieldInFocus: Bool
+    
+    @State private var pollingTimer: Timer?
+    @State private var isCheckingInvoiceState = false
 
     init(quote: CashuSwift.Bolt11.MintQuote? = nil,
          pendingMintEvent: Event? = nil) {
@@ -74,12 +77,14 @@ struct MintView: View {
                 }
                 if let quote {
                     Section {
-                        HStack {
-                            Text("Expires at: ")
-                            Spacer()
-                            Text(Date(timeIntervalSince1970: TimeInterval(quote.expiry)).formatted())
+                        if let expiry = quote.expiry {
+                            HStack {
+                                Text("Expires at: ")
+                                Spacer()
+                                Text(Date(timeIntervalSince1970: TimeInterval(expiry)).formatted())
+                            }
+                            .foregroundStyle(.secondary)
                         }
-                        .foregroundStyle(.secondary)
                         QRView(string: quote.request)
                         Button {
                             copyToClipboard()
@@ -106,6 +111,11 @@ struct MintView: View {
                             }
                         }
                     }
+                    .onAppear { // start the polling timer only when a quote is shown
+                        pollingTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: { _ in
+                            checkInvoiceState()
+                        })
+                    }
                 }
             }
             .navigationTitle("Mint")
@@ -118,6 +128,9 @@ struct MintView: View {
                     buttonState = .idle("Request Invoice", action: getQuote)
                 }
             }
+            .onDisappear {
+                pollingTimer?.invalidate()
+            }
             ActionButton(state: $buttonState)
                 .actionDisabled(amount < 1 || selectedMint == nil)
         }
@@ -125,7 +138,7 @@ struct MintView: View {
 
     // MARK: - LOGIC
     
-    func copyToClipboard() {
+    private func copyToClipboard() {
         UIPasteboard.general.string = quote?.request
         withAnimation {
             isCopied = true
@@ -138,12 +151,12 @@ struct MintView: View {
         }
     }
 
-    var amount: Int {
+    private var amount: Int {
         return Int(amountString) ?? 0
     }
     
     // getQuote can only be called when UI is not populated
-    func getQuote() { // TODO: check continually whether the quote was paid
+    private func getQuote() { // TODO: check continually whether the quote was paid
         
         guard let selectedMint else {
             logger.error("""
@@ -181,8 +194,41 @@ struct MintView: View {
             }
         }
     }
-
-    func requestMint() {
+    
+    private func checkInvoiceState() {
+        guard let quote, let selectedMint else {
+            return
+        }
+        
+        if isCheckingInvoiceState { return }
+        
+        Task {
+            do {
+                buttonState = .loading()
+                isCheckingInvoiceState = true
+                logger.debug("auto polling for quote state with mint \(selectedMint.url.absoluteString) and id \(quote.quote)")
+                let mintQuote = try await CashuSwift.mintQuoteState(for: quote.quote, mint: CashuSwift.Mint(selectedMint))
+                
+                if mintQuote.state == .paid || mintQuote.paid == true {
+                    isCheckingInvoiceState = false
+                    await MainActor.run {
+                        requestMint()
+                    }
+                } else {
+                    buttonState = .idle("Mint", action: { requestMint() })
+                    isCheckingInvoiceState = false
+                }
+            } catch {
+                buttonState = .idle("Mint", action: { requestMint() })
+                // stop trying automatically if the operation fails
+                pollingTimer?.invalidate()
+                isCheckingInvoiceState = false
+            }
+        }
+    }
+    
+    @MainActor
+    private func requestMint() {
         
         guard let quote,        // TODO: improve handling
               let selectedMint else {
@@ -193,6 +239,8 @@ struct MintView: View {
                          """)
             return
         }
+        
+        pollingTimer?.invalidate()
         
         buttonState = .loading()
                 
@@ -220,12 +268,12 @@ struct MintView: View {
         }
     }
 
-    func displayAlert(alert: AlertDetail) {
+    private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
     }
 
-    func reset() {
+    private func reset() {
         quote = nil
         amountString = ""
     }

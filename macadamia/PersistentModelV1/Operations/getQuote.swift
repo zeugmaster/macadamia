@@ -29,7 +29,7 @@ extension AppSchemaV1.Mint {
                                            wallet: wallet,
                                            quote: quote,
                                            amount: quote.requestDetail?.amount ?? 0,
-                                           expiration: Date(timeIntervalSince1970: TimeInterval(quote.expiry)),
+                                           expiration: Date(timeIntervalSince1970: TimeInterval(quote.expiry ?? 0)),
                                            mint: self)
             
         case let quote as CashuSwift.Bolt11.MeltQuote:
@@ -39,7 +39,7 @@ extension AppSchemaV1.Mint {
                                            wallet: wallet,
                                            quote: quote,
                                            amount: (quote.amount),
-                                           expiration: Date(timeIntervalSince1970: TimeInterval(quote.expiry)),
+                                           expiration: Date(timeIntervalSince1970: TimeInterval(quote.expiry ?? 0)),
                                            mints: [self],
                                            proofs: [])
             
@@ -78,7 +78,7 @@ extension AppSchemaV1.Mint {
                                                        wallet: wallet,
                                                        quote: quote,
                                                        amount: quote.requestDetail?.amount ?? 0,
-                                                       expiration: Date(timeIntervalSince1970: TimeInterval(quote.expiry)),
+                                                       expiration: Date(timeIntervalSince1970: TimeInterval(quote.expiry ?? 0)),
                                                        mint: self)
                         completion(.success((quote, event)))
                         
@@ -89,7 +89,7 @@ extension AppSchemaV1.Mint {
                                                        wallet: wallet,
                                                        quote: quote,
                                                        amount: (quote.amount),
-                                                       expiration: Date(timeIntervalSince1970: TimeInterval(quote.expiry)),
+                                                       expiration: Date(timeIntervalSince1970: TimeInterval(quote.expiry ?? 0)),
                                                        mints: [self],
                                                        proofs: nil) // will later be used to determine if melt has already been attempted
                         completion(.success((quote, event)))

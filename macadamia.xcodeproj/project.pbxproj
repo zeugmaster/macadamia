@@ -617,7 +617,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/zeugmaster/cashu-swift.git";
 			requirement = {
-				branch = dleq;
+				branch = "check-mint-quote";
 				kind = branch;
 			};
 		};
