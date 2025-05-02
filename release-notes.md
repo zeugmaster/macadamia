@@ -1,13 +1,14 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Mint Swaps! ↔**
+**Bug Fixes and other improvements**
 
-This version of the wallet allows you to swap amounts between mints.
+This version of **macadamia Wallet** features numerous minor bug fixes and improvements:
+- Correct scanning of QR codes containing a token with URI prefix ("cashu:")
+- Better reliability when creating QR codes
+- Mint view now polls the mint to check whether the invoice was paid
 
-It also includes numerous bug fixes and improvements to UI and stability. 🛠️
-
-Build 2 also fixes a bug where where a successful melt operation would still give an error and inconsistent behaviour.
+The current build also includes a version of the `CashuSwift` library that performs DLEQ verification to prevent fingerprinting from a malicious mint. 🔎
 
 🥜🥜
 
