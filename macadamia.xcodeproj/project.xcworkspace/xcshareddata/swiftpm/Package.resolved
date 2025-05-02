@@ -1,5 +1,5 @@
 {
-  "originHash" : "5f7ed10433234a880282df3b698e21100921dc868e9c58fb7a733c034d368887",
+  "originHash" : "760c01eb145d4ba8accba9f6dd55c2b64db2ea9a9affbb9305542017b42798c5",
   "pins" : [
     {
       "identity" : "base58",
@@ -101,15 +101,6 @@
       }
     },
     {
-      "identity" : "nostr-sdk-ios",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/zeugmaster/nostr-sdk-ios.git",
-      "state" : {
-        "branch" : "main",
-        "revision" : "751f36841fad9b2ec922f3aec098bec14b2aae54"
-      }
-    },
-    {
       "identity" : "popovers",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aheze/Popovers.git",
@@ -125,15 +116,6 @@
       "state" : {
         "revision" : "15679c6fe1f3ae32ec1bad63bcc45aa422954f01",
         "version" : "1.0.0"
-      }
-    },
-    {
-      "identity" : "secp256k1.swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/GigaBitcoin/secp256k1.swift.git",
-      "state" : {
-        "revision" : "6c50e65ec9959d9ab0039df9ffc31707ad19c01b",
-        "version" : "0.18.1"
       }
     },
     {
