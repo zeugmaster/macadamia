@@ -137,7 +137,7 @@ struct ReceiveView: View {
 
     @MainActor
     private func parseTokenString(input: String) {
-        var string = input.lowercased()
+        var string = input
         
         guard !string.isEmpty else {
             logger.error("pasted string was empty.")
@@ -151,6 +151,10 @@ struct ReceiveView: View {
         
         if string.hasPrefix("cashu:") {
             string.removeFirst("cashu:".count)
+        }
+        
+        if string.hasPrefix("CASHU:") {
+            string.removeFirst("CASHU:".count)
         }
         
         guard !string.hasPrefix("creq") else {
