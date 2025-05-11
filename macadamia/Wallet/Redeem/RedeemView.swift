@@ -1,0 +1,295 @@
+import SwiftUI
+import SwiftData
+import CashuSwift
+
+struct RedeemView: View {
+    
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    
+    @Query(filter: #Predicate<Wallet> { wallet in
+        wallet.active == true
+    }) private var wallets: [Wallet]
+
+    var activeWallet: Wallet? {
+        wallets.first
+    }
+    
+    let tokenString: String
+    let token: CashuSwift.Token
+    
+    @State private var buttonState: ActionButtonState = .idle("")
+    
+    private enum Selection { case add, swap }
+    @State private var selection: Selection?
+    @State private var swapTargetMint: Mint?
+    
+    @State private var showAlert: Bool = false
+    @State private var currentAlert: AlertDetail?
+    
+    var body: some View {
+        List {
+            Section {
+                TokenText(text: tokenString)
+                    .frame(idealHeight: 70)
+                HStack {
+                    Text("Total Amount: ")
+                    Spacer()
+                    Text(amountDisplayString(token.sum(), unit: Unit(token.unit) ?? .sat))
+                }
+                .foregroundStyle(.secondary)
+                if let tokenMemo = token.memo, !tokenMemo.isEmpty {
+                    Text("Memo: \(tokenMemo)")
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("cashu Token")
+            }
+            if let knownMintFromToken {
+                Section {
+                    Text(knownMintFromToken.displayName)
+                        .onAppear {
+                            buttonState = .idle("Redeem", action: { redeem() })
+                        }
+                        .foregroundStyle(.secondary)
+                } header: {
+                    Text("Mint")
+                }
+            } else {
+                Section {
+                    selector
+                        .onAppear {
+                            buttonState = .idle("Select")
+                        }
+                } header: {
+                    Text("Mint")
+                } footer: {
+                    Text("""
+                         You do not have this mint in your list of trusted mints. \
+                         If you trust it, you can add it and redeem the token. \
+                         If you are not sure, swap the token's value to one \
+                         of your known mints via a lightning swap (will cost fees).
+                         """)
+                }
+            }
+        }
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+        ActionButton(state: $buttonState)
+            .actionDisabled(knownMintFromToken == nil && selection == nil)
+    }
+    
+    private var selector: some View {
+        Group {
+            HStack {
+                Image(systemName: selection == .add ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(selection == .add ? .accentColor : .secondary)
+                Text("Add Mint ")
+                Spacer()
+                if let mintURLString = token.proofsByMint.first?.key {
+                    Text(mintURLString.strippingHTTPPrefix())
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                selection = .add
+                
+                if let mintURLString = token.proofsByMint.first?.key {
+                    buttonState = .idle("Add & Redeem", action: {
+                        addAndRedeem(mintURLstring: mintURLString)
+                    })
+                }
+            }
+
+            HStack {
+                Image(systemName: selection == .swap ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(selection == .swap ? .accentColor : .secondary)
+                Text("Swap to")
+                Spacer()
+                MintPicker(label: "", selectedMint: $swapTargetMint, allowsNoneState: false)
+                .pickerStyle(MenuPickerStyle())
+                .labelsHidden()
+                .tint(.secondary)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                selection = .swap
+                
+                if let swapTargetMint {
+                    buttonState = .idle("Swap", action: { swap(to: swapTargetMint) })
+                }
+            }
+        }
+        .listStyle(InsetGroupedListStyle())
+        .disabled(buttonState.type == .loading)
+    }
+    
+    // MARK: - ADD
+    
+    private func addAndRedeem(mintURLstring: String) {
+        guard let activeWallet, let url = URL(string: mintURLstring) else {
+            return
+        }
+        
+        buttonState = .loading()
+        
+        Task {
+            do {
+                let sendableMint = try await CashuSwift.loadMint(url: url)
+                
+                try await MainActor.run {
+                    _ = try AppSchemaV1.addMint(sendableMint, to: modelContext)
+                    try modelContext.save()
+                    logger.info("adding mint \(sendableMint.url.absoluteString) while trying to redeem a token")
+                    redeem()
+                }
+                
+            } catch {
+                buttonState = .fail()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    buttonState = .idle("Add and Redeem", action: redeem)
+                }
+                logger.error("could not add mint \(mintURLstring) due to error \(error)")
+                displayAlert(alert: AlertDetail(with: error))
+            }
+        }
+    }
+    
+    // MARK: - REDEEM
+    
+    private func redeem() {
+        
+        guard let activeWallet else {
+            logger.error("""
+                         "could not redeem, one or more of the following variables are nil:
+                         activeWallet: \(activeWallet.debugDescription)
+                         """)
+            return
+        }
+        
+        // make sure the token is not P2PK locked
+        guard let proofsInToken = token.proofsByMint.values.first,
+              !proofsInToken.contains(where: { p in
+                  p.secret.contains("P2PK")
+              }) else {
+            displayAlert(alert: AlertDetail(with: macadamiaError.lockedToken))
+            return
+        }
+        
+        // make sure token is only sat for now
+        if token.unit != "sat" {
+            displayAlert(alert: AlertDetail(with: macadamiaError.unsupportedUnit))
+            return
+        }
+        
+        // make sure the mint is known AND NOT HIDDEN
+        guard let mint = activeWallet.mints.first(where: {
+                $0.url.absoluteString == token.proofsByMint.keys.first &&
+                $0.hidden == false}) else {
+            logger.error("unable to determinw mint to redeem from.")
+//            displayAlert(alert: AlertDetail(title: "Unknown Mint 🥷",
+//                                            description: "You are trying to redeem from a mint that is not known to the wallet.",
+//                                            primaryButton: AlertButton(title: "Trust & Add", role: nil, action: {
+//                addMint()
+//            }), secondaryButton: AlertButton(title: "Cancel", role: .cancel, action: {})))
+            return
+        }
+        
+        mint.redeem(token: token) { result in
+            switch result {
+            case .success(let (proofs, event)):
+                AppSchemaV1.insert(proofs + [event], into: modelContext)
+                
+                buttonState = .success()
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    dismiss()
+                }
+                
+            case .failure(let error):
+                buttonState = .fail()
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    buttonState = .idle("Receive", action: redeem)
+                }
+                
+                logger.error("could not receive token due to error \(error)")
+                displayAlert(alert: AlertDetail(with: error))
+            }
+        }
+    }
+    
+    // MARK: - SWAP
+    
+    private func swap(to mint: Mint) {
+        let swapManager = SwapManager(modelContext: modelContext) { state in
+            switch state {
+            case .ready:
+                break
+            case .loading:
+                buttonState = .loading("Preparing...")
+            case .melting:
+                buttonState = .loading("Melting...")
+            case .minting:
+                buttonState = .loading("Minting...")
+            case .success:
+                buttonState = .success()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    dismiss()
+                }
+            case .fail(let error):
+                buttonState = .fail()
+                logger.error("could not swap token to mint due to error \(error)")
+                if let error {
+                    displayAlert(alert: AlertDetail(with: error))
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    buttonState = .idle("Swap", action: { swap(to: mint) })
+                }
+            }
+        }
+        
+        if let seed = activeWallet?.seed {
+            swapManager.swap(token: token, toMint: mint, seed: seed)
+        } else {
+            displayAlert(alert: AlertDetail(title: "This wallet does not appear to have a seed."))
+        }
+    }
+    
+    // MARK: - MISC
+    
+    private var knownMintFromToken: Mint? {
+        let mintURLString = token.proofsByMint.first?.key
+        if let activeWallet {
+            return activeWallet.mints.first(where: { $0.url.absoluteString == mintURLString &&
+                                                     $0.hidden == false })
+        } else {
+            return nil
+        }
+    }
+    
+    private func displayAlert(alert: AlertDetail) {
+        currentAlert = alert
+        showAlert = true
+    }
+}
+
+extension String {
+    func strippingHTTPPrefix() -> String {
+        let lower = self.lowercased()
+        if lower.hasPrefix("https://") {
+            return String(self.dropFirst(8))
+        } else if lower.hasPrefix("http://") {
+            return String(self.dropFirst(7))
+        }
+        return self
+    }
+}
+
+extension Optional where Wrapped == String {
+    func strippingHTTPPrefix() -> String? {
+        guard let url = self else { return nil }
+        return url.strippingHTTPPrefix()
+    }
+}
+

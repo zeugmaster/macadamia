@@ -36,7 +36,10 @@ struct MintManagerView: View {
                         Section {
                             List {
                                 ForEach(sortedMintsOfActiveWallet) { mint in
-                                    NavigationLink(destination: MintInfoView(mint: mint)) {
+                                    NavigationLink(destination: MintInfoView(mint: mint, onRemove: {
+                                        sortedMintsOfActiveWallet.setHidden(true, for: mint)
+                                        try? modelContext.save()
+                                    })) {
                                         // Pass proofs related to the mint to MintInfoRowView
                                         MintInfoRowView(mint: mint,
                                                         amountDisplayString: balanceStrings[mint.mintID] ?? nil)
@@ -150,28 +153,8 @@ struct MintManagerView: View {
                                                          """))
             return
         }
-        
-        if let knownMint = activeWallet.mints.first(where: { $0.url.absoluteString == trimmedURLString && $0.hidden == true}) {
-            // unhide and re-index
-            logger.info("user added mint that is already known. \(knownMint.url.absoluteString)")
-            knownMint.userIndex = activeWallet.mints.filter({ $0.hidden == false }).count
-            knownMint.hidden = false
-            newMintURLString = ""
-            
-            try? modelContext.save()
-            
-            DispatchQueue.main.async {
-                withAnimation {
-                    reIndex() // This calls your existing reIndex method
-                    calculateBalanceStrings()
-                }
-            }
-
-            
-            return
-        }
-        
-        guard !activeWallet.mints.contains(where: { $0.url == url }) else {
+                
+        guard !activeWallet.mints.contains(where: { $0.url == url && $0.hidden == false }) else {
             logger.warning("user tried to add a mint with a url that is already in the list of mints.")
             displayAlert(alert: AlertDetail(title: "Duplicate Mint",
                                             description: """
@@ -185,12 +168,7 @@ struct MintManagerView: View {
             do {
                 let sendableMint = try await CashuSwift.loadMint(url: url)
                 try await MainActor.run {
-                    let mint = Mint(url: sendableMint.url, keysets: sendableMint.keysets)
-                    mint.wallet = activeWallet
-                    mint.userIndex = activeWallet.mints.count - 1
-                    modelContext.insert(mint)
-                    try modelContext.save()
-                    logger.info("added new mint with URL \(mint.url.absoluteString)")
+                    _ = try AppSchemaV1.addMint(sendableMint, to: modelContext)
                     newMintURLString = ""
                 }
             } catch {
@@ -245,8 +223,8 @@ struct MintInfoRowView: View {
                 Text(amountDisplayString ?? "No Balance")
                     .foregroundStyle(.gray)
             }
-//            Spacer()
-//            Text(String(mint.userIndex ?? 404))
+            Spacer()
+            Text(String(mint.userIndex ?? 404))
         }
     }
 }

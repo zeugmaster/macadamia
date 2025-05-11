@@ -3,9 +3,11 @@ import CashuSwift
 
 extension AppSchemaV1.Mint {
     
-    func select(allProofs:[Proof], amount:Int, unit:Unit) -> (selected:[Proof], fee:Int)? {
+    func select(allProofs:[Proof]? = nil, amount:Int, unit:Unit) -> (selected:[Proof], fee:Int)? {
         
-        let validProofsOfUnit = allProofs.filter({ $0.unit == unit && $0.state == .valid && $0.mint == self})
+        let proofs = allProofs ?? (self.proofs ?? [])
+        
+        let validProofsOfUnit = proofs.filter({ $0.unit == unit && $0.state == .valid && $0.mint == self})
         
         guard !validProofsOfUnit.isEmpty else {
             return nil

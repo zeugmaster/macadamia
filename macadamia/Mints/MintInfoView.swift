@@ -7,8 +7,9 @@ import CryptoKit
 struct MintInfoView: View {
     
     @Bindable var mint: Mint
+    var onRemove: () -> Void
     
-    @State var info: CashuSwift.MintInfo?
+    @State private var info: CashuSwift.MintInfo?
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -115,21 +116,8 @@ struct MintInfoView: View {
 
     // Function to delete the mint
     private func removeMint() {
-        
-        // hide and re-index, then dismiss
-        mint.hidden = true
-        if mint.userIndex != nil {
-            mint.userIndex! += 10000
-        }
-        
-        do {
-            try modelContext.save()
-            dismiss()
-        } catch {
-            // Handle errors and show an alert
-            errorMessage = "Failed to delete mint: \(error.localizedDescription)"
-            showErrorAlert = true
-        }
+        onRemove()
+        dismiss()
     }
     
     private func dismissMOTD() {

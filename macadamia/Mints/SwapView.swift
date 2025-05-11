@@ -60,7 +60,8 @@ struct SwapView: View {
                 } footer: {
                     Text("""
                          The mint from which the ecash originates will charge fees for this operation. 
-                         IMPORTANT: If a swap fails during the Lightning payment you can manually retry from the transaction history.
+                         IMPORTANT: If a swap fails during the Lightning payment \
+                         you can manually retry from the transaction history.
                          """)
                 }
                 

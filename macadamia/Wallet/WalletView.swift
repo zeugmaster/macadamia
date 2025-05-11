@@ -80,7 +80,6 @@ struct WalletView: View {
                 MinimalEventList()
                 Spacer().frame(maxHeight: 30)
                 HStack {
-                    
                     // MARK: BUTTON "RECEIVE" -
                     Templates.Menu(
                         configuration: {
@@ -150,7 +149,7 @@ struct WalletView: View {
                 case .send:
                     SendView()
                 case .receive (let urlString):
-                    ReceiveView(tokenString: urlString)
+                    RedeemContainerView(tokenString: urlString)
                 case .melt:
                     MeltView()
                 }

@@ -218,9 +218,6 @@ enum AppSchemaV1: VersionedSchema {
         var proofs: [Proof]?
         var memo: String?
         
-//        @available(*, deprecated, message: "deprecated in V1 Schema. macadamia uses other event information to build tokens (mint(s), proofs, memo)")
-//        var tokens: [TokenInfo]?
-        
         @Relationship(deleteRule: .noAction, inverse: \Mint.events)
         var mints: [Mint]?
         
@@ -344,17 +341,103 @@ enum AppSchemaV1: VersionedSchema {
             logger.error("Saving SwiftData model context failed with error: \(error)")
         }
     }
+    
+    @MainActor
+    static func addMint(_ mint: MintRepresenting,
+                        to context: ModelContext,
+                        hidden: Bool = false,
+                        proofs: [ProofRepresenting]? = nil) throws -> Mint {
+        
+        guard let activeWallet = try context.fetch(FetchDescriptor<Wallet>()).first(where: { $0.active == true }) else {
+            throw macadamiaError.databaseError("Unable to fetch active wallet.")
+        }
+        
+        let mints = activeWallet.mints
+        
+        if let mint = mints.first(where: { $0.matches(mint) }) {
+            logger.info("mint \(mint.url) is already in the database")
+            if mint.hidden != hidden { mints.setHidden(hidden, for: mint) }
+            addProofs(proofs, to: mint)
+            return mint
+        } else {
+            let newMint = Mint(mint)
+            newMint.wallet = activeWallet
+            newMint.hidden = hidden
+            newMint.userIndex = hidden ? 10000 : mints.count + 1 // + 1 because mints does not contain the new mint yet FIXME: not ideal
+            context.insert(newMint)
+            addProofs(proofs, to: newMint)
+            try context.save()
+            logger.info("added new mint with URL \(mint.url.absoluteString)")
+            return newMint
+        }
+        
+        func addProofs(_ proofs: [ProofRepresenting]?, to mint: Mint) {
+            if let proofs,
+               let mintProofs = mint.proofs,
+               let keyset = mint.keysets.first(where: { $0.keysetID == proofs.first?.keysetID }) {
+                let inputFee = keyset.inputFeePPK
+                var internalProofs = [Proof]()
+                for p in proofs {
+                    if !mintProofs.contains(where: { $0.matches(p) }) { // inefficient duplicate check
+                        internalProofs.append(Proof(p, unit: Unit(keyset.unit) ?? .sat,
+                                                    inputFeePPK: inputFee,
+                                                    state: .valid,
+                                                    mint: mint,
+                                                    wallet: activeWallet))
+                    }
+                }
+                mint.proofs?.append(contentsOf: internalProofs)
+                internalProofs.forEach({ context.insert($0) })
+            }
+        }
+    }
 }
 
+extension Array where Element == Mint {
+    func setHidden(_ hidden: Bool, for mint: Mint) {
+        guard self.contains(mint) else {
+            // log...
+            return
+        }
+        
+        mint.hidden = hidden
+         
+        let visible = self.filter({ $0.hidden == false })
+                          .sorted(by: { $0.userIndex ?? 0 < $1.userIndex ?? 0})
+        
+        mint.userIndex = hidden ? 10000 : visible.count
+        for i in 0..<visible.count {
+            visible[i].userIndex = i
+        }
+    }
+}
 
-// this relic of drain view only remains for SwiftData model integrity
-@available(*, deprecated)
-struct TokenInfo: Identifiable, Hashable, Codable {
-    let token: String
-    let mint: String
-    let amount: Int
+// TODO: MOVE TO LIBRARY
+extension CashuSwift.Token {
+    func sum() -> Int {
+        var amount = 0
+        for prooflist in self.proofsByMint.values {
+            for p in prooflist {
+                amount += p.amount
+            }
+        }
+        return amount
+    }
+}
 
-    var id: String { token }
+extension CashuSwift.Keyset: @retroactive Equatable {
+    public static func == (lhs: CashuSwift.Keyset, rhs: CashuSwift.Keyset) -> Bool {
+        lhs.keys == rhs.keys
+    }
+}
+
+extension MintRepresenting {
+    ///Checks whether two mints are the same by making sure they have the same URL (for now) and share at least one keyset
+    ///For use instead of `==` which checks `PersistentIdentifiers` only
+    func matches(_ mint: MintRepresenting) -> Bool {
+        self.url == mint.url && // TODO: remove to allow for changing DNS
+        self.keysets.contains(where: mint.keysets.contains) // TODO: efficiency via Hashable conformance
+    }
 }
 
 extension Array where Element == Proof {
@@ -368,5 +451,11 @@ extension Array where Element == Proof {
 extension Array where Element == Proof {
     func setState(_ state: Proof.State) {
         self.forEach { $0.state = state }
+    }
+}
+
+extension ProofRepresenting {
+    func matches(_ proof: ProofRepresenting) -> Bool {
+        self.keysetID == proof.keysetID && self.C == proof.C
     }
 }

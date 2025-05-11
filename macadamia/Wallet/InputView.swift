@@ -26,7 +26,6 @@ struct InputView: View {
                 Image(systemName: "doc.on.clipboard")
             }
         }
-        .padding(.top, 10)
         .onAppear {
             checkCameraPermission()
         }
