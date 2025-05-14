@@ -93,7 +93,7 @@ struct RestoreView: View {
     }
     
     private func restore() {
-        guard let mints = activeWallet?.mints else {
+        guard let mints = activeWallet?.mints.filter({ $0.hidden == false }) else {
             return
         }
         
@@ -107,8 +107,6 @@ struct RestoreView: View {
         }
         
         buttonState = .loading()
-                
-        // TODO: insert wallet, new mints, proofs.
         
         macadamiaApp.restore(from: mints,
                              with: words) { result in

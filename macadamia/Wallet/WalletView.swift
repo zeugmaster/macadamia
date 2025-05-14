@@ -10,10 +10,10 @@ struct WalletView: View {
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
     }) private var wallets: [Wallet]
-    
-    @Query private var proofs: [Proof]
-    
-    @State var balance: Int?
+//    
+//    @Query private var proofs: [Proof]
+//    
+//    @State var balance: Int?
 
     @State var showAlert: Bool = false
     @State var currentAlert: AlertDetail?
@@ -56,12 +56,12 @@ struct WalletView: View {
         NavigationStack {
             VStack {
                 Spacer().frame(maxHeight: 40)
-                BalanceCard(balance: balance ?? 0,
+                BalanceCard(balance: activeWallet?.balance() ?? 0,
                             unit: .sat)
                 .onAppear(perform: {
-                    balance = proofs.filter { $0.state == .valid &&
-                                              $0.wallet == activeWallet &&
-                                              $0.mint?.hidden ?? true == false}.sum
+//                    balance = proofs.filter { $0.state == .valid &&
+//                                              $0.wallet == activeWallet &&
+//                                              $0.mint?.hidden ?? true == false}.sum
                     
                     // quick sanity check for uniqueness of C across list of proofs
                     guard let activeWallet else {

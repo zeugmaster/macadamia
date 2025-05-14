@@ -75,6 +75,14 @@ enum AppSchemaV1: VersionedSchema {
             self.proofs = []
             self.events = []
         }
+        
+        func balance(of unit: Unit = .sat, state: Proof.State = .valid) -> Int {
+            var sum = 0
+            for mint in self.mints.filter({ $0.hidden == false }) {
+                sum += mint.proofs?.filter({ $0.unit == unit && $0.state == state }).sum ?? 0
+            }
+            return sum
+        }
     }
 
     @Model

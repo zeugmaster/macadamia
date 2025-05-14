@@ -3,9 +3,7 @@ import SwiftData
 import SwiftUI
 
 struct MnemonicView: View {
-    @State var mnemonic = [String]()
-    @State var mintList = [String]()
-
+    
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
@@ -14,13 +12,9 @@ struct MnemonicView: View {
     var activeWallet: Wallet? {
         wallets.first
     }
-
-    func loadData() {
-        guard let activeWallet else {
-            return
-        }
-        mnemonic = activeWallet.mnemonic.components(separatedBy: " ")
-        mintList = activeWallet.mints.map { $0.url.absoluteString }
+    
+    var mnemonic: [String] {
+        activeWallet?.mnemonic.components(separatedBy: " ") ?? []
     }
 
     func copyMnemonic() {
@@ -62,11 +56,15 @@ struct MnemonicView: View {
                 }
             }
             Section {
-                ForEach(mintList, id: \.self) { mintURL in
-                    Text(mintURL)
+                if let mints = activeWallet?.mints {
+                    ForEach(mints.filter({ $0.hidden == false })) { mint in
+                        HStack {
+                            Text(mint.displayName)
+                        }
+                    }
+                    .disabled(true)
+                    .foregroundStyle(.secondary)
                 }
-                .disabled(true)
-                .foregroundStyle(.secondary)
             } footer: {
                 Text("""
                     macadamia can only restore ecash from the mints it knows about. \
@@ -74,7 +72,6 @@ struct MnemonicView: View {
                     """)
             }
         }
-        .onAppear(perform: loadData)
     }
 
     func copyToClipboard() {

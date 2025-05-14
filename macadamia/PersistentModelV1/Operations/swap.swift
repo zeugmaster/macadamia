@@ -186,12 +186,7 @@ struct SwapManager {
                                    meltAttemptEvent: Event,
                                    meltEvent: Event,
                                    change: [Proof]) {
-        // hide meltAttemptEvent
-        // save melt event
-        // update UI
-        // start minting
-        // save new proofs
-        // save mint event
+
         meltAttemptEvent.visible = false
         AppSchemaV1.insert([meltEvent] + change, into: modelContext)
         
@@ -202,6 +197,15 @@ struct SwapManager {
             logger.error("toMint was nil, could not complete minting")
             return
         }
+        
+        issueCycle(toMint: toMint, mintQuote: mintQuote, mintAttemptEvent: mintAttemptEvent, currentCycle: 0)
+    }
+    
+    // TODO: make reusable actor
+    private func issueCycle(toMint: Mint,
+                            mintQuote: CashuSwift.Bolt11.MintQuote,
+                            mintAttemptEvent: Event,
+                            currentCycle: Int, maxCycle: Int = 5, interval: Int = 2) {
         
         toMint.issue(for: mintQuote) { result in
             switch result {
@@ -219,9 +223,6 @@ struct SwapManager {
     private func mintingDidSucceed(mintAttemptEvent: Event,
                                    mintEvent: Event,
                                    proofs: [Proof]) {
-        // hide mintAttemptEvent
-        // save mint event and new proofs
-        // update UI
         
         mintAttemptEvent.visible = false
         AppSchemaV1.insert(proofs + [mintEvent], into: modelContext)
