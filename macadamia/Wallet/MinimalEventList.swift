@@ -62,43 +62,57 @@ struct TransactionListRow: View {
 
     var body: some View {
         NavigationLink(destination: EventDetailView(event: event)) {
-            HStack {
-                Group {
-                    switch event.kind {
-                    case .pendingMelt, .pendingMint:
-                        Image(systemName: "hourglass")
-                    case .mint, .receive:
-                        Image(systemName: "arrow.down.left")
-                    case .melt, .send:
-                        Image(systemName: "arrow.up.right")
-                    case .restore:
-                        Image(systemName: "clock.arrow.circlepath")
-                    case .drain:
-                        Image(systemName: "arrow.uturn.right")
-                    }
-                }
-                .opacity(0.8)
-                .font(.caption)
-                .frame(width: 20, alignment: .leading)
-                Group {
-                    if let memo = event.memo, !memo.isEmpty {
-                        Text("\"" + memo + "\"")
-                    } else {
-                        Text(event.shortDescription)
-                    }
-                    Spacer()
-                    if let amount = event.amount {
+            VStack(alignment: .leading) {
+                HStack {
+                    Group {
                         switch event.kind {
-                        case .send, .drain, .melt, .pendingMelt:
-                            Text(amountDisplayString(amount, unit: event.unit, negative: true))
-                                .foregroundStyle(.secondary)
-                        case .receive, .mint, .restore, .pendingMint:
-                            Text(amountDisplayString(amount, unit: event.unit, negative: false))
-                                .foregroundStyle(.secondary)
+                        case .pendingMelt, .pendingMint:
+                            Image(systemName: "hourglass")
+                        case .mint, .receive:
+                            Image(systemName: "arrow.down.left")
+                        case .melt, .send:
+                            Image(systemName: "arrow.up.right")
+                        case .restore:
+                            Image(systemName: "clock.arrow.circlepath")
+                        case .drain:
+                            Image(systemName: "arrow.uturn.right")
                         }
                     }
+                    .opacity(0.8)
+                    .font(.caption)
+                    .frame(width: 20, alignment: .leading)
+                    Group {
+                        Text(event.shortDescription)
+                        if let memo = event.memo, !memo.isEmpty {
+                            Text(memo)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        if let amount = event.amount {
+                            switch event.kind {
+                            case .send, .drain, .melt, .pendingMelt:
+                                Text(amountDisplayString(amount, unit: event.unit, negative: true))
+                                    .foregroundStyle(.secondary)
+                            case .receive, .mint, .restore, .pendingMint:
+                                Text(amountDisplayString(amount, unit: event.unit, negative: false))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .font(.body)
                 }
-                .font(.body)
+                
+                if let mints = event.mints, !mints.isEmpty {
+                    HStack() {
+                        Spacer().frame(width: 26)
+                        ForEach(mints) { mint in
+                            Text(mint.displayName)
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                }
             }
         }
         .listRowBackground(Color.clear)
