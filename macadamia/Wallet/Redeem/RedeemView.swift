@@ -105,6 +105,11 @@ struct RedeemView: View {
                 Image(systemName: selection == .swap ? "checkmark.circle.fill" : "circle")
                     .foregroundColor(selection == .swap ? .accentColor : .secondary)
                 Text("Swap to")
+                Text("BETA")
+                    .font(.caption)
+                    .padding(2)
+                    .foregroundStyle(.black)
+                    .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(.white.opacity(0.7)))
                 Spacer()
                 MintPicker(label: "", selectedMint: $swapTargetMint, allowsNoneState: false)
                 .pickerStyle(MenuPickerStyle())
@@ -127,7 +132,7 @@ struct RedeemView: View {
     // MARK: - ADD
     
     private func addAndRedeem(mintURLstring: String) {
-        guard let activeWallet, let url = URL(string: mintURLstring) else {
+        guard let _ = activeWallet, let url = URL(string: mintURLstring) else {
             return
         }
         

@@ -223,7 +223,9 @@ enum AppSchemaV1: VersionedSchema {
         var amount: Int?
         var expiration: Date?
         var longDescription: String?
+        
         var proofs: [Proof]?
+        
         var memo: String?
         
         @Relationship(deleteRule: .noAction, inverse: \Mint.events)
@@ -319,7 +321,6 @@ enum AppSchemaV1: VersionedSchema {
             self.blindingFactors = tuple.blindingFactors
             self.secrets = tuple.secrets
         }
-
     }
     
     enum Unit: String, Codable, CaseIterable {

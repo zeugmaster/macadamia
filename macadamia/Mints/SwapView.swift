@@ -332,6 +332,7 @@ struct SwapView: View {
             case .failure(let error):
                 logger.warning("minting for mint swap failed due to error: \(error)")
                 displayAlert(alert: AlertDetail(with: error))
+                state = .fail
             }
         }
     }

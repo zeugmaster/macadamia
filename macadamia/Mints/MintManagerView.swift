@@ -72,6 +72,11 @@ struct MintManagerView: View {
                                 Image(systemName: "arrow.down.left.arrow.up.right")
                                     .imageScale(.small)
                                 Text("Mint Swap")
+                                Text("BETA")
+                                    .font(.caption)
+                                    .padding(2)
+                                    .foregroundStyle(.black)
+                                    .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(.white.opacity(0.7)))
                             }
                         }
                     } footer: {
@@ -223,8 +228,8 @@ struct MintInfoRowView: View {
                 Text(amountDisplayString ?? "No Balance")
                     .foregroundStyle(.gray)
             }
-            Spacer()
-            Text(String(mint.userIndex ?? 404))
+//            Spacer()
+//            Text(String(mint.userIndex ?? 404))
         }
     }
 }
