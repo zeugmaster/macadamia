@@ -10,6 +10,7 @@ This version of **macadamia Wallet** features numerous minor bug fixes and impro
 
 The current build also includes a version of the `CashuSwift` library that performs DLEQ verification to prevent fingerprinting from a malicious mint. 🔎
 
+
 🥜🥜
 
 As always, thanks for using **macadamia**!

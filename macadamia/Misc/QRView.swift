@@ -10,8 +10,6 @@ struct QRView: View {
     
     init(string: String?) {
         self.string = string
-        
-        print("called the QRView initializer")
     }
     
     var body: some View {
