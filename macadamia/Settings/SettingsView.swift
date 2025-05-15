@@ -4,6 +4,7 @@ import UIKit
 struct SettingsView: View {
     let sourceRepoURL = URL(string: "https://github.com/zeugmaster/macadamia")!
     let mailURL = URL(string: "mailto:contact@macadamia.cash")!
+    let faqURL = URL(string: "https://macadamia.cash/faq")!
     
     @State private var hiddenMenuShowing: Bool = false
     @State private var showReleaseNotes: Bool = false
@@ -38,7 +39,6 @@ struct SettingsView: View {
                 }
                 Section {
                     NavigationLink("About this Release", destination: ReleaseNoteView())
-                    
                     Button {
                         if UIApplication.shared.canOpenURL(sourceRepoURL) {
                             UIApplication.shared.open(sourceRepoURL)
@@ -48,6 +48,18 @@ struct SettingsView: View {
                             Text("View source on Github")
                             Spacer()
                             Image(systemName: "rectangle.portrait.and.arrow.right")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Button {
+                        if UIApplication.shared.canOpenURL(faqURL) {
+                            UIApplication.shared.open(faqURL)
+                        }
+                    } label: {
+                        HStack {
+                            Text("Open FAQ")
+                            Spacer()
+                            Image(systemName: "globe")
                                 .foregroundStyle(.secondary)
                         }
                     }
