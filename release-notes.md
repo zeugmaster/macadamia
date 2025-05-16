@@ -9,7 +9,8 @@ This version of **macadamia Wallet** features numerous minor bug fixes and impro
 - Mint view now polls the mint to check whether the invoice was paid
 
 The current build also includes a version of the `CashuSwift` library that performs DLEQ verification to prevent fingerprinting from a malicious mint. 🔎
-
+____
+**Build 4** now lets you swap a token to one of your trusted mints instead of adding it. ↔
 
 🥜🥜
 

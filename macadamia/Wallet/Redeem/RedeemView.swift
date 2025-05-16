@@ -56,21 +56,11 @@ struct RedeemView: View {
                     Text("Mint")
                 }
             } else {
-                Section {
-                    selector
-                        .onAppear {
-                            buttonState = .idle("Select")
-                        }
-                } header: {
-                    Text("Mint")
-                } footer: {
-                    Text("""
-                         You do not have this mint in your list of trusted mints. \
-                         If you trust it, you can add it and redeem the token. \
-                         If you are not sure, swap the token's value to one \
-                         of your known mints via a lightning swap (will cost fees).
-                         """)
-                }
+                selector
+                    .onAppear {
+                        buttonState = .idle("Select")
+                    }
+                
             }
         }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
@@ -80,49 +70,59 @@ struct RedeemView: View {
     
     private var selector: some View {
         Group {
-            HStack {
-                Image(systemName: selection == .add ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(selection == .add ? .accentColor : .secondary)
-                Text("Add Mint ")
-                Spacer()
-                if let mintURLString = token.proofsByMint.first?.key {
-                    Text(mintURLString.strippingHTTPPrefix())
-                        .foregroundStyle(.secondary)
+            Section {
+                HStack {
+                    Image(systemName: selection == .add ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(selection == .add ? .accentColor : .secondary)
+                    Text("Add Mint ")
+                    Spacer()
+                    if let mintURLString = token.proofsByMint.first?.key {
+                        Text(mintURLString.strippingHTTPPrefix())
+                            .foregroundStyle(.secondary)
+                    }
                 }
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                selection = .add
-                
-                if let mintURLString = token.proofsByMint.first?.key {
-                    buttonState = .idle("Add & Redeem", action: {
-                        addAndRedeem(mintURLstring: mintURLString)
-                    })
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    selection = .add
+                    
+                    if let mintURLString = token.proofsByMint.first?.key {
+                        buttonState = .idle("Add & Redeem", action: {
+                            addAndRedeem(mintURLstring: mintURLString)
+                        })
+                    }
                 }
+            } header: {
+                Text("Unknown Mint")
+            } footer: {
+                Text("If you trust this mint selecting this option will add it to the list of known mints and redeem the token.")
             }
 
-            HStack {
-                Image(systemName: selection == .swap ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(selection == .swap ? .accentColor : .secondary)
-                Text("Swap to")
-                Text("BETA")
-                    .font(.caption)
-                    .padding(2)
-                    .foregroundStyle(.black)
-                    .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(.white.opacity(0.7)))
-                Spacer()
-                MintPicker(label: "", selectedMint: $swapTargetMint, allowsNoneState: false)
-                .pickerStyle(MenuPickerStyle())
-                .labelsHidden()
-                .tint(.secondary)
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                selection = .swap
-                
-                if let swapTargetMint {
-                    buttonState = .idle("Swap", action: { swap(to: swapTargetMint) })
+            Section {
+                HStack {
+                    Image(systemName: selection == .swap ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(selection == .swap ? .accentColor : .secondary)
+                    Text("Swap to")
+                    Text("BETA")
+                        .font(.caption)
+                        .padding(2)
+                        .foregroundStyle(.black)
+                        .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(.white.opacity(0.7)))
+                    Spacer()
+                    MintPicker(label: "", selectedMint: $swapTargetMint, allowsNoneState: false)
+                    .pickerStyle(MenuPickerStyle())
+                    .labelsHidden()
+                    .tint(.secondary)
                 }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    selection = .swap
+                    
+                    if let swapTargetMint {
+                        buttonState = .idle("Swap", action: { swap(to: swapTargetMint) })
+                    }
+                }
+            } footer: {
+                Text("If you do not trust the mint of this token, you can swap its value to one of your trusted mints via Lightning (will incur fees).")
             }
         }
         .listStyle(InsetGroupedListStyle())
@@ -192,11 +192,6 @@ struct RedeemView: View {
                 $0.url.absoluteString == token.proofsByMint.keys.first &&
                 $0.hidden == false}) else {
             logger.error("unable to determinw mint to redeem from.")
-//            displayAlert(alert: AlertDetail(title: "Unknown Mint 🥷",
-//                                            description: "You are trying to redeem from a mint that is not known to the wallet.",
-//                                            primaryButton: AlertButton(title: "Trust & Add", role: nil, action: {
-//                addMint()
-//            }), secondaryButton: AlertButton(title: "Cancel", role: .cancel, action: {})))
             return
         }
         

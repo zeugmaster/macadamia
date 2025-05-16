@@ -104,7 +104,7 @@ struct TransactionListRow: View {
                 
                 if let mints = event.mints, !mints.isEmpty {
                     HStack() {
-                        Spacer().frame(width: 26)
+                        Spacer().frame(width: 28)
                         ForEach(mints) { mint in
                             Text(mint.displayName)
                         }
