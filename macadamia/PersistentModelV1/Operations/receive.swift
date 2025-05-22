@@ -147,5 +147,4 @@ extension AppSchemaV1.Mint {
             }
         }
     }
-    
 }

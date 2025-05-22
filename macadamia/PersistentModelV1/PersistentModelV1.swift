@@ -55,6 +55,8 @@ enum AppSchemaV1: VersionedSchema {
         var seed: String
         var active: Bool
         var name: String?
+        
+        var privateKeyData: Data?
 
         @Relationship(inverse: \Mint.wallet)
         var mints: [Mint]
