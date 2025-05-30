@@ -24,6 +24,8 @@ struct RedeemView: View {
     @State private var selection: Selection?
     @State private var swapTargetMint: Mint?
     
+    @State private var didAddLockedToken = false
+    
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
     
@@ -45,22 +47,51 @@ struct RedeemView: View {
             } header: {
                 Text("cashu Token")
             }
-            if let knownMintFromToken {
-                Section {
-                    Text(knownMintFromToken.displayName)
-                        .onAppear {
-                            buttonState = .idle("Redeem", action: { redeem() })
+            
+            if let tokenLockState {
+                if let knownMintFromToken {
+                    Section {
+                        Text(knownMintFromToken.displayName)
+                            .onAppear {
+                                buttonState = .idle("Redeem", action: { redeem() })
+                            }
+                            .foregroundStyle(.secondary)
+                    } header: {
+                        Text("Mint")
+                    }
+                    switch tokenLockState {
+                    case .match, .mismatch, .noKey, .partial:
+                        LockedTokenBanner(dleqState: dleqResult, lockState: tokenLockState) {
+                            Button {
+                                redeemLater()
+                            } label: {
+                                Spacer()
+                                Text(didAddLockedToken ? "\(Image(systemName: "checkmark")) Added" : "\(Image(systemName: "hourglass")) Redeem Later")
+                                    .padding(2)
+                                Spacer()
+                            }
                         }
-                        .foregroundStyle(.secondary)
-                } header: {
-                    Text("Mint")
+                        .listRowBackground(EmptyView())
+                    case .notLocked:
+                        EmptyView()
+                    }
+                } else {
+                    switch tokenLockState {
+                    case .match, .mismatch, .noKey, .partial:
+                        selector(hideSwapOption: true)
+                        LockedTokenBanner(dleqState: dleqResult, lockState: tokenLockState) {
+                            EmptyView()
+                        }
+                        .listRowBackground(EmptyView())
+                    case .notLocked:
+                        selector()
+                            .onAppear {
+                                buttonState = .idle("Select")
+                            }
+                    }
                 }
             } else {
-                selector
-                    .onAppear {
-                        buttonState = .idle("Select")
-                    }
-                
+                Text("Error while determining token lock state.")
             }
         }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
@@ -68,7 +99,7 @@ struct RedeemView: View {
             .actionDisabled(knownMintFromToken == nil && selection == nil)
     }
     
-    private var selector: some View {
+    private func selector(hideSwapOption: Bool = false) -> some View {
         Group {
             Section {
                 HStack {
@@ -91,38 +122,51 @@ struct RedeemView: View {
                         })
                     }
                 }
+                .onAppear {
+                    if hideSwapOption {
+                        selection = .add
+                        
+                        if let mintURLString = token.proofsByMint.first?.key {
+                            buttonState = .idle("Add & Redeem", action: {
+                                addAndRedeem(mintURLstring: mintURLString)
+                            })
+                        }
+                    }
+                }
             } header: {
                 Text("Unknown Mint")
             } footer: {
                 Text("If you trust this mint selecting this option will add it to the list of known mints and redeem the token.")
             }
 
-            Section {
-                HStack {
-                    Image(systemName: selection == .swap ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(selection == .swap ? .accentColor : .secondary)
-                    Text("Swap to")
-                    Text("BETA")
-                        .font(.caption)
-                        .padding(2)
-                        .foregroundStyle(.black)
-                        .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(.white.opacity(0.7)))
-                    Spacer()
-                    MintPicker(label: "", selectedMint: $swapTargetMint, allowsNoneState: false)
-                    .pickerStyle(MenuPickerStyle())
-                    .labelsHidden()
-                    .tint(.secondary)
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    selection = .swap
-                    
-                    if let swapTargetMint {
-                        buttonState = .idle("Swap", action: { swap(to: swapTargetMint) })
+            if !hideSwapOption {
+                Section {
+                    HStack {
+                        Image(systemName: selection == .swap ? "checkmark.circle.fill" : "circle")
+                            .foregroundColor(selection == .swap ? .accentColor : .secondary)
+                        Text("Swap to")
+                        Text("BETA")
+                            .font(.caption)
+                            .padding(2)
+                            .foregroundStyle(.black)
+                            .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(.white.opacity(0.7)))
+                        Spacer()
+                        MintPicker(label: "", selectedMint: $swapTargetMint, allowsNoneState: false)
+                        .pickerStyle(MenuPickerStyle())
+                        .labelsHidden()
+                        .tint(.secondary)
                     }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selection = .swap
+                        
+                        if let swapTargetMint {
+                            buttonState = .idle("Swap", action: { swap(to: swapTargetMint) })
+                        }
+                    }
+                } footer: {
+                    Text("If you do not trust the mint of this token, you can swap its value to one of your trusted mints via Lightning (will incur fees).")
                 }
-            } footer: {
-                Text("If you do not trust the mint of this token, you can swap its value to one of your trusted mints via Lightning (will incur fees).")
             }
         }
         .listStyle(InsetGroupedListStyle())
@@ -256,6 +300,20 @@ struct RedeemView: View {
         }
     }
     
+    // MARK: - REDEEM LATER
+    
+    private func redeemLater() {
+        print("add locked token to queue \(tokenString)")
+        
+        withAnimation {
+            didAddLockedToken = true
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            dismiss()
+        }
+    }
+    
     // MARK: - MISC
     
     private var knownMintFromToken: Mint? {
@@ -266,6 +324,18 @@ struct RedeemView: View {
         } else {
             return nil
         }
+    }
+    
+    private var dleqResult: CashuSwift.Crypto.DLEQVerificationResult {
+        if let knownMintFromToken, let proofs = token.proofsByMint.first?.value {
+            return (try? CashuSwift.Crypto.checkDLEQ(for: proofs, with: knownMintFromToken)) ?? .noData
+        } else {
+            return .noData
+        }
+    }
+    
+    private var tokenLockState: CashuSwift.Token.LockVerificationResult? {
+        try? token.checkAllInputsLocked(to: activeWallet?.publicKeyString)
     }
     
     private func displayAlert(alert: AlertDetail) {

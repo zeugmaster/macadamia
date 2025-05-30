@@ -1,6 +1,7 @@
 import CashuSwift
 import Foundation
 import SwiftData
+import secp256k1
 
 typealias Wallet = AppSchemaV1.Wallet
 typealias Mint = AppSchemaV1.Mint
@@ -84,6 +85,14 @@ enum AppSchemaV1: VersionedSchema {
                 sum += mint.proofs?.filter({ $0.unit == unit && $0.state == state }).sum ?? 0
             }
             return sum
+        }
+        
+        var publicKeyString: String? {
+            guard let data = self.privateKeyData,
+                  let key = try? secp256k1.Signing.PrivateKey(dataRepresentation: data) else {
+                return nil
+            }
+            return String(bytes: key.publicKey.dataRepresentation)
         }
     }
 

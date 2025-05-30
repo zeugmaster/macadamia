@@ -53,11 +53,11 @@ struct LockedTokenBanner<Content: View>: View {
                         switch lockState {
                         case .match:
                             Image(systemName: "checkmark"); Text("Locked to your key")
-                        case .mismatch:
+                        case .mismatch, .noKey:
                             Image(systemName: "xmark"); Text("Locked to unknown key")
                         case .partial:
                             Image(systemName: "xmark"); Text("Partially locked (not yet supported)")
-                        case .notLocked, .noKey:
+                        case .notLocked:
                             Text("Error")
                         }
                     }
@@ -91,15 +91,16 @@ struct LockedTokenBanner<Content: View>: View {
                 }
             } label: {
                 Spacer()
-                if addedToQueue {
-                    Image(systemName: "checkmark")
-                    Text("Added")
-                        .padding(4)
-                } else {
-                    Image(systemName: "hourglass")
-                    Text("Redeem Later")
-                        .padding(4)
-                }
+//                if addedToQueue {
+//                    Image(systemName: "checkmark")
+//                    Text("Added")
+//                        .padding(4)
+//                } else {
+//                    Image(systemName: "hourglass")
+//                    Text("Redeem Later")
+//                        .padding(4)
+//                }
+                Text(addedToQueue ? "\(Image(systemName: "checkmark")) Added" : "\(Image(systemName: "hourglass")) Redeem Later").padding(2)
                 Spacer()
             }
         }
