@@ -292,4 +292,3 @@ extension Optional where Wrapped == String {
         return url.strippingHTTPPrefix()
     }
 }
-
