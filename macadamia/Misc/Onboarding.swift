@@ -15,8 +15,20 @@ struct Onboarding: View {
     @State private var seedPhraseWrittenDown = false
     @State private var tosAcknowledged = false
     
+    @State private var currentPage: Int = 0
+    
     var seedPhrase: [String]
     var onClose: () -> Void
+    
+    private var doneButtonDisabled: Bool {
+        if currentPage == 3 && tosAcknowledged {
+            return false
+        } else if tosAcknowledged && seedPhraseWrittenDown {
+            return false
+        } else {
+            return true
+        }
+    }
     
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -37,25 +49,31 @@ struct Onboarding: View {
             }
             
             Group {
-                TabView() {
-                    WelcomePage()
-                    DisclaimerPage()
-                    SeedPhrasePage(seedPhraseWrittenDown: $seedPhraseWrittenDown, phrase: seedPhrase)
-                    TOSPage(tosAcknoledged: $tosAcknowledged)
+                TabView(selection: $currentPage) {
+                    WelcomePage().tag(0)
+                    DisclaimerPage().tag(1)
+                    SeedPhrasePage(seedPhraseWrittenDown: $seedPhraseWrittenDown, phrase: seedPhrase).tag(2)
+                    TOSPage(tosAcknoledged: $tosAcknowledged).tag(3)
                 }
                 .tabViewStyle(.page)
                 .indexViewStyle(.page(backgroundDisplayMode: .always))
-                .padding(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
+                .padding(8)
         
                 HStack {
                     Spacer()
                     Button(action: {
-                        onClose()
+                        if !seedPhraseWrittenDown {
+                            withAnimation {
+                                currentPage = 2
+                            }
+                        } else {
+                            onClose()
+                        }
                     }) {
                         Text("Done")
                     }
                     .padding()
-                    .disabled(!seedPhraseWrittenDown || !tosAcknowledged)
+                    .disabled(doneButtonDisabled)
                     .buttonStyle(.bordered)
                 }
             }
@@ -238,20 +256,18 @@ struct CheckboxToggleStyle: ToggleStyle {
     }
 }
 
-#Preview {
-    TOSPage(tosAcknoledged: .constant(true))
-}
 
 #Preview {
     Onboarding(seedPhrase: dummySeed) {
         print("onClose closure executed")
     }
 }
-
-#Preview {
-    SeedPhrasePage(seedPhraseWrittenDown: .constant(true), phrase: dummySeed)
-}
-
-#Preview {
-    DisclaimerPage()
-}
+//#Preview {
+//    DisclaimerPage()
+//}
+//#Preview {
+//    SeedPhrasePage(seedPhraseWrittenDown: .constant(true), phrase: dummySeed)
+//}
+//#Preview {
+//    TOSPage(tosAcknoledged: .constant(true))
+//}
