@@ -239,6 +239,8 @@ enum AppSchemaV1: VersionedSchema {
         
         var memo: String?
         
+        var token: CashuSwift.Token?
+        
         @Relationship(deleteRule: .noAction, inverse: \Mint.events)
         var mints: [Mint]?
         
@@ -254,6 +256,7 @@ enum AppSchemaV1: VersionedSchema {
             case mint
             case send
             case receive
+            case pendingReceive
             case pendingMelt
             case melt
             case restore
@@ -269,11 +272,11 @@ enum AppSchemaV1: VersionedSchema {
              bolt11MintQuote: CashuSwift.Bolt11.MintQuote? = nil,
              bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? = nil,
              amount: Int? = nil,
+             token: CashuSwift.Token? = nil,
              expiration: Date? = nil,
              longDescription: String? = nil,
              proofs: [Proof]? = nil,
              memo: String? = nil,
-             token: CashuSwift.Token? = nil,
              mints: [Mint]? = nil,
              redeemed: Bool? = nil) {
             
@@ -287,6 +290,7 @@ enum AppSchemaV1: VersionedSchema {
             self.bolt11MintQuote = bolt11MintQuote
             self.bolt11MeltQuote = bolt11MeltQuote
             self.amount = amount
+            self.token = token
             self.expiration = expiration
             self.longDescription = longDescription
             self.proofs = proofs

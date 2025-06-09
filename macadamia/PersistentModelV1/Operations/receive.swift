@@ -1,10 +1,3 @@
-//
-//  receive.swift
-//  macadamia
-//
-//  Created by zm on 12.12.24.
-//
-
 import Foundation
 import CashuSwift
 

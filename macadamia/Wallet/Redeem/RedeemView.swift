@@ -216,15 +216,6 @@ struct RedeemView: View {
             return
         }
         
-        // make sure the token is not P2PK locked
-        guard let proofsInToken = token.proofsByMint.values.first,
-              !proofsInToken.contains(where: { p in
-                  p.secret.contains("P2PK")
-              }) else {
-            displayAlert(alert: AlertDetail(with: macadamiaError.lockedToken))
-            return
-        }
-        
         // make sure token is only sat for now
         if token.unit != "sat" {
             displayAlert(alert: AlertDetail(with: macadamiaError.unsupportedUnit))
@@ -303,7 +294,22 @@ struct RedeemView: View {
     // MARK: - REDEEM LATER
     
     private func redeemLater() {
-        print("add locked token to queue \(tokenString)")
+        guard let activeWallet, let knownMintFromToken else {
+            return
+        }
+        
+        guard tokenLockState == .match else {
+            return
+            // show error
+        }
+        
+        let event = Event.pendingReceiveEvent(unit: Unit(token.unit) ?? .sat,
+                                              shortDescription: "Pending Receive",
+                                              wallet: activeWallet,
+                                              amount: token.sum(),
+                                              token: token,
+                                              memo: token.memo,
+                                              mint: knownMintFromToken)
         
         withAnimation {
             didAddLockedToken = true

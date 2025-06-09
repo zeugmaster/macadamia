@@ -71,6 +71,8 @@ struct AlertDetail {
                 self = AlertDetail(title: "Unit Error 💵", description: "macadamia can only redeem tokens denominated in Satoshis. Multi unit support is coming soon™.")
             case .unknownMint(_):
                 self = AlertDetail(title: "Unknown Mint 🥷", description: "You are trying to redeem from a mint that is not known to the wallet. Please add it first.")
+            case .unknownKeyset(let string):
+                self = AlertDetail(title: "Keyset Error", description: "Detail: \(string)")
             }
         default:
             self = AlertDetail(title: "Unknown Error", description: error.localizedDescription)

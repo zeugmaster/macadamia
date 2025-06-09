@@ -1,10 +1,3 @@
-//
-//  MinimalEventList.swift
-//  macadamia
-//
-//  Created by zm on 05.12.24.
-//
-
 import SwiftUI
 import SwiftData
 
@@ -44,7 +37,7 @@ struct MinimalEventList: View {
                         Text("Show All")
                             .font(.callout)
                     })
-                        .listRowBackground(Color.clear)
+                    .listRowBackground(Color.clear)
                 }
             }
         }
@@ -68,6 +61,8 @@ struct TransactionListRow: View {
                         switch event.kind {
                         case .pendingMelt, .pendingMint:
                             Image(systemName: "hourglass")
+                        case .pendingReceive:
+                            Image(systemName: "lock")
                         case .mint, .receive:
                             Image(systemName: "arrow.down.left")
                         case .melt, .send:
@@ -93,7 +88,7 @@ struct TransactionListRow: View {
                             case .send, .drain, .melt, .pendingMelt:
                                 Text(amountDisplayString(amount, unit: event.unit, negative: true))
                                     .foregroundStyle(.secondary)
-                            case .receive, .mint, .restore, .pendingMint:
+                            case .receive, .pendingReceive, .mint, .restore, .pendingMint:
                                 Text(amountDisplayString(amount, unit: event.unit, negative: false))
                                     .foregroundStyle(.secondary)
                             }

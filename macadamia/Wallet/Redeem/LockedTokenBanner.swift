@@ -91,15 +91,6 @@ struct LockedTokenBanner<Content: View>: View {
                 }
             } label: {
                 Spacer()
-//                if addedToQueue {
-//                    Image(systemName: "checkmark")
-//                    Text("Added")
-//                        .padding(4)
-//                } else {
-//                    Image(systemName: "hourglass")
-//                    Text("Redeem Later")
-//                        .padding(4)
-//                }
                 Text(addedToQueue ? "\(Image(systemName: "checkmark")) Added" : "\(Image(systemName: "hourglass")) Redeem Later").padding(2)
                 Spacer()
             }
