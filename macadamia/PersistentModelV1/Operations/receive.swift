@@ -4,7 +4,7 @@ import CashuSwift
 extension AppSchemaV1.Mint {
     
     @MainActor
-    func redeem(token: CashuSwift.Token,
+    func redeem(token: CashuSwift.Token, privateKeyString: String?,
                 completion: @escaping (Result<(proofs: [Proof],
                                                event: Event), Error>) -> Void) {
         
@@ -13,16 +13,15 @@ extension AppSchemaV1.Mint {
             return
         }
         
-        let sendableMint = CashuSwift.Mint(self)
-        let seed = wallet.seed
-        
         Task {
             do {
-                let (sendableProofs, dleqPassed) = try await CashuSwift.receive(token: token,
-                                                                                with: sendableMint,
-                                                                                seed: seed)
+              
+                let (sendableProofs, inputDLEQ, outputDLEQ) = try await CashuSwift.receive(token: token,
+                                                                                           of: CashuSwift.Mint(self),
+                                                                                           seed: wallet.seed,
+                                                                                           privateKey: privateKeyString)
                 
-                logger.info("DLEQ check on incoming proofs was\(dleqPassed ? " " : " NOT ")successful.")
+                logger.info("DLEQ check on incoming: \(String(describing: outputDLEQ))")
                 
                 await MainActor.run {
                     let internalProofs = sendableProofs.map { p in

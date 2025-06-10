@@ -1,16 +1,10 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Bug Fixes and other improvements**
+**Offline Receive 🔓**
 
-This version of **macadamia Wallet** features numerous minor bug fixes and improvements:
-- Correct scanning of QR codes containing a token with URI prefix ("cashu:")
-- Better reliability when creating QR codes
-- Mint view now polls the mint to check whether the invoice was paid
-
-The current build also includes a version of the `CashuSwift` library that performs DLEQ verification to prevent fingerprinting from a malicious mint. 🔎
-____
-**Build 4** now lets you swap a token to one of your trusted mints instead of adding it. ↔
+This version of **macadamia Wallet** lets you receive a token offline, if it is locked to your public key.
+Once you are online again select the transaction from history and tap "Redeem" to finalize it.
 
 🥜🥜
 

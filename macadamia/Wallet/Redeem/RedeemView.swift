@@ -230,7 +230,9 @@ struct RedeemView: View {
             return
         }
         
-        mint.redeem(token: token) { result in
+        let keyString = activeWallet.privateKeyData.map { String(bytes: $0) }
+
+        mint.redeem(token: token, privateKeyString: keyString) { result in
             switch result {
             case .success(let (proofs, event)):
                 AppSchemaV1.insert(proofs + [event], into: modelContext)
@@ -310,6 +312,9 @@ struct RedeemView: View {
                                               token: token,
                                               memo: token.memo,
                                               mint: knownMintFromToken)
+        
+        modelContext.insert(event)
+        try? modelContext.save()
         
         withAnimation {
             didAddLockedToken = true
