@@ -154,7 +154,10 @@ extension AppSchemaV1.Wallet {
         var new = [Proof]()
         for (id, proofsByID) in grouped {
             guard let keyset = mint.keysets.first(where: { $0.keysetID == id }) else {
-                throw macadamiaError.unknownKeyset("The wallet has no record of a keyset \(id) for mint \(mint.url.absoluteString) and cannot associate proof data.")
+                throw macadamiaError.unknownKeyset("""
+                            The wallet has no record of a keyset \(id) for \
+                            mint \(mint.url.absoluteString) and cannot associate proof data.
+                            """)
             }
             let internalProofs = proofsByID.map({ Proof($0,
                                                   unit: Unit(keyset.unit) ?? .sat,

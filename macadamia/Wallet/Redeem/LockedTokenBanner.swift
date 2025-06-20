@@ -8,6 +8,8 @@ struct LockedTokenBanner<Content: View>: View {
     
     let button: () -> Content
     
+    @State private var showTooltip = false
+    
     init(dleqState: CashuSwift.Crypto.DLEQVerificationResult,
          lockState: CashuSwift.Token.LockVerificationResult,
          @ViewBuilder button: @escaping () -> Content) {
@@ -41,11 +43,19 @@ struct LockedTokenBanner<Content: View>: View {
                     HStack {
                         switch dleqState {
                         case .valid:
-                            Image(systemName: "checkmark"); Text("DLEQ valid")
+                            Image(systemName: "checkmark"); Text("Token is authentic")
                         case .fail:
-                            Image(systemName: "xmark"); Text("DLEQ failed")
+                            Image(systemName: "xmark"); Text("Not authentic")
                         case .noData:
-                            Image(systemName: "xmark"); Text("No DLEQ data")
+                            Image(systemName: "xmark"); Text("Authenticity unknown")
+                        }
+                        Button {
+                            let url = URL(string: "https://macadamia.cash/token-authenticity")!
+                            if UIApplication.shared.canOpenURL(url) {
+                                UIApplication.shared.open(url)
+                            }
+                        } label: {
+                            Image(systemName: "questionmark.circle").font(.callout)
                         }
                     }
                     Spacer().frame(maxHeight: 8)
@@ -70,6 +80,7 @@ struct LockedTokenBanner<Content: View>: View {
             
             button()
                 .buttonStyle(.bordered)
+                .disabled(self.lockState == .mismatch || self.dleqState == .fail)
         }
         .padding()
         .background(
@@ -106,7 +117,15 @@ struct LockedTokenBanner<Content: View>: View {
         }
         .listRowBackground(EmptyView())
         LockedTokenBanner(dleqState: .noData, lockState: .mismatch) {
-            EmptyView()
+            Button {
+                withAnimation {
+                    addedToQueue = true
+                }
+            } label: {
+                Spacer()
+                Text(addedToQueue ? "\(Image(systemName: "checkmark")) Added" : "\(Image(systemName: "hourglass")) Redeem Later").padding(2)
+                Spacer()
+            }
         }
         .listRowBackground(EmptyView())
     }
