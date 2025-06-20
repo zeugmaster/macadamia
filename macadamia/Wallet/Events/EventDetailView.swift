@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import CashuSwift
 
 struct EventDetailView: View {
@@ -68,6 +69,8 @@ struct EventDetailView: View {
                 }
             }
             
+        case .pendingReceive:
+            RedeemLaterView(event: event)
         case .pendingMelt:
             MeltView(pendingMeltEvent: event)
             

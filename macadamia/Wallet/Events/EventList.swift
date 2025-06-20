@@ -86,7 +86,7 @@ struct EventListRow: View {
             return nil
         case .send, .melt, .pendingMelt:
             return amountDisplayString(event.amount ?? 0, unit: event.unit, negative: true)
-        case .receive, .mint, .pendingMint:
+        case .receive, .pendingReceive, .mint, .pendingMint:
             return amountDisplayString(event.amount ?? 0, unit: event.unit)
         }
     }

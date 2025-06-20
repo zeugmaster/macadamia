@@ -1,6 +1,7 @@
 import CashuSwift
 import Foundation
 import SwiftData
+import secp256k1
 
 typealias Wallet = AppSchemaV1.Wallet
 typealias Mint = AppSchemaV1.Mint
@@ -55,6 +56,8 @@ enum AppSchemaV1: VersionedSchema {
         var seed: String
         var active: Bool
         var name: String?
+        
+        var privateKeyData: Data?
 
         @Relationship(inverse: \Mint.wallet)
         var mints: [Mint]
@@ -82,6 +85,14 @@ enum AppSchemaV1: VersionedSchema {
                 sum += mint.proofs?.filter({ $0.unit == unit && $0.state == state }).sum ?? 0
             }
             return sum
+        }
+        
+        var publicKeyString: String? {
+            guard let data = self.privateKeyData,
+                  let key = try? secp256k1.Signing.PrivateKey(dataRepresentation: data) else {
+                return nil
+            }
+            return String(bytes: key.publicKey.dataRepresentation)
         }
     }
 
@@ -228,6 +239,8 @@ enum AppSchemaV1: VersionedSchema {
         
         var memo: String?
         
+        var token: CashuSwift.Token?
+        
         @Relationship(deleteRule: .noAction, inverse: \Mint.events)
         var mints: [Mint]?
         
@@ -243,6 +256,7 @@ enum AppSchemaV1: VersionedSchema {
             case mint
             case send
             case receive
+            case pendingReceive
             case pendingMelt
             case melt
             case restore
@@ -258,11 +272,11 @@ enum AppSchemaV1: VersionedSchema {
              bolt11MintQuote: CashuSwift.Bolt11.MintQuote? = nil,
              bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? = nil,
              amount: Int? = nil,
+             token: CashuSwift.Token? = nil,
              expiration: Date? = nil,
              longDescription: String? = nil,
              proofs: [Proof]? = nil,
              memo: String? = nil,
-             token: CashuSwift.Token? = nil,
              mints: [Mint]? = nil,
              redeemed: Bool? = nil) {
             
@@ -276,6 +290,7 @@ enum AppSchemaV1: VersionedSchema {
             self.bolt11MintQuote = bolt11MintQuote
             self.bolt11MeltQuote = bolt11MeltQuote
             self.amount = amount
+            self.token = token
             self.expiration = expiration
             self.longDescription = longDescription
             self.proofs = proofs

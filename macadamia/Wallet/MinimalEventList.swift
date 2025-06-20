@@ -1,10 +1,3 @@
-//
-//  MinimalEventList.swift
-//  macadamia
-//
-//  Created by zm on 05.12.24.
-//
-
 import SwiftUI
 import SwiftData
 
@@ -44,12 +37,30 @@ struct MinimalEventList: View {
                         Text("Show All")
                             .font(.callout)
                     })
-                        .listRowBackground(Color.clear)
+                    .listRowBackground(Color.clear)
                 }
             }
         }
         .padding(EdgeInsets(top: 0, leading: 30, bottom: 0, trailing: 30))
         .listStyle(.plain)
+        .overlay(
+            LinearGradient(
+                gradient: Gradient(colors: [Color.black.opacity(0), Color.black.opacity(1)]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 20),
+            alignment: .bottom
+        )
+        .overlay(
+            LinearGradient(
+                gradient: Gradient(colors: [Color.black.opacity(1), Color.black.opacity(0)]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 20),
+            alignment: .top
+        )
     }
 }
 
@@ -68,6 +79,8 @@ struct TransactionListRow: View {
                         switch event.kind {
                         case .pendingMelt, .pendingMint:
                             Image(systemName: "hourglass")
+                        case .pendingReceive:
+                            Image(systemName: "lock")
                         case .mint, .receive:
                             Image(systemName: "arrow.down.left")
                         case .melt, .send:
@@ -93,7 +106,7 @@ struct TransactionListRow: View {
                             case .send, .drain, .melt, .pendingMelt:
                                 Text(amountDisplayString(amount, unit: event.unit, negative: true))
                                     .foregroundStyle(.secondary)
-                            case .receive, .mint, .restore, .pendingMint:
+                            case .receive, .pendingReceive, .mint, .restore, .pendingMint:
                                 Text(amountDisplayString(amount, unit: event.unit, negative: false))
                                     .foregroundStyle(.secondary)
                             }

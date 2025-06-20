@@ -73,6 +73,26 @@ extension AppSchemaV1.Event {
               redeemed: redeemed
         )
     }
+
+    static func pendingReceiveEvent(unit: Unit,
+                                    shortDescription: String,
+                                    visible: Bool = true,
+                                    wallet: Wallet,
+                                    amount: Int,
+                                    token: CashuSwift.Token,
+                                    memo: String?,
+                                    mint: Mint) -> Event {
+        Event(date: Date(),
+              unit: unit,
+              shortDescription: shortDescription,
+              visible: visible,
+              kind: .pendingReceive,
+              wallet: wallet,
+              amount: amount,
+              token: token,
+              memo: memo,
+              mints: [mint])
+    }
     
     static func receiveEvent(unit: Unit,
                              shortDescription: String,
@@ -81,7 +101,7 @@ extension AppSchemaV1.Event {
                              amount: Int,
                              longDescription: String,
                              proofs: [Proof],
-                             memo: String,
+                             memo: String?,
                              mint: Mint,
                              redeemed: Bool) -> Event {
         Event(date: Date(),

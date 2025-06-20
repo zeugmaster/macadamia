@@ -12,6 +12,8 @@ enum macadamiaError: Error, Sendable {
     case unknownMint(String?)
     case multiMintToken
     
+    case unknownKeyset(String)
+    
     case lockedToken
     case unsupportedUnit
 }
