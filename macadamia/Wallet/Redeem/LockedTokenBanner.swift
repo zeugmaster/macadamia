@@ -102,7 +102,8 @@ struct LockedTokenBanner<Content: View>: View {
                 }
             } label: {
                 Spacer()
-                Text(addedToQueue ? "\(Image(systemName: "checkmark")) Added" : "\(Image(systemName: "hourglass")) Redeem Later").padding(2)
+                Text(addedToQueue ? "\(Image(systemName: "checkmark")) Added" :
+                        "\(Image(systemName: "hourglass")) Redeem Later").padding(2)
                 Spacer()
             }
         }
@@ -123,7 +124,8 @@ struct LockedTokenBanner<Content: View>: View {
                 }
             } label: {
                 Spacer()
-                Text(addedToQueue ? "\(Image(systemName: "checkmark")) Added" : "\(Image(systemName: "hourglass")) Redeem Later").padding(2)
+                Text(addedToQueue ? "\(Image(systemName: "checkmark")) Added" :
+                        "\(Image(systemName: "hourglass")) Redeem Later").padding(2)
                 Spacer()
             }
         }

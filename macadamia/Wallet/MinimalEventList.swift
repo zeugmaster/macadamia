@@ -43,6 +43,24 @@ struct MinimalEventList: View {
         }
         .padding(EdgeInsets(top: 0, leading: 30, bottom: 0, trailing: 30))
         .listStyle(.plain)
+        .overlay(
+            LinearGradient(
+                gradient: Gradient(colors: [Color.black.opacity(0), Color.black.opacity(1)]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 20),
+            alignment: .bottom
+        )
+        .overlay(
+            LinearGradient(
+                gradient: Gradient(colors: [Color.black.opacity(1), Color.black.opacity(0)]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 20),
+            alignment: .top
+        )
     }
 }
 
