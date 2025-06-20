@@ -1,5 +1,5 @@
 {
-  "originHash" : "c20b5b5f48e445383e2f78051534d46fdb3c8588c8bd8b278909c74256698cdb",
+  "originHash" : "760c01eb145d4ba8accba9f6dd55c2b64db2ea9a9affbb9305542017b42798c5",
   "pins" : [
     {
       "identity" : "base58",
@@ -188,15 +188,6 @@
       "state" : {
         "revision" : "c8e85a78385b221387efeca125ee51e36898873b",
         "version" : "2.6.0"
-      }
-    },
-    {
-      "identity" : "swiftui-tooltip",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/quassum/SwiftUI-Tooltip.git",
-      "state" : {
-        "revision" : "3bef9a21e2bcf1d0f078ddf6731c3c8996f32c3e",
-        "version" : "1.4.0"
       }
     },
     {

@@ -17,7 +17,6 @@
 		3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3725D4D72CD5001A0037DD08 /* AVKit.framework */; };
 		376E88432BE5468B0026FF8D /* Popovers in Frameworks */ = {isa = PBXBuildFile; productRef = 376E88422BE5468B0026FF8D /* Popovers */; };
 		376F43B22B4FEC0D00E55B0F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 376F43B12B4FEC0D00E55B0F /* README.md */; };
-		377939822E0587C000A537D0 /* SwiftUITooltip in Frameworks */ = {isa = PBXBuildFile; productRef = 377939812E0587C000A537D0 /* SwiftUITooltip */; };
 		377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377FFEFF2BC43B6900DD2635 /* MarkdownUI */; };
 		377FFF022BC451AB00DD2635 /* release-notes.md in Resources */ = {isa = PBXBuildFile; fileRef = 377FFF012BC451AB00DD2635 /* release-notes.md */; };
 		378521862D394BB8008E07A3 /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 378521852D394BB8008E07A3 /* CashuSwift */; };
@@ -72,7 +71,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */,
-				377939822E0587C000A537D0 /* SwiftUITooltip in Frameworks */,
 				37049E262BD54A2E00BBAC4E /* URUI in Frameworks */,
 				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
 				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
@@ -190,7 +188,6 @@
 				376E88422BE5468B0026FF8D /* Popovers */,
 				370A84062CC18AEE0039A413 /* Flow */,
 				378521852D394BB8008E07A3 /* CashuSwift */,
-				377939812E0587C000A537D0 /* SwiftUITooltip */,
 			);
 			productName = macadamia;
 			productReference = 372034B62B29E1BC00C4F955 /* macadamia.app */;
@@ -250,7 +247,6 @@
 				376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */,
 				370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 				378521842D394BB8008E07A3 /* XCRemoteSwiftPackageReference "cashu-swift" */,
-				377939802E0587C000A537D0 /* XCRemoteSwiftPackageReference "SwiftUI-Tooltip" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -607,14 +603,6 @@
 				minimumVersion = 1.3.2;
 			};
 		};
-		377939802E0587C000A537D0 /* XCRemoteSwiftPackageReference "SwiftUI-Tooltip" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/quassum/SwiftUI-Tooltip.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.2;
-			};
-		};
 		377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui.git";
@@ -664,11 +652,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */;
 			productName = Popovers;
-		};
-		377939812E0587C000A537D0 /* SwiftUITooltip */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 377939802E0587C000A537D0 /* XCRemoteSwiftPackageReference "SwiftUI-Tooltip" */;
-			productName = SwiftUITooltip;
 		};
 		377FFEFF2BC43B6900DD2635 /* MarkdownUI */ = {
 			isa = XCSwiftPackageProductDependency;
