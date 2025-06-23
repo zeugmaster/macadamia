@@ -14,6 +14,8 @@ struct MinimalEventList: View {
     },
     sort: [SortDescriptor(\Event.date, order: .reverse)]) private var events: [Event]
     
+    private let shadowHeight: CGFloat = 10
+    
     var activeWallet:Wallet? {
         wallets.first
     }
@@ -27,40 +29,30 @@ struct MinimalEventList: View {
             if sortedEventsForActiveWallet.isEmpty {
                 Text("No transactions yet.")
             } else {
-                ForEach(Array(sortedEventsForActiveWallet.prefix(5))) { event in
+                ForEach(sortedEventsForActiveWallet.prefix(5)) { event in
                     TransactionListRow(event: event)
                 }
                 if sortedEventsForActiveWallet.count > 5 {
-                    NavigationLink(destination: EventList(),
-                                   label: {
-                        Spacer().frame(width: 27)
-                        Text("Show All")
-                            .font(.callout)
-                    })
-                    .listRowBackground(Color.clear)
+                    NavigationLink("Show All", destination: EventList())
+                        .listRowBackground(Color.clear)
+                        .padding(.leading, 27)
                 }
             }
         }
-        .padding(EdgeInsets(top: 0, leading: 30, bottom: 0, trailing: 30))
         .listStyle(.plain)
-        .overlay(
-            LinearGradient(
-                gradient: Gradient(colors: [Color.black.opacity(0), Color.black.opacity(1)]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: 20),
-            alignment: .bottom
-        )
-        .overlay(
-            LinearGradient(
-                gradient: Gradient(colors: [Color.black.opacity(1), Color.black.opacity(0)]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: 20),
-            alignment: .top
-        )
+        .safeAreaInset(edge: .top) {
+            LinearGradient(gradient: Gradient(colors: [.black, Color.black.opacity(0)]),
+                           startPoint: .top,
+                           endPoint: .bottom)
+            .frame(height: shadowHeight)
+        }
+        .safeAreaInset(edge: .bottom) {
+            LinearGradient(gradient: Gradient(colors: [Color.black.opacity(0), .black]),
+                           startPoint: .top,
+                           endPoint: .bottom)
+            .frame(height: shadowHeight)
+        }
+        .padding(.horizontal, 30)
     }
 }
 

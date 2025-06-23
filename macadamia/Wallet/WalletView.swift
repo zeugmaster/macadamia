@@ -76,9 +76,9 @@ struct WalletView: View {
                         logger.critical("Wallet seems to contain duplicate proofs.")
                     }
                 })
-                Spacer().frame(maxHeight: 30)
+                Spacer().frame(maxHeight: 20)
                 MinimalEventList()
-                Spacer().frame(maxHeight: 30)
+                Spacer().frame(maxHeight: 20)
                 HStack {
                     // MARK: BUTTON "RECEIVE" -
                     Templates.Menu(
