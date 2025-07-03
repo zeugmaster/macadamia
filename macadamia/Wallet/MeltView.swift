@@ -49,6 +49,12 @@ struct MeltView: View {
 
     var body: some View {
         VStack {
+            if pendingMeltEvent == nil {
+                InputView { string in
+                    processInputViewResult(string)
+                }
+                .padding()
+            }
             List {
                 Section {
                     if let pendingMeltEvent {
@@ -130,12 +136,6 @@ struct MeltView: View {
                              An attempted payment reserves ecash. When a payment fails \
                              you can reclaim this ecash by removing the melt quote.
                              """)
-                    }
-                } else {
-                    Section {
-                        InputView { string in
-                            processInputViewResult(string)
-                        }
                     }
                 }
             }

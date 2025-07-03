@@ -3,37 +3,44 @@ import AVFoundation
 
 struct InputView: View {
     
+    enum InputType {
+        case bolt11Invoice, bolt12Offer, token, creq, publicKey
+    }
+    
     let onResult: (String) -> Void
     @State private var cameraPermissionStatus: AVAuthorizationStatus = .notDetermined
     
     var body: some View {
-        if cameraPermissionStatus == .authorized {
-            QRScanner { string in
-                onResult(string)
-            }
-            .frame(minHeight: 300, maxHeight: 400)
-            .padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
-        } else {
-            permissionDeniedView
-        }
-        
-        Button {
-            paste()
-        } label: {
-            HStack {
-                Text("Paste from clipboard")
-                Spacer()
-                Image(systemName: "doc.on.clipboard")
+        Group {
+            if cameraPermissionStatus == .authorized {
+                QRScanner { string in
+                    onResult(string)
+                }
+                .frame(minHeight: 300, maxHeight: 400)
+            } else {
+                permissionDeniedView
             }
         }
         .onAppear {
             checkCameraPermission()
         }
+        .overlay(alignment: .bottomTrailing) {
+            Button {
+                paste()
+            } label: {
+                Image(systemName: "list.clipboard")
+                    .padding()
+                    .shadow(color: .primary, radius: 10)
+                    .font(.title2)
+            }
+        }
+        .background(Color.secondary.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 8.0))
     }
     
     private var permissionDeniedView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "camera.fill")
+        VStack(spacing: 10) {
+            Image(systemName: "camera")
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
                 .padding(.bottom, 10)
@@ -45,12 +52,6 @@ struct InputView: View {
                 Text("Camera access has been denied. Please enable it in the Settings app to scan QR codes.")
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
-                
-                Button("Open Settings") {
-                    openSettings()
-                }
-                .padding(.top, 5)
-                .buttonStyle(.bordered)
             } else if cameraPermissionStatus == .restricted {
                 Text("Camera access is restricted. This might be due to parental controls or other restrictions.")
                     .multilineTextAlignment(.center)

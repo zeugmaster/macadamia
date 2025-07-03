@@ -25,11 +25,10 @@ struct RedeemContainerView: View {
         if let token, let inputString {
             RedeemView(tokenString: inputString, token: token)
         } else {
-            List {
-                InputView { result in
-                    parse(input: result)
-                }
+            InputView { result in
+                parse(input: result)
             }
+            .padding()
         }
     }
     
