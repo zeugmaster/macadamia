@@ -10,11 +10,7 @@ struct WalletView: View {
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
     }) private var wallets: [Wallet]
-//    
-//    @Query private var proofs: [Proof]
-//    
-//    @State var balance: Int?
-
+    
     @State var showAlert: Bool = false
     @State var currentAlert: AlertDetail?
 
@@ -59,10 +55,6 @@ struct WalletView: View {
                 BalanceCard(balance: activeWallet?.balance() ?? 0,
                             unit: .sat)
                 .onAppear(perform: {
-//                    balance = proofs.filter { $0.state == .valid &&
-//                                              $0.wallet == activeWallet &&
-//                                              $0.mint?.hidden ?? true == false}.sum
-                    
                     // quick sanity check for uniqueness of C across list of proofs
                     guard let activeWallet else {
                         logger.warning("""
@@ -79,7 +71,7 @@ struct WalletView: View {
                 Spacer().frame(maxHeight: 20)
                 MinimalEventList()
                 Spacer().frame(maxHeight: 20)
-                HStack {
+                HStack(alignment: .bottom) {
                     // MARK: BUTTON "RECEIVE" -
                     Templates.Menu(
                         configuration: {
@@ -109,6 +101,19 @@ struct WalletView: View {
                     } label: { fade in
                         menuLabel(imageName: "arrow.down", text: "Receive", fade: fade)
                     }
+                    
+                    // MARK: - SCANNER
+                    InputViewModalButton(inputTypes: [.bolt11Invoice, .token]) {
+                        Image(systemName: "qrcode")
+                            .font(.title)
+                            .fontWeight(.semibold)
+                            .padding(20)
+                            .background(Color.secondary.opacity(0.3))
+                            .cornerRadius(10)
+                    } result: { string in
+                        print(string)
+                    }
+
 
                     // MARK: BUTTON "SEND" -
                     Templates.Menu(
@@ -140,7 +145,7 @@ struct WalletView: View {
                         menuLabel(imageName: "arrow.up", text: "Send", fade: fade)
                     }
                 }
-                .padding(EdgeInsets(top: 20, leading: 20, bottom: 40, trailing: 20))
+                .padding(EdgeInsets(top: 20, leading: 6, bottom: 40, trailing: 6))
             }
             .navigationDestination(item: $navigationDestination) { destination in
                 switch destination {
@@ -206,6 +211,6 @@ struct WalletView: View {
     }
 }
 
-#Preview {
-    WalletView(urlState: .constant(nil))
-}
+//#Preview {
+//    WalletView(urlState: .constant(nil))
+//}
