@@ -105,9 +105,9 @@ struct WalletView: View {
                     // MARK: - SCANNER
                     InputViewModalButton(inputTypes: [.bolt11Invoice, .token]) {
                         Image(systemName: "qrcode")
-                            .font(.title)
+                            .font(.largeTitle)
                             .fontWeight(.semibold)
-                            .padding(20)
+                            .padding(16)
                             .background(Color.secondary.opacity(0.3))
                             .cornerRadius(10)
                     } result: { string in

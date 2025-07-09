@@ -30,73 +30,79 @@ struct RedeemView: View {
     @State private var currentAlert: AlertDetail?
     
     var body: some View {
-        List {
-            Section {
-                TokenText(text: tokenString)
-                    .frame(idealHeight: 70)
-                HStack {
-                    Text("Total Amount: ")
-                    Spacer()
-                    Text(amountDisplayString(token.sum(), unit: Unit(token.unit) ?? .sat))
-                }
-                .foregroundStyle(.secondary)
-                if let tokenMemo = token.memo, !tokenMemo.isEmpty {
-                    Text("Memo: \(tokenMemo)")
-                        .foregroundStyle(.secondary)
-                }
-            } header: {
-                Text("cashu Token")
-            }
-            
-            if let tokenLockState {
-                if let knownMintFromToken {
-                    Section {
-                        Text(knownMintFromToken.displayName)
-                            .onAppear {
-                                buttonState = .idle("Redeem", action: { redeem() })
-                            }
+        ZStack {
+            List {
+                Section {
+                    TokenText(text: tokenString)
+                        .frame(idealHeight: 70)
+                    HStack {
+                        Text("Total Amount: ")
+                        Spacer()
+                        Text(amountDisplayString(token.sum(), unit: Unit(token.unit) ?? .sat))
+                    }
+                    .foregroundStyle(.secondary)
+                    if let tokenMemo = token.memo, !tokenMemo.isEmpty {
+                        Text("Memo: \(tokenMemo)")
                             .foregroundStyle(.secondary)
-                    } header: {
-                        Text("Mint")
                     }
-                    switch tokenLockState {
-                    case .match, .mismatch, .noKey, .partial:
-                        LockedTokenBanner(dleqState: dleqResult, lockState: tokenLockState) {
-                            Button {
-                                redeemLater()
-                            } label: {
-                                Spacer()
-                                Text(didAddLockedToken ? "\(Image(systemName: "checkmark")) Added" : "\(Image(systemName: "hourglass")) Redeem Later")
-                                    .padding(2)
-                                Spacer()
-                            }
+                } header: {
+                    Text("cashu Token")
+                }
+                
+                if let tokenLockState {
+                    if let knownMintFromToken {
+                        Section {
+                            Text(knownMintFromToken.displayName)
+                                .onAppear {
+                                    buttonState = .idle("Redeem", action: { redeem() })
+                                }
+                                .foregroundStyle(.secondary)
+                        } header: {
+                            Text("Mint")
                         }
-                        .listRowBackground(EmptyView())
-                    case .notLocked:
-                        EmptyView()
-                    }
-                } else {
-                    switch tokenLockState {
-                    case .match, .mismatch, .noKey, .partial:
-                        selector(hideSwapOption: true)
-                        LockedTokenBanner(dleqState: dleqResult, lockState: tokenLockState) {
+                        switch tokenLockState {
+                        case .match, .mismatch, .noKey, .partial:
+                            LockedTokenBanner(dleqState: dleqResult, lockState: tokenLockState) {
+                                Button {
+                                    redeemLater()
+                                } label: {
+                                    Spacer()
+                                    Text(didAddLockedToken ? "\(Image(systemName: "checkmark")) Added" : "\(Image(systemName: "hourglass")) Redeem Later")
+                                        .padding(2)
+                                    Spacer()
+                                }
+                            }
+                            .listRowBackground(EmptyView())
+                        case .notLocked:
                             EmptyView()
                         }
-                        .listRowBackground(EmptyView())
-                    case .notLocked:
-                        selector()
-                            .onAppear {
-                                buttonState = .idle("Select")
+                    } else {
+                        switch tokenLockState {
+                        case .match, .mismatch, .noKey, .partial:
+                            selector(hideSwapOption: true)
+                            LockedTokenBanner(dleqState: dleqResult, lockState: tokenLockState) {
+                                EmptyView()
                             }
+                            .listRowBackground(EmptyView())
+                        case .notLocked:
+                            selector()
+                                .onAppear {
+                                    buttonState = .idle("Select")
+                                }
+                        }
                     }
+                } else {
+                    Text("Error while determining token lock state.")
                 }
-            } else {
-                Text("Error while determining token lock state.")
+                Spacer(minLength: 50)
+            }
+            .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+            VStack {
+                Spacer()
+                ActionButton(state: $buttonState)
+                    .actionDisabled(knownMintFromToken == nil && selection == nil)
             }
         }
-        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
-        ActionButton(state: $buttonState)
-            .actionDisabled(knownMintFromToken == nil && selection == nil)
     }
     
     private func selector(hideSwapOption: Bool = false) -> some View {

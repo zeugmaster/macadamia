@@ -42,7 +42,7 @@ struct BalanceCard: View {
                 // Content inside the card
                 VStack {
                     HStack {
-                        Text(balance == 0 ? "-" : String(balance))
+                        Text(balanceString)
                             .font(.largeTitle)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
@@ -79,6 +79,14 @@ struct BalanceCard: View {
         }
         .onChange(of: appState.exchangeRates) { oldValue, newValue in
             convert()
+        }
+    }
+
+    private var balanceString: String {
+        if balance == 0 {
+            return "-"
+        } else {
+            return balance.formatted(.number)
         }
     }
     

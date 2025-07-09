@@ -78,7 +78,7 @@ struct ActionButton: View {
         return VStack {
             ZStack {
                 // MARK: Background layer
-                backgroundColor
+                backgroundColor.background(.ultraThinMaterial)
                 
                 Group {
                     Circle()
@@ -117,6 +117,7 @@ struct ActionButton: View {
             didChangeState(state.type, disabled: newValue)
         }
         .allowsHitTesting(!isDisabled && state.type == .idle)
+        .background(LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom))
     }
     
     private func didChangeState(_ type: ActionButtonState.StateType, disabled: Bool) {
@@ -194,15 +195,19 @@ struct TestView: View {
     }
     
     var body: some View {
-        TextField("Enter a Number", text: $text)
-            .padding()
-            .keyboardType(.numberPad)
-            .textFieldStyle(.roundedBorder)
-        ActionButton(state: $buttonState)
-            .actionDisabled(amount < 1)
-            .onAppear {
-                buttonState = .idle("Hello World!", action: pressed)
+        ZStack {
+            VStack {
+                TextField("Enter a Number", text: $text)
+                    .padding()
+                    .keyboardType(.numberPad)
+                    .textFieldStyle(.roundedBorder)
+                ActionButton(state: $buttonState)
+                    .actionDisabled(amount < 1)
+                    .onAppear {
+                        buttonState = .idle("Hello World!", action: pressed)
+                    }
             }
+        }
     }
     
     func pressed() {

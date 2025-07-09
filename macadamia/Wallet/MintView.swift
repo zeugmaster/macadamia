@@ -44,7 +44,7 @@ struct MintView: View {
     }
 
     var body: some View {
-        VStack {
+        ZStack {
             Form {
                 Section {
                     HStack {
@@ -117,6 +117,8 @@ struct MintView: View {
                         })
                     }
                 }
+                Spacer(minLength: 50)
+                    .listRowBackground(Color.clear)
             }
             .navigationTitle("Mint")
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
@@ -131,8 +133,11 @@ struct MintView: View {
             .onDisappear {
                 pollingTimer?.invalidate()
             }
-            ActionButton(state: $buttonState)
-                .actionDisabled(amount < 1 || selectedMint == nil)
+            VStack {
+                Spacer()
+                ActionButton(state: $buttonState)
+                    .actionDisabled(amount < 1 || selectedMint == nil)
+            }
         }
     }
 

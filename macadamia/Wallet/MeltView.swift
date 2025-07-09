@@ -55,98 +55,104 @@ struct MeltView: View {
                 }
                 .padding()
             }
-            List {
-                Section {
-                    if let pendingMeltEvent {
-                        HStack {
-                            Text("Mint: ")
-                            Spacer()
-                            Text(pendingMeltEvent.mints?.first?.displayName ?? "") //FIXME: horrible
-                        }
-                        .foregroundStyle(.gray)
-                    } else {
-                        MintPicker(label: "Pay from", selectedMint: $selectedMint)
-                            .onChange(of: selectedMint) { _, _ in
-                                updateBalance()
-                            }
-                    }
-                    HStack {
-                        Text("Balance: ")
-                        Spacer()
-                        Text(String(selectedMintBalance))
-                            .monospaced()
-                        Text("sats")
-                    }
-                    .foregroundStyle(.secondary)
-                }
-                .onAppear {
-                    if let mint =  pendingMeltEvent?.mints?.first {
-                        print("mint for pending event: \(mint.displayName)")
-                        selectedMint = mint
-                    }
-                    buttonState = .idle("Melt", action: initiateMelt)
-                    updateBalance()
-                }
-                
-                if let pendingMeltEvent {
+            ZStack {
+                List {
                     Section {
-                        HStack {
-                            Text("Quote created at: ")
-                            Spacer()
-                            Text(pendingMeltEvent.date.formatted())
-                        }
-                        Text(pendingMeltEvent.bolt11MeltQuote?.quoteRequest?.request ?? "No request")
+                        if let pendingMeltEvent {
+                            HStack {
+                                Text("Mint: ")
+                                Spacer()
+                                Text(pendingMeltEvent.mints?.first?.displayName ?? "") //FIXME: horrible
+                            }
                             .foregroundStyle(.gray)
-                            .monospaced()
-                            .lineLimit(3)
-                        if let mint = pendingMeltEvent.mints?.first {
-                            Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
+                        } else {
+                            MintPicker(label: "Pay from", selectedMint: $selectedMint)
+                                .onChange(of: selectedMint) { _, _ in
+                                    updateBalance()
+                                }
                         }
-                        if let quote = pendingMeltEvent.bolt11MeltQuote {
-                            HStack {
-                                Text("Lightning Fee: ")
-                                Spacer()
-                                Text(String(quote.feeReserve) + " sats") // FIXME: remove unit hard code
-                            }
-                            .foregroundStyle(.secondary)
+                        HStack {
+                            Text("Balance: ")
+                            Spacer()
+                            Text(String(selectedMintBalance))
+                                .monospaced()
+                            Text("sats")
                         }
-                        if !invoiceString.isEmpty {
-                            HStack {
-                                Text("Amount: ")
-                                Spacer()
-                                Text(String(invoiceAmount ?? 0) + " sats") // FIXME: remove unit hard code
-                            }
-                            .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondary)
+                    }
+                    .onAppear {
+                        if let mint =  pendingMeltEvent?.mints?.first {
+                            print("mint for pending event: \(mint.displayName)")
+                            selectedMint = mint
                         }
+                        buttonState = .idle("Melt", action: initiateMelt)
+                        updateBalance()
                     }
                     
-                    Section {
-                        Button(role: .destructive) {
-                            removeQuote()
-                        } label: {
+                    if let pendingMeltEvent {
+                        Section {
                             HStack {
-                                Text("Remove Quote")
+                                Text("Quote created at: ")
                                 Spacer()
-                                Image(systemName: "trash")
+                                Text(pendingMeltEvent.date.formatted())
+                            }
+                            Text(pendingMeltEvent.bolt11MeltQuote?.quoteRequest?.request ?? "No request")
+                                .foregroundStyle(.gray)
+                                .monospaced()
+                                .lineLimit(3)
+                            if let mint = pendingMeltEvent.mints?.first {
+                                Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
+                            }
+                            if let quote = pendingMeltEvent.bolt11MeltQuote {
+                                HStack {
+                                    Text("Lightning Fee: ")
+                                    Spacer()
+                                    Text(String(quote.feeReserve) + " sats") // FIXME: remove unit hard code
+                                }
+                                .foregroundStyle(.secondary)
+                            }
+                            if !invoiceString.isEmpty {
+                                HStack {
+                                    Text("Amount: ")
+                                    Spacer()
+                                    Text(String(invoiceAmount ?? 0) + " sats") // FIXME: remove unit hard code
+                                }
+                                .foregroundStyle(.secondary)
                             }
                         }
-                        .disabled(buttonState.type == .fail)
-                    } footer: {
-                        Text("""
-                             An attempted payment reserves ecash. When a payment fails \
-                             you can reclaim this ecash by removing the melt quote.
-                             """)
+                        
+                        Section {
+                            Button(role: .destructive) {
+                                removeQuote()
+                            } label: {
+                                HStack {
+                                    Text("Remove Quote")
+                                    Spacer()
+                                    Image(systemName: "trash")
+                                }
+                            }
+                            .disabled(buttonState.type == .fail)
+                        } footer: {
+                            Text("""
+                                 An attempted payment reserves ecash. When a payment fails \
+                                 you can reclaim this ecash by removing the melt quote.
+                                 """)
+                        }
                     }
+                    Spacer(minLength: 50)
+                        .listRowBackground(Color.clear)
+                }
+                VStack {
+                    Spacer()
+                    // MARK: - BUTTON
+                    ActionButton(state: $buttonState)
+                        .actionDisabled(invoiceString.isEmpty)
+                    .navigationTitle("Melt")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .navigationBarBackButtonHidden(buttonState.type == .loading)
+                    .alertView(isPresented: $showAlert, currentAlert: currentAlert)
                 }
             }
-            
-            // MARK: - BUTTON
-            ActionButton(state: $buttonState)
-                .actionDisabled(invoiceString.isEmpty)
-            .navigationTitle("Melt")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(buttonState.type == .loading)
-            .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
     }
 

@@ -22,6 +22,20 @@ struct InputViewModal: View {
                         // emit string
                         animateDismiss()
                     }
+                    HStack {
+                        Spacer()
+                        VStack {
+                            Button {
+                                animateDismiss()
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .shadow(color: .white, radius: 10)
+                                    .padding()
+                                    .font(.title2)
+                            }
+                            Spacer()
+                        }
+                    }
                     Group {
                         RoundedRectangle(cornerRadius: 8).fill(Color.secondary)
                         Image(systemName: "camera.fill")
