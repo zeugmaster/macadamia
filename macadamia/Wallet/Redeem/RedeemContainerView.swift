@@ -25,8 +25,9 @@ struct RedeemContainerView: View {
         if let token, let inputString {
             RedeemView(tokenString: inputString, token: token)
         } else {
-            InputView { result in
-                parse(input: result)
+            InputView(supportedTypes: [.token]) { result in
+//                parse(input: result)
+                print(result)
             }
             .padding()
         }

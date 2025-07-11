@@ -3,23 +3,26 @@ import SwiftUI
 import URUI
 
 struct QRScanner: View {
+    enum ResultValidation { case valid, retryAfter(Double) }
+    
     private let codesPublisher: URCodesPublisher
 
-    @StateObject var videoSession: URVideoSession
-    @StateObject var scanState: URScanState
+    @State private var videoSession: URVideoSession
+    @StateObject private var scanState: URScanState
 
     @State private var estimatedPercentComplete = 0.0
     @State private var fragmentStates = [URFragmentBar.FragmentState]()
     @State private var result: URScanResult?
     @State private var hrRes: String?
+    
+    var onResult: ((String) -> ResultValidation)
 
-    var onResult: ((String) -> Void)
-
-    init(onResult: @escaping ((String) -> Void)) {
+    init(onResult: @escaping ((String) -> ResultValidation)) {
         self.onResult = onResult
         let codesPublisher = URCodesPublisher()
         self.codesPublisher = codesPublisher
-        _videoSession = StateObject(wrappedValue: URVideoSession(codesPublisher: codesPublisher))
+        let videoSession: URVideoSession = .init(codesPublisher: codesPublisher)
+        _videoSession = State(wrappedValue: videoSession)
         _scanState = StateObject(wrappedValue: URScanState(codesPublisher: codesPublisher))
     }
     
@@ -44,24 +47,29 @@ struct QRScanner: View {
 
     private func handleScanResult(result: URScanResult) {
         switch result {
-        case .failure:
-            print("Failure in scanning")
+        case .failure, .reject:
             estimatedPercentComplete = 0
         case let .other(resultString):
-            onResult(resultString)
-            estimatedPercentComplete = 1
+            scanCompleted(string: resultString)
         case let .progress(progress):
+            print(progress.estimatedPercentComplete)
             estimatedPercentComplete = progress.estimatedPercentComplete
-        case .reject:
-            print("Scan rejected")
         case let .ur(ur):
             if case let .bytes(urBytes) = ur.cbor,
                let resultString = String(data: urBytes, encoding: .utf8) {
-                onResult(resultString)
-                estimatedPercentComplete = 1
+                scanCompleted(string: resultString)
             } else {
                 restart()
             }
+        }
+    }
+    
+    private func scanCompleted(string: String) {
+        switch onResult(string) {
+        case .valid:
+            estimatedPercentComplete = 1
+        case .retryAfter(let delay):
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: restart)
         }
     }
 
@@ -70,6 +78,7 @@ struct QRScanner: View {
         estimatedPercentComplete = 0
         fragmentStates = [.off]
         scanState.restart()
+        videoSession.resetScanningState()
     }
 }
 

@@ -1,5 +1,5 @@
 {
-  "originHash" : "760c01eb145d4ba8accba9f6dd55c2b64db2ea9a9affbb9305542017b42798c5",
+  "originHash" : "25816d52ed750b6ad0627bcfccf41e0aa0f3018f490e3a36b9db76f09590a32e",
   "pins" : [
     {
       "identity" : "base58",
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/BlockchainCommons/BCSwiftDCBOR",
       "state" : {
-        "revision" : "b517aec0d29c7096d8d99872c0274eff95b2c33f",
-        "version" : "1.0.7"
+        "revision" : "21efa67ada2f22a6c277e1961f1059bb376e9b1a",
+        "version" : "2.0.2"
       }
     },
     {
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/blockchaincommons/BCSwiftFloat16",
       "state" : {
-        "revision" : "71f380285d88a876f9cdf4e34e2e9e77d7ca4aef",
-        "version" : "1.0.0"
+        "revision" : "a27f3935a7b1db715713eda67369b02feade2ded",
+        "version" : "2.0.0"
       }
     },
     {
@@ -137,15 +137,6 @@
       }
     },
     {
-      "identity" : "swift-collections",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/wolfmcnally/swift-collections",
-      "state" : {
-        "revision" : "11433b688df0e0b8c3deee56c30294ed63d929eb",
-        "version" : "1.1.4"
-      }
-    },
-    {
       "identity" : "swift-markdown-ui",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gonzalezreal/swift-markdown-ui.git",
@@ -157,10 +148,10 @@
     {
       "identity" : "swift-numberkit",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/wolfmcnally/swift-numberkit.git",
+      "location" : "https://github.com/objecthub/swift-numberkit.git",
       "state" : {
-        "revision" : "34a26297c200489779929b7fd7d4d30b63e87e69",
-        "version" : "2.4.3"
+        "revision" : "33af3f9011e45dcd8ee696492d30dbcd5a8a67f3",
+        "version" : "2.6.0"
       }
     },
     {
@@ -182,6 +173,15 @@
       }
     },
     {
+      "identity" : "swiftsortedcollections",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/wolfmcnally/SwiftSortedCollections",
+      "state" : {
+        "revision" : "dd6c8e0eaef987e55a35c056d185144a7c71fc19",
+        "version" : "0.1.0"
+      }
+    },
+    {
       "identity" : "swiftui-flow",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tevelee/SwiftUI-Flow.git",
@@ -193,19 +193,19 @@
     {
       "identity" : "urkit",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/BlockchainCommons/URKit.git",
+      "location" : "https://github.com/BlockchainCommons/URKit",
       "state" : {
-        "revision" : "c98261c7b2db42ccfbbba0853379826b86aaffc4",
-        "version" : "14.0.2"
+        "revision" : "c0a447560768e2552cf85a586dea8cfc26162891",
+        "version" : "15.1.0"
       }
     },
     {
       "identity" : "urui",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/BlockchainCommons/URUI.git",
+      "location" : "https://github.com/zeugmaster/URUI",
       "state" : {
-        "revision" : "1a673ef072ec2d7d595d3210bcc993036c89cc54",
-        "version" : "11.0.0"
+        "branch" : "master",
+        "revision" : "485f8059803b50f6c92d9a92d80f99dd21530a87"
       }
     }
   ],

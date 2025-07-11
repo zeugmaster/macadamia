@@ -1,22 +1,46 @@
 import SwiftUI
 import AVFoundation
+import secp256k1
+import Flow
 
 struct InputView: View {
+    struct Result {
+        let payload: String
+        let type: InputType
+    }
     
     enum InputType {
         case bolt11Invoice, bolt12Offer, token, creq, publicKey
     }
     
-    let onResult: (String) -> Void
+    private let invalidScanRetryDelay = 3.0
+    
+    let supportedTypes: [InputType]
+    let onResult: (Result) -> Void
+    
     @State private var cameraPermissionStatus: AVAuthorizationStatus = .notDetermined
+    
+    @State private var errorMessage: String = "Error message"
+    @State private var showError: Bool = false
+    
+    @State private var restartTag: Int = 0
     
     var body: some View {
         Group {
             if cameraPermissionStatus == .authorized {
                 QRScanner { string in
-                    onResult(string)
+                    checkInput(string) // returns TRUE to the scanner if valid
                 }
                 .frame(minHeight: 300, maxHeight: 400)
+                .overlay {
+                    VStack(alignment: .center) {
+                        Text(errorMessage)
+                        SupportedTypeIndicator(supportedTypes: supportedTypes)
+                    }
+                    .padding()
+                    .background(RoundedRectangle(cornerRadius: 6).fill(.ultraThinMaterial))
+                    .opacity(showError ? 1 : 0)
+                }
             } else {
                 permissionDeniedView
             }
@@ -36,6 +60,73 @@ struct InputView: View {
         }
         .background(Color.secondary.opacity(0.1))
         .clipShape(RoundedRectangle(cornerRadius: 8.0))
+    }
+    
+    private func checkInput(_ string: String) -> QRScanner.ResultValidation {
+        var input = string.removePrefixes(["cashu://", "cashu:", "lightning://", "lightning:"]) // make sure to sort equal prefixes by lenght
+        input = input.replacingOccurrences(of: "+", with: "")
+        input = input.replacingOccurrences(of: " ", with: "")
+        let type: InputType
+        switch input {
+        case _ where input.lowercased().hasPrefix("cashu"):
+            type = .token
+        case _ where input.lowercased().hasPrefix("lnbc"),
+            _ where input.lowercased().hasPrefix("lntbs"),
+            _ where input.lowercased().hasPrefix("lntb"),
+            _ where input.lowercased().hasPrefix("lnbcrt"):
+            type = .bolt11Invoice
+        case _ where input.lowercased().hasPrefix("lno"):
+            type = .bolt12Offer
+        case _ where input.lowercased().hasPrefix("creq"):
+            type = .creq
+        default:
+            if let pubkeyData = try? input.bytes,
+               let _ = try? secp256k1.Signing.PublicKey(dataRepresentation: pubkeyData,
+                                                             format: .compressed) {
+                type = .publicKey
+            } else {
+                showErrorMessage("Unsupported Input")
+                return .retryAfter(invalidScanRetryDelay)
+            }
+        }
+        guard supportedTypes.contains(type) else {
+            showErrorMessage("Invalid input: \(type)")
+            return .retryAfter(invalidScanRetryDelay)
+        }
+        onResult(Result(payload: input, type: type))
+        return .valid
+    }
+    
+    @MainActor
+    private func showErrorMessage(_ message: String) {
+        errorMessage = message
+        withAnimation {
+            showError = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + invalidScanRetryDelay) {
+            withAnimation {
+                showError = false
+            }
+        }
+    }
+    
+    @MainActor
+    private func paste() {
+        let pasteString = UIPasteboard.general.string ?? ""
+        logger.info("user pasted string \(pasteString.prefix(20) + (pasteString.count < 20 ? "" : "..."))")
+        checkInput(pasteString)
+    }
+    
+    private func checkCameraPermission() {
+        cameraPermissionStatus = AVCaptureDevice.authorizationStatus(for: .video)
+        
+        if cameraPermissionStatus == .notDetermined {
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    cameraPermissionStatus = granted ? .authorized : .denied
+                }
+            }
+        }
     }
     
     private var permissionDeniedView: some View {
@@ -65,29 +156,50 @@ struct InputView: View {
         .frame(minHeight: 300, maxHeight: 400)
         .padding(EdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20))
     }
+}
+
+struct SupportedTypeIndicator: View {
+    let allTypes: [InputView.InputType] = [.bolt11Invoice, .bolt12Offer, .creq, .publicKey, .token]
+    let supportedTypes: [InputView.InputType]
     
-    @MainActor
-    private func paste() {
-        let pasteString = UIPasteboard.general.string ?? ""
-        logger.info("user pasted string \(pasteString.prefix(20) + (pasteString.count < 20 ? "" : "..."))")
-        onResult(pasteString)
+    var prioritized: [InputView.InputType] {
+        allTypes.sorted { a, b in
+            supportedTypes.contains(a) && !supportedTypes.contains(b)
+        }
     }
     
-    private func checkCameraPermission() {
-        cameraPermissionStatus = AVCaptureDevice.authorizationStatus(for: .video)
-        
-        if cameraPermissionStatus == .notDetermined {
-            AVCaptureDevice.requestAccess(for: .video) { granted in
-                DispatchQueue.main.async {
-                    cameraPermissionStatus = granted ? .authorized : .denied
-                }
+    func labelForType(_ type: InputView.InputType) -> String {
+        var label: String
+        switch type {
+            case .bolt11Invoice: label = "Invoice"
+            case .bolt12Offer:   label = "Offer"
+            case .creq:          label = "Request"
+            case .publicKey:     label = "Public Key"
+            case .token:         label = "Token"
+        }
+        return label
+    }
+    
+    var body: some View {
+        HFlow(spacing: 2) {
+            ForEach(prioritized, id:\.self) { type in
+                TagView(text: self.labelForType(type))
+                    .opacity(supportedTypes.contains(type) ? 1 : 0.3)
+                    .font(.caption2)
             }
         }
     }
-    
-    private func openSettings() {
-        if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
-            UIApplication.shared.open(settingsURL)
+}
+
+/// Removes the given prefixes from the string in the order the appear in the list. This is important to consider when one prefix is contained in the other (e.g. `lightning:` and `lightning://` in which case you must provde the longer prefix first for the function to work.
+extension String {
+    func removePrefixes(_ prefixes: [String]) -> String {
+        var result = self
+        for prefix in prefixes {
+            if self.lowercased().hasPrefix(prefix.lowercased()) {
+                result.removeSubrange(result.startIndex..<result.index(result.startIndex, offsetBy: prefix.count))
+            }
         }
+        return result
     }
 }

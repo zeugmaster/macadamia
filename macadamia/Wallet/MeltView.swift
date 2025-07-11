@@ -50,8 +50,9 @@ struct MeltView: View {
     var body: some View {
         VStack {
             if pendingMeltEvent == nil {
-                InputView { string in
-                    processInputViewResult(string)
+                InputView(supportedTypes: [.bolt11Invoice]) { result in
+//                    processInputViewResult(string)
+                    print(result)
                 }
                 .padding()
             }
@@ -270,7 +271,7 @@ struct MeltView: View {
         logger.debug("quote already has proofs assigned, melting via .checkMelt()...")
         
         mint.checkMelt(for: quote,
-                               blankOutputSet: pendingMeltEvent.blankOutputs) { result in
+                       blankOutputSet: pendingMeltEvent.blankOutputs) { result in
             switch result {
             case .error(let error):
                 paymentDidFail()

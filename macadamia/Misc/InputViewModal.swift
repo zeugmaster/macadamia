@@ -11,14 +11,16 @@ struct InputViewModal: View {
     @State private var overallOpacity: Double = 0
     @State private var sizeToTarget = false
     
+    let inputTypes: [InputView.InputType]
+    
     var body: some View {
         GeometryReader { proxy in
             ZStack() {
                 Color.black.opacity(sizeToTarget ? 0.4 : 0)
                     .ignoresSafeArea()
                 ZStack {
-                    InputView { string in
-                        print(string)
+                    InputView(supportedTypes: inputTypes) { result in
+                        print(result)
                         // emit string
                         animateDismiss()
                     }
@@ -106,7 +108,7 @@ struct InputViewModalButton<Content: View>: View {
             label()
         }
         .fullScreenCover(isPresented: $presentModal) {
-            InputViewModal(originFrame: $buttonFrame)
+            InputViewModal(originFrame: $buttonFrame, inputTypes: inputTypes)
                 .presentationBackground(Color.clear)
         }
         .background(
