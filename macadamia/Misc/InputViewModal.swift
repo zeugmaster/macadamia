@@ -12,6 +12,7 @@ struct InputViewModal: View {
     @State private var sizeToTarget = false
     
     let inputTypes: [InputView.InputType]
+    let onResult: (InputView.Result) -> Void
     
     var body: some View {
         GeometryReader { proxy in
@@ -20,8 +21,7 @@ struct InputViewModal: View {
                     .ignoresSafeArea()
                 ZStack {
                     InputView(supportedTypes: inputTypes) { result in
-                        print(result)
-                        // emit string
+                        onResult(result)
                         animateDismiss()
                     }
                     HStack {
@@ -97,7 +97,7 @@ struct InputViewModalButton<Content: View>: View {
     
     let label: () -> Content
     
-    let result: (String) -> Void
+    let onResult: (InputView.Result) -> Void
     
     var body: some View {
         Button {
@@ -108,7 +108,9 @@ struct InputViewModalButton<Content: View>: View {
             label()
         }
         .fullScreenCover(isPresented: $presentModal) {
-            InputViewModal(originFrame: $buttonFrame, inputTypes: inputTypes)
+            InputViewModal(originFrame: $buttonFrame, inputTypes: inputTypes) { result in
+                onResult(result)
+            }
                 .presentationBackground(Color.clear)
         }
         .background(
@@ -144,8 +146,8 @@ struct SampleView: View {
                 HStack {
                     InputViewModalButton(inputTypes: [.token]) {
                         Text("I am a button.")
-                    } result: { string in
-                        //
+                    } onResult: { result in
+                        print(result)
                     }
                     .padding()
                     .buttonStyle(.bordered)

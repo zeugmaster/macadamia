@@ -62,12 +62,14 @@ struct SendView: View {
                     .animation(.linear(duration: 0.2), value: amount > selectedMintBalance)
                 }
                 .disabled(token != nil)
-                Section {
-                    TextField("enter note", text: $tokenMemo)
-                } footer: {
-                    Text("Tap to add a note to the recipient.")
+                if token == nil || !tokenMemo.isEmpty {
+                    Section {
+                        TextField("Add a note to the recipient...", text: $tokenMemo)
+                            .disabled(token != nil)
+                    } header: {
+                        Text("Memo")
+                    }
                 }
-                .disabled(token != nil)
                 
                 if let token {
                     TokenShareView(token: token)

@@ -25,22 +25,28 @@ struct MeltView: View {
         pendingMeltEvent?.bolt11MeltQuote
     }
     
-    @State var pendingMeltEvent: Event?
-
-    @State var invoiceString: String = ""
+    var selectedMintBalance: Int {
+        if let selectedMint = selectedMint {
+            return selectedMint.proofs?.filter({ $0.state == .valid }).sum ?? 0
+        }
+        return 0
+    }
+    
+    @State private var pendingMeltEvent: Event?
+    @State private var invoice: String?
     
     @State private var buttonState: ActionButtonState = .idle("")
     
     @State private var selectedMint:Mint?
-    
-    @State private var selectedMintBalance = 0
 
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
+    
+    @State private var loadingQuote: Bool = false
 
-    init(pendingMeltEvent: Event? = nil) {
+    init(pendingMeltEvent: Event? = nil, invoice: String? = nil) {
         _pendingMeltEvent = State(initialValue: pendingMeltEvent)
-        _invoiceString = State(initialValue: quote?.quoteRequest?.request ?? "")
+        _invoice = State(initialValue: invoice)
         
         if let mint = pendingMeltEvent?.mints?.first {
             _selectedMint = State(initialValue: mint)
@@ -48,164 +54,159 @@ struct MeltView: View {
     }
 
     var body: some View {
-        VStack {
-            if pendingMeltEvent == nil {
-                InputView(supportedTypes: [.bolt11Invoice]) { result in
-//                    processInputViewResult(string)
-                    print(result)
-                }
-                .padding()
-            }
-            ZStack {
-                List {
-                    Section {
-                        if let pendingMeltEvent {
-                            HStack {
-                                Text("Mint: ")
-                                Spacer()
-                                Text(pendingMeltEvent.mints?.first?.displayName ?? "") //FIXME: horrible
+        ZStack {
+            List {
+                Section {
+                    MintPicker(label: "Pay from", selectedMint: $selectedMint)
+                        .onChange(of: selectedMint) { _, newValue in
+                            // Handle pending event case
+                            if let pendingMeltEvent,
+                               let invoice = pendingMeltEvent.bolt11MeltQuote?.quoteRequest?.request {
+                                getQuote(for: invoice)
                             }
-                            .foregroundStyle(.gray)
-                        } else {
-                            MintPicker(label: "Pay from", selectedMint: $selectedMint)
-                                .onChange(of: selectedMint) { _, _ in
-                                    updateBalance()
-                                }
+                            // Handle new invoice case when selectedMint becomes available
+                            else if let invoice, pendingMeltEvent == nil, newValue != nil {
+                                getQuote(for: invoice)
+                            }
                         }
-                        HStack {
-                            Text("Balance: ")
-                            Spacer()
-                            Text(String(selectedMintBalance))
-                                .monospaced()
-                            Text("sats")
-                        }
-                        .foregroundStyle(.secondary)
+                        .disabled(!canOverrideMeltQuote)       
+                    HStack {
+                        Text("Balance: ")
+                        Spacer()
+                        Text(String(selectedMintBalance))
+                            .monospaced()
+                        Text("sats")
                     }
-                    .onAppear {
-                        if let mint =  pendingMeltEvent?.mints?.first {
-                            print("mint for pending event: \(mint.displayName)")
-                            selectedMint = mint
-                        }
-                        buttonState = .idle("Melt", action: initiateMelt)
-                        updateBalance()
+                    .foregroundStyle(!sufficientFunds ? .failureRed : .secondary)
+                    .animation(.linear(duration: 0.2), value: sufficientFunds)
+                }
+                .onAppear {
+                    if let mint =  pendingMeltEvent?.mints?.first {
+                        print("mint for pending event: \(mint.displayName)")
+                        selectedMint = mint
                     }
-                    
+                    buttonState = .idle("Melt", action: initiateMelt)
+                }
+                
+                if loadingQuote {
+                    HStack {
+                        Spacer()
+                        ProgressView().font(.largeTitle)
+                        Spacer()
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden, edges: .all)
+                } else {
                     if let pendingMeltEvent {
-                        Section {
-                            HStack {
-                                Text("Quote created at: ")
-                                Spacer()
-                                Text(pendingMeltEvent.date.formatted())
-                            }
-                            Text(pendingMeltEvent.bolt11MeltQuote?.quoteRequest?.request ?? "No request")
-                                .foregroundStyle(.gray)
-                                .monospaced()
-                                .lineLimit(3)
-                            if let mint = pendingMeltEvent.mints?.first {
-                                Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
-                            }
-                            if let quote = pendingMeltEvent.bolt11MeltQuote {
-                                HStack {
-                                    Text("Lightning Fee: ")
-                                    Spacer()
-                                    Text(String(quote.feeReserve) + " sats") // FIXME: remove unit hard code
-                                }
-                                .foregroundStyle(.secondary)
-                            }
-                            if !invoiceString.isEmpty {
-                                HStack {
-                                    Text("Amount: ")
-                                    Spacer()
-                                    Text(String(invoiceAmount ?? 0) + " sats") // FIXME: remove unit hard code
-                                }
-                                .foregroundStyle(.secondary)
-                            }
+                        quoteView(for: pendingMeltEvent)
+                    } else {
+                        InputView(supportedTypes: [.bolt11Invoice]) { result in
+                            guard result.type == .bolt11Invoice else { return }
+                            getQuote(for: result.payload)
                         }
-                        
-                        Section {
-                            Button(role: .destructive) {
-                                removeQuote()
-                            } label: {
-                                HStack {
-                                    Text("Remove Quote")
-                                    Spacer()
-                                    Image(systemName: "trash")
-                                }
-                            }
-                            .disabled(buttonState.type == .fail)
-                        } footer: {
-                            Text("""
-                                 An attempted payment reserves ecash. When a payment fails \
-                                 you can reclaim this ecash by removing the melt quote.
-                                 """)
-                        }
-                    }
-                    Spacer(minLength: 50)
                         .listRowBackground(Color.clear)
+                    }
                 }
-                VStack {
-                    Spacer()
-                    // MARK: - BUTTON
-                    ActionButton(state: $buttonState)
-                        .actionDisabled(invoiceString.isEmpty)
-                    .navigationTitle("Melt")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .navigationBarBackButtonHidden(buttonState.type == .loading)
-                    .alertView(isPresented: $showAlert, currentAlert: currentAlert)
-                }
+                
+                Spacer(minLength: 50)
+                    .listRowBackground(Color.clear)
+            }
+            VStack {
+                Spacer()
+                // MARK: - BUTTON
+                ActionButton(state: $buttonState)
+                    .actionDisabled(pendingMeltEvent == nil || !sufficientFunds)
+                .navigationTitle("Melt")
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarBackButtonHidden(buttonState.type == .loading)
+                .alertView(isPresented: $showAlert, currentAlert: currentAlert)
             }
         }
-    }
-
-    private func processInputViewResult(_ string: String) {
-        var input = string.lowercased()
-        
-        if input.hasPrefix("lightning:") {
-            input.removeFirst("lightning:".count)
-        }
-        
-        guard input.hasPrefix("lnbc") || // TODO: replace this check with proper invoice decoding
-              input.hasPrefix("lntbs") ||
-              input.hasPrefix("lntb") ||
-              input.hasPrefix("lnbcrt") else {
-            displayAlert(alert: AlertDetail(title: "Invalid Input",
-                                            description: """
-                                                         This input does not seem to be of \
-                                                         a valid Lighning Network invoice. Please try again.
-                                                         """))
-            logger.warning("Invalid invoice input. the given string does not seem to be a LN invoice. Input: \(input)")
-            return
-        }
-        
-        invoiceString = input
-        getQuote()
-    }
-
-    private func updateBalance() {
-        selectedMintBalance = proofsOfSelectedMint.filter({ $0.state == .valid }).sum
-    }
-
-    private var invoiceAmount: Int? {
-        try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString)
     }
     
-    private func getQuote() {
+    private func quoteView(for pendingMeltEvent: Event) -> some View {
+        Group {
+            Section {
+                HStack {
+                    Text("Quote created at: ")
+                    Spacer()
+                    Text(pendingMeltEvent.date.formatted())
+                }
+                Text(pendingMeltEvent.bolt11MeltQuote?.quoteRequest?.request ?? "None")
+                    .foregroundStyle(.gray)
+                    .monospaced()
+                    .lineLimit(1)
+                if let quote = pendingMeltEvent.bolt11MeltQuote {
+                    HStack {
+                        Text("Lightning Fee: ")
+                        Spacer()
+                        Text(String(quote.feeReserve) + " sats") // FIXME: remove unit hard code
+                    }
+                    .foregroundStyle(.secondary)
+                    HStack {
+                        Text("Amount: ")
+                        Spacer()
+                        Text(String(quote.amount) + " sats") // FIXME: remove unit hard code
+                    }
+                    .foregroundStyle(.secondary)
+                }
+            }
+            
+            Section {
+                Button(role: .destructive) {
+                    removeQuote()
+                } label: {
+                    HStack {
+                        Text("Remove Quote")
+                        Spacer()
+                        Image(systemName: "trash")
+                    }
+                }
+                .disabled(buttonState.type != .idle)
+            } footer: {
+                Text("""
+                     An attempted payment reserves ecash. When a payment fails \
+                     you can reclaim this ecash by removing the melt quote.
+                     """)
+            }
+        }
+    }
+    
+    private var sufficientFunds: Bool {
+        selectedMintBalance >= pendingMeltEvent?.bolt11MeltQuote?.amount ?? 0
+    }
+    
+    // if pendingEvent exists AND has proofs assigned (melt was already attempted) do not reqest new quote
+    private var canOverrideMeltQuote: Bool {
+        if let proofs = pendingMeltEvent?.proofs, !proofs.isEmpty {
+            return false
+        } else {
+            return true
+        }
+    }
+    
+    private func getQuote(for invoice: String) {
         
         guard let selectedMint else {
             logger.warning("unable to get quote, activeWallet or selectedMint is nil")
             return
         }
         
+        loadingQuote = true
+        
         let quoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat",
-                                                              request: invoiceString,
+                                                              request: invoice,
                                                               options: nil)
         buttonState = .loading()
         selectedMint.getQuote(for: quoteRequest) { result in
             switch result {
             case .success(let (_, event)):
+                if let pendingMeltEvent { pendingMeltEvent.visible = false }
+                loadingQuote = false
                 self.pendingMeltEvent = event
                 AppSchemaV1.insert([event], into: modelContext)
             case .failure(let error):
+                loadingQuote = false
                 logger.warning("Unable to get melt quote. error \(error)")
                 displayAlert(alert: AlertDetail(with: error))
             }
@@ -256,6 +257,7 @@ struct MeltView: View {
                             insufficient funds, mint.select() could not \
                             collect proofs for the required amount.
                             """)
+                buttonState = .fail()
                 return
             }
             
@@ -263,11 +265,19 @@ struct MeltView: View {
             pendingMeltEvent.proofs = selection.selected
             try? modelContext.save()
             
-            melt(mint: selectedMint, quote: quote, proofs: selection.selected, pendingMeltEvent: pendingMeltEvent, seed: wallet.seed)
+            melt(mint: selectedMint,
+                 quote: quote,
+                 proofs: selection.selected,
+                 pendingMeltEvent: pendingMeltEvent,
+                 seed: wallet.seed)
         }
     }
     
-    private func checkState(mint: Mint, quote: CashuSwift.Bolt11.MeltQuote, proofs: [Proof], pendingMeltEvent: Event, seed: String) {
+    private func checkState(mint: Mint,
+                            quote: CashuSwift.Bolt11.MeltQuote,
+                            proofs: [Proof],
+                            pendingMeltEvent: Event,
+                            seed: String) {
         logger.debug("quote already has proofs assigned, melting via .checkMelt()...")
         
         mint.checkMelt(for: quote,
@@ -290,7 +300,11 @@ struct MeltView: View {
         }
     }
 
-    func melt(mint: Mint, quote: CashuSwift.Bolt11.MeltQuote, proofs: [Proof], pendingMeltEvent: Event, seed: String) {
+    func melt(mint: Mint,
+              quote: CashuSwift.Bolt11.MeltQuote,
+              proofs: [Proof],
+              pendingMeltEvent: Event,
+              seed: String) {
         // generate blankOutputs, increase counter, assign to event and persist (insert)
         if pendingMeltEvent.blankOutputs == nil,
             let outputs = try? CashuSwift.generateBlankOutputs(quote: quote,
@@ -314,16 +328,17 @@ struct MeltView: View {
                   blankOutputSet: pendingMeltEvent.blankOutputs) { result in
             switch result {
             case .error(let error):
-                // remove assoc proofs, mark valid, display error
-                pendingMeltEvent.proofs = nil
-                proofs.setState(.valid)
+                // keep proofs associated even for unassociated errors like network
+//                pendingMeltEvent.proofs = nil
+//                proofs.setState(.valid)
                 logger.error("melt operation failed with error: \(error)")
                 displayAlert(alert: AlertDetail(with: error))
                 paymentDidFail()
             case .failure:
                 proofs.setState(.pending)
                 logger.info("payment on mint \(mint.url.absoluteString) failed")
-                displayAlert(alert: AlertDetail(title: "Payment unsussessful 🚫", description: "Please try again."))
+                displayAlert(alert: AlertDetail(title: "Payment unsussessful 🚫",
+                                                description: "Please try again."))
                 paymentDidFail()
             case .success(let (change, event)):
                 proofs.setState(.spent)

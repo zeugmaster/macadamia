@@ -95,6 +95,7 @@ struct RedeemView: View {
                     Text("Error while determining token lock state.")
                 }
                 Spacer(minLength: 50)
+                    .listRowBackground(Color.clear)
             }
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
             VStack {

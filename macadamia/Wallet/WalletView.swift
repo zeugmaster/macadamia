@@ -20,7 +20,7 @@ struct WalletView: View {
         case mint
         case send
         case receive(urlString: String?)
-        case melt
+        case melt(invoice: String?)
 
         var id: String {
             switch self {
@@ -54,15 +54,15 @@ struct WalletView: View {
                 Spacer().frame(maxHeight: 40)
                 BalanceCard(balance: activeWallet?.balance() ?? 0,
                             unit: .sat)
-                .onAppear(perform: {
-                    // quick sanity check for uniqueness of C across list of proofs
-                    guard let activeWallet else {
-                        logger.warning("""
-                                       wallet view appeared with no activeWallet. \
-                                       this will give undefined behaviour.
-                                       """)
-                        return
-                    }
+                    .onAppear(perform: {
+                        // quick sanity check for uniqueness of C across list of proofs
+                        guard let activeWallet else {
+                            logger.warning("""
+                                           wallet view appeared with no activeWallet. \
+                                           this will give undefined behaviour.
+                                           """)
+                            return
+                        }
                     let uniqueCs = Set(activeWallet.proofs.map( { $0.C }))
                     if uniqueCs.count != activeWallet.proofs.count {
                         logger.critical("Wallet seems to contain duplicate proofs.")
@@ -83,8 +83,8 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .receive(urlString: nil)
                         } label: { fade in
-                            menuButtonLabel(title: "Redeem",
-                                            subtitle: "Claim Ecash from a Token",
+                            menuButtonLabel(title: "Ecash",
+                                            subtitle: "Scan or paste a token",
                                             imageSystemName: "qrcode",
                                             fade: fade)
                         }
@@ -92,8 +92,8 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .mint
                         } label: { fade in
-                            menuButtonLabel(title: "Mint",
-                                            subtitle: "Create Lightning Invoice",
+                            menuButtonLabel(title: "Lightning",
+                                            subtitle: "Create invoice to add funds",
                                             imageSystemName: "bolt.fill",
                                             fade: fade)
                         }
@@ -110,10 +110,16 @@ struct WalletView: View {
                             .padding(16)
                             .background(Color.secondary.opacity(0.3))
                             .cornerRadius(10)
-                    } result: { string in
-                        print(string)
+                    } onResult: { result in
+                        switch result.type {
+                            case .bolt11Invoice:
+                            navigationDestination = .melt(invoice: result.payload)
+                        case .token:
+                            navigationDestination = .receive(urlString: result.payload)
+                        default:
+                            break
+                        }
                     }
-
 
                     // MARK: BUTTON "SEND" -
                     Templates.Menu(
@@ -126,17 +132,17 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .send
                         } label: { fade in
-                            menuButtonLabel(title: "Send",
+                            menuButtonLabel(title: "Ecash",
                                             subtitle: "Create Token to Share",
                                             imageSystemName: "banknote",
                                             fade: fade)
                         }
                         .background(Color.black)
                         Templates.MenuItem {
-                            navigationDestination = .melt
+                            navigationDestination = .melt(invoice: nil)
                         } label: { fade in
-                            menuButtonLabel(title: "Melt",
-                                            subtitle: "Pay Lightning Invoice",
+                            menuButtonLabel(title: "Lightning",
+                                            subtitle: "Pay invoice",
                                             imageSystemName: "bolt.fill",
                                             fade: fade)
                         }
@@ -153,10 +159,10 @@ struct WalletView: View {
                     MintView()
                 case .send:
                     SendView()
-                case .receive (let urlString):
+                case .receive(let urlString):
                     RedeemContainerView(tokenString: urlString)
-                case .melt:
-                    MeltView()
+                case .melt(let invoice):
+                    MeltView(invoice: invoice)
                 }
             }
             .onChange(of: urlState, { oldValue, newValue in
