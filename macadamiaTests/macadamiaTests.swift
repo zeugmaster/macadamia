@@ -3,6 +3,7 @@ import BIP39
 import XCTest
 import CashuSwift
 import SwiftData
+import secp256k1
 
 final class macadamiaTests: XCTestCase {
     
@@ -97,5 +98,154 @@ final class macadamiaTests: XCTestCase {
         print(amountDisplayString(123, unit: .usd))
         print(amountDisplayString(123, unit: .eur, negative: true))
         print(amountDisplayString(0, unit: .eur))
+    }
+    
+    func testInputValidator() {
+        
+        // Test BOLT11 invoices
+        let bolt11Tests = [
+            ("lnbc1234567890", true),
+            ("lightning:lnbc1234567890", true),
+            ("lightning://lnbc1234567890", true),
+            ("LNBC1234567890", true), // case insensitive
+            ("lntbs1234567890", true),
+            ("lntb1234567890", true),
+            ("lnbcrt1234567890", true),
+            ("lnbc+12+34+56+78+90", true), // with + signs
+            ("lnbc 12 34 56 78 90", true), // with spaces
+        ]
+        
+        for (input, shouldBeValid) in bolt11Tests {
+            let result = InputValidator.validate(input, supportedTypes: [.bolt11Invoice])
+            switch result {
+            case .valid(let res) where shouldBeValid:
+                XCTAssertEqual(res.type, .bolt11Invoice)
+                XCTAssertFalse(res.payload.contains("+"))
+                XCTAssertFalse(res.payload.contains(" "))
+                XCTAssertFalse(res.payload.hasPrefix("lightning:"))
+            case .invalid where !shouldBeValid:
+                break // Expected
+            default:
+                XCTFail("Unexpected result for \(input)")
+            }
+        }
+        
+        // Test Cashu tokens
+        let cashuTests = [
+            ("cashuAeyJ0b2tlbiI6W3sicHJvb2ZzIjpbXX1dfQ", true),
+            ("cashu://cashuAeyJ0b2tlbiI6W3sicHJvb2ZzIjpbXX1dfQ", true),
+            ("cashu:cashuAeyJ0b2tlbiI6W3sicHJvb2ZzIjpbXX1dfQ", true),
+            ("CASHUAeyJ0b2tlbiI6W3sicHJvb2ZzIjpbXX1dfQ", true), // case insensitive
+            ("cashu+A+eyJ0b2tlbiI6W3sicHJvb2ZzIjpbXX1dfQ", true), // with + signs
+        ]
+        
+        for (input, shouldBeValid) in cashuTests {
+            let result = InputValidator.validate(input, supportedTypes: [.token])
+            switch result {
+            case .valid(let res) where shouldBeValid:
+                XCTAssertEqual(res.type, .token)
+                XCTAssertFalse(res.payload.contains("+"))
+                XCTAssertFalse(res.payload.hasPrefix("cashu://"))
+            case .invalid where !shouldBeValid:
+                break // Expected
+            default:
+                XCTFail("Unexpected result for \(input)")
+            }
+        }
+        
+        // Test BOLT12 offers
+        let bolt12Tests = [
+            ("lno1234567890", true),
+            ("LNO1234567890", true), // case insensitive
+        ]
+        
+        for (input, shouldBeValid) in bolt12Tests {
+            let result = InputValidator.validate(input, supportedTypes: [.bolt12Offer])
+            switch result {
+            case .valid(let res) where shouldBeValid:
+                XCTAssertEqual(res.type, .bolt12Offer)
+            case .invalid where !shouldBeValid:
+                break // Expected
+            default:
+                XCTFail("Unexpected result for \(input)")
+            }
+        }
+        
+        // Test CREQ
+        let creqTests = [
+            ("creq1234567890", true),
+            ("CREQ1234567890", true), // case insensitive
+        ]
+        
+        for (input, shouldBeValid) in creqTests {
+            let result = InputValidator.validate(input, supportedTypes: [.creq])
+            switch result {
+            case .valid(let res) where shouldBeValid:
+                XCTAssertEqual(res.type, .creq)
+            case .invalid where !shouldBeValid:
+                break // Expected
+            default:
+                XCTFail("Unexpected result for \(input)")
+            }
+        }
+        
+        // Test public keys
+        // Using a valid compressed public key from Bitcoin wiki test vectors
+        let validPubkey = "0279BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798"
+        let pubkeyTests = [
+            (validPubkey, true),
+            ("invalidpubkey", false),
+            ("00", false), // too short
+            ("not_hex_at_all!", false),
+        ]
+        
+        for (input, shouldBeValid) in pubkeyTests {
+            let result = InputValidator.validate(input, supportedTypes: [.publicKey])
+            switch result {
+            case .valid(let res) where shouldBeValid:
+                XCTAssertEqual(res.type, .publicKey)
+            case .invalid where !shouldBeValid:
+                break // Expected
+            default:
+                XCTFail("Unexpected result for public key test: \(input)")
+            }
+        }
+        
+        // Test unsupported types
+        let unsupportedTests = [
+            "randomstring",
+            "http://example.com",
+            "bitcoin:1234567890",
+            "",
+        ]
+        
+        for input in unsupportedTests {
+            let result = InputValidator.validate(input, supportedTypes: [.bolt11Invoice, .token, .bolt12Offer, .creq, .publicKey])
+            switch result {
+            case .invalid(let message):
+                XCTAssertEqual(message, "Unsupported Input")
+            default:
+                XCTFail("Expected invalid result for \(input)")
+            }
+        }
+        
+        // Test supported types filtering
+        let filterTests = [
+            ("lnbc1234567890", [InputView.InputType.token], false), // BOLT11 but only token supported
+            ("cashuAeyJ0b2tlbiI6W3sicHJvb2ZzIjpbXX1dfQ", [InputView.InputType.bolt11Invoice], false), // Token but only BOLT11 supported
+            ("lnbc1234567890", [InputView.InputType.bolt11Invoice, InputView.InputType.token], true), // BOLT11 with correct support
+        ]
+        
+        for (input, supportedTypes, shouldBeValid) in filterTests {
+            let result = InputValidator.validate(input, supportedTypes: supportedTypes)
+            switch result {
+            case .valid where shouldBeValid:
+                break // Expected
+            case .invalid where !shouldBeValid:
+                break // Expected
+            default:
+                XCTFail("Unexpected result for \(input) with supported types \(supportedTypes)")
+            }
+        }
     }
 }

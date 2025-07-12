@@ -148,18 +148,27 @@ struct MintManagerView: View {
         
         let trimmedURLString = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        guard trimmedURLString.starts(with: "http://") || trimmedURLString.starts(with: "https://"),
-              let url = URL(string: trimmedURLString), url.host != nil else {
-            logger.warning("user tried to add a URL that does not start with https:// or http:// which is not supported")
+        // Add https prefix if no protocol is specified, preserve http if explicitly entered
+        let finalURLString: String
+        if trimmedURLString.starts(with: "http://") || trimmedURLString.starts(with: "https://") {
+            finalURLString = trimmedURLString
+        } else {
+            finalURLString = "https://" + trimmedURLString
+        }
+        
+        guard let url = URL(string: finalURLString), url.host != nil else {
+            logger.warning("user tried to add an invalid URL: \(finalURLString)")
             displayAlert(alert: AlertDetail(title: "Invalid URL",
                                             description: """
-                                                         URL must start with http:// or https:// \
-                                                         and include a valid host.
+                                                         Please enter a valid URL. \
+                                                         If no protocol is specified, https:// will be used.
                                                          """))
             return
         }
-                
-        guard !activeWallet.mints.contains(where: { $0.url == url && $0.hidden == false }) else {
+        
+        let normalizedURL = normalizeURL(url)
+        
+        guard !activeWallet.mints.contains(where: { normalizeURL($0.url) == normalizedURL && $0.hidden == false }) else {
             logger.warning("user tried to add a mint with a url that is already in the list of mints.")
             displayAlert(alert: AlertDetail(title: "Duplicate Mint",
                                             description: """
@@ -202,6 +211,19 @@ struct MintManagerView: View {
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
+    }
+    
+    private func normalizeURL(_ url: URL) -> URL {
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        
+        // Only remove trailing slash from path, but keep "/" if it's the only path
+        // Don't normalize case to avoid connection issues
+        if let path = components?.path, path.count > 1 && path.hasSuffix("/") {
+            components?.path = String(path.dropLast())
+        }
+        
+        // Return normalized URL or original if normalization fails
+        return components?.url ?? url
     }
 }
 

@@ -3,6 +3,45 @@ import AVFoundation
 import secp256k1
 import Flow
 
+struct InputValidator {
+    enum ValidationResult {
+        case valid(InputView.Result)
+        case invalid(String)
+    }
+    
+    static func validate(_ string: String, supportedTypes: [InputView.InputType]) -> ValidationResult {
+        var input = string.removePrefixes(["cashu://", "cashu:", "lightning://", "lightning:"]) // make sure to sort equal prefixes by lenght
+        input = input.replacingOccurrences(of: "+", with: "")
+        input = input.replacingOccurrences(of: " ", with: "")
+        let type: InputView.InputType
+        switch input {
+        case _ where input.lowercased().hasPrefix("cashu"):
+            type = .token
+        case _ where input.lowercased().hasPrefix("lnbc"),
+            _ where input.lowercased().hasPrefix("lntbs"),
+            _ where input.lowercased().hasPrefix("lntb"),
+            _ where input.lowercased().hasPrefix("lnbcrt"):
+            type = .bolt11Invoice
+        case _ where input.lowercased().hasPrefix("lno"):
+            type = .bolt12Offer
+        case _ where input.lowercased().hasPrefix("creq"):
+            type = .creq
+        default:
+            if let pubkeyData = try? input.bytes,
+               let _ = try? secp256k1.Signing.PublicKey(dataRepresentation: pubkeyData,
+                                                             format: .compressed) {
+                type = .publicKey
+            } else {
+                return .invalid("Unsupported Input")
+            }
+        }
+        guard supportedTypes.contains(type) else {
+            return .invalid("Invalid input: \(type)")
+        }
+        return .valid(InputView.Result(payload: input, type: type))
+    }
+}
+
 struct InputView: View {
     struct Result {
         let payload: String
@@ -63,38 +102,14 @@ struct InputView: View {
     }
     
     private func checkInput(_ string: String) -> QRScanner.ResultValidation {
-        var input = string.removePrefixes(["cashu://", "cashu:", "lightning://", "lightning:"]) // make sure to sort equal prefixes by lenght
-        input = input.replacingOccurrences(of: "+", with: "")
-        input = input.replacingOccurrences(of: " ", with: "")
-        let type: InputType
-        switch input {
-        case _ where input.lowercased().hasPrefix("cashu"):
-            type = .token
-        case _ where input.lowercased().hasPrefix("lnbc"),
-            _ where input.lowercased().hasPrefix("lntbs"),
-            _ where input.lowercased().hasPrefix("lntb"),
-            _ where input.lowercased().hasPrefix("lnbcrt"):
-            type = .bolt11Invoice
-        case _ where input.lowercased().hasPrefix("lno"):
-            type = .bolt12Offer
-        case _ where input.lowercased().hasPrefix("creq"):
-            type = .creq
-        default:
-            if let pubkeyData = try? input.bytes,
-               let _ = try? secp256k1.Signing.PublicKey(dataRepresentation: pubkeyData,
-                                                             format: .compressed) {
-                type = .publicKey
-            } else {
-                showErrorMessage("Unsupported Input")
-                return .retryAfter(invalidScanRetryDelay)
-            }
-        }
-        guard supportedTypes.contains(type) else {
-            showErrorMessage("Invalid input: \(type)")
+        switch InputValidator.validate(string, supportedTypes: supportedTypes) {
+        case .valid(let result):
+            onResult(result)
+            return .valid
+        case .invalid(let message):
+            showErrorMessage(message)
             return .retryAfter(invalidScanRetryDelay)
         }
-        onResult(Result(payload: input, type: type))
-        return .valid
     }
     
     @MainActor
@@ -191,13 +206,46 @@ struct SupportedTypeIndicator: View {
     }
 }
 
+extension String {
+    /// Converts a hex string to bytes (Data)
+    var bytes: Data {
+        get throws {
+            // Remove any spaces or non-hex characters
+            let hex = self.replacingOccurrences(of: " ", with: "")
+            
+            // Check if it's a valid hex string
+            guard hex.count % 2 == 0 else {
+                throw NSError(domain: "Invalid hex string", code: 0, userInfo: nil)
+            }
+            
+            var data = Data()
+            var index = hex.startIndex
+            
+            while index < hex.endIndex {
+                let nextIndex = hex.index(index, offsetBy: 2)
+                let byteString = hex[index..<nextIndex]
+                
+                guard let byte = UInt8(byteString, radix: 16) else {
+                    throw NSError(domain: "Invalid hex string", code: 0, userInfo: nil)
+                }
+                
+                data.append(byte)
+                index = nextIndex
+            }
+            
+            return data
+        }
+    }
+}
+
 /// Removes the given prefixes from the string in the order the appear in the list. This is important to consider when one prefix is contained in the other (e.g. `lightning:` and `lightning://` in which case you must provde the longer prefix first for the function to work.
 extension String {
     func removePrefixes(_ prefixes: [String]) -> String {
         var result = self
         for prefix in prefixes {
-            if self.lowercased().hasPrefix(prefix.lowercased()) {
+            if result.lowercased().hasPrefix(prefix.lowercased()) {
                 result.removeSubrange(result.startIndex..<result.index(result.startIndex, offsetBy: prefix.count))
+                break // Only remove one prefix
             }
         }
         return result

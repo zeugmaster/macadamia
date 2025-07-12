@@ -26,8 +26,7 @@ struct RedeemContainerView: View {
             RedeemView(tokenString: inputString, token: token)
         } else {
             InputView(supportedTypes: [.token]) { result in
-//                parse(input: result)
-                print(result)
+                parse(input: result.payload)
             }
             .padding()
         }
@@ -35,29 +34,9 @@ struct RedeemContainerView: View {
     
     @MainActor
     private func parse(input: String) {
-        var string = input
-        
-        guard !string.isEmpty else {
-            logger.error("pasted string was empty.")
-            displayAlert(alert: AlertDetail(title: "Empty String 🕳️", description: "Looks like you tried to enter an empty string."))
-            return
-        }
-        
-        if string.hasPrefix("cashu:") {
-            string.removeFirst("cashu:".count)
-        }
-        
-        if string.hasPrefix("CASHU:") {
-            string.removeFirst("CASHU:".count)
-        }
-        
-        guard !string.hasPrefix("creq") else {
-            displayAlert(alert: AlertDetail(title: "Cashu Payment Request 🫴", description: "macadamia does not yet support payment requests, but will soon™."))
-            return
-        }
         
         do {
-            let t = try string.deserializeToken()
+            let t = try input.deserializeToken()
             
             guard t.proofsByMint.count == 1 else {
                 displayAlert(alert: AlertDetail(with: macadamiaError.multiMintToken))

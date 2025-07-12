@@ -1,14 +1,10 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Offline Receive 🔓**
+**Unified Scanner 📸**
 
-This version of **macadamia Wallet** lets you receive a token offline, if it is locked to your public key.
-Once you are online again select the transaction from history and tap "Redeem" to finalize it.
+This version of **macadamia Wallet** lets you scan tokens and Lightning invoices from the main wallet screen among other, more subtle UI improvements.
 
-**Build 2 & 3** contain UI refinements and minor fixes.
-
-🥜🥜
 
 As always, thanks for using **macadamia**!
 
