@@ -15,6 +15,9 @@ class DatabaseManager {
     
     private(set) var container: ModelContainer
     
+    // App group identifier - update this with your actual app group ID
+    private static let appGroupID = "group.com.cypherbase.macadamia"
+    
     private init() {
         let schema = Schema([
             Wallet.self,
@@ -22,11 +25,109 @@ class DatabaseManager {
             Mint.self,
             Event.self,
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        
+        // Try to use app group container
+        var modelConfiguration: ModelConfiguration
+        
+        if let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: DatabaseManager.appGroupID) {
+            logger.info("App group container found at: \(appGroupURL.path)")
+            
+            // Check if we need to migrate
+            DatabaseManager.performMigrationIfNeeded(to: appGroupURL, appGroupID: DatabaseManager.appGroupID)
+            
+            modelConfiguration = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: false,
+                groupContainer: .identifier(DatabaseManager.appGroupID)
+            )
+            logger.info("Using app group database")
+        } else {
+            logger.warning("App group container not found, using default location")
+            modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        }
+        
         do {
             container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            logger.info("DatabaseManager initialized successfully")
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
+        }
+    }
+    
+    private static func performMigrationIfNeeded(to appGroupURL: URL, appGroupID: String) {
+        let migrationKey = "DatabaseMigratedToAppGroup"
+        let userDefaults = UserDefaults(suiteName: appGroupID) ?? UserDefaults.standard
+        
+        // Check if already migrated
+        if userDefaults.bool(forKey: migrationKey) {
+            logger.info("Database already migrated to app group")
+            return
+        }
+        
+        // Find default database location
+        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, 
+                                                       in: .userDomainMask).first else {
+            logger.info("Could not find application support directory")
+            return
+        }
+        
+        let defaultStoreURL = appSupport.appendingPathComponent("default.store")
+        let fileManager = FileManager.default
+        
+        // Check if default store exists
+        if !fileManager.fileExists(atPath: defaultStoreURL.path) {
+            logger.info("No existing database found at default location, starting fresh")
+            userDefaults.set(true, forKey: migrationKey)
+            return
+        }
+        
+        // Perform migration
+        do {
+            logger.info("Starting database migration from: \(defaultStoreURL.path)")
+            
+            // SwiftData will create its own database structure in the app group
+            // We'll copy the store files to where SwiftData expects them
+            let targetStoreURL = appGroupURL.appendingPathComponent("default.store")
+            
+            // Create app group directory if needed
+            if !fileManager.fileExists(atPath: appGroupURL.path) {
+                try fileManager.createDirectory(at: appGroupURL, withIntermediateDirectories: true)
+            }
+            
+            // Copy the main store file
+            if fileManager.fileExists(atPath: targetStoreURL.path) {
+                try fileManager.removeItem(at: targetStoreURL)
+            }
+            try fileManager.copyItem(at: defaultStoreURL, to: targetStoreURL)
+            logger.info("Copied database file to app group")
+            
+            // Copy associated files (.store-shm, .store-wal)
+            let storeDir = defaultStoreURL.deletingLastPathComponent()
+            let storeName = defaultStoreURL.deletingPathExtension().lastPathComponent
+            
+            for suffix in ["-shm", "-wal"] {
+                let sourceFile = storeDir.appendingPathComponent("\(storeName).store\(suffix)")
+                if fileManager.fileExists(atPath: sourceFile.path) {
+                    let targetFile = appGroupURL.appendingPathComponent("\(storeName).store\(suffix)")
+                    try? fileManager.copyItem(at: sourceFile, to: targetFile)
+                    logger.info("Copied \(suffix) file")
+                }
+            }
+            
+            // Mark migration as complete
+            userDefaults.set(true, forKey: migrationKey)
+            userDefaults.synchronize()
+            
+            logger.info("Database migration completed successfully")
+            
+            // Create backup by renaming old files
+            let backupURL = defaultStoreURL.appendingPathExtension("backup")
+            try? fileManager.moveItem(at: defaultStoreURL, to: backupURL)
+            logger.info("Created backup of original database")
+            
+        } catch {
+            logger.error("Failed to migrate database: \(error)")
+            // Don't mark as migrated so we can retry
         }
     }
     
