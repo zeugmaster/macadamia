@@ -51,6 +51,7 @@
 		377FFF012BC451AB00DD2635 /* release-notes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "release-notes.md"; sourceTree = "<group>"; };
 		378B20472D09F3FD003FEEBD /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
 		3793B99D2CFCC8F80077F755 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		379A27EE2E3029A800827CC1 /* macadamia.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macadamia.entitlements; sourceTree = "<group>"; };
 		379ED0402D4580A900D432D0 /* TOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOS.swift; sourceTree = "<group>"; };
 		37DC18A12B8669A900F9B37B /* macadamiaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macadamiaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		37DC18A32B8669A900F9B37B /* macadamiaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macadamiaTests.swift; sourceTree = "<group>"; };
@@ -116,6 +117,7 @@
 		372034B82B29E1BC00C4F955 /* macadamia */ = {
 			isa = PBXGroup;
 			children = (
+				379A27EE2E3029A800827CC1 /* macadamia.entitlements */,
 				37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */,
 				372034B92B29E1BC00C4F955 /* macadamiaApp.swift */,
 				378B20472D09F3FD003FEEBD /* Error.swift */,
@@ -438,6 +440,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_ENTITLEMENTS = macadamia/macadamia.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
@@ -477,6 +480,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_ENTITLEMENTS = macadamia/macadamia.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
