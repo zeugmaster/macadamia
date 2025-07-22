@@ -85,13 +85,15 @@ class DatabaseManager {
         do {
             logger.info("Starting database migration from: \(defaultStoreURL.path)")
             
-            // SwiftData will create its own database structure in the app group
-            // We'll copy the store files to where SwiftData expects them
-            let targetStoreURL = appGroupURL.appendingPathComponent("default.store")
+            // SwiftData expects the database in Library/Application Support within the app group
+            let libraryURL = appGroupURL.appendingPathComponent("Library")
+            let appSupportURL = libraryURL.appendingPathComponent("Application Support")
+            let targetStoreURL = appSupportURL.appendingPathComponent("default.store")
             
-            // Create app group directory if needed
-            if !fileManager.fileExists(atPath: appGroupURL.path) {
-                try fileManager.createDirectory(at: appGroupURL, withIntermediateDirectories: true)
+            // Create the directory structure if needed
+            if !fileManager.fileExists(atPath: appSupportURL.path) {
+                try fileManager.createDirectory(at: appSupportURL, withIntermediateDirectories: true)
+                logger.info("Created Application Support directory in app group")
             }
             
             // Copy the main store file
@@ -99,7 +101,7 @@ class DatabaseManager {
                 try fileManager.removeItem(at: targetStoreURL)
             }
             try fileManager.copyItem(at: defaultStoreURL, to: targetStoreURL)
-            logger.info("Copied database file to app group")
+            logger.info("Copied database file to app group Application Support")
             
             // Copy associated files (.store-shm, .store-wal)
             let storeDir = defaultStoreURL.deletingLastPathComponent()
@@ -108,7 +110,7 @@ class DatabaseManager {
             for suffix in ["-shm", "-wal"] {
                 let sourceFile = storeDir.appendingPathComponent("\(storeName).store\(suffix)")
                 if fileManager.fileExists(atPath: sourceFile.path) {
-                    let targetFile = appGroupURL.appendingPathComponent("\(storeName).store\(suffix)")
+                    let targetFile = appSupportURL.appendingPathComponent("\(storeName).store\(suffix)")
                     try? fileManager.copyItem(at: sourceFile, to: targetFile)
                     logger.info("Copied \(suffix) file")
                 }
