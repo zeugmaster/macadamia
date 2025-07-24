@@ -71,7 +71,7 @@ struct WalletView: View {
                 Spacer().frame(maxHeight: 20)
                 MinimalEventList()
                 Spacer().frame(maxHeight: 20)
-                HStack(alignment: .bottom) {
+                HStack(alignment: .center) {
                     // MARK: BUTTON "RECEIVE" -
                     Templates.Menu(
                         configuration: {

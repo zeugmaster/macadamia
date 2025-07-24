@@ -32,6 +32,18 @@ class DatabaseManager {
         if let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: DatabaseManager.appGroupID) {
             logger.info("App group container found at: \(appGroupURL.path)")
             
+            // Ensure Library/Application Support directory exists to avoid CoreData verbose errors
+            let libraryURL = appGroupURL.appendingPathComponent("Library")
+            let appSupportURL = libraryURL.appendingPathComponent("Application Support")
+            if !FileManager.default.fileExists(atPath: appSupportURL.path) {
+                do {
+                    try FileManager.default.createDirectory(at: appSupportURL, withIntermediateDirectories: true)
+                    logger.info("Created Application Support directory in app group")
+                } catch {
+                    logger.error("Failed to create Application Support directory: \(error)")
+                }
+            }
+            
             // Check if we need to migrate
             DatabaseManager.performMigrationIfNeeded(to: appGroupURL, appGroupID: DatabaseManager.appGroupID)
             
