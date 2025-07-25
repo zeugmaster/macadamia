@@ -130,13 +130,7 @@ struct MintInfoView: View {
         }
         .task {
             // fetch mint info
-            do {
-                logger.info("loading info for mint: \(mint.url.absoluteString)...")
-                let cashuMint = CashuSwift.Mint(mint)
-                info = try await CashuSwift.loadMintInfo(from: cashuMint)
-            } catch {
-                logger.warning("could not load mint info \(error)")
-            }
+            info = try? await mint.loadInfo()
             // show MOTD if changed
             await MainActor.run {
                 if let motd = info?.motd {

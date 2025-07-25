@@ -233,6 +233,9 @@ enum AppSchemaV1: VersionedSchema {
         var events: [Event]?
         
         var hidden: Bool = false
+        
+        private var infoData: Data?
+        private var infoLastUpdated = Date.now
 
         required init(url: URL, keysets: [CashuSwift.Keyset]) {
             self.mintID = UUID()
@@ -252,6 +255,37 @@ enum AppSchemaV1: VersionedSchema {
         
         var displayName: String {
             self.nickName ?? self.url.host() ?? self.url.absoluteString
+        }
+        
+        var supportsMPP: Bool {
+            if let infoData {
+                guard let info = try? JSONDecoder().decode(CashuSwift.Mint.Info.self,
+                                                           from: infoData) else { return false }
+                return info.nuts?.nut15 != nil
+            } else {
+                return false // it might support MPP we don't know for sure so default to NO
+            }
+        }
+        
+        func loadInfo(invalidateCache: Bool = false) async throws -> CashuSwift.Mint.Info? {
+            let oneDayAgo: Date = Date().addingTimeInterval(-86400)
+            
+            if let infoData {
+                if infoLastUpdated < oneDayAgo || invalidateCache {
+                    return try await updatedInfo()
+                } else {
+                    return try JSONDecoder().decode(CashuSwift.Mint.Info.self, from: infoData)
+                }
+            } else {
+                return try await updatedInfo()
+            }
+            
+            func updatedInfo() async throws -> CashuSwift.Mint.Info {
+                let info = try await CashuSwift.loadMintInfo(from: CashuSwift.Mint(self))
+                infoData = try JSONEncoder().encode(info)
+                infoLastUpdated = Date.now
+                return info
+            }
         }
     }
 
@@ -344,7 +378,7 @@ enum AppSchemaV1: VersionedSchema {
         var wallet: Wallet?
         
         var bolt11MintQuote: CashuSwift.Bolt11.MintQuote?
-        var bolt11MeltQuoteData: Data? // SwiftData is unable to serialize CashuSwift.Bolt11.MeltQuote so we do it ourselves
+        private var bolt11MeltQuoteData: Data? // SwiftData is unable to serialize CashuSwift.Bolt11.MeltQuote so we do it ourselves
         
         var amount: Int?
         var expiration: Date?

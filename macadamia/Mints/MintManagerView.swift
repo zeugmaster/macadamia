@@ -105,6 +105,9 @@ struct MintManagerView: View {
                         addMint(urlString: "https://testnut.cashu.space")
                     }
                 }
+                .refreshable {
+                    await refreshAllMints()
+                }
                 .navigationTitle("Mints")
                 .alert(isPresented: $showAlert) {
                     Alert(
@@ -207,7 +210,20 @@ struct MintManagerView: View {
             current += 1
         }
     }
-
+    
+    private func refreshAllMints() async {
+        logger.info("broadcasting mint refresh signal...")
+        
+        // Send notification to all mint rows to refresh themselves
+        NotificationCenter.default.post(name: .refreshAllMints, object: nil)
+        
+        // Wait a bit for refreshes to complete, then update balances
+        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        await MainActor.run {
+            calculateBalanceStrings()
+        }
+    }
+    
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
@@ -230,6 +246,10 @@ struct MintManagerView: View {
 struct MintInfoRowView: View {
     let mint: Mint
     let amountDisplayString: String?
+    
+    @State private var isRefreshing = false
+    @State private var showSuccessAnimation = false
+    @State private var showFailureAnimation = false
 
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 44
 
@@ -239,6 +259,29 @@ struct MintInfoRowView: View {
                 Color.gray.opacity(0.3)
                 Image(systemName: "building.columns")
                     .foregroundColor(.white)
+                
+                // Simple success flash
+                if showSuccessAnimation {
+                    Circle()
+                        .stroke(Color.green, lineWidth: 4)
+                        .opacity(showSuccessAnimation ? 1.0 : 0.0)
+                        .animation(.easeInOut(duration: 0.5), value: showSuccessAnimation)
+                }
+                
+                // Simple failure flash
+                if showFailureAnimation {
+                    Circle()
+                        .stroke(Color.red, lineWidth: 4)
+                        .opacity(showFailureAnimation ? 1.0 : 0.0)
+                        .animation(.easeInOut(duration: 0.5), value: showFailureAnimation)
+                }
+                
+                // Loading indicator
+                if isRefreshing {
+                    Circle()
+                        .stroke(Color.blue, lineWidth: 2)
+                        .opacity(0.7)
+                }
             }
             .frame(width: iconSize, height: iconSize)
             .clipShape(Circle())
@@ -250,9 +293,63 @@ struct MintInfoRowView: View {
                 Text(amountDisplayString ?? "No Balance")
                     .foregroundStyle(.gray)
             }
-//            Spacer()
-//            Text(String(mint.userIndex ?? 404))
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .refreshAllMints)) { _ in
+            Task {
+                await refreshMint()
+            }
         }
     }
+    
+    private func refreshMint() async {
+        await MainActor.run {
+            isRefreshing = true
+            showSuccessAnimation = false
+            showFailureAnimation = false
+        }
+        
+        do {
+            _ = try await mint.loadInfo(invalidateCache: true)
+            logger.info("successfully refreshed mint: \(mint.url.absoluteString)")
+            
+            await MainActor.run {
+                print("should animate")
+                isRefreshing = false
+                showSuccessAnimation = true
+                
+                // Remove success animation after 1 second
+                Task {
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                    await MainActor.run {
+                        withAnimation {
+                            showSuccessAnimation = false
+                        }
+                    }
+                }
+            }
+        } catch {
+            logger.warning("failed to refresh mint \(mint.url.absoluteString): \(error)")
+            
+            await MainActor.run {
+                isRefreshing = false
+                showFailureAnimation = true
+                
+                // Remove failure animation after 1 second
+                Task {
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                    await MainActor.run {
+                        withAnimation {
+                            showFailureAnimation = false
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Notification extension
+extension Notification.Name {
+    static let refreshAllMints = Notification.Name("refreshAllMints")
 }
 
