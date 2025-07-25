@@ -3,13 +3,14 @@ import SwiftData
 import CashuSwift
 import Flow
 import CryptoKit
+import OSLog
 
 struct MintInfoView: View {
     
     @Bindable var mint: Mint
     var onRemove: () -> Void
     
-    @State private var info: CashuSwift.MintInfo?
+    @State private var info: CashuSwift.Mint.Info?
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -64,7 +65,39 @@ struct MintInfoView: View {
             }
             
             if let info {
-                MintInfoDetailV0_16_0(info: info)
+                Section {
+                    if let version = info.version {
+                        TextDescriptionCell(description: "Version", text: version)
+                    }
+                    if let name = info.name {
+                        TextDescriptionCell(description: "Name", text: name)
+                    }
+                    if let description = info.description {
+                        TextDescriptionCell(description: "Description", text: description)
+                    }
+                }
+                if let nuts = info.nuts {
+                    Section {
+                        HFlow {
+                            Tag(text: "Mint", enabled: !(nuts.nut04?.disabled ?? true))
+                            Tag(text: "Melt", enabled: !(nuts.nut05?.disabled ?? true))
+                            Tag(text: "Restore", enabled: {
+                                if case .bool(true) = nuts.nut09?.supported {
+                                    return true
+                                }
+                                return false
+                            }())
+                            Tag(text: "P2PK", enabled: {
+                                if case .bool(true) = nuts.nut11?.supported {
+                                    return true
+                                }
+                                return false
+                            }())
+                            Tag(text: "MPP", enabled: nuts.nut15 != nil)
+                        }
+                        .padding(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                    }
+                }
             }
 
             Section {
@@ -99,15 +132,16 @@ struct MintInfoView: View {
             // fetch mint info
             do {
                 logger.info("loading info for mint: \(mint.url.absoluteString)...")
-                info = try await CashuSwift.loadInfoFromMint(mint)
+                let cashuMint = CashuSwift.Mint(mint)
+                info = try await CashuSwift.loadMintInfo(from: cashuMint)
             } catch {
                 logger.warning("could not load mint info \(error)")
             }
             // show MOTD if changed
             await MainActor.run {
-                if let infoV_0_16 = info as? CashuSwift.MintInfo0_16 {
-                    if mint.lastDismissedMOTDHash != infoV_0_16.motd.hashString() {
-                        motd = infoV_0_16.motd
+                if let motd = info?.motd {
+                    if mint.lastDismissedMOTDHash != motd.hashString() {
+                        self.motd = motd
                     }
                 }
             }
@@ -121,37 +155,12 @@ struct MintInfoView: View {
     }
     
     private func dismissMOTD() {
-        guard let infoV_0_16 = info as? CashuSwift.MintInfo0_16 else {
+        guard let motdValue = info?.motd else {
             return
         }
-        mint.lastDismissedMOTDHash = infoV_0_16.motd.hashString()
+        mint.lastDismissedMOTDHash = motdValue.hashString()
         withAnimation {
             motd = nil
-        }
-    }
-}
-
-struct MintInfoDetailV0_16_0: View {
-    var info: CashuSwift.MintInfo
-    
-    var body: some View {
-        Section {
-            TextDescriptionCell(description: "Version", text: info.version)
-            TextDescriptionCell(description: "Name", text: info.name)
-            if let short = info.descriptionShort {
-                TextDescriptionCell(description: "Description", text: short)
-            }
-        }
-        if let infoV_0_16 = info as? CashuSwift.MintInfo0_16 {
-            Section {
-                HFlow {
-                    Tag(text: "Mint", enabled: !(infoV_0_16.nuts["4"]?.disabled ?? true))
-                    Tag(text: "Melt", enabled: !(infoV_0_16.nuts["5"]?.disabled ?? true))
-                    Tag(text: "Restore", enabled: (infoV_0_16.nuts["9"]?.supported == .bool(true)))
-                    Tag(text: "P2PK", enabled: (infoV_0_16.nuts["11"]?.supported == .bool(true)))
-                }
-                .padding(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-            }
         }
     }
 }
@@ -167,6 +176,7 @@ struct Tag: View {
             .padding(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
             .background(enabled ? .white.opacity(0.6) : .white.opacity(0.1))
             .cornerRadius(4)
+            .font(.caption)
     }
 }
 

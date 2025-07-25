@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		370A83FF2CB94CCD0039A413 /* .swiftformat in Resources */ = {isa = PBXBuildFile; fileRef = 370A83FE2CB94CCD0039A413 /* .swiftformat */; };
 		370A84072CC18AEE0039A413 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 370A84062CC18AEE0039A413 /* Flow */; };
+		371AA9132E33EB61006D487F /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 371AA9122E33EB61006D487F /* CashuSwift */; };
 		372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034B92B29E1BC00C4F955 /* macadamiaApp.swift */; };
 		372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
@@ -19,7 +20,6 @@
 		377D26262E1FDE7800CFB880 /* URUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377D26252E1FDE7800CFB880 /* URUI */; };
 		377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377FFEFF2BC43B6900DD2635 /* MarkdownUI */; };
 		377FFF022BC451AB00DD2635 /* release-notes.md in Resources */ = {isa = PBXBuildFile; fileRef = 377FFF012BC451AB00DD2635 /* release-notes.md */; };
-		378521862D394BB8008E07A3 /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 378521852D394BB8008E07A3 /* CashuSwift */; };
 		378B20482D09F3FD003FEEBD /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
 		3792122E2B29E7520081F161 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 3792122D2B29E7520081F161 /* BigNumber */; };
 		379212342B29E7B30081F161 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212332B29E7B30081F161 /* BIP39 */; };
@@ -74,8 +74,8 @@
 				3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */,
 				377D26262E1FDE7800CFB880 /* URUI in Frameworks */,
 				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
+				371AA9132E33EB61006D487F /* CashuSwift in Frameworks */,
 				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
-				378521862D394BB8008E07A3 /* CashuSwift in Frameworks */,
 				377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */,
 				376E88432BE5468B0026FF8D /* Popovers in Frameworks */,
 				370A84072CC18AEE0039A413 /* Flow in Frameworks */,
@@ -188,8 +188,8 @@
 				377FFEFF2BC43B6900DD2635 /* MarkdownUI */,
 				376E88422BE5468B0026FF8D /* Popovers */,
 				370A84062CC18AEE0039A413 /* Flow */,
-				378521852D394BB8008E07A3 /* CashuSwift */,
 				377D26252E1FDE7800CFB880 /* URUI */,
+				371AA9122E33EB61006D487F /* CashuSwift */,
 			);
 			productName = macadamia;
 			productReference = 372034B62B29E1BC00C4F955 /* macadamia.app */;
@@ -247,8 +247,8 @@
 				377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */,
 				370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
-				378521842D394BB8008E07A3 /* XCRemoteSwiftPackageReference "cashu-swift" */,
 				377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */,
+				371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -591,6 +591,14 @@
 				minimumVersion = 2.5.0;
 			};
 		};
+		371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/zeugmaster/cashu-swift.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/aheze/Popovers.git";
@@ -613,14 +621,6 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 2.3.0;
-			};
-		};
-		378521842D394BB8008E07A3 /* XCRemoteSwiftPackageReference "cashu-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/zeugmaster/cashu-swift.git";
-			requirement = {
-				branch = main;
-				kind = branch;
 			};
 		};
 		3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */ = {
@@ -647,6 +647,11 @@
 			package = 370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
 			productName = Flow;
 		};
+		371AA9122E33EB61006D487F /* CashuSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */;
+			productName = CashuSwift;
+		};
 		376E88422BE5468B0026FF8D /* Popovers */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */;
@@ -661,11 +666,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
 			productName = MarkdownUI;
-		};
-		378521852D394BB8008E07A3 /* CashuSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 378521842D394BB8008E07A3 /* XCRemoteSwiftPackageReference "cashu-swift" */;
-			productName = CashuSwift;
 		};
 		3792122D2B29E7520081F161 /* BigNumber */ = {
 			isa = XCSwiftPackageProductDependency;
