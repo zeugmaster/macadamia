@@ -1,9 +1,11 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Unified Scanner 📸**
+**Under the hood 🛠️**
 
-This version of **macadamia Wallet** lets you scan tokens and Lightning invoices from the main wallet screen among other, more subtle UI improvements. ✨
+This build makes some changes to the database directory (moving it to an App Group directory) to enable some cool feature in the near future, stay tuned!
+
+Further, mint information is now cached and can be manually updated using a pull-to-refresh gesture on the mint list. 
 
 
 As always, thanks for using **macadamia**!
