@@ -65,6 +65,7 @@ struct SwapManager {
                 
                 try await MainActor.run  {
                     logger.debug("attempting swap from token with total amount \(tokenSum) and swapAmount \(swapAmount)")
+                    #warning("TODO: preserve derivation counters ?")
                     let fromMint = try AppSchemaV1.addMint(fromMint, to: modelContext, hidden: true, proofs: proofs)
                     swap(fromMint: fromMint, toMint: toMint, amount: swapAmount, seed: seed)
                 }

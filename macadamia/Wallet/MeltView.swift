@@ -315,8 +315,8 @@ struct MeltView: View {
             logger.debug("no blank outputs were assigned, creating new")
             let blankOutputSet = BlankOutputSet(tuple: outputs)
             pendingMeltEvent.blankOutputs = blankOutputSet
-            if let keysetID = outputs.outputs.first?.id {
-                mint.increaseDerivationCounterForKeysetWithID(keysetID, by: outputs.outputs.count)
+            if let keyset = outputs.outputs.first {
+                mint.increaseDerivationCounterForKeysetWithID(keyset.id, by: outputs.outputs.count)
             } else {
                 logger.error("unable to determine correct keyset to increase det sec counter.")
             }

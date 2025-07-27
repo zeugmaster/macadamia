@@ -107,8 +107,6 @@ extension AppSchemaV1.Mint {
         }
         
         let sendableMint = CashuSwift.Mint(self)
-//        let seed = wallet.seed
-//        let unit = Unit(quote.quoteRequest?.unit) ?? .sat
         
         var blankOutputs: (outputs: [CashuSwift.Output], blindingFactors: [String], secrets:[String])? = nil
         

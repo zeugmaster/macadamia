@@ -108,6 +108,7 @@ struct ContentView: View {
                         let newKeysets = try await CashuSwift.updatedKeysetsForMint(CashuSwift.Mint(mint))
                         await MainActor.run {
                             mint.keysets = newKeysets
+                            print("mint: \(mint.url.absoluteString), new keyset counters: \(newKeysets.map({ $0.derivationCounter }))")
                         }
                     } catch {
                         logger.warning("""

@@ -311,9 +311,9 @@ struct MintInfoRowView: View {
                 isRefreshing = false
                 showSuccessAnimation = true
                 
-                // Remove success animation after 1 second
+                // Remove success animation after 2 seconds
                 Task {
-                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
                     await MainActor.run {
                         withAnimation {
                             showSuccessAnimation = false
@@ -328,9 +328,9 @@ struct MintInfoRowView: View {
                 isRefreshing = false
                 showFailureAnimation = true
                 
-                // Remove failure animation after 1 second
+                // Remove failure animation after 2 seconds
                 Task {
-                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
                     await MainActor.run {
                         withAnimation {
                             showFailureAnimation = false
