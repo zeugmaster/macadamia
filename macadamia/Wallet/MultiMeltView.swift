@@ -133,19 +133,46 @@ struct MultiMeltView: View {
         reloadMintQuotes()
     }
     
+
     private func reloadMintQuotes() {
-        if selectedMintIds.count == 0 { return }
-        
-        guard let invoiceString, let total = try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString.lowercased()) else { return }
-        
-        var list: [(UUID, CashuSwift.Mint, Int)] = []
-        
-        let selected = mintRowInfoArray.filter({ selectedMintIds.contains($0.id) })
-        let totalBalance = selected.map({ $0.mint.balance(for: .sat) }).reduce(0, +)
-        for row in selected {
-            let amountPerMint = row.mint.balance(for: .sat) / totalBalance * total
-            list.append((row.id, CashuSwift.Mint(row.mint), amountPerMint))
+        if selectedMintIds.isEmpty { return }
+        guard let invoiceString,
+              let invoiceAmountSat = try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString.lowercased())
+        else { return }
+
+        let selected = mintRowInfoArray.filter { selectedMintIds.contains($0.id) }
+        let totalBalance = selected.map { $0.mint.balance(for: .sat) }.reduce(0, +)
+        let totalBalanceDec = Decimal(totalBalance)
+        let totalSatDec = Decimal(invoiceAmountSat)
+
+        struct ShareInfo {
+            let row: MintRowInfo
+            let floorPart: Int
+            let fraction: Decimal
         }
+
+        var shares = [ShareInfo]()
+        for row in selected {
+            let balDec = Decimal(row.mint.balance(for: .sat))
+            let raw = balDec / totalBalanceDec * totalSatDec
+            var tmp = raw, flr = Decimal()
+            NSDecimalRound(&flr, &tmp, 0, .down)
+            let floorInt = NSDecimalNumber(decimal: flr).intValue
+            shares.append(ShareInfo(row: row, floorPart: floorInt, fraction: raw - flr))
+        }
+
+        let floorSum = shares.map(\.floorPart).reduce(0, +)
+        var remainder = invoiceAmountSat - floorSum
+        let sorted = shares.enumerated().sorted { $0.element.fraction > $1.element.fraction }
+
+        var list: [(UUID, CashuSwift.Mint, Int)] = []
+        for (index, info) in shares.enumerated() {
+            let extraSat = sorted.prefix(remainder).map(\.offset).contains(index) ? 1 : 0
+            let sats = info.floorPart + extraSat
+            let msats = sats * 1_000
+            list.append((info.row.id, CashuSwift.Mint(info.row.mint), msats))
+        }
+
         Task {
             do {
                 let quotes = try await loadInvoices(for: list, invoice: invoiceString)
@@ -160,6 +187,10 @@ struct MultiMeltView: View {
             }
         }
     }
+
+
+
+
     
     private func loadInvoices(for list: [(id: UUID, mint: CashuSwift.Mint, amount: Int)], invoice: String) async throws -> [(UUID, CashuSwift.Bolt11.MeltQuote, Int)] {
         var quotes: [(UUID, CashuSwift.Bolt11.MeltQuote, Int)] = []
@@ -168,11 +199,15 @@ struct MultiMeltView: View {
             let request = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat",
                                                              request: invoice,
                                                              options: list.count < 2 ? nil : options)
-            guard let quote = try await CashuSwift.getQuote(mint: entry.mint,
-                                                            quoteRequest: request) as? CashuSwift.Bolt11.MeltQuote else {
-                fatalError("quote request returned unexpected type")
+            do {
+                guard let quote = try await CashuSwift.getQuote(mint: entry.mint,
+                                                                quoteRequest: request) as? CashuSwift.Bolt11.MeltQuote else {
+                    fatalError("quote request returned unexpected type")
+                }
+                quotes.append((entry.id, quote, entry.amount))
+            } catch {
+                print("error fetching quote from mint: \(entry.mint.url.absoluteString), error: \(error), target amount: \(entry.amount)")
             }
-            quotes.append((entry.id, quote, entry.amount))
         }
         return quotes
     }
