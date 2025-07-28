@@ -253,6 +253,12 @@ enum AppSchemaV1: VersionedSchema {
             self.proofs = []
         }
         
+        func balance(for unit: Unit) -> Int {
+            self.proofs?.filter({ $0.unit == unit })
+                        .filter({ $0.state == .valid })
+                        .sum ?? 0
+        }
+        
         var displayName: String {
             self.nickName ?? self.url.host() ?? self.url.absoluteString
         }

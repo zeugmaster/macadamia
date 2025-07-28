@@ -92,13 +92,15 @@ struct MeltView: View {
                     buttonState = .idle("Melt", action: initiateMelt)
                 }
                 
-                Section {
-                    Text(invoice ?? "None")
-                        .foregroundStyle(.gray)
-                        .monospaced()
-                        .lineLimit(1)
-                } header: {
-                    Text("Invoice")
+                if let invoice {
+                    Section {
+                        Text(invoice)
+                            .foregroundStyle(.gray)
+                            .monospaced()
+                            .lineLimit(1)
+                    } header: {
+                        Text("Invoice")
+                    }
                 }
                 
                 if loadingQuote {
