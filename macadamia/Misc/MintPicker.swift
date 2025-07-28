@@ -9,11 +9,17 @@ struct MintPicker: View {
     
     @Binding private var selectedMint: Mint?
     @Binding private var hide: Mint?
+    @Binding private var isMultipleSelected: Bool
+    
     private var allowsNoneState: Bool = false
+    private var allowsMultipleState: Bool = false
     private var label: String
     
     @State private var mintNamesAndIDs = [(name: String, id: UUID)]()
     @State private var selectedID: UUID? = nil
+    
+    // Special UUID to represent "Multiple" selection
+    private static let multipleSelectionID = UUID()
     
     var activeWallet: Wallet? {
         wallets.first
@@ -24,10 +30,19 @@ struct MintPicker: View {
              .sorted { ($0.userIndex ?? 0) < ($1.userIndex ?? 0) }
     }
     
-    init(label: String, selectedMint: Binding<Mint?>, allowsNoneState: Bool = false, hide: Binding<Mint?>? = nil) {
+    init(
+        label: String, 
+        selectedMint: Binding<Mint?>, 
+        allowsNoneState: Bool = false, 
+        allowsMultipleState: Bool = false,
+        isMultipleSelected: Binding<Bool> = .constant(false),
+        hide: Binding<Mint?>? = nil
+    ) {
         self.label = label
         self._selectedMint = selectedMint
         self.allowsNoneState = allowsNoneState
+        self.allowsMultipleState = allowsMultipleState
+        self._isMultipleSelected = isMultipleSelected
         self._hide = hide ?? .constant(nil)
     }
     
@@ -41,6 +56,10 @@ struct MintPicker: View {
                         Text("Select...")
                             .tag(UUID?.none)
                     }
+                    if allowsMultipleState {
+                        Text("Multiple...")
+                            .tag(Optional(Self.multipleSelectionID))
+                    }
                     ForEach(mintNamesAndIDs, id: \.id) { entry in
                         Text(entry.name).tag(Optional(entry.id))
                     }
@@ -49,22 +68,48 @@ struct MintPicker: View {
         }
         .onAppear {
             populate()
-            if let selectedMint = selectedMint {
+            if isMultipleSelected {
+                selectedID = Self.multipleSelectionID
+            } else if let selectedMint = selectedMint {
                 selectedID = selectedMint.mintID
             }
         }
         .onChange(of: selectedID) { _, newValue in
             if let id = newValue {
-                selectedMint = sortedMintsOfActiveWallet.first { $0.mintID == id }
+                if id == Self.multipleSelectionID {
+                    // Multiple selection chosen
+                    selectedMint = nil
+                    isMultipleSelected = true
+                } else {
+                    // Regular mint selection
+                    selectedMint = sortedMintsOfActiveWallet.first { $0.mintID == id }
+                    isMultipleSelected = false
+                }
             } else {
+                // No selection (allowsNoneState case)
                 selectedMint = nil
+                isMultipleSelected = false
             }
         }
         .onChange(of: selectedMint) { _, newValue in
             if let mint = newValue {
                 selectedID = mint.mintID
-            } else {
+                isMultipleSelected = false
+            } else if !isMultipleSelected {
                 selectedID = nil
+            }
+        }
+        .onChange(of: isMultipleSelected) { _, newValue in
+            if newValue {
+                selectedID = Self.multipleSelectionID
+                selectedMint = nil
+            } else if selectedID == Self.multipleSelectionID {
+                // When switching away from "Multiple", check if parent has set a specific mint
+                if let mint = selectedMint {
+                    selectedID = mint.mintID
+                } else {
+                    selectedID = allowsNoneState ? nil : mintNamesAndIDs.first?.id
+                }
             }
         }
         .onChange(of: hide) { oldValue, newValue in
@@ -84,9 +129,9 @@ struct MintPicker: View {
         }
         
         // Only auto-select if we don't already have a valid selection
-        if (selectedID == nil || !mintNamesAndIDs.contains(where: { $0.id == selectedID })),
+        if (selectedID == nil || (!mintNamesAndIDs.contains(where: { $0.id == selectedID }) && selectedID != Self.multipleSelectionID)),
            let first = mintNamesAndIDs.first,
-           !allowsNoneState {
+           !allowsNoneState && !isMultipleSelected {
             selectedID = first.id
         }
     }

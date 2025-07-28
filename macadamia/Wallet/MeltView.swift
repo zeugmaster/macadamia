@@ -38,6 +38,7 @@ struct MeltView: View {
     @State private var buttonState: ActionButtonState = .idle("")
     
     @State private var selectedMint:Mint?
+    @State private var multiMintSelected: Bool = false
 
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
@@ -57,7 +58,10 @@ struct MeltView: View {
         ZStack {
             List {
                 Section {
-                    MintPicker(label: "Pay from", selectedMint: $selectedMint)
+                    MintPicker(label: "Pay from",
+                               selectedMint: $selectedMint,
+                               allowsMultipleState: true,
+                               isMultipleSelected: $multiMintSelected)
                         .onChange(of: selectedMint) { _, newValue in
                             // Handle pending event case
                             if let pendingMeltEvent,
@@ -88,6 +92,15 @@ struct MeltView: View {
                     buttonState = .idle("Melt", action: initiateMelt)
                 }
                 
+                Section {
+                    Text(invoice ?? "None")
+                        .foregroundStyle(.gray)
+                        .monospaced()
+                        .lineLimit(1)
+                } header: {
+                    Text("Invoice")
+                }
+                
                 if loadingQuote {
                     HStack {
                         Spacer()
@@ -102,6 +115,7 @@ struct MeltView: View {
                     } else {
                         InputView(supportedTypes: [.bolt11Invoice]) { result in
                             guard result.type == .bolt11Invoice else { return }
+                            invoice = result.payload
                             getQuote(for: result.payload)
                         }
                         .listRowBackground(Color.clear)
@@ -132,10 +146,6 @@ struct MeltView: View {
                     Spacer()
                     Text(pendingMeltEvent.date.formatted())
                 }
-                Text(pendingMeltEvent.bolt11MeltQuote?.quoteRequest?.request ?? "None")
-                    .foregroundStyle(.gray)
-                    .monospaced()
-                    .lineLimit(1)
                 if let quote = pendingMeltEvent.bolt11MeltQuote {
                     HStack {
                         Text("Lightning Fee: ")
