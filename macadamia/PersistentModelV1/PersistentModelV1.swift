@@ -527,6 +527,14 @@ enum AppSchemaV1: VersionedSchema {
         
         let mints = activeWallet.mints
         
+        guard !mints.containsKeysetCollision(with: mint) else {
+            throw macadamiaError.mintVerificationError("This mint uses one or more keyset IDs that other mints of this wallet use as well.")
+        }
+        
+        guard mint.keysets.allSatisfy(\.validID) else {
+            throw macadamiaError.mintVerificationError("This mint is using invalid keyset IDs.")
+        }
+        
         if let mint = mints.first(where: { $0.matches(mint) }) {
             logger.info("mint \(mint.url) is already in the database")
             if mint.hidden != hidden { mints.setHidden(hidden, for: mint) }
@@ -582,6 +590,21 @@ extension Array where Element == Mint {
         for i in 0..<visible.count {
             visible[i].userIndex = i
         }
+    }
+    
+    func containsKeysetCollision(with mint: MintRepresenting) -> Bool {
+        
+        let allIDs = Set(self.flatMap { $0.keysets.map(\.keysetID) } )
+        let mintIDs = Set(mint.keysets.map(\.keysetID))
+        
+        if !allIDs.isDisjoint(with: mintIDs) { return true }
+        
+        let allNumerical = Set(try! allIDs.map({ try CashuSwift.numericalRepresentation(of: $0)  }))
+        let mintNumerical = Set(try! mintIDs.map({ try CashuSwift.numericalRepresentation(of: $0) }))
+        
+        if !allNumerical.isDisjoint(with: mintNumerical) { return true }
+        
+        return false
     }
 }
 
