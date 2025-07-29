@@ -73,6 +73,8 @@ struct AlertDetail {
                 self = AlertDetail(title: "Unknown Mint 🥷", description: "You are trying to redeem from a mint that is not known to the wallet. Please add it first.")
             case .unknownKeyset(let string):
                 self = AlertDetail(title: "Keyset Error", description: "Detail: \(string)")
+            case .mintVerificationError(let detail):
+                self = AlertDetail(title: "Mint Verification Error", description: "This mint did not pass verification before being added. Detail: \(detail ?? "None")")
             }
         default:
             self = AlertDetail(title: "Unknown Error", description: error.localizedDescription)
