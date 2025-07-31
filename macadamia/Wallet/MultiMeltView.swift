@@ -12,6 +12,8 @@ import CashuSwift
 struct MintRowInfo: Identifiable {
     let id = UUID()
     let mint: Mint
+    var partialAmount: Int = 0
+    var fee: Int?
     var quote: CashuSwift.Bolt11.MeltQuote?
     
     var balance: Int {
@@ -32,7 +34,7 @@ struct MultiMeltView: View {
         wallets.first
     }
     
-    @Query private var mints: [Mint]
+//    @Query private var mints: [Mint]
     
     @State private var actionButtonState: ActionButtonState = .idle("No State")
     @State private var invoiceString: String?
@@ -100,11 +102,16 @@ struct MultiMeltView: View {
                             .monospaced()
                     }
                     
-                    Group {
+                    HStack {
                         if let quote = mintInfo.quote {
-                            Text(quote.quote)
+                            Text(quote.quote.prefix(10) + "...")
                         } else {
                             Text("No quote")
+                        }
+                        Spacer()
+                        if let fee = mintInfo.fee {
+                            Text("Fee: \(fee)")
+                            Text("Amount: \(mintInfo.partialAmount)")
                         }
                     }
                     .font(.caption)
@@ -116,10 +123,11 @@ struct MultiMeltView: View {
     
     private func populateMintList(invoice: String) {
         let amount = (try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoice.lowercased())) ?? 0
-        mintRowInfoArray = mints.filter({ ($0.balance(for: .sat) > 0 && $0.supportsMPP) || $0.balance(for: .sat) > amount })
+        mintRowInfoArray = activeWallet?.mints.filter({ ($0.balance(for: .sat) > 0 && $0.supportsMPP) || $0.balance(for: .sat) > amount })
             .map({ mint in
-                MintRowInfo(mint: mint)
-            })
+//                print("mint list entry: \(mint.url.absoluteString), of wallet: \(String(describing: mint.wallet?.walletID))")
+                return MintRowInfo(mint: mint)
+            }) ?? []
     }
     
     // GENERAL SELECTION METHODS:
@@ -139,6 +147,13 @@ struct MultiMeltView: View {
         guard let invoiceString,
               let invoiceAmountSat = try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString.lowercased())
         else { return }
+        
+        // Reset mint row info data before loading new quotes
+        for i in mintRowInfoArray.indices {
+            mintRowInfoArray[i].quote = nil
+            mintRowInfoArray[i].partialAmount = 0
+            mintRowInfoArray[i].fee = 0
+        }
 
         let selected = mintRowInfoArray.filter { selectedMintIds.contains($0.id) }
         let totalBalance = selected.map { $0.mint.balance(for: .sat) }.reduce(0, +)
@@ -162,7 +177,7 @@ struct MultiMeltView: View {
         }
 
         let floorSum = shares.map(\.floorPart).reduce(0, +)
-        var remainder = invoiceAmountSat - floorSum
+        let remainder = invoiceAmountSat - floorSum
         let sorted = shares.enumerated().sorted { $0.element.fraction > $1.element.fraction }
 
         var list: [(UUID, CashuSwift.Mint, Int)] = []
@@ -180,6 +195,8 @@ struct MultiMeltView: View {
                     for quote in quotes {
                         guard let i = mintRowInfoArray.firstIndex(where: { $0.id == quote.0 }) else { continue }
                         mintRowInfoArray[i].quote = quote.1
+                        mintRowInfoArray[i].partialAmount = quote.2
+                        mintRowInfoArray[i].fee = quote.1.feeReserve
                     }
                 }
             } catch {
@@ -192,7 +209,8 @@ struct MultiMeltView: View {
 
 
     
-    private func loadInvoices(for list: [(id: UUID, mint: CashuSwift.Mint, amount: Int)], invoice: String) async throws -> [(UUID, CashuSwift.Bolt11.MeltQuote, Int)] {
+    private func loadInvoices(for list: [(id: UUID, mint: CashuSwift.Mint, amount: Int)],
+                              invoice: String) async throws -> [(UUID, CashuSwift.Bolt11.MeltQuote, Int)] {
         var quotes: [(UUID, CashuSwift.Bolt11.MeltQuote, Int)] = []
         for entry in list {
             let options = CashuSwift.Bolt11.RequestMeltQuote.Options(mpp: CashuSwift.Bolt11.RequestMeltQuote.Options.MPP(amount: entry.amount))

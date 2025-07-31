@@ -131,6 +131,7 @@ struct MintInfoView: View {
         .task {
             // fetch mint info
             info = try? await mint.loadInfo()
+//            print(String(describing: mint.supportsMPP))
             // show MOTD if changed
             await MainActor.run {
                 if let motd = info?.motd {
