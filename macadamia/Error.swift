@@ -11,6 +11,7 @@ enum macadamiaError: Error, Sendable {
     case databaseError(String)
     case unknownMint(String?)
     case multiMintToken
+    case mintVerificationError(String?)
     
     case unknownKeyset(String)
     
