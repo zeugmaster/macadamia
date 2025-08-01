@@ -1,5 +1,6 @@
 import Foundation
 import CashuSwift
+import SwiftData
 
 extension AppSchemaV1.Mint {
     
@@ -141,5 +142,37 @@ extension AppSchemaV1.Mint {
         }
     }
 
-    
+    @MainActor
+    func addProofs(_ proofs: [CashuSwift.Proof],
+                   to context: ModelContext,
+                   unit: Unit,
+                   increaseDerivationCounter: Bool = true) throws {
+        
+        guard let wallet = self.wallet else {
+            throw macadamiaError.databaseError("No wallet associated with mint when trying to save \(proofs.count)")
+        }
+        
+        let internalRepresentation = proofs.map { p in
+            let keyset = self.keysets.first(where: { $0.keysetID == p.keysetID })
+            let fee = keyset?.inputFeePPK ?? 0
+            
+            return Proof(p,
+                         unit: unit,
+                         inputFeePPK: fee,
+                         state: .valid,
+                         mint: self,
+                         wallet: wallet)
+        }
+        
+        if increaseDerivationCounter {
+            let ids = Set(proofs.map(\.keysetID))
+            for id in ids {
+                let count = proofs.filter({ $0.keysetID == id }).count
+                self.increaseDerivationCounterForKeysetWithID(id, by: count)
+            }
+        }
+        
+        internalRepresentation.forEach({ context.insert($0) })
+        print("added \(internalRepresentation.count) proofs to db")
+    }
 }
