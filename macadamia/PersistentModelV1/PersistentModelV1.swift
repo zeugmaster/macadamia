@@ -533,12 +533,12 @@ enum AppSchemaV1: VersionedSchema {
         
         let mints = activeWallet.mints
         
-        guard !mints.containsKeysetCollision(with: mint) else {
-            throw macadamiaError.mintVerificationError("This mint uses one or more keyset IDs that other mints of this wallet use as well.")
+        guard mint.keysets.allSatisfy(\.validID) else {
+            throw macadamiaError.mintVerificationError("This mint is using invalid keyset IDs, you should not trust it.")
         }
         
-        guard mint.keysets.allSatisfy(\.validID) else {
-            throw macadamiaError.mintVerificationError("This mint is using invalid keyset IDs.")
+        if let colliding = mints.filter({ $0.hidden == false }).keysetCollisions(with: mint) {
+                         throw macadamiaError.mintVerificationError("This mint's keysets collide with \(colliding.map({ $0.displayName }).joined(separator: ", ")). It should not be used and might not be trustworthy.")
         }
         
         if let mint = mints.first(where: { $0.matches(mint) }) {
@@ -547,6 +547,7 @@ enum AppSchemaV1: VersionedSchema {
             addProofs(proofs, to: mint)
             return mint
         } else {
+            
             let newMint = Mint(mint)
             newMint.wallet = activeWallet
             newMint.hidden = hidden
@@ -598,19 +599,28 @@ extension Array where Element == Mint {
         }
     }
     
-    func containsKeysetCollision(with mint: MintRepresenting) -> Bool {
+    func keysetCollisions(with mint: MintRepresenting) -> [Mint]? {
         
-        let allIDs = Set(self.flatMap { $0.keysets.map(\.keysetID) } )
         let mintIDs = Set(mint.keysets.map(\.keysetID))
-        
-        if !allIDs.isDisjoint(with: mintIDs) { return true }
-        
-        let allNumerical = Set(try! allIDs.map({ try CashuSwift.numericalRepresentation(of: $0)  }))
         let mintNumerical = Set(try! mintIDs.map({ try CashuSwift.numericalRepresentation(of: $0) }))
         
-        if !allNumerical.isDisjoint(with: mintNumerical) { return true }
+        var collidingMints: [Mint] = []
         
-        return false
+        for existingMint in self {
+            let existingIDs = Set(existingMint.keysets.map(\.keysetID))
+            let existingNumerical = Set(try! existingIDs.map({ try CashuSwift.numericalRepresentation(of: $0) }))
+            
+            // Check for direct ID collision or numerical representation collision
+            if !existingIDs.isDisjoint(with: mintIDs) || !existingNumerical.isDisjoint(with: mintNumerical) {
+                collidingMints.append(existingMint)
+            }
+        }
+        
+        return collidingMints.isEmpty ? nil : collidingMints
+    }
+    
+    func containsKeysetCollision(with mint: MintRepresenting) -> Bool {
+        return keysetCollisions(with: mint) != nil
     }
 }
 
