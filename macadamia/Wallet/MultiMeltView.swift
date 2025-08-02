@@ -41,9 +41,8 @@ struct MultiMeltView: View {
     @State private var mintRowInfoArray: [MintRowInfo] = []
     
     @State private var mintListEditing = false
-    private var multiMintRequired: Bool {
-        true
-    }
+    @State private var multiMintRequired: Bool = false
+    @State private var automaticallySelected: Bool = false
     
     @State private var selectedMintIds: Set<UUID> = []
     
@@ -68,21 +67,24 @@ struct MultiMeltView: View {
                     }
                     .onAppear {
                         populateMintList(invoice: invoiceString)
+                        autoSelectMintsAndFetchQuotes()
                         actionButtonState = .idle("Pay", action: startMelt)
                     }
                     
                     Section {
                         mintList
-                            .disabled(!mintListEditing)
+                            .disabled(multiMintRequired && !mintListEditing)
                     } header: {
                         HStack {
                             Text("Pay from")
                             Spacer()
-                            Button {
-                                mintListEditing.toggle()
-                            } label: {
-                                Text(mintListEditing ? "Done" : "Edit")
-                                    .font(.footnote)
+                            if multiMintRequired {
+                                Button {
+                                    mintListEditing.toggle()
+                                } label: {
+                                    Text(mintListEditing ? "Done" : "Edit")
+                                        .font(.footnote)
+                                }
                             }
                         }
                     }
@@ -263,7 +265,7 @@ struct MultiMeltView: View {
         
         actionButtonState = .loading()
         
-        // select mints and
+        // select mints and store proofs for potential rollback
         let mintsAndProofs = selectedMintsInfo.map { row in
             guard let selected = row.mint.select(amount: row.partialAmount + (row.fee ?? 0), unit: .sat) else {
                 fatalError()
@@ -272,12 +274,12 @@ struct MultiMeltView: View {
             guard let quote = row.quote else {
                 fatalError()
             }
-            return (row.mint, quote, selected.selected)
+            return (mint: row.mint, quote: quote, proofs: selected.selected)
         }
         
         
-        let taskGroupInputs = mintsAndProofs.map { (mint, quote, selection) in
-            (CashuSwift.Mint(mint), quote, selection.sendable())
+        let taskGroupInputs = mintsAndProofs.map { entry in
+            (CashuSwift.Mint(entry.mint), entry.quote, entry.proofs.sendable())
         }
         
         Task {
@@ -297,6 +299,12 @@ struct MultiMeltView: View {
                     
                     // return to main thread with change and save, mark inputs as spent
                     try await MainActor.run {
+                        // Mark all used proofs as spent
+                        for entry in mintsAndProofs {
+                            entry.proofs.setState(.spent)
+                        }
+                        
+                        // Add change proofs
                         for result in results {
                             if let internalMint = activeWallet.mints.first(where: { $0.url == result.0.url }) { // FIXME: DO NOT MATCH MINTS BY URL
                                 try internalMint.addProofs(result.1,
@@ -310,6 +318,12 @@ struct MultiMeltView: View {
             } catch {
                 await MainActor.run {
                     print("failed due to error \(error)")
+                    
+                    // Revert all selected proofs back to valid state
+                    for entry in mintsAndProofs {
+                        entry.proofs.setState(.valid)
+                    }
+                    
                     displayAlert(alert: AlertDetail(with: error))
                     actionButtonState = .fail()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -331,6 +345,55 @@ struct MultiMeltView: View {
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
+    }
+    
+    private func autoSelectMintsAndFetchQuotes() {
+        guard let invoiceString,
+              let invoiceAmountSat = try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString.lowercased())
+        else { return }
+        
+        // Sort mints by balance (descending) to optimize selection
+        let sortedMints = mintRowInfoArray.sorted { $0.balance > $1.balance }
+        
+        // Check if any single mint can pay the full amount
+        if let singleMint = sortedMints.first(where: { $0.balance >= invoiceAmountSat }) {
+            // Single mint can pay - allow selection from the beginning
+            multiMintRequired = false
+            selectedMintIds = [singleMint.id]
+            automaticallySelected = false
+        } else {
+            // Need multiple mints - find minimum set that supports MPP
+            var totalBalance = 0
+            var selectedMints: [MintRowInfo] = []
+            
+            // First, select all MPP-supporting mints until we have enough balance
+            for mint in sortedMints where mint.mint.supportsMPP {
+                selectedMints.append(mint)
+                totalBalance += mint.balance
+                if totalBalance >= invoiceAmountSat {
+                    break
+                }
+            }
+            
+            // Check if we have enough with MPP mints
+            if totalBalance < invoiceAmountSat {
+                // Not enough even with all MPP mints - show error
+                displayAlert(alert: AlertDetail(
+                    title: "Insufficient Funds",
+                    description: "Not enough balance across MPP-supporting mints to pay this invoice."
+                ))
+                return
+            }
+            
+            // Set the selected mints and update state
+            multiMintRequired = true
+            automaticallySelected = true
+            selectedMintIds = Set(selectedMints.map { $0.id })
+            mintListEditing = false
+        }
+        
+        // Fetch quotes for selected mints
+        reloadMintQuotes()
     }
 }
 
