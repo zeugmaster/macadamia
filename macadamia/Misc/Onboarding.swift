@@ -57,7 +57,6 @@ struct Onboarding: View {
                 }
                 .tabViewStyle(.page)
                 .indexViewStyle(.page(backgroundDisplayMode: .always))
-                .padding(8)
         
                 HStack {
                     Spacer()
@@ -77,7 +76,6 @@ struct Onboarding: View {
                     .buttonStyle(.bordered)
                 }
             }
-            .padding()
         }
         .background(Color.gray.opacity(0.15))
         .ignoresSafeArea()
@@ -85,6 +83,12 @@ struct Onboarding: View {
 }
 
 struct OnboardingPageLayout<Content: View>: View {
+    @ScaledMetric(relativeTo: .body) private var scaleMetric: CGFloat = 20
+    
+    private var sidePadding: CGFloat {
+        max(0, 50-scaleMetric)
+    }
+    
     var title: String
     var content: () -> Content
     
@@ -98,7 +102,7 @@ struct OnboardingPageLayout<Content: View>: View {
             content()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(EdgeInsets(top: 0, leading: 10, bottom: 70, trailing: 10))
+        .padding(EdgeInsets(top: 0, leading: sidePadding, bottom: 70, trailing: sidePadding))
     }
 }
 
