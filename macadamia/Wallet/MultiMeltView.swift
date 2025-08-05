@@ -50,6 +50,7 @@ struct MultiMeltView: View {
     @State private var currentAlert: AlertDetail?
     @State private var showMintSelector: Bool = false
     @State private var insufficientFundsError: String? = nil
+    @State private var scannerResetID = UUID() // Used to force InputView recreation on reset
     
     init(pendingMeltEvent: Event? = nil, invoice: String? = nil) {
         // Initialization logic here
@@ -80,6 +81,8 @@ struct MultiMeltView: View {
                                     automaticallySelected = false
                                     showMintSelector = false
                                     actionButtonState = .idle("Scan or paste invoice")
+                                    // Force InputView to be recreated
+                                    scannerResetID = UUID()
                                 }
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
@@ -200,6 +203,7 @@ struct MultiMeltView: View {
                                 invoiceString = result.payload
                             }
                         }
+                        .id(scannerResetID)
                         .listRowBackground(Color.clear)
                     }
                     .transition(.opacity.combined(with: .scale(scale: 1.02)))
@@ -213,7 +217,7 @@ struct MultiMeltView: View {
             VStack {
                 Spacer()
                 ActionButton(state: $actionButtonState)
-                    .actionDisabled(insufficientFundsError != nil)
+                    .actionDisabled(insufficientFundsError != nil || invoiceString == nil)
             }
         }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
