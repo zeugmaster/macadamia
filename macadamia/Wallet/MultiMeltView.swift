@@ -99,45 +99,10 @@ struct MultiMeltView: View {
                         .buttonStyle(PlainButtonStyle())
                         
                         if showMintSelector {
+                            let invoiceAmount = (try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString.lowercased())) ?? 0
+                            
                             ForEach(mintRowInfoArray) { mintInfo in
-                                HStack {
-                                    Button {
-                                        // Toggle selection using Set operations
-                                        toggleSelection(for: mintInfo.id)
-                                    } label: {
-                                        Image(systemName: selectedMintIds.contains(mintInfo.id) ? "checkmark.circle.fill" : "circle")
-                                            .foregroundColor(selectedMintIds.contains(mintInfo.id) ? .accentColor : .secondary)
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
-                                    
-                                    VStack(alignment: .leading) {
-                                        HStack {
-                                            Text(mintInfo.mint.displayName)
-                                            Spacer()
-                                            Text(String(mintInfo.balance))
-                                                .monospaced()
-                                        }
-                                        
-                                        HStack {
-                                            if let quote = mintInfo.quote {
-                                                Text(quote.quote.prefix(10) + "...")
-                                            } else {
-                                                Text("No quote")
-                                            }
-                                            Spacer()
-                                            if let fee = mintInfo.fee {
-                                                Text("Fee: \(fee)")
-                                                Text("Amount: \(mintInfo.partialAmount)")
-                                            }
-                                        }
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                    }
-                                }
-                                .transition(.asymmetric(
-                                    insertion: .move(edge: .top).combined(with: .opacity),
-                                    removal: .move(edge: .top).combined(with: .opacity)
-                                ))
+                                mintRowView(for: mintInfo, invoiceAmount: invoiceAmount)
                             }
                         }
                     } header: {
@@ -189,6 +154,70 @@ struct MultiMeltView: View {
         }
     }
     
+    @ViewBuilder
+    private func mintRowView(for mintInfo: MintRowInfo, invoiceAmount: Int) -> some View {
+        let canPayFull = mintInfo.balance >= invoiceAmount
+        let supportsMPP = mintInfo.mint.supportsMPP
+        let isDisabled = !canPayFull && !supportsMPP
+        let isSelected = selectedMintIds.contains(mintInfo.id)
+        
+        HStack {
+            Button {
+                if !isDisabled {
+                    toggleSelection(for: mintInfo.id)
+                }
+            } label: {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(isDisabled ? .gray : (isSelected ? .accentColor : .secondary))
+            }
+            .buttonStyle(PlainButtonStyle())
+            .disabled(isDisabled)
+            
+            VStack(alignment: .leading, spacing: 3) {
+                HStack {
+                    Text(mintInfo.mint.displayName)
+                    Spacer()
+                    Text("\(mintInfo.balance) sats")
+                        .font(.footnote)
+                        .monospaced()
+                }
+                .foregroundColor(isDisabled ? .gray : .primary)
+                
+                HStack {
+                    // MPP support indicator
+                    if supportsMPP {
+                        Text("MPP \(Image(systemName: "arrow.triangle.branch"))")
+                            .font(.caption2)
+//                            .foregroundColor(.green)
+                    } else if canPayFull {
+                        Text("Full payment")
+                            .font(.caption2)
+//                            .foregroundColor(.blue)
+                    } else {
+                        Text("Insufficient balance")
+                            .font(.caption2)
+//                            .foregroundColor(.red)
+                    }
+                    
+                    Spacer()
+                    
+                    // Only show fee and allocation if selected and quote loaded
+                    if isSelected, let fee = mintInfo.fee, mintInfo.partialAmount > 0 {
+                        Text("Fee: \(fee) • Amount: \(mintInfo.partialAmount)")
+                            .font(.caption2)
+                            .monospaced()
+                    }
+                }
+                .foregroundStyle(isDisabled ? .gray : .secondary)
+            }
+        }
+        .opacity(isDisabled ? 0.6 : 1.0)
+        .transition(.asymmetric(
+            insertion: .move(edge: .top).combined(with: .opacity),
+            removal: .move(edge: .top).combined(with: .opacity)
+        ))
+    }
+    
     private func populateMintList(invoice: String) {
         let amount = (try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoice.lowercased())) ?? 0
         let filteredMints = activeWallet?.mints.filter({ ($0.balance(for: .sat) > 0 && $0.supportsMPP) || $0.balance(for: .sat) > amount })
@@ -208,9 +237,11 @@ struct MultiMeltView: View {
             }
         }
         
-        mintRowInfoArray = mintsByURL.values.map({ mint in
+        mintRowInfoArray = mintsByURL.values
+            .map({ mint in
                 return MintRowInfo(mint: mint)
             })
+            .sorted(by: { ($0.mint.userIndex ?? Int.max) < ($1.mint.userIndex ?? Int.max) })
     }
     
     // GENERAL SELECTION METHODS:
@@ -369,6 +400,9 @@ struct MultiMeltView: View {
                             }
                         }
                         actionButtonState = .success()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            dismiss()
+                        }
                     }
                 }
             } catch {
@@ -393,7 +427,6 @@ struct MultiMeltView: View {
                       on mint: CashuSwift.Mint,
                       proofs: [CashuSwift.Proof]) async throws -> [CashuSwift.Proof] {
         let blankOutputs = try CashuSwift.generateBlankOutputs(quote: quote, proofs: proofs, mint: mint, unit: "sat", seed: activeWallet?.seed)
-        print("melting with \(mint.url.absoluteString)...")
         return try await CashuSwift.melt(with: quote, mint: mint, proofs: proofs, blankOutputs: blankOutputs).change ?? []
     }
     

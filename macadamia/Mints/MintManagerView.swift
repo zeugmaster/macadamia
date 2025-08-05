@@ -281,6 +281,7 @@ struct MintInfoRowView: View {
                     .dynamicTypeSize(.xLarge)
                 Text(amountDisplayString ?? "No Balance")
                     .foregroundStyle(.gray)
+//                Text(mint.supportsMPP ? "MPP" : "NO MPP")
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .refreshAllMints)) { _ in
