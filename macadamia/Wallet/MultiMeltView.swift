@@ -150,6 +150,7 @@ struct MultiMeltView: View {
                             ForEach(mintRowInfoArray) { mintInfo in
                                 mintRowView(for: mintInfo, invoiceAmount: invoiceAmount)
                             }
+                            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: selectedMintIds)
                         }
                     } header: {
                         Text("Pay from")
@@ -282,15 +283,14 @@ struct MultiMeltView: View {
                     if supportsMPP {
                         Text("MPP \(Image(systemName: "arrow.triangle.branch"))")
                             .font(.caption2)
-//                            .foregroundColor(.green)
                     } else if canPayFull {
-                        Text("Full payment")
-                            .font(.caption2)
-//                            .foregroundColor(.blue)
+                        HStack(spacing: 2) {
+                            Text("Full payment")
+                                .font(.caption2)
+                        }
                     } else {
                         Text("Insufficient balance")
                             .font(.caption2)
-//                            .foregroundColor(.red)
                     }
                     
                     Spacer()
@@ -346,10 +346,42 @@ struct MultiMeltView: View {
         // Clear any error when user takes control
         insufficientFundsError = nil
         
+        // Implement mutual exclusion for non-MPP mints:
+        // - Non-MPP mints that can pay the full invoice must be used exclusively
+        // - Selecting such a mint deselects all others
+        // - Selecting any other mint deselects non-MPP exclusive mints
+        
+        guard let mintInfo = mintRowInfoArray.first(where: { $0.id == id }) else { return }
+        let invoiceAmount = (try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString?.lowercased() ?? "")) ?? 0
+        
         if selectedMintIds.contains(id) {
+            // Deselecting
             selectedMintIds.remove(id)
         } else {
-            selectedMintIds.insert(id)
+            // Selecting
+            let isNonMPPFullPayment = !mintInfo.mint.supportsMPP && mintInfo.balance >= invoiceAmount
+            
+            if isNonMPPFullPayment {
+                // Non-MPP mint that can pay full invoice - deselect all others
+                selectedMintIds = [id]
+            } else {
+                // Check if any currently selected mint is a non-MPP full payment mint
+                let hasNonMPPSelected = mintRowInfoArray.contains { info in
+                    selectedMintIds.contains(info.id) && 
+                    !info.mint.supportsMPP && 
+                    info.balance >= invoiceAmount
+                }
+                
+                if hasNonMPPSelected {
+                    // Remove non-MPP mints when selecting an MPP mint
+                    selectedMintIds = selectedMintIds.filter { selectedId in
+                        guard let selectedMint = mintRowInfoArray.first(where: { $0.id == selectedId }) else { return false }
+                        return selectedMint.mint.supportsMPP || selectedMint.balance < invoiceAmount
+                    }
+                }
+                
+                selectedMintIds.insert(id)
+            }
         }
         reloadMintQuotes()
     }
@@ -546,6 +578,7 @@ struct MultiMeltView: View {
         insufficientFundsError = nil
         
         // Check if any single mint can pay the full amount
+        // This includes non-MPP mints, which must be used exclusively
         if let singleMint = sortedMints.first(where: { $0.balance >= invoiceAmountSat }) {
             // Single mint can pay - allow selection from the beginning
             multiMintRequired = false
