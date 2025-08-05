@@ -36,7 +36,7 @@ struct MultiMeltView: View {
     
 //    @Query private var mints: [Mint]
     
-    @State private var actionButtonState: ActionButtonState = .idle("No State")
+    @State private var actionButtonState: ActionButtonState = .idle("Scan or paste invoice")
     @State private var invoiceString: String?
     @State private var mintRowInfoArray: [MintRowInfo] = []
     
@@ -49,6 +49,7 @@ struct MultiMeltView: View {
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
     @State private var showMintSelector: Bool = false
+    @State private var insufficientFundsError: String? = nil
     
     init(pendingMeltEvent: Event? = nil, invoice: String? = nil) {
         // Initialization logic here
@@ -58,18 +59,48 @@ struct MultiMeltView: View {
         ZStack {
             List {
                 if let invoiceString {
-                    Section {
-                        Text(invoiceString)
+                    Group {
+                        Section {
+                            Text(invoiceString)
                             .foregroundStyle(.gray)
                             .monospaced()
                             .lineLimit(1)
                     } header: {
-                        Text("Invoice")
+                        HStack {
+                            Text("Invoice")
+                            Spacer()
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    // Reset to scanner view
+                                    self.invoiceString = nil
+                                    selectedMintIds = []
+                                    mintRowInfoArray = []
+                                    insufficientFundsError = nil
+                                    multiMintRequired = false
+                                    automaticallySelected = false
+                                    showMintSelector = false
+                                    actionButtonState = .idle("Scan or paste invoice")
+                                }
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .help("Clear invoice and return to scanner")
+                        }
                     }
                     .onAppear {
                         populateMintList(invoice: invoiceString)
                         autoSelectMintsAndFetchQuotes()
                         actionButtonState = .idle("Pay", action: startMelt)
+                    }
+                    .onChange(of: insufficientFundsError) { _, newValue in
+                        if newValue != nil {
+                            actionButtonState = .idle("Insufficient Funds")
+                        } else if !selectedMintIds.isEmpty {
+                            actionButtonState = .idle("Pay", action: startMelt)
+                        }
                     }
                     
                     Section {
@@ -89,14 +120,26 @@ struct MultiMeltView: View {
                                     }
                                 }
                                 Spacer()
+                                
+                                // Show wand icon if selection was automatic
+                                if multiMintRequired && automaticallySelected {
+                                    Image(systemName: "wand.and.stars")
+                                        .foregroundColor(.secondary)
+                                        .font(.title3)
+                                        .transition(.scale.combined(with: .opacity))
+                                        .help("Mints automatically selected for optimal payment")
+                                }
+                                
                                 Image(systemName: "chevron.right")
                                     .foregroundColor(.secondary)
                                     .font(.footnote)
                                     .rotationEffect(.degrees(showMintSelector ? 90 : 0))
                                     .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showMintSelector)
                             }
+                            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: automaticallySelected)
                         }
                         .buttonStyle(PlainButtonStyle())
+                        .disabled(insufficientFundsError != nil)
                         
                         if showMintSelector {
                             let invoiceAmount = (try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString.lowercased())) ?? 0
@@ -108,22 +151,69 @@ struct MultiMeltView: View {
                     } header: {
                         Text("Pay from")
                     }
-                } else {
-                    InputView(supportedTypes: [.bolt11Invoice]) { result in
-                        guard result.type == .bolt11Invoice else { return }
-                        invoiceString = result.payload
+                    .animation(.spring(response: 0.3, dampingFraction: 0.8), value: insufficientFundsError)
+                    
+                    // Show insufficient funds error if present
+                    if let errorMessage = insufficientFundsError {
+                        Section {
+                            HStack(spacing: 12) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.orange)
+                                    .font(.title2)
+                                
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("Insufficient Balance")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Text(errorMessage)
+                                        .font(.footnote)
+                                        .foregroundColor(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                
+                                Spacer()
+                            }
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.orange.opacity(0.08))
+                            )
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .top).combined(with: .opacity),
+                                removal: .scale.combined(with: .opacity)
+                            ))
+                            .listRowBackground(EmptyView())
+                        } header: {
+                            Label("Payment Issue", systemImage: "info.circle")
+                                .foregroundColor(.orange)
+                        }
                     }
-                    .listRowBackground(Color.clear)
+                    }
+                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                } else {
+                    Group {
+                        InputView(supportedTypes: [.bolt11Invoice]) { result in
+                            guard result.type == .bolt11Invoice else { return }
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                invoiceString = result.payload
+                            }
+                        }
+                        .listRowBackground(Color.clear)
+                    }
+                    .transition(.opacity.combined(with: .scale(scale: 1.02)))
                 }
                 
                 Spacer(minLength: 50)
                     .listRowBackground(Color.clear)
             }
+            .animation(.easeInOut(duration: 0.3), value: invoiceString)
             
             VStack {
                 Spacer()
                 ActionButton(state: $actionButtonState)
-                    .actionDisabled(false)
+                    .actionDisabled(insufficientFundsError != nil)
             }
         }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
@@ -247,6 +337,11 @@ struct MultiMeltView: View {
     // GENERAL SELECTION METHODS:
     
     private func toggleSelection(for id: UUID) {
+        // Mark that user has manually changed selection
+        automaticallySelected = false
+        // Clear any error when user takes control
+        insufficientFundsError = nil
+        
         if selectedMintIds.contains(id) {
             selectedMintIds.remove(id)
         } else {
@@ -443,6 +538,9 @@ struct MultiMeltView: View {
         // Sort mints by balance (descending) to optimize selection
         let sortedMints = mintRowInfoArray.sorted { $0.balance > $1.balance }
         
+        // Clear any previous error
+        insufficientFundsError = nil
+        
         // Check if any single mint can pay the full amount
         if let singleMint = sortedMints.first(where: { $0.balance >= invoiceAmountSat }) {
             // Single mint can pay - allow selection from the beginning
@@ -466,10 +564,12 @@ struct MultiMeltView: View {
             // Check if we have enough with MPP mints
             if totalBalance < invoiceAmountSat {
                 // Not enough even with all MPP mints - show error
-                displayAlert(alert: AlertDetail(
-                    title: "Insufficient Funds",
-                    description: "Not enough balance across MPP-supporting mints to pay this invoice."
-                ))
+                let shortage = invoiceAmountSat - totalBalance
+                let mppMintCount = sortedMints.filter { $0.mint.supportsMPP }.count
+                insufficientFundsError = "You have \(totalBalance) sats across \(mppMintCount) MPP mints, but need \(invoiceAmountSat) sats total. Add \(shortage) more sats to any MPP-supporting mint to complete this payment."
+                multiMintRequired = false
+                automaticallySelected = false
+                selectedMintIds = []
                 return
             }
             
