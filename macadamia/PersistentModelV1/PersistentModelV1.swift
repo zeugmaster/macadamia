@@ -406,6 +406,8 @@ enum AppSchemaV1: VersionedSchema {
         
         var redeemed: Bool?
         
+        var groupingID: UUID?
+        
         enum Kind: Codable {
             case pendingMint
             case mint
@@ -433,7 +435,8 @@ enum AppSchemaV1: VersionedSchema {
              proofs: [Proof]? = nil,
              memo: String? = nil,
              mints: [Mint]? = nil,
-             redeemed: Bool? = nil) {
+             redeemed: Bool? = nil,
+             groupingID: UUID? = nil) {
             
             self.eventID = UUID()
             self.date = date
@@ -452,6 +455,7 @@ enum AppSchemaV1: VersionedSchema {
             self.memo = memo
             self.mints = Array(mints ?? [])
             self.redeemed = redeemed
+            self.groupingID = groupingID
         }
         
         var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? {

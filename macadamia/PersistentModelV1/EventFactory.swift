@@ -127,7 +127,8 @@ extension AppSchemaV1.Event {
                                  amount: Int,
                                  expiration: Date,
                                  mints: [Mint],
-                                 proofs: [Proof]? = nil) -> Event {
+                                 proofs: [Proof]? = nil,
+                                 groupingID: UUID? = nil) -> Event {
         Event(date: Date(),
               unit: unit,
               shortDescription: shortDescription,
@@ -148,7 +149,8 @@ extension AppSchemaV1.Event {
                           wallet: Wallet,
                           amount: Int,
                           longDescription: String,
-                          mints:[Mint]) -> Event {
+                          mints:[Mint],
+                          groupingID: UUID? = nil) -> Event {
         Event(date: Date(),
               unit: unit,
               shortDescription: shortDescription,
