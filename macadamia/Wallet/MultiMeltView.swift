@@ -34,8 +34,6 @@ struct MultiMeltView: View {
         wallets.first
     }
     
-//    @Query private var mints: [Mint]
-    
     @State private var actionButtonState: ActionButtonState = .idle("Scan or paste invoice")
     @State private var invoiceString: String?
     @State private var mintRowInfoArray: [MintRowInfo] = []
@@ -51,6 +49,7 @@ struct MultiMeltView: View {
     @State private var showMintSelector: Bool = false
     @State private var insufficientFundsError: String? = nil
     @State private var scannerResetID = UUID() // Used to force InputView recreation on reset
+    @State private var insufficientSelectionError: String? = nil
     
     init(pendingMeltEvent: Event? = nil, invoice: String? = nil) {
         // Initialization logic here
@@ -71,19 +70,20 @@ struct MultiMeltView: View {
                                 Text("Invoice")
                                 Spacer()
                                 Button {
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        // Reset to scanner view
-                                        self.invoiceString = nil
-                                        selectedMintIds = []
-                                        mintRowInfoArray = []
-                                        insufficientFundsError = nil
-                                        multiMintRequired = false
-                                        automaticallySelected = false
-                                        showMintSelector = false
-                                        actionButtonState = .idle("Scan or paste invoice")
-                                        // Force InputView to be recreated
-                                        scannerResetID = UUID()
-                                    }
+                                                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                    // Reset to scanner view
+                                    self.invoiceString = nil
+                                    selectedMintIds = []
+                                    mintRowInfoArray = []
+                                    insufficientFundsError = nil
+                                    insufficientSelectionError = nil
+                                    multiMintRequired = false
+                                    automaticallySelected = false
+                                    showMintSelector = false
+                                    actionButtonState = .idle("Scan or paste invoice")
+                                    // Force InputView to be recreated
+                                    scannerResetID = UUID()
+                                }
                                 } label: {
                                     Image(systemName: "xmark.circle.fill")
                                         .font(.footnote)
@@ -96,12 +96,30 @@ struct MultiMeltView: View {
                         .onAppear {
                             populateMintList(invoice: invoiceString)
                             autoSelectMintsAndFetchQuotes()
-                            actionButtonState = .idle("Pay", action: startMelt)
+                            if selectedMintIds.isEmpty {
+                                actionButtonState = .idle("Select Mints")
+                            } else {
+                                actionButtonState = .idle("Pay", action: startMelt)
+                            }
                         }
                         .onChange(of: insufficientFundsError) { _, newValue in
                             if newValue != nil {
                                 actionButtonState = .idle("Insufficient Funds")
                             } else if !selectedMintIds.isEmpty {
+                                actionButtonState = .idle("Pay", action: startMelt)
+                            }
+                        }
+                        .onChange(of: insufficientSelectionError) { _, newValue in
+                            if newValue != nil {
+                                actionButtonState = .idle("Insufficient Selection")
+                            } else if !selectedMintIds.isEmpty && insufficientFundsError == nil {
+                                actionButtonState = .idle("Pay", action: startMelt)
+                            }
+                        }
+                        .onChange(of: selectedMintIds) { _, newValue in
+                            if newValue.isEmpty {
+                                actionButtonState = .idle("Select Mints")
+                            } else if insufficientFundsError == nil && insufficientSelectionError == nil {
                                 actionButtonState = .idle("Pay", action: startMelt)
                             }
                         }
@@ -116,11 +134,9 @@ struct MultiMeltView: View {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(mintSelectionSummary)
                                             .foregroundColor(.primary)
-                                        if !selectedMintIds.isEmpty {
-                                            Text(mintSelectionDetails)
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
+                                        Text(mintSelectionDetails)
+                                            .font(.caption)
+                                            .foregroundColor(insufficientSelectionError != nil ? .orange : .secondary)
                                     }
                                     Spacer()
                                     
@@ -216,7 +232,7 @@ struct MultiMeltView: View {
             VStack {
                 Spacer()
                 ActionButton(state: $actionButtonState)
-                    .actionDisabled(insufficientFundsError != nil || invoiceString == nil)
+                    .actionDisabled(insufficientFundsError != nil || insufficientSelectionError != nil || selectedMintIds.isEmpty || invoiceString == nil)
             }
         }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
@@ -236,11 +252,17 @@ struct MultiMeltView: View {
     }
     
     private var mintSelectionDetails: String {
+        if selectedMintIds.isEmpty {
+            return "No mint selected"
+        }
+        
         let selectedMints = mintRowInfoArray.filter { selectedMintIds.contains($0.id) }
         let totalBalance = selectedMints.map { $0.balance }.reduce(0, +)
         let totalFees = selectedMints.compactMap { $0.fee }.reduce(0, +)
         
-        if totalFees > 0 {
+        if insufficientSelectionError != nil {
+            return "⚠️ Balance: \(totalBalance) sats (insufficient)"
+        } else if totalFees > 0 {
             return "Balance: \(totalBalance) sats • Total fees: \(totalFees) sats"
         } else {
             return "Balance: \(totalBalance) sats"
@@ -341,8 +363,9 @@ struct MultiMeltView: View {
     private func toggleSelection(for id: UUID) {
         // Mark that user has manually changed selection
         automaticallySelected = false
-        // Clear any error when user takes control
+        // Clear any errors when user takes control - they will be recalculated
         insufficientFundsError = nil
+        insufficientSelectionError = nil
         
         // Implement mutual exclusion for non-MPP mints:
         // - Non-MPP mints that can pay the full invoice must be used exclusively
@@ -386,7 +409,10 @@ struct MultiMeltView: View {
     
 
     private func reloadMintQuotes() {
-        if selectedMintIds.isEmpty { return }
+        if selectedMintIds.isEmpty { 
+            insufficientSelectionError = nil
+            return 
+        }
         guard let invoiceString,
               let invoiceAmountSat = try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString.lowercased())
         else { return }
@@ -400,6 +426,15 @@ struct MultiMeltView: View {
 
         let selected = mintRowInfoArray.filter { selectedMintIds.contains($0.id) }
         let totalBalance = selected.map { $0.mint.balance(for: .sat) }.reduce(0, +)
+        
+        // Check if total balance is sufficient before loading quotes
+        if totalBalance < invoiceAmountSat {
+            let shortage = invoiceAmountSat - totalBalance
+            insufficientSelectionError = "Selected mints have \(totalBalance) sats, but \(invoiceAmountSat) sats are needed. Select more mints or add \(shortage) sats."
+            return
+        } else {
+            insufficientSelectionError = nil
+        }
         let totalBalanceDec = Decimal(totalBalance)
         let totalSatDec = Decimal(invoiceAmountSat)
 
@@ -433,9 +468,23 @@ struct MultiMeltView: View {
 
         Task {
             do {
-                let quotes = try await loadQuotes(for: list, invoice: invoiceString)
+                let result = try await loadQuotes(for: list, invoice: invoiceString)
                 await MainActor.run {
-                    for quote in quotes {
+                    // Check if any quotes failed to load
+                    if !result.failedMints.isEmpty {
+                        if result.failedMints.count == list.count {
+                            // All quotes failed
+                            insufficientSelectionError = "Unable to get quotes from any selected mint. Check your network connection and try again."
+                        } else {
+                            // Some quotes failed
+                            let failedList = result.failedMints.joined(separator: ", ")
+                            insufficientSelectionError = "Unable to get quotes from: \(failedList). Try different mints or check your connection."
+                        }
+                        return
+                    }
+                    
+                    // Process successful quotes
+                    for quote in result.quotes {
                         guard let i = mintRowInfoArray.firstIndex(where: { $0.id == quote.0 }) else { continue }
                         mintRowInfoArray[i].quote = quote.1
                         mintRowInfoArray[i].partialAmount = Int(quote.2 / 1000)
@@ -443,6 +492,9 @@ struct MultiMeltView: View {
                     }
                 }
             } catch {
+                await MainActor.run {
+                    insufficientSelectionError = "Failed to get quotes: \(error.localizedDescription)"
+                }
                 print("error fetching quotes: \(error)")
             }
         }
@@ -450,8 +502,10 @@ struct MultiMeltView: View {
 
     
     private func loadQuotes(for list: [(id: UUID, mint: CashuSwift.Mint, amount: Int)],
-                              invoice: String) async throws -> [(UUID, CashuSwift.Bolt11.MeltQuote, Int)] {
+                              invoice: String) async throws -> (quotes: [(UUID, CashuSwift.Bolt11.MeltQuote, Int)], failedMints: [String]) {
         var quotes: [(UUID, CashuSwift.Bolt11.MeltQuote, Int)] = []
+        var failedMints: [String] = []
+        
         for entry in list {
             let options = CashuSwift.Bolt11.RequestMeltQuote.Options(mpp: CashuSwift.Bolt11.RequestMeltQuote.Options.MPP(amount: entry.amount))
             let request = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat",
@@ -465,15 +519,21 @@ struct MultiMeltView: View {
                 quotes.append((entry.id, quote, entry.amount))
             } catch {
                 print("error fetching quote from mint: \(entry.mint.url.absoluteString), error: \(error), target amount: \(entry.amount)")
+                failedMints.append(entry.mint.url.host() ?? entry.mint.url.absoluteString)
             }
         }
-        return quotes
+        return (quotes, failedMints)
     }
     
-    
+    // persist
     private func startMelt() {
         // skip pending mint events for now
         guard let activeWallet else {
+            return
+        }
+        
+        // Don't proceed if there's insufficient balance or selection
+        guard insufficientFundsError == nil && insufficientSelectionError == nil else {
             return
         }
         
