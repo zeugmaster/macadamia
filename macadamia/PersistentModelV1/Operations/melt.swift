@@ -119,12 +119,12 @@ extension AppSchemaV1.Mint {
         Task {
             do {
                 logger.debug("Attempting to melt...")
-                
-                
-                let meltResult = try await CashuSwift.meltState(mint: sendableMint,
-                                                                quoteID: quote.quote,
-                                                                blankOutputs: blankOutputs)
-                
+                               
+                let meltResult = try await CashuSwift.melt(with: quote,
+                                                           mint: sendableMint,
+                                                           proofs: [],
+                                                           blankOutputs: blankOutputs)
+
                 if meltResult.paid {
                     // make sendable change proofs
                     let sendableProofs = meltResult.change
