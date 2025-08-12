@@ -399,6 +399,8 @@ enum AppSchemaV1: VersionedSchema {
         @Relationship(deleteRule: .noAction, inverse: \Mint.events)
         var mints: [Mint]?
         
+        var preImage: String?
+        
         // Persistence for NUT-08 blank outputs and secrets, blinding factors to allow for melt operation repeatability
         // another case where SwiftData refuses to store the "complex" codable struct
         // so we need to (de-) serialize it ourselves
@@ -435,6 +437,7 @@ enum AppSchemaV1: VersionedSchema {
              proofs: [Proof]? = nil,
              memo: String? = nil,
              mints: [Mint]? = nil,
+             preImage: String? = nil,
              redeemed: Bool? = nil,
              groupingID: UUID? = nil) {
             
@@ -456,6 +459,7 @@ enum AppSchemaV1: VersionedSchema {
             self.mints = Array(mints ?? [])
             self.redeemed = redeemed
             self.groupingID = groupingID
+            self.preImage = preImage
         }
         
         var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? {

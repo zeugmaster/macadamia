@@ -1,6 +1,44 @@
 import SwiftUI
 import SwiftData
 
+struct EventGroup {
+    let events: [Event]
+    
+    init(events: [Event]) {
+        precondition(!events.isEmpty, "EventGroup must be initialized with at least one event")
+        self.events = events
+    }
+    
+    var mostRecentDate: Date {
+        events.map { $0.date }.max() ?? Date()
+    }
+    
+    var totalAmount: Int? {
+        let amounts = events.compactMap { $0.amount }
+        return amounts.isEmpty ? nil : amounts.reduce(0, +)
+    }
+    
+    var allMints: [Mint] {
+        let allMints = events.flatMap { $0.mints ?? [] }
+        // Remove duplicates while preserving order
+        var seen = Set<UUID>()
+        return allMints.filter { mint in
+            guard !seen.contains(mint.mintID) else { return false }
+            seen.insert(mint.mintID)
+            return true
+        }
+    }
+    
+    var primaryEvent: Event {
+        // Safe to force unwrap due to precondition in init
+        events.first!
+    }
+    
+    var isGrouped: Bool {
+        events.count > 1
+    }
+}
+
 struct MinimalEventList: View {
     @Environment(\.modelContext) private var modelContext
     
@@ -20,8 +58,37 @@ struct MinimalEventList: View {
         wallets.first
     }
     
-    var sortedEventsForActiveWallet: [Event] {
-        events.filter({ $0.wallet == activeWallet })
+    var sortedEventsForActiveWallet: [EventGroup] {
+        let walletEvents = events.filter({ $0.wallet == activeWallet })
+        
+        // Group events by groupingID
+        var groupedEvents: [UUID?: [Event]] = [:]
+        var standaloneEvents: [Event] = []
+        
+        for event in walletEvents {
+            // Only group melt events with a groupingID
+            if event.kind == .melt, let groupingID = event.groupingID {
+                groupedEvents[groupingID, default: []].append(event)
+            } else {
+                standaloneEvents.append(event)
+            }
+        }
+        
+        // Convert to EventGroup array
+        var eventGroups: [EventGroup] = []
+        
+        // Add grouped events
+        for (_, events) in groupedEvents {
+            eventGroups.append(EventGroup(events: events))
+        }
+        
+        // Add standalone events
+        for event in standaloneEvents {
+            eventGroups.append(EventGroup(events: [event]))
+        }
+        
+        // Sort by most recent date
+        return eventGroups.sorted { $0.mostRecentDate > $1.mostRecentDate }
     }
     
     var body: some View {
@@ -29,8 +96,8 @@ struct MinimalEventList: View {
             if sortedEventsForActiveWallet.isEmpty {
                 Text("No transactions yet.")
             } else {
-                ForEach(sortedEventsForActiveWallet.prefix(5)) { event in
-                    TransactionListRow(event: event)
+                ForEach(Array(sortedEventsForActiveWallet.prefix(5).enumerated()), id: \.offset) { _, eventGroup in
+                    TransactionListRow(eventGroup: eventGroup)
                 }
                 if sortedEventsForActiveWallet.count > 5 {
                     NavigationLink("Show All", destination: EventList())
@@ -57,18 +124,18 @@ struct MinimalEventList: View {
 }
 
 struct TransactionListRow: View {
-    var event: Event
+    var eventGroup: EventGroup
 
-    init(event: Event) {
-        self.event = event
+    init(eventGroup: EventGroup) {
+        self.eventGroup = eventGroup
     }
 
     var body: some View {
-        NavigationLink(destination: EventDetailView(event: event)) {
+        NavigationLink(destination: EventDetailView(event: eventGroup.primaryEvent)) {
             VStack(alignment: .leading) {
                 HStack {
                     Group {
-                        switch event.kind {
+                        switch eventGroup.primaryEvent.kind {
                         case .pendingMelt, .pendingMint:
                             Image(systemName: "hourglass")
                         case .pendingReceive:
@@ -76,7 +143,11 @@ struct TransactionListRow: View {
                         case .mint, .receive:
                             Image(systemName: "arrow.down.left")
                         case .melt, .send:
-                            Image(systemName: "arrow.up.right")
+                            if eventGroup.isGrouped {
+                                Image(systemName: "arrow.triangle.branch")
+                            } else {
+                                Image(systemName: "arrow.up.right")
+                            }
                         case .restore:
                             Image(systemName: "clock.arrow.circlepath")
                         case .drain:
@@ -87,19 +158,28 @@ struct TransactionListRow: View {
                     .font(.caption)
                     .frame(width: 20, alignment: .leading)
                     Group {
-                        Text(event.shortDescription)
-                        if let memo = event.memo, !memo.isEmpty {
+                        HStack(spacing: 4) {
+                            if eventGroup.isGrouped {
+                                Text("Payment")
+                                Text("• MPP")
+                                    .font(.caption)
+                                    .foregroundStyle(.tertiary)
+                            } else {
+                                Text(eventGroup.primaryEvent.shortDescription)
+                            }
+                        }
+                        if let memo = eventGroup.primaryEvent.memo, !memo.isEmpty {
                             Text(memo)
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
-                        if let amount = event.amount {
-                            switch event.kind {
+                        if let amount = eventGroup.totalAmount {
+                            switch eventGroup.primaryEvent.kind {
                             case .send, .drain, .melt, .pendingMelt:
-                                Text(amountDisplayString(amount, unit: event.unit, negative: true))
+                                Text(amountDisplayString(amount, unit: eventGroup.primaryEvent.unit, negative: true))
                                     .foregroundStyle(.secondary)
                             case .receive, .pendingReceive, .mint, .restore, .pendingMint:
-                                Text(amountDisplayString(amount, unit: event.unit, negative: false))
+                                Text(amountDisplayString(amount, unit: eventGroup.primaryEvent.unit, negative: false))
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -107,7 +187,8 @@ struct TransactionListRow: View {
                     .font(.body)
                 }
                 
-                if let mints = event.mints, !mints.isEmpty {
+                let mints = eventGroup.allMints
+                if !mints.isEmpty {
                     HStack() {
                         Spacer().frame(width: 28)
                         ForEach(mints) { mint in

@@ -4,6 +4,16 @@ import CashuSwift
 
 struct EventDetailView: View {
     let event: Event
+    @Query private var allEvents: [Event]
+    
+    // Only filters and sorts existing events - does not create new Event objects
+    var groupedEvents: [Event] {
+        // Only group melt events
+        guard event.kind == .melt, let groupingID = event.groupingID else {
+            return [event]
+        }
+        return allEvents.filter { $0.kind == .melt && $0.groupingID == groupingID }.sorted { $0.date < $1.date }
+    }
 
     var body: some View {
         switch event.kind {
@@ -75,36 +85,7 @@ struct EventDetailView: View {
             MeltView(pendingMeltEvent: event)
             
         case .melt:
-            List {
-                HStack {
-                    Text("Melted at: ")
-                    Spacer()
-                    Text(event.date.formatted())
-                }
-                HStack {
-                    Text("Amount: ")
-                    Spacer()
-                    Text(String(event.amount ?? 0))
-                }
-                HStack {
-                    Text("Unit: ")
-                    Spacer()
-                    Text(event.unit.rawValue)
-                }
-                if let text = event.bolt11MeltQuote?.paymentPreimage {
-                    TokenText(text: text)
-                        .frame(idealHeight: 70)
-                        .contextMenu {
-                            Button(action: {
-                                UIPasteboard.general.string = text
-                            }) {
-                                Text("Copy")
-                                Spacer()
-                                Image(systemName: "clipboard")
-                            }
-                        }
-                }
-            }
+            MeltEventView(events: groupedEvents)
             
         case .restore:
             List {
@@ -125,6 +106,144 @@ struct EventDetailView: View {
                 }
             }
         }
+    }
+}
+
+struct MeltEventView: View {
+    let events: [Event]
+    
+    var totalAmount: Int {
+        events.compactMap { $0.amount }.reduce(0, +)
+    }
+    
+    var isMultiPath: Bool {
+        events.count > 1
+    }
+    
+    var body: some View {
+        List {
+            Section("Payment Summary") {
+                HStack {
+                    Text("Payment Date")
+                    Spacer()
+                    Text(events.first?.date.formatted() ?? "")
+                }
+                
+                HStack {
+                    Text("Total Amount")
+                    Spacer()
+                    Text("\(totalAmount) sats")
+                }
+                
+                HStack {
+                    Text("Payment Type")
+                    Spacer()
+                    HStack(spacing: 4) {
+                        if isMultiPath {
+                            Image(systemName: "arrow.triangle.branch")
+                                .font(.caption)
+                        }
+                        Text(isMultiPath ? "Multi-Path Payment" : "Single Payment")
+                    }
+                    .foregroundStyle(.secondary)
+                }
+                
+                if isMultiPath {
+                    HStack {
+                        Text("Payment Parts")
+                        Spacer()
+                        Text("\(events.count)")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            
+            if isMultiPath {
+                Section("Payment Parts") {
+                    ForEach(Array(events.enumerated()), id: \.offset) { index, event in
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Part \(index + 1)")
+                                    .font(.headline)
+                                Spacer()
+                                Text("\(event.amount ?? 0) sats")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            
+                            if let mint = event.mints?.first {
+                                HStack {
+                                    Text("Mint:")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Text(mint.displayName)
+                                        .font(.caption)
+                                }
+                            }
+                            
+                            if let preImage = event.preImage {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Preimage:")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Text(preImage)
+                                        .font(.system(.caption, design: .monospaced))
+                                        .lineLimit(1)
+                                        .truncationMode(.middle)
+                                        .contextMenu {
+                                            Button(action: {
+                                                UIPasteboard.general.string = preImage
+                                            }) {
+                                                Text("Copy Preimage")
+                                                Image(systemName: "doc.on.clipboard")
+                                            }
+                                        }
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                        
+                        if index < events.count - 1 {
+                            Divider()
+                        }
+                    }
+                }
+            } else {
+                // Single payment
+                if let mint = events.first?.mints?.first {
+                    Section("Payment Details") {
+                        HStack {
+                            Text("Mint")
+                            Spacer()
+                            Text(mint.displayName)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                
+                if let preImage = events.first?.preImage {
+                    Section("Payment Proof") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Preimage")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            TokenText(text: preImage)
+                                .frame(idealHeight: 70)
+                                .contextMenu {
+                                    Button(action: {
+                                        UIPasteboard.general.string = preImage
+                                    }) {
+                                        Text("Copy Preimage")
+                                        Image(systemName: "doc.on.clipboard")
+                                    }
+                                }
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle(isMultiPath ? "Multi-Path Payment" : "Payment")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

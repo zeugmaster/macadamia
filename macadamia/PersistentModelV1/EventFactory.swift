@@ -150,6 +150,8 @@ extension AppSchemaV1.Event {
                           amount: Int,
                           longDescription: String,
                           mints:[Mint],
+                          change: [Proof]? = nil,
+                          preImage: String? = nil, // FIXME: should not be optional
                           groupingID: UUID? = nil) -> Event {
         Event(date: Date(),
               unit: unit,
@@ -159,7 +161,10 @@ extension AppSchemaV1.Event {
               wallet: wallet,
               amount: amount,
               longDescription: longDescription,
-              mints: mints
+              proofs: change,
+              mints: mints,
+              preImage: preImage,
+              groupingID: groupingID
         )
     }
     
