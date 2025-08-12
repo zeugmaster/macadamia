@@ -10,15 +10,15 @@ struct EventList: View {
 
     @Query private var allEvents: [Event]
 
-    @State private var events: [Event] = []
+    @State private var eventGroups: [EventGroup] = []
 
     var body: some View {
         List {
-            ForEach(events) { event in
-                EventListRow(event: event)
+            ForEach(eventGroups, id: \.primaryEvent.id) { eventGroup in
+                EventListRow(eventGroup: eventGroup)
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button {
-                            deleteEvent(event)
+                            deleteEventGroup(eventGroup)
                         } label: {
                             Image(systemName: "trash")
                                 .foregroundColor(.white)
@@ -40,17 +40,49 @@ struct EventList: View {
 
     private func updateEvents() {
         if let activeWallet = wallets.first {
-            events = allEvents.filter { $0.wallet == activeWallet && $0.visible == true }
-                              .sorted { $0.date > $1.date }
+            let walletEvents = allEvents.filter { $0.wallet == activeWallet && $0.visible == true }
+            
+            // Group events by groupingID
+            var groupedEvents: [UUID?: [Event]] = [:]
+            var standaloneEvents: [Event] = []
+            
+            for event in walletEvents {
+                // Only group melt events with a groupingID
+                if event.kind == .melt, let groupingID = event.groupingID {
+                    groupedEvents[groupingID, default: []].append(event)
+                } else {
+                    standaloneEvents.append(event)
+                }
+            }
+            
+            // Convert to EventGroup array
+            var groups: [EventGroup] = []
+            
+            // Add grouped events
+            for (_, events) in groupedEvents {
+                groups.append(EventGroup(events: events))
+            }
+            
+            // Add standalone events
+            for event in standaloneEvents {
+                groups.append(EventGroup(events: [event]))
+            }
+            
+            // Sort by most recent date
+            eventGroups = groups.sorted { $0.mostRecentDate > $1.mostRecentDate }
         } else {
-            events = []
+            eventGroups = []
         }
     }
 
-    private func deleteEvent(_ event: Event) {
+    private func deleteEventGroup(_ eventGroup: EventGroup) {
         withAnimation {
-            modelContext.delete(event)
-            events.removeAll { $0.id == event.id }
+            // Delete all events in the group
+            for event in eventGroup.events {
+                modelContext.delete(event)
+            }
+            // Update local state
+            updateEvents()
         }
 
         do {
@@ -63,52 +95,59 @@ struct EventList: View {
 
 struct EventListRow: View {
     
-    let event: Event
+    let eventGroup: EventGroup
     
     var readableMintName: String {
-        if let mints = event.mints {
-            if mints.isEmpty {
-                return ""
-            } else if mints.count == 1 {
-                if let mint = mints.first {
-                    return mint.displayName
-                }
-            } else {
-                return "Multiple"
-            }
+        let mints = eventGroup.allMints
+        if mints.isEmpty {
+            return ""
+        } else if mints.count == 1 {
+            return mints.first?.displayName ?? ""
+        } else {
+            return "Multiple"
         }
-        return ""
     }
     
     var amountString: String? {
+        let event = eventGroup.primaryEvent
         switch event.kind {
         case .restore, .drain:
             return nil
         case .send, .melt, .pendingMelt:
-            return amountDisplayString(event.amount ?? 0, unit: event.unit, negative: true)
+            return amountDisplayString(eventGroup.totalAmount ?? 0, unit: event.unit, negative: true)
         case .receive, .pendingReceive, .mint, .pendingMint:
-            return amountDisplayString(event.amount ?? 0, unit: event.unit)
+            return amountDisplayString(eventGroup.totalAmount ?? 0, unit: event.unit)
         }
     }
     
     var shortenedDateString: String {
         let now = Date()
         let dayPassed = Calendar.current.dateComponents([.hour],
-                                                        from: event.date,
+                                                        from: eventGroup.mostRecentDate,
                                                         to: now).hour ?? 0 > 24
         let dateFormatter = DateFormatter()
         dateFormatter.timeStyle = .short
         dateFormatter.dateStyle = dayPassed ? .short : .none
-        return dateFormatter.string(from: event.date)
+        return dateFormatter.string(from: eventGroup.mostRecentDate)
+    }
+    
+    var description: String {
+        let event = eventGroup.primaryEvent
+        if eventGroup.isGrouped && event.kind == .melt {
+            return "Payment • MPP"
+        } else {
+            return event.shortDescription
+        }
     }
     
     var body: some View {
-        NavigationLink(destination: EventDetailView(event: event)) {
+        NavigationLink(destination: EventDetailView(event: eventGroup.primaryEvent)) {
             RowLayout(mintLabel: readableMintName,
-                      description: event.shortDescription,
+                      description: description,
                       amountString: amountString,
                       dateLabel: shortenedDateString,
-                      memo: event.memo)
+                      memo: eventGroup.primaryEvent.memo,
+                      isGrouped: eventGroup.isGrouped)
         }
     }
 }
@@ -121,6 +160,7 @@ struct RowLayout: View {
     let dateLabel: String
     
     let memo: String?
+    var isGrouped: Bool = false
     
     var body: some View {
         VStack {
@@ -132,10 +172,16 @@ struct RowLayout: View {
             .font(.caption)
             .padding(EdgeInsets(top: 0, leading: 0, bottom: 4, trailing: 0))
             HStack {
-                if let memo, !memo.isEmpty {
-                    Text(description + ": \(memo)")
-                } else {
-                    Text(description)
+                HStack(spacing: 4) {
+                    if isGrouped {
+                        Image(systemName: "arrow.triangle.branch")
+                            .font(.caption)
+                    }
+                    if let memo, !memo.isEmpty {
+                        Text(description + ": \(memo)")
+                    } else {
+                        Text(description)
+                    }
                 }
                 Spacer()
                 if let amountString {
@@ -152,5 +198,7 @@ struct RowLayout: View {
     RowLayout(mintLabel: "mint.macadamia.cash",
               description: "Send",
               amountString: "- 420 sat",
-              dateLabel: "6.2.24, 14:32", memo: "tenks u")
+              dateLabel: "6.2.24, 14:32", 
+              memo: "tenks u",
+              isGrouped: false)
 }
