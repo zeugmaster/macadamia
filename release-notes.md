@@ -1,11 +1,13 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Under the hood 🛠️**
+**Multi Nut Payments 🌰🥜🔩**
 
-Build 1 makes some changes to the database directory (moving it to an App Group directory) to enable some cool feature in the near future, stay tuned!
+This version of *macadamia* lets you perform lightning payments from more than one mint if it supports that feature.
 
-Further, mint information is now cached and can be manually updated using a pull-to-refresh gesture on the mint list. 
+The database inspector has also been improved for debugging.
+
+**Hint:** If one or more mints are not shown as supporting MPP (Multi-path payments) pull down on the main mint list to update all.
 
 
 As always, thanks for using **macadamia**!
