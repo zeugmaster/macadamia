@@ -55,6 +55,11 @@ struct MultiMeltView: View {
     
     init(pendingMeltEvents: [Event]? = nil, invoice: String? = nil) {
         self.pendingMeltEvents = pendingMeltEvents
+        self._invoiceString = State(initialValue: invoice)
+        // Set appropriate action button state based on whether we have an invoice
+        if invoice != nil {
+            self._actionButtonState = State(initialValue: .idle("Loading..."))
+        }
     }
     
     var body: some View {
