@@ -1,10 +1,3 @@
-//
-//  MultiMeltView.swift
-//  macadamia
-//
-//  Created by zm on 28.07.25.
-//
-
 import SwiftUI
 import SwiftData
 import CashuSwift
@@ -77,20 +70,20 @@ struct MultiMeltView: View {
                                 Text("Invoice")
                                 Spacer()
                                 Button {
-                                                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                    // Reset to scanner view
-                                    self.invoiceString = nil
-                                    selectedMintIds = []
-                                    mintRowInfoArray = []
-                                    insufficientFundsError = nil
-                                    insufficientSelectionError = nil
-                                    multiMintRequired = false
-                                    automaticallySelected = false
-                                    showMintSelector = false
-                                    actionButtonState = .idle("Scan or paste invoice")
-                                    // Force InputView to be recreated
-                                    scannerResetID = UUID()
-                                }
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        // Reset to scanner view
+                                        self.invoiceString = nil
+                                        selectedMintIds = []
+                                        mintRowInfoArray = []
+                                        insufficientFundsError = nil
+                                        insufficientSelectionError = nil
+                                        multiMintRequired = false
+                                        automaticallySelected = false
+                                        showMintSelector = false
+                                        actionButtonState = .idle("Scan or paste invoice")
+                                        // Force InputView to be recreated
+                                        scannerResetID = UUID()
+                                    }
                                 } label: {
                                     Image(systemName: "xmark.circle.fill")
                                         .font(.footnote)
@@ -106,28 +99,28 @@ struct MultiMeltView: View {
                             if selectedMintIds.isEmpty {
                                 actionButtonState = .idle("Select Mints")
                             } else {
-                                actionButtonState = .idle("Pay", action: startMelt)
+                                actionButtonState = .idle("Pay", action: initiateMelt)
                             }
                         }
                         .onChange(of: insufficientFundsError) { _, newValue in
                             if newValue != nil {
                                 actionButtonState = .idle("Insufficient Funds")
                             } else if !selectedMintIds.isEmpty {
-                                actionButtonState = .idle("Pay", action: startMelt)
+                                actionButtonState = .idle("Pay", action: initiateMelt)
                             }
                         }
                         .onChange(of: insufficientSelectionError) { _, newValue in
                             if newValue != nil {
                                 actionButtonState = .idle("Insufficient Selection")
                             } else if !selectedMintIds.isEmpty && insufficientFundsError == nil {
-                                actionButtonState = .idle("Pay", action: startMelt)
+                                actionButtonState = .idle("Pay", action: initiateMelt)
                             }
                         }
                         .onChange(of: selectedMintIds) { _, newValue in
                             if newValue.isEmpty {
                                 actionButtonState = .idle("Select Mints")
                             } else if insufficientFundsError == nil && insufficientSelectionError == nil {
-                                actionButtonState = .idle("Pay", action: startMelt)
+                                actionButtonState = .idle("Pay", action: initiateMelt)
                             }
                         }
                         
@@ -239,7 +232,10 @@ struct MultiMeltView: View {
             VStack {
                 Spacer()
                 ActionButton(state: $actionButtonState)
-                    .actionDisabled(insufficientFundsError != nil || insufficientSelectionError != nil || selectedMintIds.isEmpty || invoiceString == nil)
+                    .actionDisabled(insufficientFundsError != nil ||
+                                    insufficientSelectionError != nil ||
+                                    selectedMintIds.isEmpty ||
+                                    invoiceString == nil)
             }
         }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
@@ -341,7 +337,8 @@ struct MultiMeltView: View {
     
     private func populateMintList(invoice: String) {
         let amount = (try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoice.lowercased())) ?? 0
-        let filteredMints = activeWallet?.mints.filter({ ($0.balance(for: .sat) > 0 && $0.supportsMPP) || $0.balance(for: .sat) > amount })
+        let filteredMints = activeWallet?.mints.filter({ ($0.balance(for: .sat) > 0 && $0.supportsMPP) ||
+                                                          $0.balance(for: .sat) > amount })
             .filter({ !$0.hidden }) ?? []
         
         // Group mints by URL and take only the one with highest balance per URL
@@ -532,7 +529,7 @@ struct MultiMeltView: View {
         return (quotes, failedMints)
     }
     
-    private func startMelt() {
+    private func initiateMelt() {
         // skip pending mint events for now
         guard let activeWallet else {
             return
@@ -604,34 +601,13 @@ struct MultiMeltView: View {
                     
                     // return to main thread with change and save, mark inputs as spent
                     try await MainActor.run {
-                        // Mark all used proofs as spent
-                        for entry in mintsAndProofs {
-                            entry.proofs.setState(.spent)
-                        }
-                        
-                        // Add change proofs
-                        for result in results {
-                            if let internalMint = activeWallet.mints.first(where: { $0.url == result.0.url }) { // FIXME: DO NOT MATCH MINTS BY URL
-                                try internalMint.addProofs(result.2,
-                                                           to: modelContext,
-                                                           unit: .sat) // TODO: remove hard coded unit
-                                
-                                let event = Event.meltEvent(unit: .sat,
-                                                            shortDescription: disc,
-                                                            wallet: activeWallet,
-                                                            amount: result.1.amount,
-                                                            longDescription: "",
-                                                            mints: [internalMint],
-                                                            preImage: result.1.paymentPreimage,
-                                                            groupingID: eventGroupingID)
-                                modelContext.insert(event)
-                            }
-                        }
-                        actionButtonState = .success()
-                        
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                            dismiss()
-                        }
+                        try handleSuccessfulMelt(
+                            mintsAndProofs: mintsAndProofs,
+                            meltResults: results,
+                            activeWallet: activeWallet,
+                            shortDescription: disc,
+                            eventGroupingID: eventGroupingID
+                        )
                     }
                 }
             } catch {
@@ -644,7 +620,7 @@ struct MultiMeltView: View {
                     displayAlert(alert: AlertDetail(with: error))
                     actionButtonState = .fail()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        actionButtonState = .idle("Pay", action: startMelt)
+                        actionButtonState = .idle("Pay", action: initiateMelt)
                     }
                 }
             }
@@ -658,6 +634,44 @@ struct MultiMeltView: View {
         let blankOutputs = try CashuSwift.generateBlankOutputs(quote: quote, proofs: proofs, mint: mint, unit: "sat", seed: activeWallet?.seed)
         let result = try await CashuSwift.melt(quote: quote, mint: mint, proofs: proofs, blankOutputs: blankOutputs)
         return (result.quote, result.change ?? [])
+    }
+    
+    private func handleSuccessfulMelt(mintsAndProofs: [(mint: Mint, quote: CashuSwift.Bolt11.MeltQuote, proofs: [Proof])],
+                                      meltResults: [(CashuSwift.Mint, CashuSwift.Bolt11.MeltQuote, [CashuSwift.Proof])],
+                                activeWallet: Wallet,
+                                shortDescription: String,
+                                eventGroupingID: UUID?) throws {
+        // Mark all used proofs as spent
+        for entry in mintsAndProofs {
+            entry.proofs.setState(.spent)
+        }
+        
+        // Add change proofs and create events
+        for result in meltResults {
+            if let internalMint = activeWallet.mints.first(where: { $0.url == result.0.url }) { // FIXME: DO NOT MATCH MINTS BY URL
+                try internalMint.addProofs(result.2,
+                                           to: modelContext,
+                                           unit: .sat) // TODO: remove hard coded unit
+                
+                let event = Event.meltEvent(unit: .sat,
+                                            shortDescription: shortDescription,
+                                            wallet: activeWallet,
+                                            amount: result.1.amount,
+                                            longDescription: "",
+                                            mints: [internalMint],
+                                            preImage: result.1.paymentPreimage,
+                                            groupingID: eventGroupingID)
+                modelContext.insert(event)
+            }
+        }
+        
+        // Update UI state
+        actionButtonState = .success()
+        
+        // Dismiss the view after a brief delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            dismiss()
+        }
     }
     
     private func displayAlert(alert: AlertDetail) {
