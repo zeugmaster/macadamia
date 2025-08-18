@@ -47,8 +47,8 @@ struct EventList: View {
             var standaloneEvents: [Event] = []
             
             for event in walletEvents {
-                // Only group melt events with a groupingID
-                if event.kind == .melt, let groupingID = event.groupingID {
+                // Group melt and pending melt events with a groupingID
+                if (event.kind == .melt || event.kind == .pendingMelt), let groupingID = event.groupingID {
                     groupedEvents[groupingID, default: []].append(event)
                 } else {
                     standaloneEvents.append(event)
@@ -97,6 +97,16 @@ struct EventListRow: View {
     
     let eventGroup: EventGroup
     
+    @ViewBuilder
+    var destination: some View {
+        if eventGroup.primaryEvent.kind == .pendingMelt {
+            // For pending melt events, navigate to MultiMeltView with all events in the group
+            MultiMeltView(pendingMeltEvents: eventGroup.events)
+        } else {
+            EventDetailView(event: eventGroup.primaryEvent)
+        }
+    }
+    
     var readableMintName: String {
         let mints = eventGroup.allMints
         if mints.isEmpty {
@@ -133,15 +143,15 @@ struct EventListRow: View {
     
     var description: String {
         let event = eventGroup.primaryEvent
-        if eventGroup.isGrouped && event.kind == .melt {
-            return "Payment • MPP"
+        if eventGroup.isGrouped && (event.kind == .melt || event.kind == .pendingMelt) {
+            return event.kind == .pendingMelt ? "Pending Payment • MPP" : "Payment • MPP"
         } else {
             return event.shortDescription
         }
     }
     
     var body: some View {
-        NavigationLink(destination: EventDetailView(event: eventGroup.primaryEvent)) {
+        NavigationLink(destination: destination) {
             RowLayout(mintLabel: readableMintName,
                       description: description,
                       amountString: amountString,

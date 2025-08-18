@@ -139,7 +139,8 @@ extension AppSchemaV1.Event {
               amount: amount,
               expiration: expiration,
               proofs: proofs,
-              mints: mints
+              mints: mints,
+              groupingID: groupingID
         )
     }
     

@@ -3,11 +3,15 @@ import SwiftData
 import CashuSwift
 
 struct MintRowInfo: Identifiable {
-    let id = UUID()
     let mint: Mint
     var partialAmount: Int = 0
     var fee: Int?
     var quote: CashuSwift.Bolt11.MeltQuote?
+    
+    // Use mint's URL as stable identifier
+    var id: String {
+        mint.url.absoluteString
+    }
     
     var balance: Int {
         mint.balance(for: .sat)
@@ -37,7 +41,7 @@ struct MultiMeltView: View {
     @State private var multiMintRequired: Bool = false
     @State private var automaticallySelected: Bool = false
     
-    @State private var selectedMintIds: Set<UUID> = []
+    @State private var selectedMintIds: Set<String> = []
     
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
@@ -47,11 +51,14 @@ struct MultiMeltView: View {
     @State private var insufficientSelectionError: String? = nil
     
     init(pendingMeltEvents: [Event]? = nil, invoice: String? = nil) {
-        self.pendingMeltEvents = pendingMeltEvents
+        self._pendingMeltEvents = State(initialValue: pendingMeltEvents)
         self._invoiceString = State(initialValue: invoice)
         // Set appropriate action button state based on whether we have an invoice
         if invoice != nil {
             self._actionButtonState = State(initialValue: .idle("Loading..."))
+        } else if pendingMeltEvents != nil && !pendingMeltEvents!.isEmpty {
+            // If we have pending events, show check payment button
+            self._actionButtonState = State(initialValue: .idle("Check Payment Status", action: nil))
         }
     }
     
@@ -95,32 +102,44 @@ struct MultiMeltView: View {
                         }
                         .onAppear {
                             populateMintList(invoice: invoiceString)
-                            autoSelectMintsAndFetchQuotes()
-                            if selectedMintIds.isEmpty {
-                                actionButtonState = .idle("Select Mints")
-                            } else {
-                                actionButtonState = .idle("Pay", action: initiateMelt)
+                            // Only auto-select if we don't have pending events
+                            if pendingMeltEvents == nil || pendingMeltEvents!.isEmpty {
+                                autoSelectMintsAndFetchQuotes()
+                                if selectedMintIds.isEmpty {
+                                    actionButtonState = .idle("Select Mints")
+                                } else {
+                                    actionButtonState = .idle("Pay", action: initiateMelt)
+                                }
                             }
                         }
                         .onChange(of: insufficientFundsError) { _, newValue in
-                            if newValue != nil {
-                                actionButtonState = .idle("Insufficient Funds")
-                            } else if !selectedMintIds.isEmpty {
-                                actionButtonState = .idle("Pay", action: initiateMelt)
+                            // Don't modify action button if we have pending events
+                            if pendingMeltEvents == nil || pendingMeltEvents!.isEmpty {
+                                if newValue != nil {
+                                    actionButtonState = .idle("Insufficient Funds")
+                                } else if !selectedMintIds.isEmpty {
+                                    actionButtonState = .idle("Pay", action: initiateMelt)
+                                }
                             }
                         }
                         .onChange(of: insufficientSelectionError) { _, newValue in
-                            if newValue != nil {
-                                actionButtonState = .idle("Insufficient Selection")
-                            } else if !selectedMintIds.isEmpty && insufficientFundsError == nil {
-                                actionButtonState = .idle("Pay", action: initiateMelt)
+                            // Don't modify action button if we have pending events
+                            if pendingMeltEvents == nil || pendingMeltEvents!.isEmpty {
+                                if newValue != nil {
+                                    actionButtonState = .idle("Insufficient Selection")
+                                } else if !selectedMintIds.isEmpty && insufficientFundsError == nil {
+                                    actionButtonState = .idle("Pay", action: initiateMelt)
+                                }
                             }
                         }
                         .onChange(of: selectedMintIds) { _, newValue in
-                            if newValue.isEmpty {
-                                actionButtonState = .idle("Select Mints")
-                            } else if insufficientFundsError == nil && insufficientSelectionError == nil {
-                                actionButtonState = .idle("Pay", action: initiateMelt)
+                            // Don't modify action button if we have pending events
+                            if pendingMeltEvents == nil || pendingMeltEvents!.isEmpty {
+                                if newValue.isEmpty {
+                                    actionButtonState = .idle("Select Mints")
+                                } else if insufficientFundsError == nil && insufficientSelectionError == nil {
+                                    actionButtonState = .idle("Pay", action: initiateMelt)
+                                }
                             }
                         }
                         
@@ -158,7 +177,7 @@ struct MultiMeltView: View {
                                 .animation(.spring(response: 0.3, dampingFraction: 0.8), value: automaticallySelected)
                             }
                             .buttonStyle(PlainButtonStyle())
-                            .disabled(insufficientFundsError != nil)
+                            .disabled(insufficientFundsError != nil || (pendingMeltEvents != nil && !pendingMeltEvents!.isEmpty))
                             
                             if showMintSelector {
                                 let invoiceAmount = (try? CashuSwift.Bolt11.satAmountFromInvoice(pr: invoiceString.lowercased())) ?? 0
@@ -232,13 +251,23 @@ struct MultiMeltView: View {
             VStack {
                 Spacer()
                 ActionButton(state: $actionButtonState)
-                    .actionDisabled(insufficientFundsError != nil ||
-                                    insufficientSelectionError != nil ||
-                                    selectedMintIds.isEmpty ||
-                                    invoiceString == nil)
+                    .actionDisabled(
+                        // Allow action if we have pending events (for checking status)
+                        (pendingMeltEvents == nil || pendingMeltEvents!.isEmpty) &&
+                        (insufficientFundsError != nil ||
+                         insufficientSelectionError != nil ||
+                         selectedMintIds.isEmpty ||
+                         invoiceString == nil)
+                    )
             }
         }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+        .onAppear {
+            // If we have pending events, setup the recovery UI
+            if let pendingEvents = pendingMeltEvents, !pendingEvents.isEmpty {
+                setupPendingEventsUI(pendingEvents)
+            }
+        }
     }
     
     private var mintSelectionSummary: String {
@@ -263,8 +292,8 @@ struct MultiMeltView: View {
         let totalBalance = selectedMints.map { $0.balance }.reduce(0, +)
         let totalFees = selectedMints.compactMap { $0.fee }.reduce(0, +)
         
-        if insufficientSelectionError != nil {
-            return "⚠️ Balance: \(totalBalance) sats (insufficient)"
+        if let error = insufficientSelectionError {
+            return "⚠️ \(error)"
         } else if totalFees > 0 {
             return "Balance: \(totalBalance) sats • Total fees: \(totalFees) sats"
         } else {
@@ -276,7 +305,8 @@ struct MultiMeltView: View {
     private func mintRowView(for mintInfo: MintRowInfo, invoiceAmount: Int) -> some View {
         let canPayFull = mintInfo.balance >= invoiceAmount
         let supportsMPP = mintInfo.mint.supportsMPP
-        let isDisabled = !canPayFull && !supportsMPP
+        let hasPendingEvents = pendingMeltEvents != nil && !pendingMeltEvents!.isEmpty
+        let isDisabled = (!canPayFull && !supportsMPP) || hasPendingEvents
         let isSelected = selectedMintIds.contains(mintInfo.id)
         
         HStack {
@@ -364,7 +394,12 @@ struct MultiMeltView: View {
     
     // GENERAL SELECTION METHODS:
     
-    private func toggleSelection(for id: UUID) {
+    private func toggleSelection(for id: String) {
+        // Disable selection if we have pending events
+        if pendingMeltEvents != nil && !pendingMeltEvents!.isEmpty {
+            return
+        }
+        
         // Mark that user has manually changed selection
         automaticallySelected = false
         // Clear any errors when user takes control - they will be recalculated
@@ -413,6 +448,11 @@ struct MultiMeltView: View {
     
 
     private func reloadMintQuotes() {
+        // Don't reload quotes if we have pending events
+        if pendingMeltEvents != nil && !pendingMeltEvents!.isEmpty {
+            return
+        }
+        
         if selectedMintIds.isEmpty { 
             insufficientSelectionError = nil
             return 
@@ -431,10 +471,11 @@ struct MultiMeltView: View {
         let selected = mintRowInfoArray.filter { selectedMintIds.contains($0.id) }
         let totalBalance = selected.map { $0.mint.balance(for: .sat) }.reduce(0, +)
         
-        // Check if total balance is sufficient before loading quotes
+        // Early check: ensure total balance is at least the invoice amount
+        // The real check including fees happens after quotes are loaded
         if totalBalance < invoiceAmountSat {
             let shortage = invoiceAmountSat - totalBalance
-            insufficientSelectionError = "Selected mints have \(totalBalance) sats, but \(invoiceAmountSat) sats are needed. Select more mints or add \(shortage) sats."
+            insufficientSelectionError = "Need \(shortage) more sats (have \(totalBalance)/\(invoiceAmountSat)+fees)"
             return
         } else {
             insufficientSelectionError = nil
@@ -462,7 +503,7 @@ struct MultiMeltView: View {
         let remainder = invoiceAmountSat - floorSum
         let sorted = shares.enumerated().sorted { $0.element.fraction > $1.element.fraction }
 
-        var list: [(UUID, CashuSwift.Mint, Int)] = []
+        var list: [(String, CashuSwift.Mint, Int)] = []
         for (index, info) in shares.enumerated() {
             let extraSat = sorted.prefix(remainder).map(\.offset).contains(index) ? 1 : 0
             let sats = info.floorPart + extraSat
@@ -478,11 +519,11 @@ struct MultiMeltView: View {
                     if !result.failedMints.isEmpty {
                         if result.failedMints.count == list.count {
                             // All quotes failed
-                            insufficientSelectionError = "Unable to get quotes from any selected mint. Check your network connection and try again."
+                            insufficientSelectionError = "Cannot reach selected mints"
                         } else {
                             // Some quotes failed
                             let failedList = result.failedMints.joined(separator: ", ")
-                            insufficientSelectionError = "Unable to get quotes from: \(failedList). Try different mints or check your connection."
+                            insufficientSelectionError = "Cannot reach: \(failedList)"
                         }
                         return
                     }
@@ -494,10 +535,25 @@ struct MultiMeltView: View {
                         mintRowInfoArray[i].partialAmount = Int(quote.2 / 1000)
                         mintRowInfoArray[i].fee = quote.1.feeReserve
                     }
+                    
+                    // Recheck balance after fees are known
+                    var totalRequired = 0
+                    for mintInfo in mintRowInfoArray where selectedMintIds.contains(mintInfo.id) {
+                        let required = mintInfo.partialAmount + (mintInfo.fee ?? 0)
+                        if mintInfo.mint.balance(for: .sat) < required {
+                            let shortage = required - mintInfo.mint.balance(for: .sat)
+                            insufficientSelectionError = "\(mintInfo.mint.displayName): need \(shortage) more sats (fee: \(mintInfo.fee ?? 0))"
+                            return
+                        }
+                        totalRequired += required
+                    }
+                    
+                    // Clear error if all mints have sufficient balance
+                    insufficientSelectionError = nil
                 }
             } catch {
                 await MainActor.run {
-                    insufficientSelectionError = "Failed to get quotes: \(error.localizedDescription)"
+                    insufficientSelectionError = "Connection error - check network"
                 }
                 print("error fetching quotes: \(error)")
             }
@@ -505,9 +561,9 @@ struct MultiMeltView: View {
     }
 
     
-    private func loadQuotes(for list: [(id: UUID, mint: CashuSwift.Mint, amount: Int)],
-                              invoice: String) async throws -> (quotes: [(UUID, CashuSwift.Bolt11.MeltQuote, Int)], failedMints: [String]) {
-        var quotes: [(UUID, CashuSwift.Bolt11.MeltQuote, Int)] = []
+    private func loadQuotes(for list: [(id: String, mint: CashuSwift.Mint, amount: Int)],
+                              invoice: String) async throws -> (quotes: [(String, CashuSwift.Bolt11.MeltQuote, Int)], failedMints: [String]) {
+        var quotes: [(String, CashuSwift.Bolt11.MeltQuote, Int)] = []
         var failedMints: [String] = []
         
         for entry in list {
@@ -548,49 +604,100 @@ struct MultiMeltView: View {
         
         let disc = selectedMintsInfo.count > 1 ? "Payment Part" : "Payment"
         
-//        var events = [Event]()
+        // Generate grouping ID for multi-mint payments
+        let eventGroupingID = selectedMintsInfo.count > 1 ? UUID() : nil
         
-        let mintsAndProofs = selectedMintsInfo.map { row in
+        var pendingEvents: [Event] = []
+        
+        let mintsAndProofs = selectedMintsInfo.compactMap { row -> (mint: Mint, quote: CashuSwift.Bolt11.MeltQuote, proofs: [Proof])? in
             
-            // needs actual handling
+            // Select proofs for the required amount
             guard let selected = row.mint.select(amount: row.partialAmount + (row.fee ?? 0), unit: .sat) else {
-                fatalError()
+                print("Failed to select proofs for mint: \(row.mint.displayName)")
+                return nil
             }
             guard let quote = row.quote else {
-                fatalError()
+                print("Missing quote for mint: \(row.mint.displayName)")
+                return nil
             }
             
-//            let partialEvent = Event.pendingMeltEvent(unit: .sat,
-//                                                      shortDescription: "Payment",
-//                                                      wallet: activeWallet,
-//                                                      quote: quote,
-//                                                      amount: row.partialAmount,
-//                                                      expiration: quote.expiry.map({ Date(timeIntervalSince1970: TimeInterval($0)) }) ?? Date.now + 3600, // FIXME: should not assume 1hr
-//                                                      mints: [row.mint],
-//                                                      proofs: selected.selected,
-//                                                      groupingID: eventGroupingID)
-//            events.append(partialEvent)
+            // Generate blank outputs for potential change
+            var blankOutputSet: BlankOutputSet? = nil
+            do {
+                let blankOutputs = try CashuSwift.generateBlankOutputs(
+                    quote: quote,
+                    proofs: selected.selected.sendable(),
+                    mint: CashuSwift.Mint(row.mint),
+                    unit: "sat",
+                    seed: activeWallet.seed
+                )
+                blankOutputSet = BlankOutputSet(tuple: blankOutputs)
+                
+                // Increase derivation counter for the keyset
+                if let keysetId = blankOutputs.outputs.first?.id {
+                    row.mint.increaseDerivationCounterForKeysetWithID(keysetId, by: blankOutputs.outputs.count)
+                }
+            } catch {
+                print("Failed to generate blank outputs for mint \(row.mint.displayName): \(error)")
+                // Continue without blank outputs - we won't be able to claim change
+            }
             
+            // Create pending melt event for this mint
+            // Persisting quote, proofs and blank outputs for proper recovery
+            let pendingEvent = Event.pendingMeltEvent(
+                unit: .sat,
+                shortDescription: disc,
+                visible: true, // Explicitly set visible to true
+                wallet: activeWallet,
+                quote: quote,
+                amount: row.partialAmount,
+                expiration: quote.expiry.map({ Date(timeIntervalSince1970: TimeInterval($0)) }) ?? Date.now + 3600,
+                mints: [row.mint],
+                proofs: selected.selected,
+                groupingID: eventGroupingID
+            )
+            
+            // Assign blank outputs to the event
+            pendingEvent.blankOutputs = blankOutputSet
+            pendingEvents.append(pendingEvent)
+            
+            // Mark proofs as pending
             selected.selected.setState(.pending)
             
             return (mint: row.mint, quote: quote, proofs: selected.selected)
         }
         
-//        events.forEach({ modelContext.insert($0) })
-//        pendingMeltEvents = events
-        
-        let taskGroupInputs = mintsAndProofs.map { entry in
-            (CashuSwift.Mint(entry.mint), entry.quote, entry.proofs.sendable())
+        // Check if we failed to prepare any mints
+        if mintsAndProofs.count != selectedMintsInfo.count {
+            actionButtonState = .fail()
+            displayAlert(alert: AlertDetail(title: "Preparation Error", 
+                                            description: "Failed to prepare payment for one or more mints"))
+            return
         }
         
-        let eventGroupingID = taskGroupInputs.count > 1 ? UUID() : nil
+        // Persist all pending events (quote, associated proofs, and blank outputs)
+        // This allows for tracking payment attempts, properly updating proof states
+        // when checking payment status later, and claiming any change
+        pendingEvents.forEach { modelContext.insert($0) }
+        
+        // Save the model context to ensure events and proof states are persisted before starting the melt operation
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save pending events: \(error)")
+        }
+        
+        let taskGroupInputs = mintsAndProofs.enumerated().map { index, entry in
+            let blankOutputs = pendingEvents[index].blankOutputs
+            return (CashuSwift.Mint(entry.mint), entry.quote, entry.proofs.sendable(), blankOutputs)
+        }
         
         Task {
             do {
                 try await withThrowingTaskGroup(of: (CashuSwift.Mint, CashuSwift.Bolt11.MeltQuote, [CashuSwift.Proof]).self) { group in
                     for input in taskGroupInputs {
                         group.addTask {
-                            let (quote, change) = try await melt(with: input.1, on: input.0, proofs: input.2)
+                            let (quote, change) = try await melt(with: input.1, on: input.0, proofs: input.2, blankOutputs: input.3)
                             return (input.0, quote,change)
                         }
                     }
@@ -606,7 +713,8 @@ struct MultiMeltView: View {
                             meltResults: results,
                             activeWallet: activeWallet,
                             shortDescription: disc,
-                            eventGroupingID: eventGroupingID
+                            eventGroupingID: eventGroupingID,
+                            pendingEvents: pendingEvents
                         )
                     }
                 }
@@ -615,6 +723,11 @@ struct MultiMeltView: View {
                     // Revert all selected proofs back to valid state
                     for entry in mintsAndProofs {
                         entry.proofs.setState(.valid)
+                    }
+                    
+                    // Remove pending events on failure
+                    for event in pendingEvents {
+                        modelContext.delete(event)
                     }
                     
                     displayAlert(alert: AlertDetail(with: error))
@@ -630,9 +743,16 @@ struct MultiMeltView: View {
     // as simple as possible, non-det change outputs
     private func melt(with quote: CashuSwift.Bolt11.MeltQuote,
                       on mint: CashuSwift.Mint,
-                      proofs: [CashuSwift.Proof]) async throws -> (CashuSwift.Bolt11.MeltQuote, [CashuSwift.Proof]) {
-        let blankOutputs = try CashuSwift.generateBlankOutputs(quote: quote, proofs: proofs, mint: mint, unit: "sat", seed: activeWallet?.seed)
-        let result = try await CashuSwift.melt(quote: quote, mint: mint, proofs: proofs, blankOutputs: blankOutputs)
+                      proofs: [CashuSwift.Proof],
+                      blankOutputs: BlankOutputSet?) async throws -> (CashuSwift.Bolt11.MeltQuote, [CashuSwift.Proof]) {
+        let outputs: (outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String])?
+        if let blankOutputs {
+            outputs = (blankOutputs.outputs, blankOutputs.blindingFactors, blankOutputs.secrets)
+        } else {
+            // Fallback: generate blank outputs if not provided
+            outputs = try CashuSwift.generateBlankOutputs(quote: quote, proofs: proofs, mint: mint, unit: "sat", seed: activeWallet?.seed)
+        }
+        let result = try await CashuSwift.melt(quote: quote, mint: mint, proofs: proofs, blankOutputs: outputs)
         return (result.quote, result.change ?? [])
     }
     
@@ -640,10 +760,16 @@ struct MultiMeltView: View {
                                       meltResults: [(CashuSwift.Mint, CashuSwift.Bolt11.MeltQuote, [CashuSwift.Proof])],
                                 activeWallet: Wallet,
                                 shortDescription: String,
-                                eventGroupingID: UUID?) throws {
+                                eventGroupingID: UUID?,
+                                pendingEvents: [Event]) throws {
         // Mark all used proofs as spent
         for entry in mintsAndProofs {
             entry.proofs.setState(.spent)
+        }
+        
+        // Hide pending events instead of deleting them to avoid view state inconsistencies
+        for event in pendingEvents {
+            event.visible = false
         }
         
         // Add change proofs and create events
@@ -662,8 +788,16 @@ struct MultiMeltView: View {
                                             preImage: result.1.paymentPreimage,
                                             groupingID: eventGroupingID)
                 modelContext.insert(event)
+                
+                // Debug logging
+                if let groupingID = eventGroupingID {
+                    print("Created melt event with groupingID: \(groupingID) for mint: \(internalMint.displayName)")
+                }
             }
         }
+        
+        // Save context to ensure groupingID is persisted
+        try modelContext.save()
         
         // Update UI state
         actionButtonState = .success()
@@ -732,6 +866,239 @@ struct MultiMeltView: View {
         
         // Fetch quotes for selected mints
         reloadMintQuotes()
+    }
+    
+    private func checkPendingMeltEvents(_ events: [Event]) async {
+        // Group events by groupingID (or treat individually if no groupingID)
+        var groupedEvents: [UUID?: [Event]] = [:]
+        for event in events {
+            let key = event.groupingID
+            if groupedEvents[key] == nil {
+                groupedEvents[key] = []
+            }
+            groupedEvents[key]?.append(event)
+        }
+        
+        // Process each group
+        for (groupingID, groupEvents) in groupedEvents {
+            await checkMeltEventGroup(groupEvents, groupingID: groupingID)
+        }
+    }
+    
+    private func checkMeltEventGroup(_ events: [Event], groupingID: UUID?) async {
+        var paidEvents: [(Event, CashuSwift.Bolt11.MeltQuote, [CashuSwift.Proof]?)] = []
+        var pendingEvents: [Event] = []
+        var unpaidEvents: [Event] = []
+        
+        print("Checking melt event group with \(events.count) events, groupingID: \(groupingID?.uuidString ?? "nil")")
+        
+        // Check status of each event
+        for event in events {
+            guard let quote = event.bolt11MeltQuote,
+                  let mint = event.mints?.first else {
+                print("Invalid pending event: missing quote or mint")
+                continue
+            }
+            
+            do {
+                // Prepare blank outputs if available
+                let blankOutputs: (outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String])?
+                if let blankOutputSet = event.blankOutputs {
+                    blankOutputs = (blankOutputSet.outputs, blankOutputSet.blindingFactors, blankOutputSet.secrets)
+                } else {
+                    blankOutputs = nil
+                }
+                
+                // Check the payment status without blocking
+                let result: (quote: CashuSwift.Bolt11.MeltQuote, change: [CashuSwift.Proof]?, dleqResult: CashuSwift.Crypto.DLEQVerificationResult) = try await CashuSwift.meltState(
+                    for: quote.quote,
+                    mint: CashuSwift.Mint(mint),
+                    blankOutputs: blankOutputs
+                )
+                
+                switch result.quote.state {
+                case .paid:
+                    paidEvents.append((event, result.quote, result.change))
+                case .pending:
+                    pendingEvents.append(event)
+                case .unpaid:
+                    unpaidEvents.append(event)
+                default:
+                    print("Unknown quote state for event")
+                }
+            } catch {
+                print("Error checking melt state: \(error)")
+                // Treat as unpaid to allow retry
+                unpaidEvents.append(event)
+            }
+        }
+        
+        // Handle the results
+        await MainActor.run {
+            handleMeltCheckResults(
+                paidEvents: paidEvents,
+                pendingEvents: pendingEvents,
+                unpaidEvents: unpaidEvents,
+                groupingID: groupingID
+            )
+        }
+    }
+    
+    private func handleMeltCheckResults(
+        paidEvents: [(Event, CashuSwift.Bolt11.MeltQuote, [CashuSwift.Proof]?)],
+        pendingEvents: [Event],
+        unpaidEvents: [Event],
+        groupingID: UUID?
+    ) {
+        // If all events in a group are paid, handle success
+        let totalEvents = paidEvents.count + pendingEvents.count + unpaidEvents.count
+        
+        if paidEvents.count == totalEvents && !paidEvents.isEmpty {
+            // All paid - handle success
+            handleRecoveredPaidEvents(paidEvents, groupingID: groupingID)
+        } else if !pendingEvents.isEmpty {
+            // Some are still pending - update action button
+            actionButtonState = .idle("Payment Still Pending") {
+                Task {
+                    actionButtonState = .loading()
+                    // Re-check the pending events
+                    await checkPendingMeltEvents(pendingEvents)
+                }
+            }
+        } else if !unpaidEvents.isEmpty && paidEvents.isEmpty {
+            // All unpaid - allow retry
+            prepareRetryForUnpaidEvents(unpaidEvents)
+        } else {
+            // Mixed results - this is complex, show status
+            let paidCount = paidEvents.count
+            let pendingCount = pendingEvents.count
+            let unpaidCount = unpaidEvents.count
+            
+            displayAlert(alert: AlertDetail(
+                title: "Mixed Payment Status",
+                description: "Payment status: \(paidCount) paid, \(pendingCount) pending, \(unpaidCount) unpaid. Please handle manually."
+            ))
+            
+            // Handle any paid events
+            if !paidEvents.isEmpty {
+                handleRecoveredPaidEvents(paidEvents, groupingID: groupingID)
+            }
+        }
+    }
+    
+    private func handleRecoveredPaidEvents(
+        _ paidEvents: [(Event, CashuSwift.Bolt11.MeltQuote, [CashuSwift.Proof]?)],
+        groupingID: UUID?
+    ) {
+        guard let activeWallet else { return }
+        
+        do {
+            // First, mark all proofs from pending events as spent
+            // We need to find the actual proofs in the mint, not just the references in the event
+            for (event, _, _) in paidEvents {
+                if let eventProofs = event.proofs {
+                    for eventProof in eventProofs {
+                        // Find the actual proof in the mint by matching properties
+                        if let mint = event.mints?.first,
+                           let actualProof = mint.proofs?.first(where: { 
+                               $0.C == eventProof.C && 
+                               $0.secret == eventProof.secret &&
+                               $0.keysetID == eventProof.keysetID
+                           }) {
+                            actualProof.state = .spent
+                        }
+                        // Also mark the event proof as spent
+                        eventProof.state = .spent
+                    }
+                }
+            }
+            
+            // Prepare data for success handler
+            var mintsAndProofs: [(mint: Mint, quote: CashuSwift.Bolt11.MeltQuote, proofs: [Proof])] = []
+            var meltResults: [(CashuSwift.Mint, CashuSwift.Bolt11.MeltQuote, [CashuSwift.Proof])] = []
+            var pendingEventsToRemove: [Event] = []
+            
+            for (event, quote, change) in paidEvents {
+                guard let mint = event.mints?.first,
+                      let proofs = event.proofs else { continue }
+                
+                mintsAndProofs.append((mint, quote, proofs))
+                meltResults.append((CashuSwift.Mint(mint), quote, change ?? []))
+                pendingEventsToRemove.append(event)
+            }
+            
+            // Use the existing success handler
+            try handleSuccessfulMelt(
+                mintsAndProofs: mintsAndProofs,
+                meltResults: meltResults,
+                activeWallet: activeWallet,
+                shortDescription: "Payment",
+                eventGroupingID: groupingID,
+                pendingEvents: pendingEventsToRemove
+            )
+            
+            // Don't show alert - success is indicated by action button
+            // The handleSuccessfulMelt already sets success state and dismisses
+        } catch {
+            displayAlert(alert: AlertDetail(with: error))
+        }
+    }
+    
+    private func prepareRetryForUnpaidEvents(_ unpaidEvents: [Event]) {
+        // Mark proofs as valid again for retry
+        for event in unpaidEvents {
+            event.proofs?.setState(.valid)
+        }
+        
+        // Set action button to allow retry
+        actionButtonState = .idle("Payment Failed - Retry") {
+            // Allow user to retry the payment
+            self.pendingMeltEvents = nil  // Clear pending events
+            actionButtonState = .idle("Pay", action: initiateMelt)
+        }
+        
+        // Hide the pending events instead of deleting to avoid view state inconsistencies
+        for event in unpaidEvents {
+            event.visible = false
+        }
+    }
+    
+    private func setupPendingEventsUI(_ events: [Event]) {
+        // Extract invoice and mint selection from pending events
+        if let firstEvent = events.first,
+           let quote = firstEvent.bolt11MeltQuote {
+            guard let invoiceString = quote.quoteRequest?.request else {
+                fatalError()
+            }
+            
+            self.invoiceString = invoiceString
+            
+            // Populate mint list with the invoice
+            populateMintList(invoice: invoiceString)
+            
+            // Select the mints that were used in the pending events
+            var mintsToSelect: Set<String> = []
+            for event in events {
+                if let mint = event.mints?.first {
+                    if let mintInfo = mintRowInfoArray.first(where: { $0.mint.url == mint.url }) {
+                        mintsToSelect.insert(mintInfo.id)
+                    }
+                }
+            }
+            selectedMintIds = mintsToSelect
+            
+            // Disable automatic selection and show static state
+            automaticallySelected = false
+            multiMintRequired = events.count > 1
+            
+            // Set action button to check payment status
+            actionButtonState = .idle("Check Payment Status") {
+                Task {
+                    actionButtonState = .loading()
+                    await checkPendingMeltEvents(events)
+                }
+            }
+        }
     }
 }
 

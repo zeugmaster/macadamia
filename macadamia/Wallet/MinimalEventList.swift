@@ -28,8 +28,8 @@ struct MinimalEventList: View {
         var standaloneEvents: [Event] = []
         
         for event in walletEvents {
-            // Only group melt events with a groupingID
-            if event.kind == .melt, let groupingID = event.groupingID {
+            // Group melt and pending melt events with a groupingID
+            if (event.kind == .melt || event.kind == .pendingMelt), let groupingID = event.groupingID {
                 groupedEvents[groupingID, default: []].append(event)
             } else {
                 standaloneEvents.append(event)
@@ -91,9 +91,19 @@ struct TransactionListRow: View {
     init(eventGroup: EventGroup) {
         self.eventGroup = eventGroup
     }
+    
+    @ViewBuilder
+    var destination: some View {
+        if eventGroup.primaryEvent.kind == .pendingMelt {
+            // For pending melt events, navigate to MultiMeltView with all events in the group
+            MultiMeltView(pendingMeltEvents: eventGroup.events)
+        } else {
+            EventDetailView(event: eventGroup.primaryEvent)
+        }
+    }
 
     var body: some View {
-        NavigationLink(destination: EventDetailView(event: eventGroup.primaryEvent)) {
+        NavigationLink(destination: destination) {
             VStack(alignment: .leading) {
                 HStack {
                     Group {
@@ -122,7 +132,11 @@ struct TransactionListRow: View {
                     Group {
                         HStack(spacing: 4) {
                             if eventGroup.isGrouped {
-                                Text("Payment")
+                                if eventGroup.primaryEvent.kind == .pendingMelt {
+                                    Text("Pending Payment")
+                                } else {
+                                    Text("Payment")
+                                }
                                 Text("• MPP")
                                     .font(.caption)
                                     .foregroundStyle(.tertiary)

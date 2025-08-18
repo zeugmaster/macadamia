@@ -4,7 +4,9 @@ import CashuSwift
 
 struct EventDetailView: View {
     let event: Event
-    @Query private var allEvents: [Event]
+    @Query(filter: #Predicate<Event> { event in
+        event.visible == true
+    }) private var allEvents: [Event]
     
     // Only filters and sorts existing events - does not create new Event objects
     var groupedEvents: [Event] {
@@ -12,7 +14,17 @@ struct EventDetailView: View {
         guard event.kind == .melt, let groupingID = event.groupingID else {
             return [event]
         }
-        return allEvents.filter { $0.kind == .melt && $0.groupingID == groupingID }.sorted { $0.date < $1.date }
+        let filtered = allEvents.filter { $0.kind == .melt && $0.groupingID == groupingID }.sorted { $0.date < $1.date }
+        
+        // Debug logging
+        if filtered.count > 1 {
+            print("Found \(filtered.count) grouped melt events with groupingID: \(groupingID)")
+            for evt in filtered {
+                print("  - Event: \(evt.amount ?? 0) sats via \(evt.mints?.first?.displayName ?? "unknown")")
+            }
+        }
+        
+        return filtered
     }
 
     var body: some View {
