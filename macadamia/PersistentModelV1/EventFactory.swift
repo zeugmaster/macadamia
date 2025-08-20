@@ -125,7 +125,7 @@ extension AppSchemaV1.Event {
                                  wallet: Wallet,
                                  quote: CashuSwift.Bolt11.MeltQuote,
                                  amount: Int,
-                                 expiration: Date,
+                                 expiration: Date?,
                                  mints: [Mint],
                                  proofs: [Proof]? = nil,
                                  groupingID: UUID? = nil) -> Event {

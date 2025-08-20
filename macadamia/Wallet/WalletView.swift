@@ -162,7 +162,8 @@ struct WalletView: View {
                 case .receive(let urlString):
                     RedeemContainerView(tokenString: urlString)
                 case .melt(let invoice):
-                    MultiMeltView(invoice: invoice)
+//                    MultiMeltView(invoice: invoice)
+                    MultiMeltViewV2()
                 }
             }
             .onChange(of: urlState, { oldValue, newValue in

@@ -499,6 +499,10 @@ enum AppSchemaV1: VersionedSchema {
             self.blindingFactors = tuple.blindingFactors
             self.secrets = tuple.secrets
         }
+        
+        func tuple() -> (outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String]) {
+            (outputs, blindingFactors, secrets)
+        }
     }
     
     enum Unit: String, Codable, CaseIterable {
