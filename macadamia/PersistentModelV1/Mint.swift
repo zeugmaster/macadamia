@@ -146,7 +146,7 @@ extension AppSchemaV1.Mint {
     func addProofs(_ proofs: [CashuSwift.Proof],
                    to context: ModelContext,
                    unit: Unit,
-                   increaseDerivationCounter: Bool = true) throws {
+                   increaseDerivationCounter: Bool = true) throws -> [Proof]  {
         
         guard let wallet = self.wallet else {
             throw macadamiaError.databaseError("No wallet associated with mint when trying to save \(proofs.count)")
@@ -174,5 +174,6 @@ extension AppSchemaV1.Mint {
         
         internalRepresentation.forEach({ context.insert($0) })
         print("added \(internalRepresentation.count) proofs to db")
+        return internalRepresentation
     }
 }

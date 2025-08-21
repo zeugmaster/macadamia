@@ -11,6 +11,21 @@ import CashuSwift
 
 struct MultiMeltViewV2: View {
     
+    // MARK: - Helper Structs
+    
+    struct MeltTaskInput {
+        let mint: CashuSwift.Mint
+        let proofs: [CashuSwift.Proof]
+        let quote: CashuSwift.Bolt11.MeltQuote
+        let blankOutputs: (outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String])?
+    }
+    
+    struct MeltTaskResult {
+        let mint: CashuSwift.Mint
+        let quote: CashuSwift.Bolt11.MeltQuote
+        let change: [CashuSwift.Proof]
+    }
+    
     enum QuoteState { case quote(CashuSwift.Bolt11.MeltQuote), error(String)}
     
     @Environment(\.modelContext) private var modelContext
@@ -235,7 +250,7 @@ struct MultiMeltViewV2: View {
                         quoteEntries[mint] = result.1
                     }
                 }
-                actionButtonState = .idle("Pay")
+                actionButtonState = .idle("Pay", action: buttonPressed)
                 selectorDisabled = false
             }
         }
@@ -281,7 +296,7 @@ struct MultiMeltViewV2: View {
     
     private func buttonPressed() {
         if pendingMeltEvents.isEmpty {
-            // init payment
+            prepareMelt()
         } else {
             // check state
         }
@@ -307,10 +322,11 @@ struct MultiMeltViewV2: View {
         
         //pick proofs,  create pending events (optional grouping id)
         let groupingID = quotes.count > 1 ? UUID() : nil
-        let disc = quotes.count > 1 ? "Payment Part" : "Payment"
+        let disc = quotes.count > 1 ? "Pending Payment Part" : "Pending Payment"
         var events = [Event]()
         for (mint, quote) in quotes {
-            guard let proofs = mint.select(amount: quote.amount, unit: .sat) else {
+            guard let proofs = mint.select(amount: quote.amount + quote.feeReserve,
+                                           unit: .sat) else {
                 displayAlert(alert: AlertDetail(title: "Proof Selection Error",
                                                 description: "The wallet was not able to pick ecash proofs from mint \(mint.displayName)."))
                 return
@@ -343,9 +359,11 @@ struct MultiMeltViewV2: View {
                 logger.error("failed to create blank outputs for melt operation on mint \(mint.url) due to error \(error)")
             }
             
+            events.append(event)
             proofs.selected.setState(.pending)
         }
         
+        pendingMeltEvents = events
         events.forEach({ modelContext.insert($0) })
         try? modelContext.save()
         
@@ -355,52 +373,47 @@ struct MultiMeltViewV2: View {
     private func melt(with events: [Event]) {
         
         // convert event info into labeled, sendable task group inputs
-        let taskGroupInputs: [(mint: CashuSwift.Mint,
-                              proofs: [CashuSwift.Proof],
-                              quote: CashuSwift.Bolt11.MeltQuote,
-                              blankOutputs: (outputs: [CashuSwift.Output],
-                                             blindingFactors: [String],
-                                             secrets: [String])?)]
+        let taskGroupInputs: [MeltTaskInput]
         
         taskGroupInputs = events.map { event in
             let blankOutputs = event.blankOutputs.flatMap { set in
                 !set.outputs.isEmpty ? set.tuple() : nil
             }
-            return (mint: CashuSwift.Mint(event.mints!.first!), // FIXME: unsafe unwrapping
-                    proofs: event.proofs!.sendable(),
-                    quote: event.bolt11MeltQuote!,
-                    blankOutputs: blankOutputs)
+            return MeltTaskInput(mint: CashuSwift.Mint(event.mints!.first!), // FIXME: unsafe unwrapping
+                                proofs: event.proofs!.sendable(),
+                                quote: event.bolt11MeltQuote!,
+                                blankOutputs: blankOutputs)
         }
         
         Task {
             do {
-                try await withThrowingTaskGroup(of: (mint: CashuSwift.Mint,
-                                                     quote: CashuSwift.Bolt11.MeltQuote,
-                                                     change: [CashuSwift.Proof]).self) { group in
+                try await withThrowingTaskGroup(of: MeltTaskResult.self) { group in
                     
                     for input in taskGroupInputs {
                         group.addTask {
                             let (quote, change, _) = try await CashuSwift.melt(quote: input.quote,
                                                                                mint: input.mint,
-                                                                               proofs: input.proofs)
-                            return (input.mint, quote, change ?? [])
+                                                                               proofs: input.proofs,
+                                                                               blankOutputs: input.blankOutputs)
+                            return MeltTaskResult(mint: input.mint, quote: quote, change: change ?? [])
                         }
                     }
                     
-                    var results: [(mint: CashuSwift.Mint,
-                                   quote: CashuSwift.Bolt11.MeltQuote,
-                                   change: [CashuSwift.Proof])] = []
+                    var results: [MeltTaskResult] = []
                     
                     for try await result in group {
                         results.append(result)
                     }
                     
-                    try await MainActor.run {
-                        
+                    await MainActor.run {
+                        handleSuccess(with: results)
                     }
                 }
             } catch {
-                
+                await MainActor.run {
+                    logger.error("Unable to complete melt operation due to error \(error)")
+                    displayAlert(alert: AlertDetail(with: error))
+                }
             }
         }
     }
@@ -412,7 +425,53 @@ struct MultiMeltViewV2: View {
         // pending: prompt user to check again later
     }
     
+    private func handleSuccess(with results: [MeltTaskResult]) {
+        guard let activeWallet else {
+            return
+        }
+        
+        for event in pendingMeltEvents {
+            event.proofs?.setState(.spent)
+            event.visible = false
+        }
+        
+        let groupingID = results.count > 1 ? UUID() : nil
+        
+        var events = [Event]()
+        for result in results {
+            guard let mint = mints.first(where: { $0.matches(result.mint) }) else {
+                // TODO: show error saving change
+                return
+            }
+            
+            let internalChange = try? mint.addProofs(result.change, to: modelContext, unit: .sat)
+            
+            events.append(Event.meltEvent(unit: .sat,
+                                          shortDescription: "Payment",
+                                          wallet: activeWallet,
+                                          amount: result.quote.amount,
+                                          longDescription: "",
+                                          mints: [mint],
+                                          change: internalChange,
+                                          preImage: result.quote.paymentPreimage,
+                                          groupingID: groupingID))
+        }
+        
+        events.forEach({ modelContext.insert($0) })
+        
+        try? modelContext.save()
+        
+        actionButtonState = .success()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            dismiss()
+        }
+    }
     
+    private func removePendingPayment() {
+        // set pending ecash as valid
+        // set events as hidden
+        // dismiss
+    }
     
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
