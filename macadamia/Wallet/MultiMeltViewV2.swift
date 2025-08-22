@@ -1,18 +1,11 @@
-//
-//  MultiMeltViewV2.swift
-//  macadamia
-//
-//  Created by zm on 18.08.25.
-//
-
 import SwiftUI
 import SwiftData
 import CashuSwift
 
+// TODO: remove unsafe unwrapping, nicer pending error
+
 struct MultiMeltViewV2: View {
-    
-    // MARK: - Helper Structs
-    
+        
     struct MeltTaskInput {
         let mint: CashuSwift.Mint
         let proofs: [CashuSwift.Proof]
@@ -41,9 +34,8 @@ struct MultiMeltViewV2: View {
     @State private var quoteEntries: [Mint: QuoteState] = [:]
     @State private var selectedMints = Set<Mint>()
     @State private var showSelector = false
-    @State private var autoSelected = false
-    @State private var selectorDisabled = false
-    @State private var actionButtonState = ActionButtonState.idle("Select Mint")
+    @State private var autoSelect = true
+    @State private var buttonState = ActionButtonState.idle("...")
     
     @State private var showAlert = false
     @State private var currentAlert: AlertDetail?
@@ -62,39 +54,92 @@ struct MultiMeltViewV2: View {
     }
     
     private var actionButtonDisabled: Bool {
-        quoteEntries.values.contains { if case .error(_) = $0 { true } else { false } } ||
-        quoteEntries.isEmpty
+        if pendingMeltEvents.isEmpty {
+            return quoteEntries.values.contains { if case .error(_) = $0 { true } else { false } } ||
+                   quoteEntries.isEmpty
+        } else {
+            return false
+        }
+    }
+    
+    private var selected: Set<Mint> {
+        if pendingMeltEvents.isEmpty {
+            if autoSelect {
+                // non-mpp mints by user index
+                // mpp mints be lowest number of mints per payment
+            }
+            return selectedMints
+        } else {
+            return Set(pendingMeltEvents.compactMap { $0.mints }.joined())
+        }
+    }
+    
+    private var selectorDisabled: Bool {
+        if pendingMeltEvents.isEmpty {
+            return buttonState.type == .loading ? true : false
+        } else {
+            return true
+        }
+    }
+    
+    private var dynamicButtonState: ActionButtonState {
+        switch (pendingMeltEvents.isEmpty, selected.isEmpty) {
+        case (true, true): return .idle("No Mint Selected")
+        case (true, false): return .idle("Pay", action: { prepareMelt() })
+        case (false, _): return .idle("Check Payment State",
+                                      action: { checkMeltState(for: pendingMeltEvents) })
+        }
+    }
+    
+    init(events: [Event]? = nil, invoice: String? = nil) {
+        if let events {
+            _pendingMeltEvents = State(initialValue: events)
+            let invoices = Set(events.map({ $0.bolt11MeltQuote?.quoteRequest?.request }))
+            if invoices.count == 1 {
+                _invoiceString = State(initialValue: invoices.first!)
+            } else {
+                _invoiceString = State(initialValue: "Initialization Error") // FIXME: suboptimal and potentially leading to wonky behaviour
+                logger.error("unable to initialize melt view, because none or too many invoice strings where gathered from pending events")
+            }
+        } else if let invoice {
+            _invoiceString = State(initialValue: invoice)
+        }
     }
     
     var body: some View {
-        if let invoiceString {
-            ZStack {
-                List {
-                    Section {
-                        Text(invoiceString)
-                            .monospaced()
-                    } header: {
-                        Text("BOLT11 INVOICE")
+        Group {
+            if let invoiceString {
+                ZStack {
+                    List {
+                        Section {
+                            Text(invoiceString)
+                                .monospaced()
+                        } header: {
+                            Text("BOLT11 INVOICE")
+                        }
+                        mintSelector
+                        Spacer(minLength: 50)
+                            .listRowBackground(Color.clear)
                     }
-                    mintSelector
-                    Spacer(minLength: 50)
-                        .listRowBackground(Color.clear)
+                    .lineLimit(1) // applies to entire list view, no text in this view should be more than 1 line
+                    VStack {
+                        Spacer()
+                        ActionButton(state: $buttonState)
+                            .actionDisabled(actionButtonDisabled)
+                    }
                 }
-                .lineLimit(1) // applies to entire list view, no text in this view should be more than 1 line
-                VStack {
-                    Spacer()
-                    ActionButton(state: $actionButtonState)
-                        .actionDisabled(actionButtonDisabled)
+                .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+                .onAppear {
+                    buttonState = dynamicButtonState
                 }
+            } else {
+                InputView(supportedTypes: [.bolt11Invoice]) { input in
+                    withAnimation {
+                        invoiceString = input.payload
+                    }
+                }
+                .padding()
             }
-            .alertView(isPresented: $showAlert, currentAlert: currentAlert)
-        } else {
-            InputView(supportedTypes: [.bolt11Invoice]) { input in
-                withAnimation {
-                    invoiceString = input.payload
-                }
-            }
-            .padding()
         }
     }
     
@@ -107,13 +152,13 @@ struct MultiMeltViewV2: View {
             } label: {
                 HStack {
                     VStack(alignment: .leading) {
-                        switch selectedMints.count {
+                        switch selected.count {
                         case 0:
                             Text("No mint selected")
                         case 1:
-                            Text("Pay from: \(selectedMints.first?.displayName ?? "nil")")
+                            Text("Pay from: \(selected.first?.displayName ?? "nil")")
                         default:
-                            Text("Pay from \(selectedMints.count) mints")
+                            Text("Pay from \(selected.count) mints")
                         }
                         
                         Text("Summary line")
@@ -121,7 +166,7 @@ struct MultiMeltViewV2: View {
                             .font(.caption)
                     }
                     Spacer()
-                    if selectedMints.count > 1 && autoSelected {
+                    if selected.count > 1 && autoSelect {
                         Image(systemName: "wand.and.stars")
                             .foregroundColor(.secondary)
                             .font(.title3)
@@ -144,7 +189,7 @@ struct MultiMeltViewV2: View {
                         Button {
                             toggleSelection(for: mint)
                         } label: {
-                            Image(systemName: selectedMints.contains(mint) ? "checkmark.circle.fill" : "circle")
+                            Image(systemName: selected.contains(mint) ? "checkmark.circle.fill" : "circle")
                         }
                         .disabled(disableRow)
                         
@@ -152,8 +197,17 @@ struct MultiMeltViewV2: View {
                             HStack {
                                 Text(mint.displayName)
                                 Spacer()
-                                Text(String(mint.balance(for: .sat)) + " sat")
-                                    .monospaced()
+                                Group {
+                                    let balance = mint.balance(for: .sat)
+
+                                    Text(balance, format: .number)
+                                        .monospaced()
+                                        .contentTransition(.numericText(value: Double(balance)))
+                                        .animation(.snappy, value: balance)
+
+                                    Text(" sat")
+                                }
+                                .monospaced()
                             }
                             .foregroundStyle(disableRow ? .secondary : .primary)
                             HStack {
@@ -179,18 +233,8 @@ struct MultiMeltViewV2: View {
         }
     }
     
-    private func initiateSelector() {
-        if pendingMeltEvents.isEmpty {
-            // auto select mints...
-            autoSelected = true
-        } else {
-            // assign quotes and selection
-            selectorDisabled = true
-        }
-    }
-    
     private func toggleSelection(for mint: Mint) {
-        withAnimation { autoSelected = false }
+        withAnimation { autoSelect = false }
 
         let hasNonMPP = selectedMints.contains { !$0.supportsMPP }
         switch (selectedMints.contains(mint), mint.supportsMPP, hasNonMPP) {
@@ -220,8 +264,7 @@ struct MultiMeltViewV2: View {
             return
         }
         
-        actionButtonState = .loading()
-        selectorDisabled = true
+        buttonState = .loading()
         
         let allocationsSendable = msatAllocations(for: total,
                                                   mints: Array(selectedMints)).map { (mint, allocation) in
@@ -250,8 +293,7 @@ struct MultiMeltViewV2: View {
                         quoteEntries[mint] = result.1
                     }
                 }
-                actionButtonState = .idle("Pay", action: buttonPressed)
-                selectorDisabled = false
+                buttonState = dynamicButtonState
             }
         }
     }
@@ -294,20 +336,12 @@ struct MultiMeltViewV2: View {
         return out
     }
     
-    private func buttonPressed() {
-        if pendingMeltEvents.isEmpty {
-            prepareMelt()
-        } else {
-            // check state
-        }
-    }
-    
     private func prepareMelt() {
         guard let activeWallet else {
             return
         }
         
-        selectorDisabled = true
+        buttonState = .loading()
         
         var quotes = [Mint: CashuSwift.Bolt11.MeltQuote]()
         for (mint, quoteEntry) in quoteEntries {
@@ -419,10 +453,57 @@ struct MultiMeltViewV2: View {
     }
     
     private func checkMeltState(for events: [Event]) {
-        // load quote states:
-        // if all paid: run on success
-        // unpaid: allow retry
-        // pending: prompt user to check again later
+        var taskInputs = [MeltTaskInput]()
+        for event in events {
+            guard let mint = event.mints?.first,
+                  let proofs = event.proofs,
+                  let quote = event.bolt11MeltQuote else {
+                // show error
+                return
+            }
+            
+            taskInputs.append(MeltTaskInput(mint: CashuSwift.Mint(mint),
+                                            proofs: proofs.sendable(),
+                                            quote: quote,
+                                            blankOutputs: event.blankOutputs?.tuple()))
+        }
+        
+        var results = [MeltTaskResult]()
+        Task {
+            do {
+                for input in taskInputs {
+                    let result = try await CashuSwift.meltState(for: input.quote.quote,
+                                                                with: input.mint,
+                                                                blankOutputs: input.blankOutputs)
+                    results.append(MeltTaskResult(mint: input.mint,
+                                                  quote: result.quote,
+                                                  change: result.change ?? []))
+                }
+                
+                await MainActor.run {
+                    if results.allSatisfy({ $0.quote.state == .paid }) {
+                        handleSuccess(with: results)
+                    } else if results.allSatisfy({ $0.quote.state == .pending }) {
+                        displayAlert(alert: AlertDetail(title: "Payment Pending ⏳",
+                                                        description: "This payment is still pending. Please check again later to make sure the lightning payment was successful."))
+                        buttonState = dynamicButtonState
+                    } else if results.allSatisfy({ $0.quote.state == .unpaid }) {
+                        displayAlert(alert: AlertDetail(title: "Unpaid ⚠",
+                                                        description: "This payment did not go through and is marked \"unpaid\" with the mint. Would you like to try again?",
+                                                        primaryButton: AlertButton(title: "Retry",
+                                                                                   action: { melt(with: events) } )))
+                    } else {
+                        logger.error("quote states are conflicting: \(results.map({ $0.mint.url.absoluteString + ":" + String(describing: $0.quote.state) }))")
+                        displayAlert(alert: AlertDetail(title: "MPP Error", description: "The wallet received conflicting state information \(results.map({ $0.quote.state })) from the mint. "))
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    logger.error("unable to check one or more quote states due to error: \(error)")
+                    displayAlert(alert: AlertDetail(with: error))
+                }
+            }
+        }
     }
     
     private func handleSuccess(with results: [MeltTaskResult]) {
@@ -461,7 +542,7 @@ struct MultiMeltViewV2: View {
         
         try? modelContext.save()
         
-        actionButtonState = .success()
+        buttonState = .success("Paid!")
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             dismiss()
         }

@@ -910,9 +910,11 @@ struct MultiMeltView: View {
                 }
                 
                 // Check the payment status without blocking
-                let result: (quote: CashuSwift.Bolt11.MeltQuote, change: [CashuSwift.Proof]?, dleqResult: CashuSwift.Crypto.DLEQVerificationResult) = try await CashuSwift.meltState(
+                let result: (quote: CashuSwift.Bolt11.MeltQuote,
+                             change: [CashuSwift.Proof]?,
+                             dleqResult: CashuSwift.Crypto.DLEQVerificationResult) = try await CashuSwift.meltState(
                     for: quote.quote,
-                    mint: CashuSwift.Mint(mint),
+                    with: CashuSwift.Mint(mint),
                     blankOutputs: blankOutputs
                 )
                 

@@ -96,7 +96,7 @@ struct TransactionListRow: View {
     var destination: some View {
         if eventGroup.primaryEvent.kind == .pendingMelt {
             // For pending melt events, navigate to MultiMeltView with all events in the group
-            MultiMeltView(pendingMeltEvents: eventGroup.events)
+            MultiMeltViewV2(events: eventGroup.events)
         } else {
             EventDetailView(event: eventGroup.primaryEvent)
         }
