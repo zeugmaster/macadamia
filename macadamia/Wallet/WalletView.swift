@@ -69,7 +69,7 @@ struct WalletView: View {
                     }
                 })
                 Spacer().frame(maxHeight: 20)
-                MinimalEventList()
+                EventList(style: .minimal)
                 Spacer().frame(maxHeight: 20)
                 HStack(alignment: .center) {
                     // MARK: BUTTON "RECEIVE" -
@@ -162,8 +162,7 @@ struct WalletView: View {
                 case .receive(let urlString):
                     RedeemContainerView(tokenString: urlString)
                 case .melt(let invoice):
-//                    MultiMeltView(invoice: invoice)
-                    MultiMeltViewV2()
+                    MultiMeltViewV2(invoice: invoice)
                 }
             }
             .onChange(of: urlState, { oldValue, newValue in
@@ -217,7 +216,3 @@ struct WalletView: View {
         showAlert = true
     }
 }
-
-//#Preview {
-//    WalletView(urlState: .constant(nil))
-//}

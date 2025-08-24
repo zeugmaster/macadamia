@@ -84,8 +84,6 @@ struct RestoreView: View {
                                             primaryButton: AlertButton(title: "Restore", role: .destructive, action: {
                 restore()
                 return
-            }), secondaryButton: AlertButton(title: "Cancel", role: .cancel, action: {
-                return
             })))
         } else {
             restore()

@@ -14,15 +14,18 @@ struct AlertDetail {
     let alertDescription: String?
     let primaryButton: AlertButton?
     let secondaryButton: AlertButton?
+    let tertiaryButton: AlertButton?
     
     init(title: String,
          description: String? = nil,
          primaryButton: AlertButton? = nil,
-         secondaryButton: AlertButton? = nil) {
+         secondaryButton: AlertButton? = nil,
+         tertiaryButton: AlertButton? = nil) {
         self.title = title
         self.alertDescription = description
         self.primaryButton = primaryButton
         self.secondaryButton = secondaryButton
+        self.tertiaryButton = tertiaryButton
     }
     
     init(with error: Swift.Error) {
@@ -103,6 +106,13 @@ struct AlertViewModifier: ViewModifier {
                         Text(secondaryButton.title)
                     }
                 }
+                if let tertiaryButton = currentAlert?.tertiaryButton {
+                    Button(role: tertiaryButton.role) {
+                        tertiaryButton.action()
+                    } label: {
+                        Text(tertiaryButton.title)
+                    }
+                }
             } message: {
                 Text(currentAlert?.alertDescription ?? "")
             }
@@ -112,7 +122,7 @@ struct AlertViewModifier: ViewModifier {
 struct AlertButton {
     var title: String
     var role: ButtonRole?
-    var action: () -> Void
+    var action: (() -> Void)
 }
 
 extension View {

@@ -1,127 +1,52 @@
+//
+//  EventSummary.swift
+//  macadamia
+//
+//  Created by zm on 24.08.25.
+//
+
 import SwiftUI
-import SwiftData
 import CashuSwift
+import SwiftData
 
-struct EventDetailView: View {
+struct MintEventSummary: View {
     let event: Event
-    @Query(filter: #Predicate<Event> { event in
-        event.visible == true
-    }) private var allEvents: [Event]
     
-    // Only filters and sorts existing events - does not create new Event objects
-    var groupedEvents: [Event] {
-        // Only group melt events
-        guard event.kind == .melt, let groupingID = event.groupingID else {
-            return [event]
-        }
-        let filtered = allEvents.filter { $0.kind == .melt && $0.groupingID == groupingID }.sorted { $0.date < $1.date }
-        
-        // Debug logging
-        if filtered.count > 1 {
-            print("Found \(filtered.count) grouped melt events with groupingID: \(groupingID)")
-            for evt in filtered {
-                print("  - Event: \(evt.amount ?? 0) sats via \(evt.mints?.first?.displayName ?? "unknown")")
-            }
-        }
-        
-        return filtered
-    }
-
     var body: some View {
-        switch event.kind {
-            
-        case .pendingMint:
-            if let quote = event.bolt11MintQuote {
-                MintView(quote: quote, pendingMintEvent: event)
-            } else {
-                Text("No quote set.")
+        List {
+            HStack {
+                Text("Minted at: ")
+                Spacer()
+                Text(event.date.formatted())
             }
-            
-        case .mint:
-            List {
-                HStack {
-                    Text("Minted at: ")
-                    Spacer()
-                    Text(event.date.formatted())
-                }
-                HStack {
-                    Text("Amount: ")
-                    Spacer()
-                    Text(String(event.amount ?? 0))
-                }
-                HStack {
-                    Text("Unit: ")
-                    Spacer()
-                    Text(event.unit.rawValue)
-                }
-                if let text = event.bolt11MintQuote?.request {
-                    TokenText(text: text)
-                        .frame(idealHeight: 70)
-                        .contextMenu {
-                            Button(action: {
-                                UIPasteboard.general.string = text
-                            }) {
-                                Text("Copy")
-                                Spacer()
-                                Image(systemName: "clipboard")
-                            }
+            HStack {
+                Text("Amount: ")
+                Spacer()
+                Text(String(event.amount ?? 0))
+            }
+            HStack {
+                Text("Unit: ")
+                Spacer()
+                Text(event.unit.rawValue)
+            }
+            if let text = event.bolt11MintQuote?.request {
+                TokenText(text: text)
+                    .frame(idealHeight: 70)
+                    .contextMenu {
+                        Button(action: {
+                            UIPasteboard.general.string = text
+                        }) {
+                            Text("Copy")
+                            Spacer()
+                            Image(systemName: "clipboard")
                         }
-                }
-            }
-            
-        case .send:
-            SendEventView(event: event)
-            
-        case .receive:
-            List {
-                HStack {
-                    Text("Received at: ")
-                    Spacer()
-                    Text(event.date.formatted())
-                }
-                HStack {
-                    Text("Amount: ")
-                    Spacer()
-                    Text(String(event.amount ?? 0))
-                }
-                HStack {
-                    Text("Unit: ")
-                    Spacer()
-                    Text(event.unit.rawValue)
-                }
-            }
-            
-        case .pendingReceive:
-            RedeemLaterView(event: event)
-        case .pendingMelt:
-            MeltView(pendingMeltEvent: event)
-            
-        case .melt:
-            MeltEventView(events: groupedEvents)
-            
-        case .restore:
-            List {
-                HStack {
-                    Text("Restored at: ")
-                    Spacer()
-                    Text(event.date.formatted())
-                }
-                Text(event.longDescription ?? "No description.")
-            }
-            
-        case .drain:
-            List {
-                HStack {
-                    Text("Created at: ")
-                    Spacer()
-                    Text(event.date.formatted())
-                }
+                    }
             }
         }
     }
 }
 
-struct MeltEventView: View {
+struct MeltEventSummary: View {
     let events: [Event]
     
     var totalAmount: Int {
@@ -361,6 +286,45 @@ struct SendEventView: View {
                     }
                 }
             }
+        }
+    }
+}
+
+struct ReceiveEventSummary: View {
+    let event: Event
+    
+    var body: some View {
+        List {
+            HStack {
+                Text("Received at: ")
+                Spacer()
+                Text(event.date.formatted())
+            }
+            HStack {
+                Text("Amount: ")
+                Spacer()
+                Text(String(event.amount ?? 0))
+            }
+            HStack {
+                Text("Unit: ")
+                Spacer()
+                Text(event.unit.rawValue)
+            }
+        }
+    }
+}
+
+struct RestoreEventSummary: View {
+    let event: Event
+    
+    var body: some View {
+        List {
+            HStack {
+                Text("Restored at: ")
+                Spacer()
+                Text(event.date.formatted())
+            }
+            Text(event.longDescription ?? "No description.")
         }
     }
 }

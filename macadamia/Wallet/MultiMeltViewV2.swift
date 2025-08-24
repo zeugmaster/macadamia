@@ -101,6 +101,7 @@ struct MultiMeltViewV2: View {
                 _invoiceString = State(initialValue: "Initialization Error") // FIXME: suboptimal and potentially leading to wonky behaviour
                 logger.error("unable to initialize melt view, because none or too many invoice strings where gathered from pending events")
             }
+            _autoSelect = State(initialValue: false)
         } else if let invoice {
             _invoiceString = State(initialValue: invoice)
         }
@@ -488,13 +489,20 @@ struct MultiMeltViewV2: View {
                                                         description: "This payment is still pending. Please check again later to make sure the lightning payment was successful."))
                         buttonState = dynamicButtonState
                     } else if results.allSatisfy({ $0.quote.state == .unpaid }) {
+                        let primary = AlertButton(title: "Retry",
+                                                  action: { melt(with: events) })
+                        let secondary = AlertButton(title: "Remove Payment",
+                                                    role: .destructive,
+                                                    action: removePendingPayment)
                         displayAlert(alert: AlertDetail(title: "Unpaid ⚠",
                                                         description: "This payment did not go through and is marked \"unpaid\" with the mint. Would you like to try again?",
-                                                        primaryButton: AlertButton(title: "Retry",
-                                                                                   action: { melt(with: events) } )))
+                                                        primaryButton: primary,
+                                                        secondaryButton: secondary))
+                        buttonState = dynamicButtonState
                     } else {
                         logger.error("quote states are conflicting: \(results.map({ $0.mint.url.absoluteString + ":" + String(describing: $0.quote.state) }))")
-                        displayAlert(alert: AlertDetail(title: "MPP Error", description: "The wallet received conflicting state information \(results.map({ $0.quote.state })) from the mint. "))
+                        displayAlert(alert: AlertDetail(title: "MPP Error",
+                                                        description: "The wallet received conflicting state information \(results.map({ $0.quote.state })) from the mint. "))
                     }
                 }
             } catch {

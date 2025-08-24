@@ -1,214 +1,243 @@
+//
+//  EventListV2.swift
+//  macadamia
+//
+//  Created by zm on 23.08.25.
+//
+
 import SwiftUI
 import SwiftData
 
 struct EventList: View {
+    
+    struct EventGroup: Identifiable {
+        let events: [Event]
+        let date: Date // hold the latest date for the group for chronological sorting
+        let id: UUID
+    }
+    
+    enum Style { case minimal, full }
+    let style: Style
+    
     @Environment(\.modelContext) private var modelContext
-
-    @Query(filter: #Predicate<Wallet> { wallet in
-        wallet.active == true
-    }) private var wallets: [Wallet]
-
     @Query private var allEvents: [Event]
-
-    @State private var eventGroups: [EventGroup] = []
-
+    @Query private var wallets: [Wallet]
+    
+    @State private var showHidden = false
+    
+    private var activeWallet: Wallet? {
+        wallets.first { $0.active }
+    }
+    
+    private var events: [Event] {
+        allEvents.filter { $0.wallet == activeWallet }
+                 .filter({ $0.visible || showHidden })
+    }
+    
+    private var eventGroups: [EventGroup] {
+        var out: [EventGroup] = []
+        var seen = Set<AnyHashable>()
+        for e in events {
+            if let gid = e.groupingID {
+                let key = AnyHashable(gid)
+                if seen.contains(key) { continue }
+                let grouped = events.filter { $0.groupingID == gid }
+                out.append(EventGroup(events: grouped,
+                                      date: grouped.first?.date ?? e.date,
+                                      id: gid))
+                seen.insert(key)
+            } else {
+                out.append(EventGroup(events: [e],
+                                      date: e.date,
+                                      id: e.eventID))
+            }
+        }
+        return out.sorted(by: { $0.date > $1.date })
+    }
+    
     var body: some View {
-        List {
-            ForEach(eventGroups, id: \.primaryEvent.id) { eventGroup in
-                EventListRow(eventGroup: eventGroup)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button {
-                            deleteEventGroup(eventGroup)
-                        } label: {
-                            Image(systemName: "trash")
-                                .foregroundColor(.white)
+        Group {
+            switch style {
+            case .minimal:
+                List {
+                    ForEach(eventGroups.prefix(5)) { group in
+                        MinimalRow(eventGroup: group)
+                    }
+                    NavigationLink(destination: EventList(style: .full),
+                                   label: {
+                        HStack {
+                            Spacer().frame(width: 28)
+                            Text("Show all")
                         }
-                        .tint(Color.black)
-                    }
-            }
-        }
-        .onAppear {
-            updateEvents()
-        }
-        .onChange(of: wallets.first) { _, _ in
-            updateEvents()
-        }
-        .onChange(of: allEvents) { _, _ in
-            updateEvents()
-        }
-    }
-
-    private func updateEvents() {
-        if let activeWallet = wallets.first {
-            let walletEvents = allEvents.filter { $0.wallet == activeWallet && $0.visible == true }
-            
-            // Group events by groupingID
-            var groupedEvents: [UUID?: [Event]] = [:]
-            var standaloneEvents: [Event] = []
-            
-            for event in walletEvents {
-                // Group melt and pending melt events with a groupingID
-                if (event.kind == .melt || event.kind == .pendingMelt), let groupingID = event.groupingID {
-                    groupedEvents[groupingID, default: []].append(event)
-                } else {
-                    standaloneEvents.append(event)
+                    })
                 }
-            }
-            
-            // Convert to EventGroup array
-            var groups: [EventGroup] = []
-            
-            // Add grouped events
-            for (_, events) in groupedEvents {
-                groups.append(EventGroup(events: events))
-            }
-            
-            // Add standalone events
-            for event in standaloneEvents {
-                groups.append(EventGroup(events: [event]))
-            }
-            
-            // Sort by most recent date
-            eventGroups = groups.sorted { $0.mostRecentDate > $1.mostRecentDate }
-        } else {
-            eventGroups = []
-        }
-    }
-
-    private func deleteEventGroup(_ eventGroup: EventGroup) {
-        withAnimation {
-            // Delete all events in the group
-            for event in eventGroup.events {
-                modelContext.delete(event)
-            }
-            // Update local state
-            updateEvents()
-        }
-
-        do {
-            try modelContext.save()
-        } catch {
-            print("Failed to save context after deletion: \(error)")
-        }
-    }
-}
-
-struct EventListRow: View {
-    
-    let eventGroup: EventGroup
-    
-    @ViewBuilder
-    var destination: some View {
-        if eventGroup.primaryEvent.kind == .pendingMelt {
-            // For pending melt events, navigate to MultiMeltView with all events in the group
-            MultiMeltView(pendingMeltEvents: eventGroup.events)
-        } else {
-            EventDetailView(event: eventGroup.primaryEvent)
-        }
-    }
-    
-    var readableMintName: String {
-        let mints = eventGroup.allMints
-        if mints.isEmpty {
-            return ""
-        } else if mints.count == 1 {
-            return mints.first?.displayName ?? ""
-        } else {
-            return "Multiple"
-        }
-    }
-    
-    var amountString: String? {
-        let event = eventGroup.primaryEvent
-        switch event.kind {
-        case .restore, .drain:
-            return nil
-        case .send, .melt, .pendingMelt:
-            return amountDisplayString(eventGroup.totalAmount ?? 0, unit: event.unit, negative: true)
-        case .receive, .pendingReceive, .mint, .pendingMint:
-            return amountDisplayString(eventGroup.totalAmount ?? 0, unit: event.unit)
-        }
-    }
-    
-    var shortenedDateString: String {
-        let now = Date()
-        let dayPassed = Calendar.current.dateComponents([.hour],
-                                                        from: eventGroup.mostRecentDate,
-                                                        to: now).hour ?? 0 > 24
-        let dateFormatter = DateFormatter()
-        dateFormatter.timeStyle = .short
-        dateFormatter.dateStyle = dayPassed ? .short : .none
-        return dateFormatter.string(from: eventGroup.mostRecentDate)
-    }
-    
-    var description: String {
-        let event = eventGroup.primaryEvent
-        if eventGroup.isGrouped && (event.kind == .melt || event.kind == .pendingMelt) {
-            return event.kind == .pendingMelt ? "Pending Payment • MPP" : "Payment • MPP"
-        } else {
-            return event.shortDescription
-        }
-    }
-    
-    var body: some View {
-        NavigationLink(destination: destination) {
-            RowLayout(mintLabel: readableMintName,
-                      description: description,
-                      amountString: amountString,
-                      dateLabel: shortenedDateString,
-                      memo: eventGroup.primaryEvent.memo,
-                      isGrouped: eventGroup.isGrouped)
-        }
-    }
-}
-
-struct RowLayout: View {
-    
-    let mintLabel: String
-    let description: String
-    let amountString: String?
-    let dateLabel: String
-    
-    let memo: String?
-    var isGrouped: Bool = false
-    
-    var body: some View {
-        VStack {
-            HStack {
-                Text("\(Image(systemName:"building.columns.fill")) \(mintLabel)")
-                Spacer()
-                Text(dateLabel)
-            }
-            .font(.caption)
-            .padding(EdgeInsets(top: 0, leading: 0, bottom: 4, trailing: 0))
-            HStack {
-                HStack(spacing: 4) {
-                    if isGrouped {
-                        Image(systemName: "arrow.triangle.branch")
-                            .font(.caption)
+                .listStyle(.plain)
+            case .full:
+                List {
+                    ForEach(eventGroups) { group in
+                        FullRow(eventGroup: group)
                     }
-                    if let memo, !memo.isEmpty {
-                        Text(description + ": \(memo)")
-                    } else {
-                        Text(description)
-                    }
-                }
-                Spacer()
-                if let amountString {
-                    Text(amountString)
-                        .monospaced()
                 }
             }
         }
         .lineLimit(1)
     }
-}
+    
+    struct MinimalRow: View {
+        let eventGroup: EventGroup
+        
+        var body: some View {
+            NavigationLink(destination: destination(for: eventGroup)) {
+                VStack(alignment: .leading) {
+                    HStack {
+                        image
+                            .opacity(0.8)
+                            .font(.caption)
+                            .frame(width: 20, alignment: .leading)
+                        let (main, secondary) = description(for: eventGroup)
+                        Text(main)
+                        if let secondary {
+                            Text(secondary)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text(amountString(for: eventGroup))
+                            .foregroundStyle(.secondary)
+                    }
+                    HStack {
+                        Spacer().frame(width: 28)
+                        let mints = eventGroup.events.compactMap { $0.mints }.flatMap { $0 }
+                        ForEach(mints) { mint in
+                            Text(mint.displayName)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+        }
+        
+        private var image: Image {
+            switch eventGroup.events.first?.kind {
+            case .pendingMelt, .pendingMint:
+                Image(systemName: "hourglass")
+            case .pendingReceive:
+                Image(systemName: "lock")
+            case .mint, .receive:
+                Image(systemName: "arrow.down.left")
+            case .melt, .send:
+                if eventGroup.events.count > 1 {
+                    Image(systemName: "arrow.triangle.branch")
+                } else {
+                    Image(systemName: "arrow.up.right")
+                }
+            case .restore:
+                Image(systemName: "clock.arrow.circlepath")
+            case .drain:
+                Image(systemName: "arrow.uturn.right")
+            case .none:
+                Image(systemName: "xmark")
+            }
+        }
+    }
 
-#Preview {
-    RowLayout(mintLabel: "mint.macadamia.cash",
-              description: "Send",
-              amountString: "- 420 sat",
-              dateLabel: "6.2.24, 14:32", 
-              memo: "tenks u",
-              isGrouped: false)
+    struct FullRow: View {
+        let eventGroup: EventGroup
+        
+        var body: some View {
+            NavigationLink(destination: destination(for: eventGroup)) {
+                VStack {
+                    HStack {
+                        Image(systemName: "building.columns.fill")
+                        
+                        let mints = eventGroup.events.compactMap { $0.mints }.flatMap { $0 }
+                        ForEach(mints) { mint in
+                            Text(mint.displayName)
+                        }
+                        
+                        Spacer()
+                        Text(shortenedDateString)
+                    }
+                    .font(.caption)
+                    .padding(EdgeInsets(top: 0, leading: 0, bottom: 4, trailing: 0))
+                    HStack {
+                        HStack(spacing: 4) {
+                            let (main, secondary) = description(for: eventGroup)
+                            Text(main)
+                            if let secondary {
+                                Text(secondary)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        Spacer()
+                        Text(amountString(for: eventGroup))
+                            .monospaced()
+                    }
+                }
+            }
+        }
+        
+        var shortenedDateString: String {
+            let now = Date()
+            let dayPassed = Calendar.current.dateComponents([.hour],
+                                                            from: eventGroup.date,
+                                                            to: now).hour ?? 0 > 24
+            let dateFormatter = DateFormatter()
+            dateFormatter.timeStyle = .short
+            dateFormatter.dateStyle = dayPassed ? .short : .none
+            return dateFormatter.string(from: eventGroup.date)
+        }
+    }
+    
+    private static func description(for eventGroup: EventGroup) -> (main: String,
+                                                                   secondary: String?) {
+        guard let primaryEvent = eventGroup.events.first else {
+            return ("Empty", nil)
+        }
+        switch primaryEvent.kind {
+        case .pendingMint:      return ("Pending Ecash", nil)
+        case .mint:             return ("Ecash created", nil)
+        case .send:             return ("Send", primaryEvent.memo)
+        case .receive:          return ("Receive", primaryEvent.memo)
+        case .pendingReceive:   return ("Locked Token", nil)
+        case .pendingMelt:      return ("Pending Payment", eventGroup.events.count > 1 ? "MPP" : nil)
+        case .melt:             return ("Payment", nil)
+        case .restore:          return ("Restore", nil)
+        case .drain:            return ("Drain", nil)
+        }
+    }
+    
+    private static func amountString(for group: EventGroup) -> String {
+        let negative: Bool
+        switch group.events.first?.kind {
+        case .send, .drain, .melt, .pendingMelt: negative = true
+        default: negative = false
+        }
+        let sum = group.events.reduce(0, { $0 + ($1.amount ?? 0) })
+        return amountDisplayString(sum, unit: .sat, negative: negative)
+    }
+    
+    @ViewBuilder
+    private static func destination(for group: EventGroup) -> some View {
+        switch group.events.first?.kind {
+        case .pendingMint:
+            MintView(pendingMintEvent: group.events.first)
+        case .mint:
+            if let e = group.events.first { MintEventSummary(event: e) } else { Text("No mint event provided.") }
+        case .send:
+            if let e = group.events.first { SendEventView(event: e) } else { Text("No send event provided.") }
+        case .receive:
+            if let e = group.events.first { ReceiveEventSummary(event: e) } else { Text("No receive event provided.") }
+        case .pendingReceive:
+            if let e = group.events.first { RedeemLaterView(event: e) } else { Text("No pending receive event provided") }
+        case .pendingMelt:
+            MultiMeltViewV2(events: group.events)
+        case .melt:
+            MeltEventSummary(events: group.events)
+        case .restore:
+            if let e = group.events.first { RestoreEventSummary(event: e) } else { Text("No restore event provided") }
+        default:
+            EmptyView()
+        }
+    }
 }
