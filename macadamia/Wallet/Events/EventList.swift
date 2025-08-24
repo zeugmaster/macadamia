@@ -25,6 +25,8 @@ struct EventList: View {
     
     @State private var showHidden = false
     
+    private let shadowHeight: CGFloat = 10
+    
     private var activeWallet: Wallet? {
         wallets.first { $0.active }
     }
@@ -60,18 +62,37 @@ struct EventList: View {
             switch style {
             case .minimal:
                 List {
-                    ForEach(eventGroups.prefix(5)) { group in
-                        MinimalRow(eventGroup: group)
-                    }
-                    NavigationLink(destination: EventList(style: .full),
-                                   label: {
-                        HStack {
-                            Spacer().frame(width: 28)
-                            Text("Show all")
+                    if eventGroups.isEmpty {
+                        Text("No transactions yet.")
+                            .monospaced()
+                    } else {
+                        ForEach(eventGroups.prefix(5)) { group in
+                            MinimalRow(eventGroup: group)
                         }
-                    })
+                        if eventGroups.count > 5 {
+                            NavigationLink(destination: EventList(style: .full),
+                                           label: {
+                                HStack {
+                                    Spacer().frame(width: 28)
+                                    Text("Show all")
+                                }
+                            })
+                        }
+                    }
                 }
                 .listStyle(.plain)
+                .safeAreaInset(edge: .top) {
+                    LinearGradient(gradient: Gradient(colors: [.black, Color.black.opacity(0)]),
+                                   startPoint: .top,
+                                   endPoint: .bottom)
+                    .frame(height: shadowHeight)
+                }
+                .safeAreaInset(edge: .bottom) {
+                    LinearGradient(gradient: Gradient(colors: [Color.black.opacity(0), .black]),
+                                   startPoint: .top,
+                                   endPoint: .bottom)
+                    .frame(height: shadowHeight)
+                }
             case .full:
                 List {
                     ForEach(eventGroups) { group in

@@ -70,6 +70,7 @@ struct WalletView: View {
                 })
                 Spacer().frame(maxHeight: 20)
                 EventList(style: .minimal)
+                    .padding(.horizontal, 30)
                 Spacer().frame(maxHeight: 20)
                 HStack(alignment: .center) {
                     // MARK: BUTTON "RECEIVE" -
