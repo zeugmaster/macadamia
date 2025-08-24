@@ -97,6 +97,15 @@ struct EventList: View {
                 List {
                     ForEach(eventGroups) { group in
                         FullRow(eventGroup: group)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button {
+                                deleteEvents(of: group)
+                            } label: {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.white)
+                            }
+                            .tint(Color.black)
+                        }
                     }
                 }
             }
@@ -122,9 +131,12 @@ struct EventList: View {
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Text(amountString(for: eventGroup))
-                            .foregroundStyle(.secondary)
+                        if let amountString = amountString(for: eventGroup) {
+                            Text(amountString)
+                                .foregroundStyle(.secondary)
+                        }
                     }
+                    .font(.body)
                     HStack {
                         Spacer().frame(width: 28)
                         let mints = eventGroup.events.compactMap { $0.mints }.flatMap { $0 }
@@ -191,8 +203,10 @@ struct EventList: View {
                             }
                         }
                         Spacer()
-                        Text(amountString(for: eventGroup))
-                            .monospaced()
+                        if let amountString = amountString(for: eventGroup) {
+                            Text(amountString)
+                                .monospaced()
+                        }
                     }
                 }
             }
@@ -209,6 +223,14 @@ struct EventList: View {
             return dateFormatter.string(from: eventGroup.date)
         }
     }
+    
+    private func deleteEvents(of group: EventGroup) {
+        withTransaction(Transaction(animation: .default)) {
+            group.events.forEach { modelContext.delete($0) }
+            try? modelContext.save()
+        }
+    }
+
     
     private static func description(for eventGroup: EventGroup) -> (main: String,
                                                                    secondary: String?) {
@@ -228,10 +250,11 @@ struct EventList: View {
         }
     }
     
-    private static func amountString(for group: EventGroup) -> String {
+    private static func amountString(for group: EventGroup) -> String? {
         let negative: Bool
         switch group.events.first?.kind {
         case .send, .drain, .melt, .pendingMelt: negative = true
+        case .restore: return nil
         default: negative = false
         }
         let sum = group.events.reduce(0, { $0 + ($1.amount ?? 0) })

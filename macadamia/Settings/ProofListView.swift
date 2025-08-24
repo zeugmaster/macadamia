@@ -57,86 +57,92 @@ struct ProofListView: View {
     
     var body: some View {
         List {
-            Button {
-                Task {
-                    let result = try await CashuSwift.check(mintProofs.sendable(), url: mint.url)
-                    await MainActor.run {
-                        var dict = [String : CashuSwift.Proof.ProofState]()
-                        for (i, p) in mintProofs.enumerated() {
-                            dict[p.C] = result[i]
-                            print("e: \(p.dleq?.e ?? "") has state: \(p.state) remote is: \(result[i])")
+            Section {
+                Button {
+                    Task {
+                        let result = try await CashuSwift.check(mintProofs.sendable(), url: mint.url)
+                        await MainActor.run {
+                            var dict = [String : CashuSwift.Proof.ProofState]()
+                            for (i, p) in mintProofs.enumerated() {
+                                dict[p.C] = result[i]
+                                print("e: \(p.dleq?.e ?? "") has state: \(p.state) remote is: \(result[i])")
+                            }
+                            remoteStates = dict
                         }
-                        remoteStates = dict
                     }
-                }
-            } label: {
-                Text("Load States")
-            }
-            Button {
-                guard let remoteStates, remoteStates.values.count == sortedProofs.count else {
-                    return
-                }
-                for p in mintProofs {
-                    if let state = remoteStates[p.C] { p.state = Proof.State(state: state) }
-                }
-            } label: {
-                Text("Overwrite ⚠")
-            }.disabled(remoteStates == nil)
-            ForEach(sortedProofs) { proof in
-                NavigationLink {
-                    ProofDataView(proof: proof)
                 } label: {
-                    HStack {
-                        if let remoteStates, let state = remoteStates[proof.C] {
-                            Group {
-                                switch state {
-                                case .unspent:
-                                    RoundedRectangle(cornerRadius: 2)
-                                        .foregroundStyle(.green)
-                                        .frame(width: 6)
-                                case .pending:
-                                    RoundedRectangle(cornerRadius: 2)
-                                        .foregroundStyle(.yellow)
-                                        .frame(width: 6)
-                                case .spent:
-                                    RoundedRectangle(cornerRadius: 2)
-                                        .foregroundStyle(.red)
-                                        .frame(width: 6)
+                    Text("Load States")
+                }
+                Button {
+                    guard let remoteStates, remoteStates.values.count == sortedProofs.count else {
+                        return
+                    }
+                    for p in mintProofs {
+                        if let state = remoteStates[p.C] { p.state = Proof.State(state: state) }
+                    }
+                } label: {
+                    Text("Overwrite ⚠")
+                }.disabled(remoteStates == nil)
+            }
+            Section(content: {
+                ForEach(sortedProofs) { proof in
+                    NavigationLink {
+                        ProofDataView(proof: proof)
+                    } label: {
+                        HStack {
+                            if let remoteStates, let state = remoteStates[proof.C] {
+                                Group {
+                                    switch state {
+                                    case .unspent:
+                                        RoundedRectangle(cornerRadius: 2)
+                                            .foregroundStyle(.green)
+                                            .frame(width: 6)
+                                    case .pending:
+                                        RoundedRectangle(cornerRadius: 2)
+                                            .foregroundStyle(.yellow)
+                                            .frame(width: 6)
+                                    case .spent:
+                                        RoundedRectangle(cornerRadius: 2)
+                                            .foregroundStyle(.red)
+                                            .frame(width: 6)
+                                    }
                                 }
                             }
-                        }
-                        VStack(alignment:.leading) {
-                            HStack {
-                                switch proof.state {
-                                case .valid:
-                                    Circle()
-                                        .frame(width: 10)
-                                        .foregroundStyle(.green)
-                                case .pending:
-                                    Circle()
-                                        .frame(width: 10)
-                                        .foregroundStyle(.yellow)
-                                case .spent:
-                                    Circle()
-                                        .frame(width: 10)
-                                        .foregroundStyle(.red)
+                            VStack(alignment:.leading) {
+                                HStack {
+                                    switch proof.state {
+                                    case .valid:
+                                        Circle()
+                                            .frame(width: 10)
+                                            .foregroundStyle(.green)
+                                    case .pending:
+                                        Circle()
+                                            .frame(width: 10)
+                                            .foregroundStyle(.yellow)
+                                    case .spent:
+                                        Circle()
+                                            .frame(width: 10)
+                                            .foregroundStyle(.red)
+                                    }
+                                    Text(proof.C.prefix(10) + "...")
+                                    Spacer()
+                                    Text(String(proof.amount))
                                 }
-                                Text(proof.C.prefix(10) + "...")
-                                Spacer()
-                                Text(String(proof.amount))
-                            }
-                            .bold()
-                            .font(.title3)
-                            .monospaced()
-                            HFlow() {
-                                TagView(text: proof.keysetID)
-                                TagView(text: proof.unit.rawValue)
-                                TagView(text: String(proof.inputFeePPK))
+                                .bold()
+                                .font(.title3)
+                                .monospaced()
+                                HFlow() {
+                                    TagView(text: proof.keysetID)
+                                    TagView(text: proof.unit.rawValue)
+                                    TagView(text: String(proof.inputFeePPK))
+                                }
                             }
                         }
                     }
                 }
-            }
+            }, header: {
+                Text("\(sortedProofs.count) objects")
+            })
         }
         .navigationTitle(mint.url.host(percentEncoded:false) ?? "")
     }
