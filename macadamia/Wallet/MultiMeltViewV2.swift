@@ -4,7 +4,7 @@ import CashuSwift
 
 // TODO: remove unsafe unwrapping, nicer pending error
 
-struct MultiMeltViewV2: View {
+struct MeltView: View {
         
     struct MeltTaskInput {
         let mint: CashuSwift.Mint

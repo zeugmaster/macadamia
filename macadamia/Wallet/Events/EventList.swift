@@ -275,7 +275,7 @@ struct EventList: View {
         case .pendingReceive:
             if let e = group.events.first { RedeemLaterView(event: e) } else { Text("No pending receive event provided") }
         case .pendingMelt:
-            MultiMeltViewV2(events: group.events)
+            MeltView(events: group.events)
         case .melt:
             MeltEventSummary(events: group.events)
         case .restore:
