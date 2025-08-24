@@ -65,8 +65,28 @@ struct MeltView: View {
     private var selected: Set<Mint> {
         if pendingMeltEvents.isEmpty {
             if autoSelect {
-                // non-mpp mints by user index
-                // mpp mints be lowest number of mints per payment
+                guard let amount = invoiceAmount, amount > 0 else { return [] }
+                let ordered = mints
+                if let single = ordered.first(where: { $0.balance(for: .sat) >= amount }) {
+                    return [single]
+                }
+                let mpp = ordered.filter { $0.supportsMPP }
+                let total = mpp.reduce(0) { $0 + $1.balance(for: .sat) }
+                if total < amount {
+                    DispatchQueue.main.async { self.autoSelect = false }
+                    return []
+                }
+                let ranked = mpp.sorted {
+                    let lb = $0.balance(for: .sat), rb = $1.balance(for: .sat)
+                    return lb == rb ? (($0.userIndex ?? Int.max) < ($1.userIndex ?? Int.max)) : (lb > rb)
+                }
+                var acc = 0
+                var chosen = [Mint]()
+                for mint in ranked where acc < amount {
+                    chosen.append(mint)
+                    acc += mint.balance(for: .sat)
+                }
+                return Set(chosen)
             }
             return selectedMints
         } else {
@@ -74,6 +94,36 @@ struct MeltView: View {
         }
     }
     
+    @ViewBuilder
+    private var subline: some View {
+        
+        if selected.isEmpty {
+            Text("Tap to select a mint from the list")
+                .foregroundStyle(.secondary)
+        } else if buttonState.type == .loading {
+            Text("Attempting payment...")
+                .foregroundStyle(.secondary)
+        } else if selected.reduce(0, { $0 + $1.balance(for: .sat) }) < invoiceAmount ?? 0 {
+            Text("Insufficient balance")
+                .foregroundStyle(.orange)
+        } else if quoteEntries.values.contains(where: { if case .error(_) = $0 { true } else { false } }) {
+            Text("Error")
+                .foregroundStyle(.orange)
+        } else {
+            let totalFeeArray = quoteEntries.values.compactMap { state in
+                switch state {
+                case .quote(let quote):
+                    return quote.feeReserve
+                case .error(_):
+                    return nil
+                }
+            }
+            let totalFee = totalFeeArray.reduce(0, { $0 + $1 })
+            Text("Total Lightning Fees: \(totalFee)")
+                .foregroundStyle(.secondary)
+        }
+    }
+
     private var selectorDisabled: Bool {
         if pendingMeltEvents.isEmpty {
             return buttonState.type == .loading ? true : false
@@ -84,7 +134,7 @@ struct MeltView: View {
     
     private var dynamicButtonState: ActionButtonState {
         switch (pendingMeltEvents.isEmpty, selected.isEmpty) {
-        case (true, true): return .idle("No Mint Selected")
+        case (true, true): return .idle("Pay")
         case (true, false): return .idle("Pay", action: { prepareMelt() })
         case (false, _): return .idle("Check Payment State",
                                       action: { checkMeltState(for: pendingMeltEvents) })
@@ -115,6 +165,13 @@ struct MeltView: View {
                         Section {
                             Text(invoiceString)
                                 .monospaced()
+                            HStack {
+                                Text("Amount: ")
+                                Spacer()
+                                Text(amountDisplayString(invoiceAmount ?? 0, unit: .sat))
+                                    .monospaced()
+                            }
+                            .foregroundStyle(.secondary)
                         } header: {
                             Text("BOLT11 INVOICE")
                         }
@@ -132,6 +189,7 @@ struct MeltView: View {
                 .alertView(isPresented: $showAlert, currentAlert: currentAlert)
                 .onAppear {
                     buttonState = dynamicButtonState
+                    updateQuotes()
                 }
             } else {
                 InputView(supportedTypes: [.bolt11Invoice]) { input in
@@ -162,8 +220,7 @@ struct MeltView: View {
                             Text("Pay from \(selected.count) mints")
                         }
                         
-                        Text("Summary line")
-                            .foregroundStyle(.secondary)
+                        subline
                             .font(.caption)
                     }
                     Spacer()
@@ -235,6 +292,7 @@ struct MeltView: View {
     }
     
     private func toggleSelection(for mint: Mint) {
+        if autoSelect { selectedMints = selected }
         withAnimation { autoSelect = false }
 
         let hasNonMPP = selectedMints.contains { !$0.supportsMPP }
@@ -251,19 +309,21 @@ struct MeltView: View {
             selectedMints.insert(mint)
         }
         quoteEntries = [:]
-
-        let totalSelectedBalance = selectedMints.reduce(0) { $0 + $1.balance(for: .sat) }
-        if (invoiceAmount ?? 0) > totalSelectedBalance { return }
         
         updateQuotes()
     }
 
     
-    private func updateQuotes() {
+    private func updateQuotes(selectedMints: Set<Mint>? = nil) {
         // load quotes and set action button state .loading
         guard let total = invoiceAmount, let invoiceString else {
             return
         }
+        
+        let selectedMints = selectedMints ?? selected
+        
+        let totalSelectedBalance = selectedMints.reduce(0) { $0 + $1.balance(for: .sat) }
+        if total > totalSelectedBalance { return }
         
         buttonState = .loading()
         
