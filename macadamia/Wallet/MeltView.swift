@@ -508,6 +508,7 @@ struct MeltView: View {
                 await MainActor.run {
                     logger.error("Unable to complete melt operation due to error \(error)")
                     displayAlert(alert: AlertDetail(with: error))
+                    buttonState = dynamicButtonState
                 }
             }
         }
@@ -528,6 +529,8 @@ struct MeltView: View {
                                             quote: quote,
                                             blankOutputs: event.blankOutputs?.tuple()))
         }
+        
+        buttonState = .loading()
         
         var results = [MeltTaskResult]()
         Task {
@@ -563,12 +566,14 @@ struct MeltView: View {
                         logger.error("quote states are conflicting: \(results.map({ $0.mint.url.absoluteString + ":" + String(describing: $0.quote.state) }))")
                         displayAlert(alert: AlertDetail(title: "MPP Error",
                                                         description: "The wallet received conflicting state information \(results.map({ $0.quote.state })) from the mint. "))
+                        buttonState = dynamicButtonState
                     }
                 }
             } catch {
                 await MainActor.run {
                     logger.error("unable to check one or more quote states due to error: \(error)")
                     displayAlert(alert: AlertDetail(with: error))
+                    buttonState = dynamicButtonState
                 }
             }
         }
@@ -611,6 +616,7 @@ struct MeltView: View {
         try? modelContext.save()
         
         buttonState = .success("Paid!")
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             dismiss()
         }
