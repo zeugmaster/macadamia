@@ -32,9 +32,9 @@ struct MintView: View {
     @State private var pollingTimer: Timer?
     @State private var isCheckingInvoiceState = false
 
-    init(quote: CashuSwift.Bolt11.MintQuote? = nil,
-         pendingMintEvent: Event? = nil) {
-        _quote = State(initialValue: quote)
+    init(pendingMintEvent: Event? = nil) {
+        
+        _quote = State(initialValue: pendingMintEvent?.bolt11MintQuote)
         _pendingMintEvent = State(initialValue: pendingMintEvent)
         _buttonState = State(initialValue: .idle("No Action"))
         
