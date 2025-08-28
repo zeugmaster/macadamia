@@ -2,6 +2,10 @@ import CashuSwift
 import Foundation
 import SwiftData
 import secp256k1
+import OSLog
+
+fileprivate let databaseLogger = Logger(subsystem: "macadamia", category: "DatabaseManager")
+
 
 typealias Wallet = AppSchemaV1.Wallet
 typealias Mint = AppSchemaV1.Mint
@@ -30,7 +34,7 @@ class DatabaseManager {
         var modelConfiguration: ModelConfiguration
         
         if let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: DatabaseManager.appGroupID) {
-            logger.info("App group container found at: \(appGroupURL.path)")
+            databaseLogger.info("App group container found at: \(appGroupURL.path)")
             
             // Ensure Library/Application Support directory exists to avoid CoreData verbose errors
             let libraryURL = appGroupURL.appendingPathComponent("Library")
@@ -38,9 +42,9 @@ class DatabaseManager {
             if !FileManager.default.fileExists(atPath: appSupportURL.path) {
                 do {
                     try FileManager.default.createDirectory(at: appSupportURL, withIntermediateDirectories: true)
-                    logger.info("Created Application Support directory in app group")
+                    databaseLogger.info("Created Application Support directory in app group")
                 } catch {
-                    logger.error("Failed to create Application Support directory: \(error)")
+                    databaseLogger.error("Failed to create Application Support directory: \(error)")
                 }
             }
             
@@ -52,15 +56,15 @@ class DatabaseManager {
                 isStoredInMemoryOnly: false,
                 groupContainer: .identifier(DatabaseManager.appGroupID)
             )
-            logger.info("Using app group database")
+            databaseLogger.info("Using app group database")
         } else {
-            logger.warning("App group container not found, using default location")
+            databaseLogger.warning("App group container not found, using default location")
             modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         }
         
         do {
             container = try ModelContainer(for: schema, configurations: [modelConfiguration])
-            logger.info("DatabaseManager initialized successfully")
+            databaseLogger.info("DatabaseManager initialized successfully")
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
@@ -72,14 +76,14 @@ class DatabaseManager {
         
         // Check if already migrated
         if userDefaults.bool(forKey: migrationKey) {
-            logger.info("Database already migrated to app group")
+            databaseLogger.info("Database already migrated to app group")
             return
         }
         
         // Find default database location
         guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, 
                                                        in: .userDomainMask).first else {
-            logger.info("Could not find application support directory")
+            databaseLogger.info("Could not find application support directory")
             return
         }
         
@@ -88,14 +92,14 @@ class DatabaseManager {
         
         // Check if default store exists
         if !fileManager.fileExists(atPath: defaultStoreURL.path) {
-            logger.info("No existing database found at default location, starting fresh")
+            databaseLogger.info("No existing database found at default location, starting fresh")
             userDefaults.set(true, forKey: migrationKey)
             return
         }
         
         // Perform migration
         do {
-            logger.info("Starting database migration from: \(defaultStoreURL.path)")
+            databaseLogger.info("Starting database migration from: \(defaultStoreURL.path)")
             
             // SwiftData expects the database in Library/Application Support within the app group
             let libraryURL = appGroupURL.appendingPathComponent("Library")
@@ -105,7 +109,7 @@ class DatabaseManager {
             // Create the directory structure if needed
             if !fileManager.fileExists(atPath: appSupportURL.path) {
                 try fileManager.createDirectory(at: appSupportURL, withIntermediateDirectories: true)
-                logger.info("Created Application Support directory in app group")
+                databaseLogger.info("Created Application Support directory in app group")
             }
             
             // Copy the main store file
@@ -113,7 +117,7 @@ class DatabaseManager {
                 try fileManager.removeItem(at: targetStoreURL)
             }
             try fileManager.copyItem(at: defaultStoreURL, to: targetStoreURL)
-            logger.info("Copied database file to app group Application Support")
+            databaseLogger.info("Copied database file to app group Application Support")
             
             // Copy associated files (.store-shm, .store-wal)
             let storeDir = defaultStoreURL.deletingLastPathComponent()
@@ -124,7 +128,7 @@ class DatabaseManager {
                 if fileManager.fileExists(atPath: sourceFile.path) {
                     let targetFile = appSupportURL.appendingPathComponent("\(storeName).store\(suffix)")
                     try? fileManager.copyItem(at: sourceFile, to: targetFile)
-                    logger.info("Copied \(suffix) file")
+                    databaseLogger.info("Copied \(suffix) file")
                 }
             }
             
@@ -132,15 +136,15 @@ class DatabaseManager {
             userDefaults.set(true, forKey: migrationKey)
             userDefaults.synchronize()
             
-            logger.info("Database migration completed successfully")
+            databaseLogger.info("Database migration completed successfully")
             
             // Create backup by renaming old files
             let backupURL = defaultStoreURL.appendingPathExtension("backup")
             try? fileManager.moveItem(at: defaultStoreURL, to: backupURL)
-            logger.info("Created backup of original database")
+            databaseLogger.info("Created backup of original database")
             
         } catch {
-            logger.error("Failed to migrate database: \(error)")
+            databaseLogger.error("Failed to migrate database: \(error)")
             // Don't mark as migrated so we can retry
         }
     }
@@ -527,9 +531,9 @@ enum AppSchemaV1: VersionedSchema {
         models.forEach({ modelContext.insert($0) })
         do {
             try modelContext.save()
-            logger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
+            databaseLogger.info("successfully added \(models.count) object\(models.count == 1 ? "" : "s") to the database.")
         } catch {
-            logger.error("Saving SwiftData model context failed with error: \(error)")
+            databaseLogger.error("Saving SwiftData model context failed with error: \(error)")
         }
     }
     
@@ -554,7 +558,7 @@ enum AppSchemaV1: VersionedSchema {
         }
         
         if let mint = mints.first(where: { $0.matches(mint) }) {
-            logger.info("mint \(mint.url) is already in the database")
+            databaseLogger.info("mint \(mint.url) is already in the database")
             if mint.hidden != hidden { mints.setHidden(hidden, for: mint) }
             addProofs(proofs, to: mint)
             return mint
@@ -567,7 +571,7 @@ enum AppSchemaV1: VersionedSchema {
             context.insert(newMint)
             addProofs(proofs, to: newMint)
             try context.save()
-            logger.info("added new mint with URL \(mint.url.absoluteString)")
+            databaseLogger.info("added new mint with URL \(mint.url.absoluteString)")
             return newMint
         }
         

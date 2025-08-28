@@ -1,5 +1,8 @@
 import Foundation
 import CashuSwift
+import OSLog
+
+fileprivate let meltLogger = Logger(subsystem: "macadamia", category: "MeltOperation")
 
 extension AppSchemaV1.Mint {
     
@@ -31,14 +34,14 @@ extension AppSchemaV1.Mint {
         
         Task {
             do {
-                logger.debug("Attempting to melt...")
+                meltLogger.debug("Attempting to melt...")
                 
                 let meltResult = try await CashuSwift.melt(with: quote,
                                                            mint: sendableMint,
                                                            proofs: proofs.sendable(),
                                                            blankOutputs: blankOutputs)
                 
-                logger.info("DLEQ check on melt change proofs was\(meltResult.dleqValid ? " " : " NOT ")successful.")
+                meltLogger.info("DLEQ check on melt change proofs was\(meltResult.dleqValid ? " " : " NOT ")successful.")
                 
                 if meltResult.paid {
                     // make sendable change proofs
@@ -51,7 +54,7 @@ extension AppSchemaV1.Mint {
                            !sendableProofs.isEmpty,
                            let changeKeyset = sendableMint.keysets.first(where: { $0.keysetID == sendableProofs.first?.keysetID }) {
                             
-                            logger.debug("Melt quote includes change, attempting saving to db.")
+                            meltLogger.debug("Melt quote includes change, attempting saving to db.")
                             
                             let unit = Unit(changeKeyset.unit) ?? .other
                             let inputFee = changeKeyset.inputFeePPK
@@ -78,7 +81,7 @@ extension AppSchemaV1.Mint {
                     }
                 } else {
                     DispatchQueue.main.async {
-                        logger.info("""
+                        meltLogger.info("""
                                     Melt function returned a quote with state NOT PAID, \
                                     probably because the lightning payment failed
                                     """)
@@ -116,7 +119,7 @@ extension AppSchemaV1.Mint {
         
         Task {
             do {
-                logger.debug("Attempting to melt...")
+                meltLogger.debug("Attempting to melt...")
                 
                 
                 let meltResult = try await CashuSwift.meltState(mint: sendableMint,
@@ -133,7 +136,7 @@ extension AppSchemaV1.Mint {
                         if let sendableProofs, !sendableProofs.isEmpty,
                            let changeKeyset = sendableMint.keysets.first(where: { $0.keysetID == sendableProofs.first?.keysetID }) {
                             
-                            logger.debug("Melt quote includes change, attempting saving to db.")
+                            meltLogger.debug("Melt quote includes change, attempting saving to db.")
                             
                             let unit = Unit(changeKeyset.unit) ?? .other
                             let inputFee = changeKeyset.inputFeePPK
@@ -160,7 +163,7 @@ extension AppSchemaV1.Mint {
                 } else {
                     
                     DispatchQueue.main.async {
-                        logger.info("""
+                        meltLogger.info("""
                                     Melt function returned a quote with state NOT PAID, \
                                     probably because the lightning payment failed
                                     """)

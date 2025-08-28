@@ -8,6 +8,9 @@
 import Foundation
 import CashuSwift
 import BIP39
+import OSLog
+
+fileprivate let restoreLogger = Logger(subsystem: "macadamia", category: "RestoreOperation")
 
 extension macadamiaApp {
     static func restore(from mints: [Mint],
@@ -33,7 +36,7 @@ extension macadamiaApp {
                                                                                     with: seed,
                                                                                     batchSize: 50)
                     
-                    logger.info("DLEQ check on restore proofs from mint \(oldMint.url.absoluteString) was\(dleqPassed ? " " : " NOT ")successful.")
+                    restoreLogger.info("DLEQ check on restore proofs from mint \(oldMint.url.absoluteString) was\(dleqPassed ? " " : " NOT ")successful.")
                     
                     resultsListPerMint[oldMint.url.absoluteString] = proofsByKeyset
                 }
@@ -78,7 +81,7 @@ extension macadamiaApp {
                                                                              by: result.derivationCounter)
                         }
         
-                        logger.info("""
+                        restoreLogger.info("""
                                     restored proofs from mint \(newMint.url.absoluteString) \
                                     new keyset derivation counters are: \(resultList.map({ $0.derivationCounter }))
                                     """)

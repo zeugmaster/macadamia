@@ -172,7 +172,7 @@ struct ContentView: View {
     func handleUrl(_ url: URL) {
         logger.info("""
                     URL has been passed to the application: \ 
-                    \(url.absoluteString.prefix(30) + (url.absoluteString.count > 30 ? "..." : ""))
+                    \(url.absoluteString)
                     """)
          if url.scheme == "cashu" {
              let noURLPrefix = url.absoluteStringWithoutPrefix("cashu")
@@ -181,6 +181,7 @@ struct ContentView: View {
              urlState = URLState(url: noURLPrefix)
          }
     }
+
 }
 
 #Preview {

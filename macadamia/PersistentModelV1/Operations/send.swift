@@ -1,5 +1,8 @@
 import Foundation
 import CashuSwift
+import OSLog
+
+fileprivate let sendLogger = Logger(subsystem: "macadamia", category: "SendOperation")
 
 extension AppSchemaV1.Mint {
     
@@ -26,7 +29,7 @@ extension AppSchemaV1.Mint {
 //        proofs.forEach({ $0.state = .pending })
 //        
 //        if targetAmount == proofs.sum {
-//            logger.debug("target amount and selected proof sum are an exact match, no swap necessary...")
+//            sendLogger.debug("target amount and selected proof sum are an exact match, no swap necessary...")
 //                        
 //            token = CashuSwift.Token(proofs: [self.url.absoluteString: proofs],
 //                                     unit: unit.rawValue,
@@ -43,7 +46,7 @@ extension AppSchemaV1.Mint {
 //            swapped = []
 //        
 //        } else if proofs.sum > targetAmount {
-//            logger.debug("Token amount and selected proof are not a match, swapping...")
+//            sendLogger.debug("Token amount and selected proof are not a match, swapping...")
 //            
 //            // swap to amount specified by user
 //            let sendProofs: [ProofRepresenting]
@@ -65,7 +68,7 @@ extension AppSchemaV1.Mint {
 //                self.increaseDerivationCounterForKeysetWithID(usedKeyset.keysetID,
 //                                                              by: sendProofs.count + changeProofs.count)
 //            } else {
-//                logger.error("Could not determine applied keyset! This will lead to issues with det sec counter and fee rates.")
+//                sendLogger.error("Could not determine applied keyset! This will lead to issues with det sec counter and fee rates.")
 //            }
 //            
 //            // if the swap succeeds the input proofs need to be marked as spent
@@ -107,9 +110,9 @@ extension AppSchemaV1.Mint {
 //            
 //            swapped = internalSendProofs + internalChangeProofs
 //
-//            logger.info("successfully created sendable token.")
+//            sendLogger.info("successfully created sendable token.")
 //        } else {
-//            logger.critical("amount must not exceed preselected proof sum. .pick() should have returned nil.")
+//            sendLogger.critical("amount must not exceed preselected proof sum. .pick() should have returned nil.")
 //            throw CashuError.invalidAmount
 //        }
 //        
@@ -142,7 +145,7 @@ extension AppSchemaV1.Mint {
         
         if targetAmount == proofs.sum {
             
-            logger.debug("target amount and selected proof sum are an exact match, no swap necessary...")
+            sendLogger.debug("target amount and selected proof sum are an exact match, no swap necessary...")
                         
             let token = CashuSwift.Token(proofs: [self.url.absoluteString: proofs],
                                      unit: unit.rawValue,
@@ -168,7 +171,7 @@ extension AppSchemaV1.Mint {
                                                                                           inputs: proofs.sendable(),
                                                                                           amount: targetAmount,
                                                                                           seed: wallet.seed)
-                    logger.info("DLEQ check on swapped proofs was\(dleqPassed ? " " : " NOT ")successful.")
+                    sendLogger.info("DLEQ check on swapped proofs was\(dleqPassed ? " " : " NOT ")successful.")
                     
                     await MainActor.run {
                         // if the swap succeeds the input proofs need to be marked as spent
@@ -179,7 +182,7 @@ extension AppSchemaV1.Mint {
                             self.increaseDerivationCounterForKeysetWithID(usedKeyset.keysetID,
                                                                           by: sendProofs.count + changeProofs.count)
                         } else {
-                            logger.error("Could not determine applied keyset! This will lead to issues with det sec counter and fee rates.")
+                            sendLogger.error("Could not determine applied keyset! This will lead to issues with det sec counter and fee rates.")
                         }
                         
                         let feeRate = usedKeyset?.inputFeePPK ?? 0
@@ -218,7 +221,7 @@ extension AppSchemaV1.Mint {
                         
                         let swapped = internalSendProofs + internalChangeProofs
 
-                        logger.info("successfully created sendable token.")
+                        sendLogger.info("successfully created sendable token.")
                         completion(.success((token, swapped, event)))
                         return
                     }
@@ -231,7 +234,7 @@ extension AppSchemaV1.Mint {
             }
             
         } else {
-            logger.critical("amount must not exceed preselected proof sum. .pick() should have returned nil.")
+            sendLogger.critical("amount must not exceed preselected proof sum. .pick() should have returned nil.")
             completion(.failure(CashuError.invalidAmount))
             return
         }

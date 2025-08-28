@@ -1,5 +1,8 @@
 import Foundation
 import CashuSwift
+import OSLog
+
+fileprivate let receiveLogger = Logger(subsystem: "macadamia", category: "ReceiveOperation")
 
 extension AppSchemaV1.Mint {
     
@@ -21,7 +24,7 @@ extension AppSchemaV1.Mint {
                                                                                            seed: wallet.seed,
                                                                                            privateKey: privateKeyString)
                 
-                logger.info("DLEQ check on incoming: \(String(describing: outputDLEQ))")
+                receiveLogger.info("DLEQ check on incoming: \(String(describing: outputDLEQ))")
                 
                 await MainActor.run {
                     let internalProofs = sendableProofs.map { p in
@@ -30,7 +33,7 @@ extension AppSchemaV1.Mint {
                         let unit = Unit(keyset?.unit)
                         
                         if unit == nil {
-                            logger.error("wallet could not determine unit for incoming proofs. defaulting to .sat")
+                            receiveLogger.error("wallet could not determine unit for incoming proofs. defaulting to .sat")
                         }
                         
                         return Proof(p,
@@ -44,7 +47,7 @@ extension AppSchemaV1.Mint {
                     if let usedKeyset = self.keysets.first(where: { $0.keysetID == internalProofs.first?.keysetID }) {
                         self.increaseDerivationCounterForKeysetWithID(usedKeyset.keysetID, by: internalProofs.count)
                     } else {
-                        logger.error("""
+                        receiveLogger.error("""
                                      Could not determine applied keyset! \
                                      This will lead to issues with det sec counter and fee rates.
                                      """)
@@ -54,7 +57,7 @@ extension AppSchemaV1.Mint {
                     wallet.proofs.append(contentsOf: internalProofs)
                                 
                     
-                    logger.info("""
+                    receiveLogger.info("""
                                 receiving \(internalProofs.count) proof(s) with sum \
                                 \(internalProofs.sum) from mint \(self.url.absoluteString)
                                 """)

@@ -7,6 +7,10 @@
 
 import Foundation
 import CashuSwift
+import OSLog
+
+fileprivate let quoteLogger = Logger(subsystem: "macadamia", category: "GetQuoteOperation")
+
 
 extension AppSchemaV1.Mint {
     
@@ -47,7 +51,7 @@ extension AppSchemaV1.Mint {
             throw CashuError.typeMismatch("quote is not of any known type.")
         }
         
-        logger.info("Successfully requested mint quote from mint.")
+        quoteLogger.info("Successfully requested mint quote from mint.")
         
         return (quote, event)
     }
