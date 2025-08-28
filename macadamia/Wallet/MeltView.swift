@@ -556,7 +556,7 @@ struct MeltView: View {
                                                   action: { melt(with: events) })
                         let secondary = AlertButton(title: "Remove Payment",
                                                     role: .destructive,
-                                                    action: removePendingPayment)
+                                                    action: { removePendingPayment(events: events) })
                         displayAlert(alert: AlertDetail(title: "Unpaid ⚠",
                                                         description: "This payment did not go through and is marked \"unpaid\" with the mint. Would you like to try again?",
                                                         primaryButton: primary,
@@ -622,10 +622,12 @@ struct MeltView: View {
         }
     }
     
-    private func removePendingPayment() {
-        // set pending ecash as valid
-        // set events as hidden
-        // dismiss
+    private func removePendingPayment(events: [Event]) {
+        for e in events {
+            e.proofs?.setState(.valid)
+            e.visible = false
+        }
+        dismiss()
     }
     
     private func displayAlert(alert: AlertDetail) {
