@@ -103,6 +103,9 @@ struct MeltView: View {
         } else if buttonState.type == .loading {
             Text("Attempting payment...")
                 .foregroundStyle(.secondary)
+        } else if buttonState.type == .success {
+            Text("Payment successful!")
+                .foregroundStyle(.secondary)
         } else if selected.reduce(0, { $0 + $1.balance(for: .sat) }) < invoiceAmount ?? 0 {
             Text("Insufficient balance")
                 .foregroundStyle(.orange)
@@ -345,7 +348,7 @@ struct MeltView: View {
                     results.append((mint, QuoteState.error("Network error")))
                 } catch {
                     logger.warning("Error when fetching quote: \(error)")
-                    results.append((mint, QuoteState.error(String(describing: error))))
+                    results.append((mint, QuoteState.error("Unknown error")))
                 }
             }
             await MainActor.run {
@@ -375,25 +378,17 @@ struct MeltView: View {
         let totalBalance = mints.reduce(0) { $0 + $1.balance(for: .sat) }
         guard totalBalance > 0, total > 0 else { return Dictionary(uniqueKeysWithValues: mints.map { ($0, 0) }) }
 
-        let totBal = Decimal(totalBalance), tot = Decimal(total)
-        var floors = [Int](), fracs = [Decimal]()
-        floors.reserveCapacity(mints.count); fracs.reserveCapacity(mints.count)
-
-        for m in mints {
-            let raw = Decimal(m.balance(for: .sat)) / totBal * tot
-            var tmp = raw, flr = Decimal()
-            NSDecimalRound(&flr, &tmp, 0, .down)
-            floors.append(NSDecimalNumber(decimal: flr).intValue)
-            fracs.append(raw - flr)
-        }
-
-        let remainder = max(0, total - floors.reduce(0, +))
-        let winners = Set(fracs.enumerated().sorted { $0.element > $1.element }.prefix(remainder).map { $0.offset })
-
+        let totalMsat = total * 1_000
         var out = [Mint: Int](minimumCapacity: mints.count)
-        for i in mints.indices {
-            out[mints[i]] = (floors[i] + (winners.contains(i) ? 1 : 0)) * 1_000
+        
+        for mint in mints {
+            let allocation = (mint.balance(for: .sat) * totalMsat) / totalBalance
+            let roundedUp = ((allocation + 999) / 1000) * 1000
+            out[mint] = roundedUp
         }
+        
+        logger.info("created payment amount splits for \(total): \(out.map({ $0.key.url.absoluteString + ": " + String($0.value) }).joined(separator: ", "))")
+        
         return out
     }
     
