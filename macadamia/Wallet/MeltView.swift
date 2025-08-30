@@ -557,10 +557,20 @@ struct MeltView: View {
                                                         primaryButton: primary,
                                                         secondaryButton: secondary))
                         buttonState = dynamicButtonState
-                    } else {
-                        logger.error("quote states are conflicting: \(results.map({ $0.mint.url.absoluteString + ":" + String(describing: $0.quote.state) }))")
-                        displayAlert(alert: AlertDetail(title: "MPP Error",
-                                                        description: "The wallet received conflicting state information \(results.map({ $0.quote.state })) from the mint. "))
+                    } else if results.contains(where: { $0.quote.state == .pending }) {
+                        displayAlert(alert: AlertDetail(title: "Payment Pending ⏳",
+                                                        description: "One or more parts of this payment are still pending. Please check again later to make sure the lightning payment was successful."))
+                        buttonState = dynamicButtonState
+                    } else if results.contains(where: { $0.quote.state == .unpaid }) {
+                        let primary = AlertButton(title: "Retry",
+                                                  action: { melt(with: events) })
+                        let secondary = AlertButton(title: "Remove Payment",
+                                                    role: .destructive,
+                                                    action: { removePendingPayment(events: events) })
+                        displayAlert(alert: AlertDetail(title: "Unpaid ⚠",
+                                                        description: "This payment did not go through and one or more parts are marked \"unpaid\". Would you like to try again?",
+                                                        primaryButton: primary,
+                                                        secondaryButton: secondary))
                         buttonState = dynamicButtonState
                     }
                 }
