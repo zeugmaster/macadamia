@@ -103,6 +103,9 @@ struct MeltView: View {
         } else if buttonState.type == .loading {
             Text("Attempting payment...")
                 .foregroundStyle(.secondary)
+        } else if buttonState.type == .success {
+            Text("Payment successful!")
+                .foregroundStyle(.secondary)
         } else if selected.reduce(0, { $0 + $1.balance(for: .sat) }) < invoiceAmount ?? 0 {
             Text("Insufficient balance")
                 .foregroundStyle(.orange)
@@ -345,7 +348,7 @@ struct MeltView: View {
                     results.append((mint, QuoteState.error("Network error")))
                 } catch {
                     logger.warning("Error when fetching quote: \(error)")
-                    results.append((mint, QuoteState.error(String(describing: error))))
+                    results.append((mint, QuoteState.error("Unknown error")))
                 }
             }
             await MainActor.run {
@@ -375,25 +378,17 @@ struct MeltView: View {
         let totalBalance = mints.reduce(0) { $0 + $1.balance(for: .sat) }
         guard totalBalance > 0, total > 0 else { return Dictionary(uniqueKeysWithValues: mints.map { ($0, 0) }) }
 
-        let totBal = Decimal(totalBalance), tot = Decimal(total)
-        var floors = [Int](), fracs = [Decimal]()
-        floors.reserveCapacity(mints.count); fracs.reserveCapacity(mints.count)
-
-        for m in mints {
-            let raw = Decimal(m.balance(for: .sat)) / totBal * tot
-            var tmp = raw, flr = Decimal()
-            NSDecimalRound(&flr, &tmp, 0, .down)
-            floors.append(NSDecimalNumber(decimal: flr).intValue)
-            fracs.append(raw - flr)
-        }
-
-        let remainder = max(0, total - floors.reduce(0, +))
-        let winners = Set(fracs.enumerated().sorted { $0.element > $1.element }.prefix(remainder).map { $0.offset })
-
+        let totalMsat = total * 1_000
         var out = [Mint: Int](minimumCapacity: mints.count)
-        for i in mints.indices {
-            out[mints[i]] = (floors[i] + (winners.contains(i) ? 1 : 0)) * 1_000
+        
+        for mint in mints {
+            let allocation = (mint.balance(for: .sat) * totalMsat) / totalBalance
+            let roundedUp = ((allocation + 999) / 1000) * 1000
+            out[mint] = roundedUp
         }
+        
+        logger.info("created payment amount splits for \(total): \(out.map({ $0.key.url.absoluteString + ": " + String($0.value) }).joined(separator: ", "))")
+        
         return out
     }
     
@@ -508,6 +503,7 @@ struct MeltView: View {
                 await MainActor.run {
                     logger.error("Unable to complete melt operation due to error \(error)")
                     displayAlert(alert: AlertDetail(with: error))
+                    buttonState = dynamicButtonState
                 }
             }
         }
@@ -528,6 +524,8 @@ struct MeltView: View {
                                             quote: quote,
                                             blankOutputs: event.blankOutputs?.tuple()))
         }
+        
+        buttonState = .loading()
         
         var results = [MeltTaskResult]()
         Task {
@@ -553,22 +551,34 @@ struct MeltView: View {
                                                   action: { melt(with: events) })
                         let secondary = AlertButton(title: "Remove Payment",
                                                     role: .destructive,
-                                                    action: removePendingPayment)
+                                                    action: { removePendingPayment(events: events) })
                         displayAlert(alert: AlertDetail(title: "Unpaid ⚠",
                                                         description: "This payment did not go through and is marked \"unpaid\" with the mint. Would you like to try again?",
                                                         primaryButton: primary,
                                                         secondaryButton: secondary))
                         buttonState = dynamicButtonState
-                    } else {
-                        logger.error("quote states are conflicting: \(results.map({ $0.mint.url.absoluteString + ":" + String(describing: $0.quote.state) }))")
-                        displayAlert(alert: AlertDetail(title: "MPP Error",
-                                                        description: "The wallet received conflicting state information \(results.map({ $0.quote.state })) from the mint. "))
+                    } else if results.contains(where: { $0.quote.state == .pending }) {
+                        displayAlert(alert: AlertDetail(title: "Payment Pending ⏳",
+                                                        description: "One or more parts of this payment are still pending. Please check again later to make sure the lightning payment was successful."))
+                        buttonState = dynamicButtonState
+                    } else if results.contains(where: { $0.quote.state == .unpaid }) {
+                        let primary = AlertButton(title: "Retry",
+                                                  action: { melt(with: events) })
+                        let secondary = AlertButton(title: "Remove Payment",
+                                                    role: .destructive,
+                                                    action: { removePendingPayment(events: events) })
+                        displayAlert(alert: AlertDetail(title: "Unpaid ⚠",
+                                                        description: "This payment did not go through and one or more parts are marked \"unpaid\". Would you like to try again?",
+                                                        primaryButton: primary,
+                                                        secondaryButton: secondary))
+                        buttonState = dynamicButtonState
                     }
                 }
             } catch {
                 await MainActor.run {
                     logger.error("unable to check one or more quote states due to error: \(error)")
                     displayAlert(alert: AlertDetail(with: error))
+                    buttonState = dynamicButtonState
                 }
             }
         }
@@ -593,7 +603,9 @@ struct MeltView: View {
                 return
             }
             
-            let internalChange = try? mint.addProofs(result.change, to: modelContext, unit: .sat)
+            let internalChange = try? mint.addProofs(result.change,
+                                                     to: modelContext,
+                                                     unit: .sat)
             
             events.append(Event.meltEvent(unit: .sat,
                                           shortDescription: "Payment",
@@ -611,15 +623,18 @@ struct MeltView: View {
         try? modelContext.save()
         
         buttonState = .success("Paid!")
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             dismiss()
         }
     }
     
-    private func removePendingPayment() {
-        // set pending ecash as valid
-        // set events as hidden
-        // dismiss
+    private func removePendingPayment(events: [Event]) {
+        for e in events {
+            e.proofs?.setState(.valid)
+            e.visible = false
+        }
+        dismiss()
     }
     
     private func displayAlert(alert: AlertDetail) {

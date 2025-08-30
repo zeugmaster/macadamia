@@ -267,6 +267,7 @@ enum AppSchemaV1: VersionedSchema {
             self.nickName ?? self.url.host() ?? self.url.absoluteString
         }
         
+        @MainActor
         var supportsMPP: Bool {
             if let infoData {
                 guard let info = try? JSONDecoder().decode(CashuSwift.Mint.Info.self,
@@ -292,8 +293,10 @@ enum AppSchemaV1: VersionedSchema {
             
             func updatedInfo() async throws -> CashuSwift.Mint.Info {
                 let info = try await CashuSwift.loadMintInfo(from: CashuSwift.Mint(self))
-                infoData = try JSONEncoder().encode(info)
-                infoLastUpdated = Date.now
+                try await MainActor.run {
+                    infoData = try JSONEncoder().encode(info)
+                    infoLastUpdated = Date.now
+                }
                 return info
             }
         }
