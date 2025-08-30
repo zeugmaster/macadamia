@@ -243,7 +243,7 @@ struct EventList: View {
         case .send:             return ("Send", primaryEvent.memo)
         case .receive:          return ("Receive", primaryEvent.memo)
         case .pendingReceive:   return ("Locked Token", nil)
-        case .pendingMelt:      return ("Pending Payment", eventGroup.events.count > 1 ? "MPP" : nil)
+        case .pendingMelt:      return ("Pending Payment", nil)
         case .melt:             return ("Payment", nil)
         case .restore:          return ("Restore", nil)
         case .drain:            return ("Drain", nil)
