@@ -4,6 +4,7 @@ import SwiftData
 
 class MessagesViewController: MSMessagesAppViewController {
     
+    
     // Access the shared container - same one used by main app!
     private var modelContainer: ModelContainer {
         DatabaseManager.shared.container
@@ -11,51 +12,24 @@ class MessagesViewController: MSMessagesAppViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupInitialView()
+        setupView()
     }
     
-    private func setupInitialView() {
-        requestPresentationStyle(.compact)
-    }
-    
-    // MARK: - Conversation Handling
     override func willBecomeActive(with conversation: MSConversation) {
-        presentViewController(for: conversation, with: presentationStyle)
-    }
-    
-    override func didSelect(_ message: MSMessage, conversation: MSConversation) {
-        if let url = message.url {
-            openInMainApp(url: url)
+        print("willBecomeActive called")
+        
+        // Check if there's a selected message when becoming active
+        if let selectedMessage = conversation.selectedMessage {
+            print("Selected message: \(selectedMessage)")
+            handleMessage(selectedMessage)
         }
     }
     
-    // Present appropriate view based on presentation style
-    private func presentViewController(for conversation: MSConversation, 
-                                     with presentationStyle: MSMessagesAppPresentationStyle) {
-        
-        removeAllChildViewControllers()
-        
-        let hostingController: UIHostingController<AnyView>
-        
-        switch presentationStyle {
-        case .compact:
-            hostingController = UIHostingController(rootView: AnyView(
-                NavigationView {
-                    MessageMintList(delegate: self)
-                }
+    private func setupView() {
+        let hostingController = UIHostingController(rootView: 
+            MessageMintList(vc: self)
                 .modelContainer(modelContainer)
-            ))
-        case .expanded:
-            hostingController = UIHostingController(rootView: AnyView(
-                NavigationView {
-                    MessageMintList(delegate: self)
-                }
-                .navigationViewStyle(StackNavigationViewStyle())
-                .modelContainer(modelContainer)
-            ))
-        @unknown default:
-            fatalError("Unknown presentation style")
-        }
+        )
         
         addChild(hostingController)
         hostingController.view.frame = view.bounds
@@ -72,23 +46,35 @@ class MessagesViewController: MSMessagesAppViewController {
         hostingController.didMove(toParent: self)
     }
     
-    private func removeAllChildViewControllers() {
-        children.forEach { child in
-            child.willMove(toParent: nil)
-            child.view.removeFromSuperview()
-            child.removeFromParent()
-        }
+    override func didSelect(_ message: MSMessage, conversation: MSConversation) {
+        print("didSelect called: \(message)")
+        handleMessage(message)
     }
     
-    private func openInMainApp(url: URL) {
-        extensionContext?.open(url, completionHandler: nil)
-    }
-}
-
-// MARK: - Presentation Style Changes
-extension MessagesViewController {
-    override func willTransition(to presentationStyle: MSMessagesAppPresentationStyle) {
-        guard let conversation = activeConversation else { return }
-        presentViewController(for: conversation, with: presentationStyle)
+    private func handleMessage(_ message: MSMessage) {
+        guard let url = message.url else {
+            print("No URL in message")
+            return 
+        }
+        
+        print("Message URL: \(url)")
+        
+        // Check if it's a data URL with token
+        if url.scheme == "data" {
+            let tokenString = String(url.absoluteString.dropFirst("data:".count))
+            print("Found token: \(tokenString)")
+            
+            // Notify the view to show the token
+            NotificationCenter.default.post(name: .messageSelected, object: tokenString)
+        } else {
+            // For other URLs, create cashu scheme and open in main app
+            var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            components?.scheme = "cashu"
+            guard let cashuURL = components?.url else {
+                print("Failed to create cashu URL")
+                return
+            }
+            extensionContext?.open(cashuURL)
+        }
     }
 }
