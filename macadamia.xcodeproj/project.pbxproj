@@ -101,6 +101,13 @@
 			);
 			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
 		};
+		37F511B42E65D765005014B9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Currency.swift,
+			);
+			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -108,7 +115,7 @@
 		3793B9A22D0049AD0077F755 /* Mints */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Mints; sourceTree = "<group>"; };
 		3793B9A42D0049F60077F755 /* PersistentModelV1 */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (37C4CCA02E5CB4070028E4FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = PersistentModelV1; sourceTree = "<group>"; };
 		3793B9A62D004A490077F755 /* Settings */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Settings; sourceTree = "<group>"; };
-		3793B9A72D004ADA0077F755 /* Misc */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Misc; sourceTree = "<group>"; };
+		3793B9A72D004ADA0077F755 /* Misc */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (37F511B42E65D765005014B9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Misc; sourceTree = "<group>"; };
 		37C4CC312E5CA4660028E4FE /* macadamiaMessages */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (37C4CC402E5CA4670028E4FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = macadamiaMessages; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
