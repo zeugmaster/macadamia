@@ -104,6 +104,7 @@
 		37F511B42E65D765005014B9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				ActionButton.swift,
 				Currency.swift,
 			);
 			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;

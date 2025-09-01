@@ -1,4 +1,7 @@
 import SwiftUI
+import OSLog
+
+fileprivate let buttonLogger = Logger(subsystem: "macadamia", category: "interface")
 
 private struct ActionButtonDisabledKey: EnvironmentKey {
     static let defaultValue: Bool = true
@@ -180,7 +183,7 @@ struct ActionButton: View {
         if let action = state.action {
             action()
         } else {
-            logger.warning("ActionButton registered button press but no action closure is specified via state.action")
+            buttonLogger.warning("ActionButton registered button press but no action closure is specified via state.action")
         }
     }
 }

@@ -7,6 +7,8 @@
 
 import SwiftUI
 import SwiftData
+import CashuSwift
+import Messages
 
 struct MessageMintList: View {
     weak var delegate: MessagesViewController?
@@ -30,7 +32,10 @@ struct MessageMintList: View {
         List {
             Section {
                 ForEach(mints) { mint in
-                    NavigationLink(destination: MessageSendView(mint: mint)) {
+                    NavigationLink {
+                        MessageSendView(delegate: delegate,
+                                        mint: mint)
+                    } label: {
                         MintRow(mint: mint)
                     }
                 }
@@ -56,10 +61,75 @@ struct MintRow: View {
 }
 
 struct MessageSendView: View {
+    weak var delegate: MessagesViewController?
     let mint: Mint
     
+    @State private var memo: String = ""
+    @State private var amountString: String = ""
+    @State private var buttonState = ActionButtonState.idle("...")
+    
+    @FocusState private var amountFieldInFocus
+    
+    private var buttonDisabled: Bool {
+        amount > 0 ? false : true
+    }
+    
+    private var amount: Int {
+        Int(amountString) ?? 0
+    }
+    
     var body: some View {
-        Text("Send from \(mint.displayName)")
+        ZStack {
+            Form {
+                Section {
+                    HStack {
+                        TextField("Enter amount...", text: $amountString)
+                            .keyboardType(.numberPad)
+                            .focused($amountFieldInFocus)
+                        Spacer()
+                        Text("sat")
+                    }
+                    .monospaced()
+                }
+                Section {
+                    TextField("Optional memo...", text: $memo)
+                }
+                Spacer(minLength: 50)
+                    .listRowBackground(Color.clear)
+            }
+            VStack {
+                Spacer()
+                ActionButton(state: $buttonState)
+                    .actionDisabled(buttonDisabled)
+            }
+        }
+        .onAppear {
+            buttonState = .idle("Send", action: createToken)
+            amountFieldInFocus = true
+        }
+    }
+    
+    private func createToken() {
+        buttonState = .loading()
+        
+        //....
+        print("create token ....")
+    }
+    
+    private func message(for token: CashuSwift.Token) throws -> MSMessage {
+        let tokenString = try token.serialize(to: .V4)
+        
+        let message = MSMessage()
+        message.url = URL(string: "macadamia-message:\(tokenString)")
+        
+        let layout = MSMessageTemplateLayout()
+        layout.image = UIImage(named: "message-banner")
+        layout.caption = amountDisplayString(token.sum(), unit: .sat)
+        layout.subcaption = token.memo
+        
+        message.layout = layout
+        return message
     }
 }
+
 

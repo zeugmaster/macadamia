@@ -37,37 +37,37 @@ class MessagesViewController: MSMessagesAppViewController {
         
         let hostingController: UIHostingController<AnyView>
         
-//        switch presentationStyle {
-//        case .compact:
-//            hostingController = UIHostingController(rootView: AnyView(
-//                CompactView(delegate: self)
-//                    .modelContainer(modelContainer)
-//            ))
-//        case .expanded:
-//            hostingController = UIHostingController(rootView: AnyView(
-//                ExpandedView(delegate: self)
-//                    .modelContainer(modelContainer)
-//            ))
-//        @unknown default:
-//            fatalError("Unknown presentation style")
-//        }
-        
-        hostingController = UIHostingController(rootView: AnyView(
-            MessageMintList(delegate: self)
+        switch presentationStyle {
+        case .compact:
+            hostingController = UIHostingController(rootView: AnyView(
+                NavigationView {
+                    MessageMintList(delegate: self)
+                }
                 .modelContainer(modelContainer)
-        ))
+            ))
+        case .expanded:
+            hostingController = UIHostingController(rootView: AnyView(
+                NavigationView {
+                    MessageMintList(delegate: self)
+                }
+                .navigationViewStyle(StackNavigationViewStyle())
+                .modelContainer(modelContainer)
+            ))
+        @unknown default:
+            fatalError("Unknown presentation style")
+        }
         
         addChild(hostingController)
         hostingController.view.frame = view.bounds
         hostingController.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(hostingController.view)
         
-//        NSLayoutConstraint.activate([
-//            hostingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-//            hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-//            hostingController.view.topAnchor.constraint(equalTo: view.topAnchor),
-//            hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-//        ])
+        NSLayoutConstraint.activate([
+            hostingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            hostingController.view.topAnchor.constraint(equalTo: view.topAnchor),
+            hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
         
         hostingController.didMove(toParent: self)
     }
