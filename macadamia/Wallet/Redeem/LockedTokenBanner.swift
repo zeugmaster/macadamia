@@ -49,6 +49,7 @@ struct LockedTokenBanner<Content: View>: View {
                         case .noData:
                             Image(systemName: "xmark"); Text("Authenticity unknown")
                         }
+#if !APP_EXTENSION
                         Button {
                             let url = URL(string: "https://macadamia.cash/token-authenticity")!
                             if UIApplication.shared.canOpenURL(url) {
@@ -57,6 +58,7 @@ struct LockedTokenBanner<Content: View>: View {
                         } label: {
                             Image(systemName: "questionmark.circle").font(.callout)
                         }
+#endif
                     }
                     Spacer().frame(maxHeight: 8)
                     HStack {

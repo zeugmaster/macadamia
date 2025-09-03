@@ -37,19 +37,31 @@ struct MessageMintList: View {
     var body: some View {
         Group {
             if let token = selectedToken {
-                TokenDisplayView(vc: vc, tokenString: token) {
+                TokenDisplayView(tokenString: token) {
                     selectedToken = nil
                 }
             } else {
                 NavigationStack {
-                    List {
-                        ForEach(mints) { mint in
-                            NavigationLink {
-                                MessageSendView(mint: mint, vc: vc)
-                            } label: {
-                                MintRow(mint: mint)
+                    ScrollView {
+                        VStack(spacing: 20) {
+                            Text("Send from")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal)
+                            
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 20) {
+                                ForEach(mints) { mint in
+                                    NavigationLink {
+                                        MessageSendView(mint: mint, vc: vc)
+                                    } label: {
+                                        MintGridItem(mint: mint)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                }
                             }
+                            .padding(.horizontal)
                         }
+                        .padding(.vertical)
                     }
                 }
             }
@@ -66,17 +78,98 @@ struct MessageMintList: View {
     }
 }
 
-struct MintRow: View {
+struct MintGridItem: View {
     let mint: Mint
     
+    @State private var mintIcon: UIImage?
+    @State private var isLoadingIcon = false
+    
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 60
+    
     var body: some View {
-        HStack {
+        VStack(spacing: 8) {
+            // Mint icon
+            ZStack {
+                Circle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: iconSize, height: iconSize)
+                
+                if let icon = mintIcon {
+                    Image(uiImage: icon)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: iconSize * 0.6, height: iconSize * 0.6)
+                        .clipShape(Circle())
+                } else if isLoadingIcon {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                } else {
+                    Image(systemName: "building.columns")
+                        .foregroundColor(.white)
+                        .font(.title2)
+                }
+            }
+            
+            // Mint name
             Text(mint.displayName)
-            Spacer()
+                .font(.caption)
+                .fontWeight(.semibold)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .frame(height: 32) // Fixed height for alignment
+            
+            // Balance
             Text(amountDisplayString(mint.balance(for: .sat), unit: .sat))
+                .font(.caption2)
+                .foregroundColor(.secondary)
                 .monospaced()
         }
-        .bold()
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.secondary.opacity(0.1))
+        )
+        .onAppear {
+            loadMintIcon()
+        }
+    }
+    
+    private func loadMintIcon() {
+        Task {
+            await MainActor.run {
+                isLoadingIcon = true
+            }
+            
+            do {
+                guard let info = try await mint.loadInfo(invalidateCache: false) else {
+                    print("No mint info available")
+                    await MainActor.run {
+                        isLoadingIcon = false
+                    }
+                    return
+                }
+                
+                if let iconURLString = info.iconUrl,
+                   let iconURL = URL(string: iconURLString) {
+                    
+                    let (data, _) = try await URLSession.shared.data(from: iconURL)
+                    if let image = UIImage(data: data) {
+                        await MainActor.run {
+                            mintIcon = image
+                            isLoadingIcon = false
+                        }
+                        return
+                    }
+                }
+            } catch {
+                print("Failed to load mint icon: \(error)")
+            }
+            
+            await MainActor.run {
+                isLoadingIcon = false
+            }
+        }
     }
 }
 

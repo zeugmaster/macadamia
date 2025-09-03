@@ -10,15 +10,18 @@ import CashuSwift
 
 struct RedeemContainerView: View {
     
+    private let allowSwap: Bool
+    
     @State private var inputString: String?
     @State private var token: CashuSwift.Token?
     
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
     
-    init(tokenString: String? = nil) {
+    init(tokenString: String? = nil, allowSwap: Bool = true) {
         self._inputString = State(initialValue: tokenString)
         self._token = State(initialValue: try? tokenString?.deserializeToken())
+        self.allowSwap = allowSwap
     }
     
     var body: some View {

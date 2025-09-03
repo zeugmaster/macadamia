@@ -87,6 +87,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		372456DB2E68A404008EBD31 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Redeem/LockedTokenBanner.swift,
+			);
+			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
+		};
 		37C4CC402E5CA4670028E4FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -112,7 +119,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		3793B9A12D0047140077F755 /* Wallet */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Wallet; sourceTree = "<group>"; };
+		3793B9A12D0047140077F755 /* Wallet */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (372456DB2E68A404008EBD31 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Wallet; sourceTree = "<group>"; };
 		3793B9A22D0049AD0077F755 /* Mints */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Mints; sourceTree = "<group>"; };
 		3793B9A42D0049F60077F755 /* PersistentModelV1 */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (37C4CCA02E5CB4070028E4FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = PersistentModelV1; sourceTree = "<group>"; };
 		3793B9A62D004A490077F755 /* Settings */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Settings; sourceTree = "<group>"; };
@@ -659,6 +666,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.cypherbase.macadamia.macadamiaMessages;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS[arch=*]" = APP_EXTENSION;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -689,6 +697,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.cypherbase.macadamia.macadamiaMessages;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS[arch=*]" = APP_EXTENSION;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
