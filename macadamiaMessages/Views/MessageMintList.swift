@@ -211,7 +211,7 @@ struct MessageSendView: View {
             }
             VStack {
                 Spacer()
-                ActionButton(state: $buttonState)
+                ActionButton(state: $buttonState, hideShadow: true)
                     .actionDisabled(buttonDisabled)
             }
         }
@@ -314,53 +314,42 @@ struct TokenDisplayView: View {
             }
             .padding(.horizontal)
             
-            List {
-                Section {
-                    Text(tokenString)
-                        .monospaced()
-                        .lineLimit(1)
-                    if let amount {
-                        Text(amountDisplayString(amount, unit: .sat))
-                            .monospaced()
+            RedeemView(tokenString: tokenString) {
+                Button {
+                    UIPasteboard.general.string = tokenString
+                    withAnimation {
+                        copied = true
                     }
-                    if let memo {
-                        Text(memo)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                        withAnimation {
+                            copied = false
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Text(copied ? "Copied!" : "Copy")
+                        Spacer()
+                        Image(systemName: "clipboard")
                     }
                 }
-                .foregroundStyle(.secondary)
-                Section {
-                    Button {
-                        UIPasteboard.general.string = tokenString
-                        withAnimation {
-                            copied = true
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-                            withAnimation {
-                                copied = false
-                            }
-                        }
-                    } label: {
-                        HStack {
-                            Text(copied ? "Copied!" : "Copy")
-                            Spacer()
-                            Image(systemName: "clipboard")
-                        }
+                Button {
+                    guard let url = URL(string: "cashu:\(tokenString)") else {
+                        return
                     }
-                    Button {
-                        guard let url = URL(string: "cashu:\(tokenString)") else {
-                            return
-                        }
-                        vc?.extensionContext?.open(url)
-                    } label: {
-                        HStack {
-                            Text("Open in Wallet")
-                            Spacer()
-                            Image(systemName: "arrow.up.right.square")
-                        }
+                    vc?.extensionContext?.open(url)
+                } label: {
+                    HStack {
+                        Text("Open in Wallet")
+                        Spacer()
+                        Image(systemName: "arrow.up.right.square")
                     }
+                }
+            } onSuccess: {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    onDismiss()
+                    vc?.requestPresentationStyle(.compact)
                 }
             }
-            Spacer()
         }
     }
 }

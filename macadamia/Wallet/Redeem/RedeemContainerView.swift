@@ -25,8 +25,8 @@ struct RedeemContainerView: View {
     }
     
     var body: some View {
-        if let token, let inputString {
-            RedeemView(tokenString: inputString, token: token)
+        if let inputString {
+            RedeemView(tokenString: inputString)
         } else {
             InputView(supportedTypes: [.token]) { result in
                 parse(input: result.payload)

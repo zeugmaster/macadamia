@@ -91,6 +91,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Redeem/LockedTokenBanner.swift,
+				Redeem/RedeemView.swift,
 			);
 			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
 		};
@@ -112,7 +113,10 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				ActionButton.swift,
+				Alerts.swift,
 				Currency.swift,
+				MintPicker.swift,
+				TokenText.swift,
 			);
 			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
 		};
