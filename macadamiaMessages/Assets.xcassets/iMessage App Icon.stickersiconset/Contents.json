@@ -11,11 +11,13 @@
       "size" : "29x29"
     },
     {
+      "filename" : "messageArtboard 1_2@2x.png",
       "idiom" : "iphone",
       "scale" : "2x",
       "size" : "60x45"
     },
     {
+      "filename" : "messageArtboard 1_2@3x.png",
       "idiom" : "iphone",
       "scale" : "3x",
       "size" : "60x45"
@@ -36,6 +38,7 @@
       "size" : "74x55"
     },
     {
+      "filename" : "logo.png",
       "idiom" : "ios-marketing",
       "scale" : "1x",
       "size" : "1024x1024"
@@ -65,6 +68,7 @@
       "size" : "32x24"
     },
     {
+      "filename" : "messagehi res.png",
       "idiom" : "ios-marketing",
       "platform" : "ios",
       "scale" : "1x",

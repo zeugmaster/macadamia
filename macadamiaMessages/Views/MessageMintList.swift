@@ -98,7 +98,7 @@ struct MintGridItem: View {
                     Image(uiImage: icon)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: iconSize * 0.6, height: iconSize * 0.6)
+                        .frame(width: iconSize * 0.7, height: iconSize * 0.7)
                         .clipShape(Circle())
                 } else if isLoadingIcon {
                     ProgressView()
@@ -183,8 +183,10 @@ struct MessageSendView: View {
     @State private var memo: String = ""
     @State private var amountString: String = ""
     @State private var buttonState = ActionButtonState.idle("...")
+    @State private var mintIcon: UIImage?
     
     @FocusState private var amountFieldInFocus
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 60
     
     private var buttonDisabled: Bool {
         amount > 0 ? false : true && amount >= mint.balance(for: .sat)
@@ -197,15 +199,67 @@ struct MessageSendView: View {
     var body: some View {
         ZStack {
             List {
-                HStack {
-                    TextField("Enter amount...", text: $amountString)
-                        .keyboardType(.numberPad)
-                        .focused($amountFieldInFocus)
-                    Spacer()
-                    Text("sat")
+                Section {
+                    HStack {
+                        ZStack {
+                            Circle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: iconSize, height: iconSize)
+                            
+                            if let icon = mintIcon {
+                                Image(uiImage: icon)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: iconSize * 0.7, height: iconSize * 0.7)
+                                    .clipShape(Circle())
+                            } else {
+                                Image(systemName: "building.columns")
+                                    .foregroundColor(.white)
+                                    .font(.title2)
+                            }
+                        }
+                        Text(mint.displayName)
+                            .font(.title3)
+                            .lineLimit(1)
+                    }
                 }
-                .monospaced()
-                TextField("Optional memo...", text: $memo)
+                .task {
+                    if let info = try? await mint.loadInfo(),
+                       let urlString = info.iconUrl,
+                       let url = URL(string: urlString) {
+                        if let (data, _) = try? await URLSession.shared.data(from: url),
+                           let image = UIImage(data: data) {
+                            await MainActor.run {
+                                withAnimation {
+                                    self.mintIcon = image
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                Section {
+                    HStack {
+                        TextField("Enter amount...", text: $amountString)
+                            .keyboardType(.numberPad)
+                            .focused($amountFieldInFocus)
+                        Spacer()
+                        Text("sat")
+                    }
+                    .monospaced()
+                    
+                    HStack {
+                        Text("Balance: ")
+                        Spacer()
+                        Text(String(mint.balance(for: .sat)))
+                            .monospaced()
+                        Text("sats")
+                    }
+                    .foregroundStyle(amount > mint.balance(for: .sat) ? .failureRed : .secondary)
+                    .animation(.linear(duration: 0.2), value: amount > mint.balance(for: .sat))
+                    
+                    TextField("Optional memo...", text: $memo)
+                }
                 Spacer(minLength: 50)
                     .listRowBackground(Color.clear)
             }
@@ -219,6 +273,8 @@ struct MessageSendView: View {
             buttonState = .idle("Send", action: createToken)
             amountFieldInFocus = true
         }
+        .navigationTitle("Send")
+        .navigationBarTitleDisplayMode(.inline)
     }
     
     private func createToken() {
