@@ -7,7 +7,7 @@
 
 import Foundation
 
-func amountDisplayString(_ amount: Int, unit: Unit, negative: Bool = false) -> String {
+func amountDisplayString(_ amount: Int, unit: AppSchemaV1.Unit, negative: Bool = false) -> String {
     let numberFormatter = NumberFormatter()
     
     let prefix = (negative && amount != 0) ? "- " : ""

@@ -11,11 +11,11 @@ struct RedeemView<AdditionalControls: View>: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
-    @Query(filter: #Predicate<Wallet> { wallet in
+    @Query(filter: #Predicate<AppSchemaV1.Wallet> { wallet in
         wallet.active == true
-    }) private var wallets: [Wallet]
+    }) private var wallets: [AppSchemaV1.Wallet]
 
-    var activeWallet: Wallet? {
+    var activeWallet: AppSchemaV1.Wallet? {
         wallets.first
     }
     

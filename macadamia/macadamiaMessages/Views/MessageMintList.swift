@@ -19,13 +19,13 @@ struct MessageMintList: View {
     weak var vc: MessagesViewController?
     
     @Environment(\.modelContext) private var modelContext
-    @Query(filter: #Predicate<Wallet> { wallet in
+    @Query(filter: #Predicate<AppSchemaV1.Wallet> { wallet in
         wallet.active == true
-    }) private var wallets: [Wallet]
+    }) private var wallets: [AppSchemaV1.Wallet]
     
     @State private var selectedToken: String?
     
-    private var activeWallet: Wallet? {
+    private var activeWallet: AppSchemaV1.Wallet? {
         wallets.first
     }
     
@@ -174,7 +174,7 @@ struct MintGridItem: View {
 }
 
 struct MessageSendView: View {
-    let mint: Mint
+    let mint: AppSchemaV1.Mint
     weak var vc: MessagesViewController?
     
     @Environment(\.modelContext) private var modelContext
@@ -299,7 +299,7 @@ struct MessageSendView: View {
         })
     }
     
-    private func onSuccess(token: CashuSwift.Token, event: Event, swapped: [Proof]) {
+    private func onSuccess(token: CashuSwift.Token, event: Event, swapped: [AppSchemaV1.Proof]) {
         AppSchemaV1.insert(swapped + [event], into: modelContext)
         
         vc?.requestPresentationStyle(.compact)

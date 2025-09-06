@@ -22,7 +22,7 @@ struct SwapManager {
         self.updateHandler = updateHandler
     }
     
-    func swap(token: CashuSwift.Token, toMint: Mint, seed: String) {
+    func swap(token: CashuSwift.Token, toMint: AppSchemaV1.Mint, seed: String) {
         // load from mint
         // guess fee by creating dummy quote
         
@@ -79,7 +79,7 @@ struct SwapManager {
         }
     }
     
-    func swap(fromMint: Mint, toMint: Mint, amount: Int, seed: String) {
+    func swap(fromMint: AppSchemaV1.Mint, toMint: AppSchemaV1.Mint, amount: Int, seed: String) {
         updateHandler(.loading)
         
         let mintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat", amount: amount)

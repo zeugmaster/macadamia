@@ -46,7 +46,7 @@ extension AppSchemaV1.Wallet {
 }
 
 // MARK: - Core Mint Operations  
-extension Mint {
+extension AppSchemaV1.Mint {
     /// Get balance for this specific mint
     func balance() -> Int {
         return proofs?.filter { $0.state == .valid }.sum ?? 0
@@ -59,7 +59,7 @@ extension Mint {
 }
 
 // MARK: - Core Token Generation
-extension Mint {
+extension AppSchemaV1.Mint {
     /// Simplified token generation for extension use
     @MainActor
     func generateToken(amount: Int, memo: String, allProofs: [Proof], completion: @escaping (Result<String, Error>) -> Void) {
@@ -94,7 +94,7 @@ extension Mint {
 }
 
 // MARK: - Array Extensions
-extension Array where Element == Proof {
+extension Array where Element == AppSchemaV1.Proof {
     var sum: Int {
         return self.reduce(0) { $0 + $1.amount }
     }
