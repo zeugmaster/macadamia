@@ -1,7 +1,10 @@
 # Fix for Archive Build Errors in Messages Extension
 
-## The Problem
-Your Messages extension fails during Archive builds because it's missing Swift Package dependencies that the shared code requires.
+## The Problem(s)
+1. **Missing Swift Package Dependencies**: Your Messages extension is missing critical package dependencies
+2. **Xcode File Location Quirk**: After moving files to work around an Xcode quirk, the project file needs path updates
+3. **Wrong Assets Catalog**: Messages extension was referencing the main app's Assets.xcassets instead of its own
+4. **Missing Custom Colors**: Custom colors (successGreen, failureRed) were not available in Messages extension
 
 ## Root Cause (UPDATED)
 While the shared files have their target membership set correctly, the Messages extension is **missing critical Swift Package dependencies**:
@@ -50,7 +53,32 @@ Check that these imports work in your Messages extension:
 - `import secp256k1` (required by PersistentModelV1.swift)
 - `import BIP39` (if using restore functionality)
 
-### Step 3: Clean and Archive
+### Step 3: Fix File Paths and Assets (if you moved files)
+
+If you moved the Messages extension files to `macadamia/macadamiaMessages/`:
+
+**The project.pbxproj has been updated with:**
+- INFOPLIST_FILE paths: `macadamia/macadamiaMessages/Info.plist`
+- Synchronized root group path: `macadamiaMessages` (relative to parent group)
+- Removed incorrect Assets.xcassets reference (was pointing to main app's assets)
+
+**Assets Catalog Fix:**
+- The Messages extension was incorrectly using the main app's Assets.xcassets
+- This caused "iMessage App Icon" not found errors
+- Now uses its own Assets.xcassets from `macadamia/macadamiaMessages/Assets.xcassets`
+- The synchronized root group automatically includes the correct assets
+
+### Step 4: Fix Custom Colors
+
+The Messages extension needs its own copy of custom colors used by shared code:
+
+**Custom colors copied to Messages extension:**
+- `successGreen.colorset` - Green color for success states
+- `failureRed.colorset` - Red color for error/warning states
+
+These colors are now in `macadamia/macadamiaMessages/Assets.xcassets/` and will be included automatically.
+
+### Step 5: Clean and Archive
 
 1. Clean Build Folder: Product > Clean Build Folder (⇧⌘K)
 2. Try archiving again: Product > Archive
@@ -86,9 +114,17 @@ After making changes, verify:
 2. Archive succeeds for Release configuration
 3. Messages extension works correctly when installed
 
+## Summary of All Fixes Applied
+
+1. ✅ **Swift Package Dependencies** - Add secp256k1 and BIP39 to Messages extension
+2. ✅ **Info.plist Path** - Updated to `macadamia/macadamiaMessages/Info.plist`
+3. ✅ **Assets Catalog Path** - Fixed to use extension's own Assets.xcassets
+4. ✅ **Custom Colors** - Copied successGreen and failureRed colorsets to extension
+
 ## Common Pitfalls to Avoid
 
 - Don't use `@testable import` in production code
 - Ensure all dependencies of added files are also included
 - Check that the App Group is properly configured for data sharing
 - Verify entitlements match between app and extension
+- Remember that extensions need their own copies of custom colors/assets

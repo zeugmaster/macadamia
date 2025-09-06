@@ -27,7 +27,6 @@
 		37965DE22E6CBB2F00681744 /* Messages.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37C4CC2F2E5CA4660028E4FE /* Messages.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		37C4CC3C2E5CA4670028E4FE /* macadamiaMessages.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 37C4CC2E2E5CA4660028E4FE /* macadamiaMessages.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		37C4CC4B2E5CAAE30028E4FE /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 37C4CC4A2E5CAAE30028E4FE /* CashuSwift */; };
-		37C4CC722E5CAE130028E4FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
 		37C4CC8F2E5CB1A90028E4FE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
 		37C4CC902E5CB1A90028E4FE /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
 		37C4CC912E5CB1A90028E4FE /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3793B99D2CFCC8F80077F755 /* AppState.swift */; };
@@ -408,7 +407,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				37C4CC722E5CAE130028E4FE /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -673,14 +671,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "iMessage App Icon";
-				CODE_SIGN_ENTITLEMENTS = macadamiaMessages/macadamiaMessages.entitlements;
+				CODE_SIGN_ENTITLEMENTS = /Users/dariolass/Developer/macadamia/macadamia/macadamiaMessages/macadamiaMessages.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "macadamia/Error.swift macadamia/Misc/ActionButton.swift macadamia/Misc/Alerts.swift macadamia/PersistentModelV1";
 				DEVELOPMENT_TEAM = W285RX5S82;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = macadamiaMessages/Info.plist;
+				INFOPLIST_FILE = macadamia/macadamiaMessages/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = macadamia;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
@@ -704,14 +702,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "iMessage App Icon";
-				CODE_SIGN_ENTITLEMENTS = macadamiaMessages/macadamiaMessages.entitlements;
+				CODE_SIGN_ENTITLEMENTS = /Users/dariolass/Developer/macadamia/macadamia/macadamiaMessages/macadamiaMessages.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "macadamia/Error.swift macadamia/Misc/ActionButton.swift macadamia/Misc/Alerts.swift macadamia/PersistentModelV1";
 				DEVELOPMENT_TEAM = W285RX5S82;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = macadamiaMessages/Info.plist;
+				INFOPLIST_FILE = macadamia/macadamiaMessages/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = macadamia;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
