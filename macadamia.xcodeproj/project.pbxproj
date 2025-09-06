@@ -20,7 +20,11 @@
 		377FFF022BC451AB00DD2635 /* release-notes.md in Resources */ = {isa = PBXBuildFile; fileRef = 377FFF012BC451AB00DD2635 /* release-notes.md */; };
 		3792122E2B29E7520081F161 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 3792122D2B29E7520081F161 /* BigNumber */; };
 		379212342B29E7B30081F161 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212332B29E7B30081F161 /* BIP39 */; };
-		37C4CC302E5CA4660028E4FE /* Messages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37C4CC2F2E5CA4660028E4FE /* Messages.framework */; };
+		37965DDC2E6CBABE00681744 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDB2E6CBABE00681744 /* secp256k1 */; };
+		37965DDE2E6CBAD600681744 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDD2E6CBAD600681744 /* BigNumber */; };
+		37965DE02E6CBAD600681744 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDF2E6CBAD600681744 /* BIP39 */; };
+		37965DE12E6CBB2F00681744 /* Messages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37C4CC2F2E5CA4660028E4FE /* Messages.framework */; };
+		37965DE22E6CBB2F00681744 /* Messages.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37C4CC2F2E5CA4660028E4FE /* Messages.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		37C4CC3C2E5CA4670028E4FE /* macadamiaMessages.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 37C4CC2E2E5CA4660028E4FE /* macadamiaMessages.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		37C4CC4B2E5CAAE30028E4FE /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 37C4CC4A2E5CAAE30028E4FE /* CashuSwift */; };
 		37C4CC722E5CAE130028E4FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
@@ -52,6 +56,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		37965DE32E6CBB2F00681744 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				37965DE22E6CBB2F00681744 /* Messages.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		37C4CC3D2E5CA4670028E4FE /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -151,8 +166,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				37C4CC302E5CA4660028E4FE /* Messages.framework in Frameworks */,
+				37965DDE2E6CBAD600681744 /* BigNumber in Frameworks */,
+				37965DE02E6CBAD600681744 /* BIP39 in Frameworks */,
+				37965DDC2E6CBABE00681744 /* secp256k1 in Frameworks */,
 				37C4CC4B2E5CAAE30028E4FE /* CashuSwift in Frameworks */,
+				37965DE12E6CBB2F00681744 /* Messages.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -174,7 +192,6 @@
 				377FFF012BC451AB00DD2635 /* release-notes.md */,
 				372034B82B29E1BC00C4F955 /* macadamia */,
 				37DC18A22B8669A900F9B37B /* macadamiaTests */,
-				37C4CC312E5CA4660028E4FE /* macadamiaMessages */,
 				3725D4D62CD5001A0037DD08 /* Frameworks */,
 				372034B72B29E1BC00C4F955 /* Products */,
 			);
@@ -206,6 +223,7 @@
 				3793B9A72D004ADA0077F755 /* Misc */,
 				3793B9A42D0049F60077F755 /* PersistentModelV1 */,
 				372034BD2B29E1BD00C4F955 /* Assets.xcassets */,
+				37C4CC312E5CA4660028E4FE /* macadamiaMessages */,
 				372034BF2B29E1BD00C4F955 /* Preview Content */,
 			);
 			path = macadamia;
@@ -281,6 +299,7 @@
 				37C4CC2A2E5CA4660028E4FE /* Sources */,
 				37C4CC2B2E5CA4660028E4FE /* Frameworks */,
 				37C4CC2C2E5CA4660028E4FE /* Resources */,
+				37965DE32E6CBB2F00681744 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -293,6 +312,9 @@
 			name = macadamiaMessages;
 			packageProductDependencies = (
 				37C4CC4A2E5CAAE30028E4FE /* CashuSwift */,
+				37965DDB2E6CBABE00681744 /* secp256k1 */,
+				37965DDD2E6CBAD600681744 /* BigNumber */,
+				37965DDF2E6CBAD600681744 /* BIP39 */,
 			);
 			productName = macadamiaMessages;
 			productReference = 37C4CC2E2E5CA4660028E4FE /* macadamiaMessages.appex */;
@@ -355,6 +377,7 @@
 				370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 				377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */,
 				371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */,
+				37965DDA2E6CBABE00681744 /* XCRemoteSwiftPackageReference "swift-secp256k1" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -590,7 +613,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.3.1;
+				MARKETING_VERSION = 0.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.cypherbase.macadamia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -632,7 +655,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.3.1;
+				MARKETING_VERSION = 0.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.cypherbase.macadamia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -842,6 +865,14 @@
 				kind = branch;
 			};
 		};
+		37965DDA2E6CBABE00681744 /* XCRemoteSwiftPackageReference "swift-secp256k1" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/21-DOT-DEV/swift-secp256k1.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.21.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -876,6 +907,21 @@
 			productName = BigNumber;
 		};
 		379212332B29E7B30081F161 /* BIP39 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */;
+			productName = BIP39;
+		};
+		37965DDB2E6CBABE00681744 /* secp256k1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 37965DDA2E6CBABE00681744 /* XCRemoteSwiftPackageReference "swift-secp256k1" */;
+			productName = secp256k1;
+		};
+		37965DDD2E6CBAD600681744 /* BigNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */;
+			productName = BigNumber;
+		};
+		37965DDF2E6CBAD600681744 /* BIP39 */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */;
 			productName = BIP39;
