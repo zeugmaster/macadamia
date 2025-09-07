@@ -672,7 +672,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "macadamia/Error.swift macadamia/Misc/ActionButton.swift macadamia/Misc/Alerts.swift macadamia/PersistentModelV1";
+				DEVELOPMENT_ASSET_PATHS = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = macadamia/macadamiaMessages/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = macadamia;
@@ -703,7 +703,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "macadamia/Error.swift macadamia/Misc/ActionButton.swift macadamia/Misc/Alerts.swift macadamia/PersistentModelV1";
+				DEVELOPMENT_ASSET_PATHS = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = macadamia/macadamiaMessages/Info.plist;
