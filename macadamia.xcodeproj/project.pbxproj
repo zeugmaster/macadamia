@@ -11,10 +11,10 @@
 		370A84072CC18AEE0039A413 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 370A84062CC18AEE0039A413 /* Flow */; };
 		371AA9132E33EB61006D487F /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 371AA9122E33EB61006D487F /* CashuSwift */; };
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
-		372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */; };
 		3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3725D4D72CD5001A0037DD08 /* AVKit.framework */; };
 		376E88432BE5468B0026FF8D /* Popovers in Frameworks */ = {isa = PBXBuildFile; productRef = 376E88422BE5468B0026FF8D /* Popovers */; };
 		376F43B22B4FEC0D00E55B0F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 376F43B12B4FEC0D00E55B0F /* README.md */; };
+		377A1BC82E6D9E3B00BC1BC1 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
 		377D26262E1FDE7800CFB880 /* URUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377D26252E1FDE7800CFB880 /* URUI */; };
 		377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377FFEFF2BC43B6900DD2635 /* MarkdownUI */; };
 		377FFF022BC451AB00DD2635 /* release-notes.md in Resources */ = {isa = PBXBuildFile; fileRef = 377FFF012BC451AB00DD2635 /* release-notes.md */; };
@@ -24,7 +24,6 @@
 		37965DDE2E6CBAD600681744 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDD2E6CBAD600681744 /* BigNumber */; };
 		37965DE02E6CBAD600681744 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDF2E6CBAD600681744 /* BIP39 */; };
 		37965DE12E6CBB2F00681744 /* Messages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37C4CC2F2E5CA4660028E4FE /* Messages.framework */; };
-		37965DE22E6CBB2F00681744 /* Messages.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37C4CC2F2E5CA4660028E4FE /* Messages.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		37C4CC3C2E5CA4670028E4FE /* macadamiaMessages.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 37C4CC2E2E5CA4660028E4FE /* macadamiaMessages.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		37C4CC4B2E5CAAE30028E4FE /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 37C4CC4A2E5CAAE30028E4FE /* CashuSwift */; };
 		37C4CC8F2E5CB1A90028E4FE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
@@ -32,8 +31,6 @@
 		37C4CC912E5CB1A90028E4FE /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3793B99D2CFCC8F80077F755 /* AppState.swift */; };
 		37C4CC922E5CB1A90028E4FE /* macadamiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034B92B29E1BC00C4F955 /* macadamiaApp.swift */; };
 		37C4CC932E5CB1A90028E4FE /* TOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379ED0402D4580A900D432D0 /* TOS.swift */; };
-		37C4CC9F2E5CB3CE0028E4FE /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
-		37DC18A42B8669A900F9B37B /* macadamiaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DC18A32B8669A900F9B37B /* macadamiaTests.swift */; };
 		37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */; };
 /* End PBXBuildFile section */
 
@@ -61,7 +58,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				37965DE22E6CBB2F00681744 /* Messages.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -85,7 +81,6 @@
 		372034B92B29E1BC00C4F955 /* macadamiaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macadamiaApp.swift; sourceTree = "<group>"; };
 		372034BB2B29E1BC00C4F955 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		372034BD2B29E1BD00C4F955 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3725D4D72CD5001A0037DD08 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		376F43B12B4FEC0D00E55B0F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		377FFF012BC451AB00DD2635 /* release-notes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "release-notes.md"; sourceTree = "<group>"; };
@@ -96,12 +91,11 @@
 		37C4CC2E2E5CA4660028E4FE /* macadamiaMessages.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = macadamiaMessages.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		37C4CC2F2E5CA4660028E4FE /* Messages.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Messages.framework; path = System/Library/Frameworks/Messages.framework; sourceTree = SDKROOT; };
 		37DC18A12B8669A900F9B37B /* macadamiaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macadamiaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		37DC18A32B8669A900F9B37B /* macadamiaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macadamiaTests.swift; sourceTree = "<group>"; };
 		37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		372456DB2E68A404008EBD31 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		377A1BC62E6D9E1000BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Redeem/LockedTokenBanner.swift,
@@ -109,21 +103,7 @@
 			);
 			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
 		};
-		37C4CC402E5CA4670028E4FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
-		};
-		37C4CCA02E5CB4070028E4FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Operations/restore.swift,
-			);
-			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
-		};
-		37F511B42E65D765005014B9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		377A1BC72E6D9E1000BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				ActionButton.swift,
@@ -134,14 +114,30 @@
 			);
 			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
 		};
+		377A1BCA2E6D9ED900BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Operations/restore.swift,
+			);
+			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
+		};
+		37C4CC402E5CA4670028E4FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		3793B9A12D0047140077F755 /* Wallet */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (372456DB2E68A404008EBD31 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Wallet; sourceTree = "<group>"; };
+		377A1BAA2E6CF53F00BC1BC1 /* macadamiaTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = macadamiaTests; sourceTree = "<group>"; };
+		377A1BAD2E6CF54900BC1BC1 /* Preview Content */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "Preview Content"; sourceTree = "<group>"; };
+		3793B9A12D0047140077F755 /* Wallet */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (377A1BC62E6D9E1000BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Wallet; sourceTree = "<group>"; };
 		3793B9A22D0049AD0077F755 /* Mints */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Mints; sourceTree = "<group>"; };
-		3793B9A42D0049F60077F755 /* PersistentModelV1 */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (37C4CCA02E5CB4070028E4FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = PersistentModelV1; sourceTree = "<group>"; };
+		3793B9A42D0049F60077F755 /* PersistentModelV1 */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (377A1BCA2E6D9ED900BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = PersistentModelV1; sourceTree = "<group>"; };
 		3793B9A62D004A490077F755 /* Settings */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Settings; sourceTree = "<group>"; };
-		3793B9A72D004ADA0077F755 /* Misc */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (37F511B42E65D765005014B9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Misc; sourceTree = "<group>"; };
+		3793B9A72D004ADA0077F755 /* Misc */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (377A1BC72E6D9E1000BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Misc; sourceTree = "<group>"; };
 		37C4CC312E5CA4660028E4FE /* macadamiaMessages */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (37C4CC402E5CA4670028E4FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = macadamiaMessages; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
@@ -190,7 +186,7 @@
 				370A83FE2CB94CCD0039A413 /* .swiftformat */,
 				377FFF012BC451AB00DD2635 /* release-notes.md */,
 				372034B82B29E1BC00C4F955 /* macadamia */,
-				37DC18A22B8669A900F9B37B /* macadamiaTests */,
+				377A1BAA2E6CF53F00BC1BC1 /* macadamiaTests */,
 				3725D4D62CD5001A0037DD08 /* Frameworks */,
 				372034B72B29E1BC00C4F955 /* Products */,
 			);
@@ -223,17 +219,9 @@
 				3793B9A42D0049F60077F755 /* PersistentModelV1 */,
 				372034BD2B29E1BD00C4F955 /* Assets.xcassets */,
 				37C4CC312E5CA4660028E4FE /* macadamiaMessages */,
-				372034BF2B29E1BD00C4F955 /* Preview Content */,
+				377A1BAD2E6CF54900BC1BC1 /* Preview Content */,
 			);
 			path = macadamia;
-			sourceTree = "<group>";
-		};
-		372034BF2B29E1BD00C4F955 /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
 			sourceTree = "<group>";
 		};
 		3725D4D62CD5001A0037DD08 /* Frameworks */ = {
@@ -243,14 +231,6 @@
 				37C4CC2F2E5CA4660028E4FE /* Messages.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		37DC18A22B8669A900F9B37B /* macadamiaTests */ = {
-			isa = PBXGroup;
-			children = (
-				37DC18A32B8669A900F9B37B /* macadamiaTests.swift */,
-			);
-			path = macadamiaTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -271,6 +251,7 @@
 				37C4CC3B2E5CA4670028E4FE /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
+				377A1BAD2E6CF54900BC1BC1 /* Preview Content */,
 				3793B9A12D0047140077F755 /* Wallet */,
 				3793B9A22D0049AD0077F755 /* Mints */,
 				3793B9A42D0049F60077F755 /* PersistentModelV1 */,
@@ -295,10 +276,10 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 37C4CC412E5CA4670028E4FE /* Build configuration list for PBXNativeTarget "macadamiaMessages" */;
 			buildPhases = (
-				37C4CC2A2E5CA4660028E4FE /* Sources */,
 				37C4CC2B2E5CA4660028E4FE /* Frameworks */,
 				37C4CC2C2E5CA4660028E4FE /* Resources */,
 				37965DE32E6CBB2F00681744 /* Embed Frameworks */,
+				377A1BAF2E6D9D6C00BC1BC1 /* Sources */,
 			);
 			buildRules = (
 			);
@@ -334,6 +315,9 @@
 			);
 			dependencies = (
 				37DC18A62B8669A900F9B37B /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				377A1BAA2E6CF53F00BC1BC1 /* macadamiaTests */,
 			);
 			name = macadamiaTests;
 			productName = macadamiaTests;
@@ -398,7 +382,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */,
-				372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */,
 				370A83FF2CB94CCD0039A413 /* .swiftformat in Resources */,
 				376F43B22B4FEC0D00E55B0F /* README.md in Resources */,
 				377FFF022BC451AB00DD2635 /* release-notes.md in Resources */,
@@ -435,11 +418,11 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		37C4CC2A2E5CA4660028E4FE /* Sources */ = {
+		377A1BAF2E6D9D6C00BC1BC1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				37C4CC9F2E5CB3CE0028E4FE /* Error.swift in Sources */,
+				377A1BC82E6D9E3B00BC1BC1 /* Error.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -447,7 +430,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				37DC18A42B8669A900F9B37B /* macadamiaTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
