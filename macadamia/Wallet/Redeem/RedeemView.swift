@@ -1,22 +1,29 @@
 import SwiftUI
 import SwiftData
 import CashuSwift
+import OSLog
 
-struct RedeemView: View {
-    
+fileprivate var redeemLogger = Logger(subsystem: "macadamia", category: "redeem")
+
+
+struct RedeemView<AdditionalControls: View>: View {
+        
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
-    @Query(filter: #Predicate<Wallet> { wallet in
+    @Query(filter: #Predicate<AppSchemaV1.Wallet> { wallet in
         wallet.active == true
-    }) private var wallets: [Wallet]
+    }) private var wallets: [AppSchemaV1.Wallet]
 
-    var activeWallet: Wallet? {
+    var activeWallet: AppSchemaV1.Wallet? {
         wallets.first
     }
     
-    let tokenString: String
-    let token: CashuSwift.Token
+    private let tokenString: String
+    private let additionalControls: AdditionalControls?
+    private let onSuccess: (() -> Void)?
+    
+    private let token: CashuSwift.Token?
     
     @State private var buttonState: ActionButtonState = .idle("")
     
@@ -29,24 +36,51 @@ struct RedeemView: View {
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
     
+    var hideButtonShadow: Bool {
+    #if APP_EXTENSION
+        true
+    #else
+        false
+    #endif
+    }
+
+    
+    init(tokenString: String, @ViewBuilder
+         additionalControls: () -> AdditionalControls? = { EmptyView() },
+         onSuccess: (() -> Void)? = nil) {
+        self.tokenString = tokenString
+        self.token = try? tokenString.deserializeToken()
+        self.additionalControls = additionalControls()
+        self.onSuccess = onSuccess
+    }
+    
     var body: some View {
         ZStack {
             List {
                 Section {
-                    TokenText(text: tokenString)
-                        .frame(idealHeight: 70)
-                    HStack {
-                        Text("Total Amount: ")
-                        Spacer()
-                        Text(amountDisplayString(token.sum(), unit: Unit(token.unit) ?? .sat))
-                    }
-                    .foregroundStyle(.secondary)
-                    if let tokenMemo = token.memo, !tokenMemo.isEmpty {
-                        Text("Memo: \(tokenMemo)")
-                            .foregroundStyle(.secondary)
+                    if let token {
+                        TokenText(text: tokenString)
+                            .frame(idealHeight: 70)
+                        HStack {
+                            Text("Total Amount: ")
+                            Spacer()
+                            Text(amountDisplayString(token.sum(), unit: Unit(token.unit) ?? .sat))
+                        }
+                        .foregroundStyle(.secondary)
+                        if let tokenMemo = token.memo, !tokenMemo.isEmpty {
+                            Text("Memo: \(tokenMemo)")
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        Text("Unable to decode token.")
                     }
                 } header: {
                     Text("cashu Token")
+                }
+                if let additionalControls {
+                    Section {
+                        additionalControls
+                    }
                 }
                 
                 if let tokenLockState {
@@ -85,10 +119,17 @@ struct RedeemView: View {
                             }
                             .listRowBackground(EmptyView())
                         case .notLocked:
-                            selector()
+#if APP_EXTENSION
+                            selector(hideSwapOption: true)
                                 .onAppear {
                                     buttonState = .idle("Select")
                                 }
+#else
+                            selector(hideSwapOption: false)
+                                .onAppear {
+                                    buttonState = .idle("Select")
+                                }
+#endif
                         }
                     }
                 } else {
@@ -100,7 +141,7 @@ struct RedeemView: View {
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
             VStack {
                 Spacer()
-                ActionButton(state: $buttonState)
+                ActionButton(state: $buttonState, hideShadow: hideButtonShadow)
                     .actionDisabled(knownMintFromToken == nil && selection == nil)
             }
         }
@@ -108,29 +149,20 @@ struct RedeemView: View {
     
     private func selector(hideSwapOption: Bool = false) -> some View {
         Group {
-            Section {
-                HStack {
-                    Image(systemName: selection == .add ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(selection == .add ? .accentColor : .secondary)
-                    Text("Add Mint ")
-                    Spacer()
-                    if let mintURLString = token.proofsByMint.first?.key {
-                        Text(mintURLString.strippingHTTPPrefix())
-                            .foregroundStyle(.secondary)
+            if let token {
+                Section {
+                    HStack {
+                        Image(systemName: selection == .add ? "checkmark.circle.fill" : "circle")
+                            .foregroundColor(selection == .add ? .accentColor : .secondary)
+                        Text("Add Mint ")
+                        Spacer()
+                        if let mintURLString = token.proofsByMint.first?.key {
+                            Text(mintURLString.strippingHTTPPrefix())
+                                .foregroundStyle(.secondary)
+                        }
                     }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    selection = .add
-                    
-                    if let mintURLString = token.proofsByMint.first?.key {
-                        buttonState = .idle("Add & Redeem", action: {
-                            addAndRedeem(mintURLstring: mintURLString)
-                        })
-                    }
-                }
-                .onAppear {
-                    if hideSwapOption {
+                    .contentShape(Rectangle())
+                    .onTapGesture {
                         selection = .add
                         
                         if let mintURLString = token.proofsByMint.first?.key {
@@ -139,41 +171,54 @@ struct RedeemView: View {
                             })
                         }
                     }
-                }
-            } header: {
-                Text("Unknown Mint")
-            } footer: {
-                Text("If you trust this mint selecting this option will add it to the list of known mints and redeem the token.")
-            }
-
-            if !hideSwapOption {
-                Section {
-                    HStack {
-                        Image(systemName: selection == .swap ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(selection == .swap ? .accentColor : .secondary)
-                        Text("Swap to")
-                        Text("BETA")
-                            .font(.caption)
-                            .padding(2)
-                            .foregroundStyle(.black)
-                            .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(.white.opacity(0.7)))
-                        Spacer()
-                        MintPicker(label: "", selectedMint: $swapTargetMint, allowsNoneState: false)
-                        .pickerStyle(MenuPickerStyle())
-                        .labelsHidden()
-                        .tint(.secondary)
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        selection = .swap
-                        
-                        if let swapTargetMint {
-                            buttonState = .idle("Swap", action: { swap(to: swapTargetMint) })
+                    .onAppear {
+                        if hideSwapOption {
+                            selection = .add
+                            
+                            if let mintURLString = token.proofsByMint.first?.key {
+                                buttonState = .idle("Add & Redeem", action: {
+                                    addAndRedeem(mintURLstring: mintURLString)
+                                })
+                            }
                         }
                     }
+                } header: {
+                    Text("Unknown Mint")
                 } footer: {
-                    Text("If you do not trust the mint of this token, you can swap its value to one of your trusted mints via Lightning (will incur fees).")
+                    Text("If you trust this mint selecting this option will add it to the list of known mints and redeem the token.")
                 }
+
+                if !hideSwapOption {
+                    Section {
+                        HStack {
+                            Image(systemName: selection == .swap ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(selection == .swap ? .accentColor : .secondary)
+                            Text("Swap to")
+                            Text("BETA")
+                                .font(.caption)
+                                .padding(2)
+                                .foregroundStyle(.black)
+                                .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(.white.opacity(0.7)))
+                            Spacer()
+                            MintPicker(label: "", selectedMint: $swapTargetMint, allowsNoneState: false)
+                            .pickerStyle(MenuPickerStyle())
+                            .labelsHidden()
+                            .tint(.secondary)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            selection = .swap
+                            
+                            if let swapTargetMint {
+                                buttonState = .idle("Swap", action: { swap(to: swapTargetMint) })
+                            }
+                        }
+                    } footer: {
+                        Text("If you do not trust the mint of this token, you can swap its value to one of your trusted mints via Lightning (will incur fees).")
+                    }
+                }
+            } else {
+                EmptyView()
             }
         }
         .listStyle(InsetGroupedListStyle())
@@ -196,7 +241,7 @@ struct RedeemView: View {
                 try await MainActor.run {
                     _ = try AppSchemaV1.addMint(sendableMint, to: modelContext)
                     try modelContext.save()
-                    logger.info("adding mint \(sendableMint.url.absoluteString) while trying to redeem a token")
+                    redeemLogger.info("adding mint \(sendableMint.url.absoluteString) while trying to redeem a token")
                     redeem()
                 }
                 
@@ -205,7 +250,7 @@ struct RedeemView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     buttonState = .idle("Add and Redeem", action: redeem)
                 }
-                logger.error("could not add mint \(mintURLstring) due to error \(error)")
+                redeemLogger.error("could not add mint \(mintURLstring) due to error \(error)")
                 displayAlert(alert: AlertDetail(with: error))
             }
         }
@@ -215,8 +260,8 @@ struct RedeemView: View {
     
     private func redeem() {
         
-        guard let activeWallet else {
-            logger.error("""
+        guard let activeWallet, let token else {
+            redeemLogger.error("""
                          "could not redeem, one or more of the following variables are nil:
                          activeWallet: \(activeWallet.debugDescription)
                          """)
@@ -233,7 +278,7 @@ struct RedeemView: View {
         guard let mint = activeWallet.mints.first(where: {
                 $0.url.absoluteString == token.proofsByMint.keys.first &&
                 $0.hidden == false}) else {
-            logger.error("unable to determinw mint to redeem from.")
+            redeemLogger.error("unable to determinw mint to redeem from.")
             return
         }
         
@@ -250,6 +295,10 @@ struct RedeemView: View {
                     dismiss()
                 }
                 
+                if let onSuccess {
+                    onSuccess()
+                }
+                
             case .failure(let error):
                 buttonState = .fail()
                 
@@ -257,7 +306,7 @@ struct RedeemView: View {
                     buttonState = .idle("Receive", action: redeem)
                 }
                 
-                logger.error("could not receive token due to error \(error)")
+                redeemLogger.error("could not receive token due to error \(error)")
                 displayAlert(alert: AlertDetail(with: error))
             }
         }
@@ -266,6 +315,10 @@ struct RedeemView: View {
     // MARK: - SWAP
     
     private func swap(to mint: Mint) {
+        guard let token else {
+            return
+        }
+        
         let swapManager = SwapManager(modelContext: modelContext) { state in
             switch state {
             case .ready:
@@ -281,9 +334,12 @@ struct RedeemView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     dismiss()
                 }
+                if let onSuccess {
+                    onSuccess()
+                }
             case .fail(let error):
                 buttonState = .fail()
-                logger.error("could not swap token to mint due to error \(error)")
+                redeemLogger.error("could not swap token to mint due to error \(error)")
                 if let error {
                     displayAlert(alert: AlertDetail(with: error))
                 }
@@ -303,7 +359,7 @@ struct RedeemView: View {
     // MARK: - REDEEM LATER
     
     private func redeemLater() {
-        guard let activeWallet, let knownMintFromToken else {
+        guard let activeWallet, let knownMintFromToken, let token else {
             return
         }
         
@@ -330,12 +386,16 @@ struct RedeemView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             dismiss()
         }
+        
+        if let onSuccess {
+            onSuccess()
+        }
     }
     
     // MARK: - MISC
     
     private var knownMintFromToken: Mint? {
-        let mintURLString = token.proofsByMint.first?.key
+        let mintURLString = token?.proofsByMint.first?.key
         if let activeWallet {
             return activeWallet.mints.first(where: { $0.url.absoluteString == mintURLString &&
                                                      $0.hidden == false })
@@ -345,7 +405,7 @@ struct RedeemView: View {
     }
     
     private var dleqResult: CashuSwift.Crypto.DLEQVerificationResult {
-        if let knownMintFromToken, let proofs = token.proofsByMint.first?.value {
+        if let knownMintFromToken, let token, let proofs = token.proofsByMint.first?.value {
             return (try? CashuSwift.Crypto.checkDLEQ(for: proofs, with: knownMintFromToken)) ?? .noData
         } else {
             return .noData
@@ -353,7 +413,7 @@ struct RedeemView: View {
     }
     
     private var tokenLockState: CashuSwift.Token.LockVerificationResult? {
-        try? token.checkAllInputsLocked(to: activeWallet?.publicKeyString)
+        try? token?.checkAllInputsLocked(to: activeWallet?.publicKeyString)
     }
     
     private func displayAlert(alert: AlertDetail) {

@@ -1,14 +1,12 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Multi Nut Payments 🌰🥜🔩**
+**iMessage Extension 🤖**
 
-This version of *macadamia* lets you perform lightning payments from more than one mint if it supports that feature.
+This version of macadamia includes an iMessage Extension that lets you send ecash straight from the messages app 🚀.
 
-The database inspector has also been improved for debugging.
-
-**Hint:** If one or more mints are not shown as supporting MPP (Multi-path payments) pull down on the main mint list to update all.
-
+Note: The recipient needs to also have *macadamia* installed to open the message. If they do not have it, 
+send them a regular token using the main app's share sheet.
 
 As always, thanks for using **macadamia**!
 

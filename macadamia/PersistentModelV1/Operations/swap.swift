@@ -1,6 +1,10 @@
 import Foundation
 import SwiftData
 import CashuSwift
+import OSLog
+
+fileprivate let swapLogger = Logger(subsystem: "macadamia", category: "SwapOperation")
+
 
 @MainActor
 struct SwapManager {
@@ -18,7 +22,7 @@ struct SwapManager {
         self.updateHandler = updateHandler
     }
     
-    func swap(token: CashuSwift.Token, toMint: Mint, seed: String) {
+    func swap(token: CashuSwift.Token, toMint: AppSchemaV1.Mint, seed: String) {
         // load from mint
         // guess fee by creating dummy quote
         
@@ -34,7 +38,7 @@ struct SwapManager {
         
         Task {
             do {
-                logger.debug("loading mint for untrusted swap \(mintURLstring)...")
+                swapLogger.debug("loading mint for untrusted swap \(mintURLstring)...")
                 let fromMint = try await CashuSwift.loadMint(url: mintURL)
                 
                 let dummyMintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: token.unit, amount: tokenSum)
@@ -64,7 +68,7 @@ struct SwapManager {
                 let swapAmount = tokenSum - dummyMeltQuote.feeReserve - inputFee
                 
                 try await MainActor.run  {
-                    logger.debug("attempting swap from token with total amount \(tokenSum) and swapAmount \(swapAmount)")
+                    swapLogger.debug("attempting swap from token with total amount \(tokenSum) and swapAmount \(swapAmount)")
                     #warning("TODO: preserve derivation counters ?")
                     let fromMint = try AppSchemaV1.addMint(fromMint, to: modelContext, hidden: true, proofs: proofs)
                     swap(fromMint: fromMint, toMint: toMint, amount: swapAmount, seed: seed)
@@ -75,7 +79,7 @@ struct SwapManager {
         }
     }
     
-    func swap(fromMint: Mint, toMint: Mint, amount: Int, seed: String) {
+    func swap(fromMint: AppSchemaV1.Mint, toMint: AppSchemaV1.Mint, amount: Int, seed: String) {
         updateHandler(.loading)
         
         let mintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat", amount: amount)
@@ -83,7 +87,7 @@ struct SwapManager {
             switch result {
             case .success((let quote, let mintAttemptEvent)):
                 guard let mintQuote = quote as? CashuSwift.Bolt11.MintQuote else {
-                    logger.error("returned quote was not a bolt11 mint quote. aborting swap.")
+                    swapLogger.error("returned quote was not a bolt11 mint quote. aborting swap.")
                     return
                 }
                 
@@ -94,7 +98,7 @@ struct SwapManager {
                     switch result {
                     case .success((let quote, let meltAttemptEvent)):
                         guard let meltQuote = quote as? CashuSwift.Bolt11.MeltQuote else {
-                            logger.error("returned quote was not a bolt11 mint quote. aborting swap.")
+                            swapLogger.error("returned quote was not a bolt11 mint quote. aborting swap.")
                             return
                         }
                         
@@ -146,14 +150,14 @@ struct SwapManager {
                                                               mint: fromMint,
                                                               unit: meltQuote.quoteRequest?.unit ?? "sat",
                                                               seed: seed) {
-            logger.debug("no blank outputs were assigned, creating new")
+            swapLogger.debug("no blank outputs were assigned, creating new")
             let blankOutputSet = BlankOutputSet(tuple: outputs)
             meltAttemptEvent.blankOutputs = blankOutputSet
             if let keysetID = outputs.outputs.first?.id {
                 fromMint.increaseDerivationCounterForKeysetWithID(keysetID,
                                                                   by: outputs.outputs.count)
             } else {
-                logger.error("unable to determine correct keyset to increase det sec counter.")
+                swapLogger.error("unable to determine correct keyset to increase det sec counter.")
             }
             try? modelContext.save()
         }
@@ -165,14 +169,14 @@ struct SwapManager {
             case .error(let error):
                 meltAttemptEvent.proofs = nil
                 selectedProofs.setState(.valid)
-                logger.error("melt operation failed with error: \(error)")
+                swapLogger.error("melt operation failed with error: \(error)")
                 updateHandler(.fail(error: error))
             case .failure:
                 selectedProofs.setState(.pending)
-                logger.info("payment on mint \(fromMint.url.absoluteString) failed")
+                swapLogger.info("payment on mint \(fromMint.url.absoluteString) failed")
                 updateHandler(.fail(error: nil))
             case .success(let (change, event)):
-                logger.debug("melt operation was successful.")
+                swapLogger.debug("melt operation was successful.")
                 selectedProofs.setState(.spent)
                 meltingDidSucceed(toMint: toMint,
                                   mintAttemptEvent: mintAttemptEvent,
@@ -195,7 +199,7 @@ struct SwapManager {
         
         guard let mintQuote = mintAttemptEvent.bolt11MintQuote else {
             updateHandler(.fail(error: nil))
-            logger.error("toMint was nil, could not complete minting")
+            swapLogger.error("toMint was nil, could not complete minting")
             return
         }
         
@@ -215,7 +219,7 @@ struct SwapManager {
                                   mintEvent: mintEvent,
                                   proofs: proofs)
             case .failure(let error):
-                logger.warning("minting for mint swap failed due to error: \(error)")
+                swapLogger.warning("minting for mint swap failed due to error: \(error)")
                 updateHandler(.fail(error: error))
             }
         }

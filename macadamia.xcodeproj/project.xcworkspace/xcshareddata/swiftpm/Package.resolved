@@ -1,5 +1,5 @@
 {
-  "originHash" : "25816d52ed750b6ad0627bcfccf41e0aa0f3018f490e3a36b9db76f09590a32e",
+  "originHash" : "5fe7da51673daab537dd458d6bd870e4673b5877ce77a6d1c7957afdfd6767e4",
   "pins" : [
     {
       "identity" : "base58",
@@ -157,7 +157,7 @@
     {
       "identity" : "swift-secp256k1",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/zeugmaster/swift-secp256k1.git",
+      "location" : "https://github.com/21-DOT-DEV/swift-secp256k1.git",
       "state" : {
         "branch" : "main",
         "revision" : "73cf2403b7a69de8efc612d251a6e0d01211e1c4"

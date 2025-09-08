@@ -2,12 +2,12 @@ import SwiftUI
 import SwiftData
 
 struct MintPicker: View {
-    @Query(sort: [SortDescriptor(\Mint.userIndex, order: .forward)]) private var mints: [Mint]
-    @Query(filter: #Predicate<Wallet> { wallet in
+    @Query(sort: [SortDescriptor(\AppSchemaV1.Mint.userIndex, order: .forward)]) private var mints: [Mint]
+    @Query(filter: #Predicate<AppSchemaV1.Wallet> { wallet in
         wallet.active == true
-    }) private var wallets: [Wallet]
+    }) private var wallets: [AppSchemaV1.Wallet]
     
-    @Binding private var selectedMint: Mint?
+    @Binding private var selectedMint: AppSchemaV1.Mint?
     @Binding private var hide: Mint?
     @Binding private var isMultipleSelected: Bool
     
@@ -21,11 +21,11 @@ struct MintPicker: View {
     // Special UUID to represent "Multiple" selection
     private static let multipleSelectionID = UUID()
     
-    var activeWallet: Wallet? {
+    var activeWallet: AppSchemaV1.Wallet? {
         wallets.first
     }
     
-    var sortedMintsOfActiveWallet: [Mint] {
+    var sortedMintsOfActiveWallet: [AppSchemaV1.Mint] {
         mints.filter { $0.wallet == activeWallet && !$0.hidden }
              .sorted { ($0.userIndex ?? 0) < ($1.userIndex ?? 0) }
     }

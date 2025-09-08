@@ -1,4 +1,7 @@
 import SwiftUI
+import OSLog
+
+fileprivate let buttonLogger = Logger(subsystem: "macadamia", category: "interface")
 
 private struct ActionButtonDisabledKey: EnvironmentKey {
     static let defaultValue: Bool = true
@@ -51,6 +54,7 @@ struct ActionButtonState: Equatable {
 
 struct ActionButton: View {
     @Binding var state: ActionButtonState
+    let hideShadow: Bool
     
     @GestureState private var isPressed = false
     
@@ -65,6 +69,12 @@ struct ActionButton: View {
     @State private var backgroundColor: Color = .gray.opacity(0.15)
     @State private var sensoryFeedback: SensoryFeedback = .success
     @State private var feedbackTrigger = 0
+    
+    init(state:Binding<ActionButtonState>,
+         hideShadow: Bool = false) {
+        self._state = state
+        self.hideShadow = hideShadow
+    }
     
     var body: some View {
         let gesture = DragGesture(minimumDistance: 0)
@@ -117,7 +127,7 @@ struct ActionButton: View {
             didChangeState(state.type, disabled: newValue)
         }
         .allowsHitTesting(!isDisabled && state.type == .idle)
-        .background(LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom))
+        .background(LinearGradient(colors: [.clear, hideShadow ? .clear : .black], startPoint: .top, endPoint: .bottom))
     }
     
     private func didChangeState(_ type: ActionButtonState.StateType, disabled: Bool) {
@@ -180,7 +190,7 @@ struct ActionButton: View {
         if let action = state.action {
             action()
         } else {
-            logger.warning("ActionButton registered button press but no action closure is specified via state.action")
+            buttonLogger.warning("ActionButton registered button press but no action closure is specified via state.action")
         }
     }
 }

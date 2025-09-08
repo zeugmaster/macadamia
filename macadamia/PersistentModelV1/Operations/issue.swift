@@ -7,6 +7,9 @@
 
 import Foundation
 import CashuSwift
+import OSLog
+
+fileprivate let issueLogger = Logger(subsystem: "macadamia", category: "IssueOperation")
 
 extension AppSchemaV1.Mint {
     
@@ -65,7 +68,7 @@ extension AppSchemaV1.Mint {
             do {
                 // runs on a background thread
                 let (sendableProofs, dleqPassed) = try await CashuSwift.issue(for: quote, with: sendableMint, seed: seed)
-                logger.info("DLEQ check on newly minted proofs was\(dleqPassed ? " " : " NOT ")successful.")
+                issueLogger.info("DLEQ check on newly minted proofs was\(dleqPassed ? " " : " NOT ")successful.")
                 
                 // and safely back to main using sendable types
                 

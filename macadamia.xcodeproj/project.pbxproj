@@ -10,26 +10,38 @@
 		370A83FF2CB94CCD0039A413 /* .swiftformat in Resources */ = {isa = PBXBuildFile; fileRef = 370A83FE2CB94CCD0039A413 /* .swiftformat */; };
 		370A84072CC18AEE0039A413 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 370A84062CC18AEE0039A413 /* Flow */; };
 		371AA9132E33EB61006D487F /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 371AA9122E33EB61006D487F /* CashuSwift */; };
-		372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034B92B29E1BC00C4F955 /* macadamiaApp.swift */; };
-		372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
-		372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */; };
 		3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3725D4D72CD5001A0037DD08 /* AVKit.framework */; };
 		376E88432BE5468B0026FF8D /* Popovers in Frameworks */ = {isa = PBXBuildFile; productRef = 376E88422BE5468B0026FF8D /* Popovers */; };
 		376F43B22B4FEC0D00E55B0F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 376F43B12B4FEC0D00E55B0F /* README.md */; };
+		377A1BC82E6D9E3B00BC1BC1 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
 		377D26262E1FDE7800CFB880 /* URUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377D26252E1FDE7800CFB880 /* URUI */; };
 		377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377FFEFF2BC43B6900DD2635 /* MarkdownUI */; };
 		377FFF022BC451AB00DD2635 /* release-notes.md in Resources */ = {isa = PBXBuildFile; fileRef = 377FFF012BC451AB00DD2635 /* release-notes.md */; };
-		378B20482D09F3FD003FEEBD /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
 		3792122E2B29E7520081F161 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 3792122D2B29E7520081F161 /* BigNumber */; };
 		379212342B29E7B30081F161 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212332B29E7B30081F161 /* BIP39 */; };
-		3793B99E2CFCC8F80077F755 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3793B99D2CFCC8F80077F755 /* AppState.swift */; };
-		379ED0412D4580A900D432D0 /* TOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379ED0402D4580A900D432D0 /* TOS.swift */; };
-		37DC18A42B8669A900F9B37B /* macadamiaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DC18A32B8669A900F9B37B /* macadamiaTests.swift */; };
+		37965DDC2E6CBABE00681744 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDB2E6CBABE00681744 /* secp256k1 */; };
+		37965DDE2E6CBAD600681744 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDD2E6CBAD600681744 /* BigNumber */; };
+		37965DE02E6CBAD600681744 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDF2E6CBAD600681744 /* BIP39 */; };
+		37965DE12E6CBB2F00681744 /* Messages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37C4CC2F2E5CA4660028E4FE /* Messages.framework */; };
+		37C4CC3C2E5CA4670028E4FE /* macadamiaMessages.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 37C4CC2E2E5CA4660028E4FE /* macadamiaMessages.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		37C4CC4B2E5CAAE30028E4FE /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 37C4CC4A2E5CAAE30028E4FE /* CashuSwift */; };
+		37C4CC8F2E5CB1A90028E4FE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
+		37C4CC902E5CB1A90028E4FE /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
+		37C4CC912E5CB1A90028E4FE /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3793B99D2CFCC8F80077F755 /* AppState.swift */; };
+		37C4CC922E5CB1A90028E4FE /* macadamiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034B92B29E1BC00C4F955 /* macadamiaApp.swift */; };
+		37C4CC932E5CB1A90028E4FE /* TOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379ED0402D4580A900D432D0 /* TOS.swift */; };
 		37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		37C4CC3A2E5CA4670028E4FE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 372034AE2B29E1BC00C4F955 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 37C4CC2D2E5CA4660028E4FE;
+			remoteInfo = macadamiaMessages;
+		};
 		37DC18A52B8669A900F9B37B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 372034AE2B29E1BC00C4F955 /* Project object */;
@@ -39,13 +51,36 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		37965DE32E6CBB2F00681744 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		37C4CC3D2E5CA4670028E4FE /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				37C4CC3C2E5CA4670028E4FE /* macadamiaMessages.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		370A83FE2CB94CCD0039A413 /* .swiftformat */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .swiftformat; sourceTree = "<group>"; };
 		372034B62B29E1BC00C4F955 /* macadamia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macadamia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		372034B92B29E1BC00C4F955 /* macadamiaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macadamiaApp.swift; sourceTree = "<group>"; };
 		372034BB2B29E1BC00C4F955 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		372034BD2B29E1BD00C4F955 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3725D4D72CD5001A0037DD08 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		376F43B12B4FEC0D00E55B0F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		377FFF012BC451AB00DD2635 /* release-notes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "release-notes.md"; sourceTree = "<group>"; };
@@ -53,17 +88,57 @@
 		3793B99D2CFCC8F80077F755 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		379A27EE2E3029A800827CC1 /* macadamia.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macadamia.entitlements; sourceTree = "<group>"; };
 		379ED0402D4580A900D432D0 /* TOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOS.swift; sourceTree = "<group>"; };
+		37C4CC2E2E5CA4660028E4FE /* macadamiaMessages.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = macadamiaMessages.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		37C4CC2F2E5CA4660028E4FE /* Messages.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Messages.framework; path = System/Library/Frameworks/Messages.framework; sourceTree = SDKROOT; };
 		37DC18A12B8669A900F9B37B /* macadamiaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macadamiaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		37DC18A32B8669A900F9B37B /* macadamiaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macadamiaTests.swift; sourceTree = "<group>"; };
 		37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		377A1BC62E6D9E1000BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Redeem/LockedTokenBanner.swift,
+				Redeem/RedeemView.swift,
+			);
+			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
+		};
+		377A1BC72E6D9E1000BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ActionButton.swift,
+				Alerts.swift,
+				Currency.swift,
+				MintPicker.swift,
+				TokenText.swift,
+			);
+			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
+		};
+		377A1BCA2E6D9ED900BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Operations/restore.swift,
+			);
+			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
+		};
+		37C4CC402E5CA4670028E4FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		3793B9A12D0047140077F755 /* Wallet */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Wallet; sourceTree = "<group>"; };
+		377A1BAA2E6CF53F00BC1BC1 /* macadamiaTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = macadamiaTests; sourceTree = "<group>"; };
+		377A1BAD2E6CF54900BC1BC1 /* Preview Content */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "Preview Content"; sourceTree = "<group>"; };
+		3793B9A12D0047140077F755 /* Wallet */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (377A1BC62E6D9E1000BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Wallet; sourceTree = "<group>"; };
 		3793B9A22D0049AD0077F755 /* Mints */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Mints; sourceTree = "<group>"; };
-		3793B9A42D0049F60077F755 /* PersistentModelV1 */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = PersistentModelV1; sourceTree = "<group>"; };
+		3793B9A42D0049F60077F755 /* PersistentModelV1 */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (377A1BCA2E6D9ED900BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = PersistentModelV1; sourceTree = "<group>"; };
 		3793B9A62D004A490077F755 /* Settings */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Settings; sourceTree = "<group>"; };
-		3793B9A72D004ADA0077F755 /* Misc */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Misc; sourceTree = "<group>"; };
+		3793B9A72D004ADA0077F755 /* Misc */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (377A1BC72E6D9E1000BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Misc; sourceTree = "<group>"; };
+		37C4CC312E5CA4660028E4FE /* macadamiaMessages */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (37C4CC402E5CA4670028E4FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = macadamiaMessages; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +154,18 @@
 				377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */,
 				376E88432BE5468B0026FF8D /* Popovers in Frameworks */,
 				370A84072CC18AEE0039A413 /* Flow in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		37C4CC2B2E5CA4660028E4FE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				37965DDE2E6CBAD600681744 /* BigNumber in Frameworks */,
+				37965DE02E6CBAD600681744 /* BIP39 in Frameworks */,
+				37965DDC2E6CBABE00681744 /* secp256k1 in Frameworks */,
+				37C4CC4B2E5CAAE30028E4FE /* CashuSwift in Frameworks */,
+				37965DE12E6CBB2F00681744 /* Messages.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -99,7 +186,7 @@
 				370A83FE2CB94CCD0039A413 /* .swiftformat */,
 				377FFF012BC451AB00DD2635 /* release-notes.md */,
 				372034B82B29E1BC00C4F955 /* macadamia */,
-				37DC18A22B8669A900F9B37B /* macadamiaTests */,
+				377A1BAA2E6CF53F00BC1BC1 /* macadamiaTests */,
 				3725D4D62CD5001A0037DD08 /* Frameworks */,
 				372034B72B29E1BC00C4F955 /* Products */,
 			);
@@ -110,6 +197,7 @@
 			children = (
 				372034B62B29E1BC00C4F955 /* macadamia.app */,
 				37DC18A12B8669A900F9B37B /* macadamiaTests.xctest */,
+				37C4CC2E2E5CA4660028E4FE /* macadamiaMessages.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -130,33 +218,19 @@
 				3793B9A72D004ADA0077F755 /* Misc */,
 				3793B9A42D0049F60077F755 /* PersistentModelV1 */,
 				372034BD2B29E1BD00C4F955 /* Assets.xcassets */,
-				372034BF2B29E1BD00C4F955 /* Preview Content */,
+				37C4CC312E5CA4660028E4FE /* macadamiaMessages */,
+				377A1BAD2E6CF54900BC1BC1 /* Preview Content */,
 			);
 			path = macadamia;
-			sourceTree = "<group>";
-		};
-		372034BF2B29E1BD00C4F955 /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				372034C02B29E1BD00C4F955 /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
 			sourceTree = "<group>";
 		};
 		3725D4D62CD5001A0037DD08 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				3725D4D72CD5001A0037DD08 /* AVKit.framework */,
+				37C4CC2F2E5CA4660028E4FE /* Messages.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		37DC18A22B8669A900F9B37B /* macadamiaTests */ = {
-			isa = PBXGroup;
-			children = (
-				37DC18A32B8669A900F9B37B /* macadamiaTests.swift */,
-			);
-			path = macadamiaTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -169,12 +243,15 @@
 				372034B22B29E1BC00C4F955 /* Sources */,
 				372034B32B29E1BC00C4F955 /* Frameworks */,
 				372034B42B29E1BC00C4F955 /* Resources */,
+				37C4CC3D2E5CA4670028E4FE /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				37C4CC3B2E5CA4670028E4FE /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
+				377A1BAD2E6CF54900BC1BC1 /* Preview Content */,
 				3793B9A12D0047140077F755 /* Wallet */,
 				3793B9A22D0049AD0077F755 /* Mints */,
 				3793B9A42D0049F60077F755 /* PersistentModelV1 */,
@@ -195,6 +272,37 @@
 			productReference = 372034B62B29E1BC00C4F955 /* macadamia.app */;
 			productType = "com.apple.product-type.application";
 		};
+		37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 37C4CC412E5CA4670028E4FE /* Build configuration list for PBXNativeTarget "macadamiaMessages" */;
+			buildPhases = (
+				37C4CC2B2E5CA4660028E4FE /* Frameworks */,
+				37C4CC2C2E5CA4660028E4FE /* Resources */,
+				37965DE32E6CBB2F00681744 /* Embed Frameworks */,
+				377A1BAF2E6D9D6C00BC1BC1 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				37BC5F542E6CCF23000E1799 /* PBXTargetDependency */,
+				37BC5F562E6CCF23000E1799 /* PBXTargetDependency */,
+				37BC5F582E6CCF23000E1799 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				3793B9A42D0049F60077F755 /* PersistentModelV1 */,
+				37C4CC312E5CA4660028E4FE /* macadamiaMessages */,
+			);
+			name = macadamiaMessages;
+			packageProductDependencies = (
+				37C4CC4A2E5CAAE30028E4FE /* CashuSwift */,
+				37965DDB2E6CBABE00681744 /* secp256k1 */,
+				37965DDD2E6CBAD600681744 /* BigNumber */,
+				37965DDF2E6CBAD600681744 /* BIP39 */,
+			);
+			productName = macadamiaMessages;
+			productReference = 37C4CC2E2E5CA4660028E4FE /* macadamiaMessages.appex */;
+			productType = "com.apple.product-type.app-extension.messages";
+		};
 		37DC18A02B8669A900F9B37B /* macadamiaTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 37DC18A72B8669A900F9B37B /* Build configuration list for PBXNativeTarget "macadamiaTests" */;
@@ -208,6 +316,9 @@
 			dependencies = (
 				37DC18A62B8669A900F9B37B /* PBXTargetDependency */,
 			);
+			fileSystemSynchronizedGroups = (
+				377A1BAA2E6CF53F00BC1BC1 /* macadamiaTests */,
+			);
 			name = macadamiaTests;
 			productName = macadamiaTests;
 			productReference = 37DC18A12B8669A900F9B37B /* macadamiaTests.xctest */;
@@ -220,11 +331,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 1500;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					372034B52B29E1BC00C4F955 = {
 						CreatedOnToolsVersion = 15.0.1;
+					};
+					37C4CC2D2E5CA4660028E4FE = {
+						CreatedOnToolsVersion = 16.2;
 					};
 					37DC18A02B8669A900F9B37B = {
 						CreatedOnToolsVersion = 15.0.1;
@@ -249,6 +363,7 @@
 				370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 				377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */,
 				371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */,
+				37965DDA2E6CBABE00681744 /* XCRemoteSwiftPackageReference "swift-secp256k1" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -256,6 +371,7 @@
 			targets = (
 				372034B52B29E1BC00C4F955 /* macadamia */,
 				37DC18A02B8669A900F9B37B /* macadamiaTests */,
+				37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */,
 			);
 		};
 /* End PBXProject section */
@@ -266,11 +382,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */,
-				372034C12B29E1BD00C4F955 /* Preview Assets.xcassets in Resources */,
 				370A83FF2CB94CCD0039A413 /* .swiftformat in Resources */,
 				376F43B22B4FEC0D00E55B0F /* README.md in Resources */,
 				377FFF022BC451AB00DD2635 /* release-notes.md in Resources */,
 				372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		37C4CC2C2E5CA4660028E4FE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -288,11 +410,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				372034BC2B29E1BC00C4F955 /* ContentView.swift in Sources */,
-				372034BA2B29E1BC00C4F955 /* macadamiaApp.swift in Sources */,
-				378B20482D09F3FD003FEEBD /* Error.swift in Sources */,
-				379ED0412D4580A900D432D0 /* TOS.swift in Sources */,
-				3793B99E2CFCC8F80077F755 /* AppState.swift in Sources */,
+				37C4CC8F2E5CB1A90028E4FE /* ContentView.swift in Sources */,
+				37C4CC902E5CB1A90028E4FE /* Error.swift in Sources */,
+				37C4CC912E5CB1A90028E4FE /* AppState.swift in Sources */,
+				37C4CC922E5CB1A90028E4FE /* macadamiaApp.swift in Sources */,
+				37C4CC932E5CB1A90028E4FE /* TOS.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		377A1BAF2E6D9D6C00BC1BC1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				377A1BC82E6D9E3B00BC1BC1 /* Error.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -300,13 +430,29 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				37DC18A42B8669A900F9B37B /* macadamiaTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		37BC5F542E6CCF23000E1799 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 37BC5F532E6CCF23000E1799 /* BIP39 */;
+		};
+		37BC5F562E6CCF23000E1799 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 37BC5F552E6CCF23000E1799 /* CashuSwift */;
+		};
+		37BC5F582E6CCF23000E1799 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 37BC5F572E6CCF23000E1799 /* secp256k1 */;
+		};
+		37C4CC3B2E5CA4670028E4FE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
+			targetProxy = 37C4CC3A2E5CA4670028E4FE /* PBXContainerItemProxy */;
+		};
 		37DC18A62B8669A900F9B37B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 372034B52B29E1BC00C4F955 /* macadamia */;
@@ -350,6 +496,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = W285RX5S82;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -413,6 +560,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = W285RX5S82;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -443,9 +591,8 @@
 				CODE_SIGN_ENTITLEMENTS = macadamia/macadamia.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
-				DEVELOPMENT_TEAM = W285RX5S82;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = macadamia/Info.plist;
@@ -462,7 +609,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.3.1;
+				MARKETING_VERSION = 0.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.cypherbase.macadamia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -485,9 +632,8 @@
 				CODE_SIGN_ENTITLEMENTS = macadamia/macadamia.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"macadamia/Preview Content\"";
-				DEVELOPMENT_TEAM = W285RX5S82;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = macadamia/Info.plist;
@@ -504,7 +650,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.3.1;
+				MARKETING_VERSION = 0.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.cypherbase.macadamia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -518,13 +664,77 @@
 			};
 			name = Release;
 		};
+		37C4CC3E2E5CA4670028E4FE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "iMessage App Icon";
+				CODE_SIGN_ENTITLEMENTS = /Users/dariolass/Developer/macadamia/macadamia/macadamiaMessages/macadamiaMessages.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = macadamia/macadamiaMessages/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = macadamia;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.4.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cypherbase.macadamia.macadamiaMessages;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS[arch=*]" = APP_EXTENSION;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Debug;
+		};
+		37C4CC3F2E5CA4670028E4FE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "iMessage App Icon";
+				CODE_SIGN_ENTITLEMENTS = /Users/dariolass/Developer/macadamia/macadamia/macadamiaMessages/macadamiaMessages.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = macadamia/macadamiaMessages/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = macadamia;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.4.0;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cypherbase.macadamia.macadamiaMessages;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "RELEASE $(inherited)";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS[arch=*]" = APP_EXTENSION;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		37DC18A82B8669A900F9B37B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = W285RX5S82;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = zeugmaster.macadamiaTests;
@@ -542,7 +752,6 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = W285RX5S82;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = zeugmaster.macadamiaTests;
@@ -571,6 +780,15 @@
 			buildConfigurations = (
 				372034C52B29E1BD00C4F955 /* Debug */,
 				372034C62B29E1BD00C4F955 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		37C4CC412E5CA4670028E4FE /* Build configuration list for PBXNativeTarget "macadamiaMessages" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				37C4CC3E2E5CA4670028E4FE /* Debug */,
+				37C4CC3F2E5CA4670028E4FE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -643,6 +861,14 @@
 				kind = branch;
 			};
 		};
+		37965DDA2E6CBABE00681744 /* XCRemoteSwiftPackageReference "swift-secp256k1" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/21-DOT-DEV/swift-secp256k1.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.21.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -680,6 +906,41 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */;
 			productName = BIP39;
+		};
+		37965DDB2E6CBABE00681744 /* secp256k1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 37965DDA2E6CBABE00681744 /* XCRemoteSwiftPackageReference "swift-secp256k1" */;
+			productName = secp256k1;
+		};
+		37965DDD2E6CBAD600681744 /* BigNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */;
+			productName = BigNumber;
+		};
+		37965DDF2E6CBAD600681744 /* BIP39 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */;
+			productName = BIP39;
+		};
+		37BC5F532E6CCF23000E1799 /* BIP39 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */;
+			productName = BIP39;
+		};
+		37BC5F552E6CCF23000E1799 /* CashuSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */;
+			productName = CashuSwift;
+		};
+		37BC5F572E6CCF23000E1799 /* secp256k1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 37965DDA2E6CBABE00681744 /* XCRemoteSwiftPackageReference "swift-secp256k1" */;
+			productName = secp256k1;
+		};
+		37C4CC4A2E5CAAE30028E4FE /* CashuSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */;
+			productName = CashuSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

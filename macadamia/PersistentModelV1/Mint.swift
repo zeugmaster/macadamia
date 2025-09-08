@@ -1,6 +1,9 @@
 import Foundation
 import CashuSwift
 import SwiftData
+import OSLog
+
+fileprivate let mintLogger = Logger(subsystem: "macadamia", category: "Mint")
 
 extension AppSchemaV1.Mint {
     
@@ -28,7 +31,7 @@ extension AppSchemaV1.Mint {
     private static func selectWithoutFee(amount: Int, of proofs:[Proof]) -> [Proof]? {
         
         guard amount >= 0 else {
-            logger.error("input selection amount can not be negative")
+            mintLogger.error("input selection amount can not be negative")
             return nil
         }
         
@@ -68,7 +71,7 @@ extension AppSchemaV1.Mint {
         // TODO: BRUTE FORCE CHECK FOR POSSIBLE
         
         guard amount >= 0 else {
-            logger.error("input selection amount can not be negative")
+            mintLogger.error("input selection amount can not be negative")
             return nil
         }
         

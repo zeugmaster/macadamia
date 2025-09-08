@@ -43,6 +43,9 @@ struct ContentView: View {
     @State private var selectedTab: Tab = .wallet
     
     @State private var urlState: URLState?
+    
+    @State private var showAlert = false
+    @State private var currentAlert: AlertDetail?
 
     enum Tab {
         case wallet
@@ -136,6 +139,7 @@ struct ContentView: View {
         .onOpenURL { url in
             handleUrl(url)
         }
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
 
     private func initializeWallet() {
@@ -172,14 +176,21 @@ struct ContentView: View {
     func handleUrl(_ url: URL) {
         logger.info("""
                     URL has been passed to the application: \ 
-                    \(url.absoluteString.prefix(30) + (url.absoluteString.count > 30 ? "..." : ""))
+                    \(url.absoluteString)
                     """)
          if url.scheme == "cashu" {
              let noURLPrefix = url.absoluteStringWithoutPrefix("cashu")
              selectedTab = .wallet
              
              urlState = URLState(url: noURLPrefix)
+         } else {
+             displayAlert(alert: AlertDetail(title: "Unsupported URL Scheme", description: "The system passed an unexpected URL \(url)"))
          }
+    }
+
+    private func displayAlert(alert: AlertDetail) {
+        currentAlert = alert
+        showAlert = true
     }
 }
 
