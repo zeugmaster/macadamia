@@ -5,6 +5,7 @@ import SwiftUI
 struct MintView: View {
     
     @State private var buttonState: ActionButtonState
+    @EnvironmentObject private var appState: AppState
         
     @State var quote: CashuSwift.Bolt11.MintQuote?
     @State var pendingMintEvent: Event?
@@ -19,15 +20,14 @@ struct MintView: View {
     var activeWallet: Wallet? {
         wallets.first
     }
-
-    @State private var amountString = ""
+    
+    @State private var amount: Int = 0
     @State private var selectedMint:Mint?
 
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
 
     @State private var isCopied = false
-    @FocusState private var amountFieldInFocus: Bool
     
     @State private var pollingTimer: Timer?
     @State private var isCheckingInvoiceState = false
@@ -41,40 +41,23 @@ struct MintView: View {
         if let mint = pendingMintEvent?.mints?.first {
             _selectedMint = State(initialValue: mint)
         }
+        
+        // TODO: robust unit handling
+        if let quote = pendingMintEvent?.bolt11MintQuote, let detail = quote.requestDetail {
+            _amount = State(initialValue: detail.amount)
+        }
     }
 
     var body: some View {
         ZStack {
             Form {
                 Section {
-                    HStack {
-                        if let quote, let requestDetail = quote.requestDetail {
-                            Text(String(requestDetail.amount))
-                                .monospaced()
-                            Text("sats")
-                                .monospaced()
-                        } else {
-                            TextField("enter amount", text: $amountString)
-                                .keyboardType(.numberPad)
-                                .monospaced()
-                                .focused($amountFieldInFocus)
-                                .onSubmit {
-                                    amountFieldInFocus = false
-                                }
-                                .onAppear(perform: {
-                                    amountFieldInFocus = true
-                                })
-                                .disabled(quote != nil)
-                            Text("sats")
-                                .monospaced()
-                        }
-                    }
-                    if let mint = pendingMintEvent?.mints?.first {
-                        Text(mint.nickName ?? mint.url.host() ?? mint.url.absoluteString)
-                    } else {
-                        MintPicker(label: "Mint", selectedMint: $selectedMint)
-                    }
+                    NumericalInputView(output: $amount,
+                                       baseUnit: .sat,
+                                       appState: appState)
+                    MintPicker(label: "Mint", selectedMint: $selectedMint)
                 }
+                .disabled(pendingMintEvent != nil)
                 if let quote {
                     Section {
                         if let expiry = quote.expiry {
@@ -101,15 +84,6 @@ struct MintView: View {
                                 Image(systemName: "list.clipboard")
                             }
                         }
-                        Button {
-                            reset()
-                        } label: {
-                            HStack {
-                                Text("Reset")
-                                Spacer()
-                                Image(systemName: "trash")
-                            }
-                        }
                     }
                     .onAppear { // start the polling timer only when a quote is shown
                         pollingTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: { _ in
@@ -123,11 +97,10 @@ struct MintView: View {
             .navigationTitle("Mint")
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
             .onAppear {
-                if let quote {
-                    amountString = String(quote.requestDetail?.amount ?? 1) // dirty little hack so the button is not disabled
+                if quote != nil {
                     buttonState = .idle("Mint", action: requestMint)
                 } else {
-                    buttonState = .idle("Request Invoice", action: getQuote)
+                    buttonState = .idle("Get Invoice", action: getQuote)
                 }
             }
             .onDisappear {
@@ -154,10 +127,6 @@ struct MintView: View {
                 isCopied = false
             }
         }
-    }
-
-    private var amount: Int {
-        return Int(amountString) ?? 0
     }
     
     // getQuote can only be called when UI is not populated
@@ -194,7 +163,7 @@ struct MintView: View {
                              """)
                 buttonState = .fail()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    buttonState = .idle("Request Invoice", action: getQuote)
+                    buttonState = .idle("Get Invoice", action: getQuote)
                 }
             }
         }
@@ -276,11 +245,6 @@ struct MintView: View {
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
-    }
-
-    private func reset() {
-        quote = nil
-        amountString = ""
     }
 }
 

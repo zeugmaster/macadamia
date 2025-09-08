@@ -3,10 +3,16 @@
 
 **iMessage Extension 🤖**
 
-This version of macadamia includes an iMessage Extension that lets you send ecash straight from the messages app 🚀.
+This version of *macadamia* includes an iMessage Extension that lets you send ecash straight from the messages app 🚀.
 
 Note: The recipient needs to also have *macadamia* installed to open the message. If they do not have it, 
 send them a regular token using the main app's share sheet.
+
+**Input Conversion 💶**
+
+The wallet can now convert amounts to and from your preferred fiat unit. Select it in the Setting tab. 
+
+------
 
 As always, thanks for using **macadamia**!
 

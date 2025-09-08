@@ -112,6 +112,10 @@ struct NumericalInputView: View {
             }
         }
         .onAppear {
+            // Only sync if input is empty and we have an initial value
+            if input.isEmpty && output > 0 {
+                input = String(output)
+            }
             updateOutput()
             isInputFocused = true
         }
