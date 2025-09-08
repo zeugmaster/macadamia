@@ -53,12 +53,14 @@ struct BalanceCard: View {
                             .foregroundColor(Color.gray)
                     }
                     Spacer()
-                    HStack {
-                        Text(convertedBalance)
-                        Spacer()
+                    if appState.preferredConversionUnit != .none {
+                        HStack {
+                            Text(convertedBalance)
+                            Spacer()
+                        }
+                        .opacity(0.7)
+                        .animation(.default, value: convertedBalance)
                     }
-                    .opacity(0.7)
-                    .animation(.default, value: convertedBalance)
                 }
                 .padding(24)
                 .frame(width: cardWidth, height: cardHeight)
@@ -87,6 +89,10 @@ struct BalanceCard: View {
     
     @MainActor
     private func convert() {
+        guard appState.preferredConversionUnit != .none else {
+            convertedBalance = ""
+            return
+        }
         
         convertedBalance = "..."
 

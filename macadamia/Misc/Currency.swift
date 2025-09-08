@@ -8,6 +8,7 @@
 import Foundation
 
 enum ConversionUnit: String, Codable, CaseIterable {
+    case none = "NONE"
     case usd = "USD"
     case eur = "EUR"
     case jpy = "JPY"
@@ -26,6 +27,7 @@ enum ConversionUnit: String, Codable, CaseIterable {
     
     var displayName: String {
         switch self {
+        case .none: return "None"
         case .usd: return "US Dollar"
         case .eur: return "Euro"
         case .jpy: return "Japanese Yen"
@@ -46,6 +48,7 @@ enum ConversionUnit: String, Codable, CaseIterable {
     
     var symbol: String {
         switch self {
+        case .none: return ""
         case .usd: return "$"
         case .eur: return "€"
         case .jpy: return "¥"
@@ -85,6 +88,8 @@ enum ConversionUnit: String, Codable, CaseIterable {
 }
 
 func amountDisplayString(_ amount: Int, unit: ConversionUnit, negative: Bool = false) -> String {
+    guard unit != .none else { return "" }
+    
     let numberFormatter = NumberFormatter()
     
     let prefix = (negative && amount != 0) ? "- " : ""

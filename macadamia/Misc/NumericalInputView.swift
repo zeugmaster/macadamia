@@ -42,10 +42,12 @@ struct NumericalInputView: View {
     }
     
     private var toggleButtonDisabled: Bool {
-        exchangeRates == nil
+        exchangeRates == nil || conversionUnit == .none
     }
     
     private var conversionText: String {
+        guard conversionUnit != .none else { return "" }
+        
         if inputIsFiat {
             // Input is fiat, show sats conversion
             if input.isEmpty {
@@ -91,19 +93,23 @@ struct NumericalInputView: View {
                     
                 }
                 
-                Text(conversionText)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .animation(.default, value: conversionText)
+                if conversionUnit != .none {
+                    Text(conversionText)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .animation(.default, value: conversionText)
+                }
             }
-            Spacer(minLength: 30)
-            Button {
-                toggleInputMode()
-            } label: {
-                Image(systemName: "arrow.trianglehead.2.clockwise")
-                    .foregroundColor(toggleButtonDisabled ? .gray : .accentColor)
+            if conversionUnit != .none {
+                Spacer(minLength: 30)
+                Button {
+                    toggleInputMode()
+                } label: {
+                    Image(systemName: "arrow.trianglehead.2.clockwise")
+                        .foregroundColor(toggleButtonDisabled ? .gray : .accentColor)
+                }
+                .disabled(toggleButtonDisabled)
             }
-            .disabled(toggleButtonDisabled)
         }
         .onAppear {
             updateOutput()
