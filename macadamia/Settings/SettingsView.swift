@@ -103,31 +103,25 @@ struct SettingsView: View {
 struct ConversionPicker: View {
     @EnvironmentObject private var appState: AppState
     
-    let units = ["USD", "EUR", "none"]
+    let conversionUnits = ConversionUnit.allCases
     
-    @State private var selectedUnitString:String
+    @State private var selectedUnit: ConversionUnit
     
     init() {
-        _selectedUnitString = State(initialValue: "none")
+        _selectedUnit = State(initialValue: .usd)
     }
     
     var body: some View {
-        Picker("Display Fiat Value as:", selection: $selectedUnitString) {
-            ForEach(units, id: \.self) { unitString in
-                Text(unitString)
+        Picker("Display Fiat Value as:", selection: $selectedUnit) {
+            ForEach(conversionUnits, id: \.self) { unit in
+                Text(unit.displayName).tag(unit)
             }
         }
         .onAppear(perform: {
-            if let initial = units.first(where: { $0.lowercased() == appState.preferredConversionUnit.rawValue }) {
-                selectedUnitString = initial
-            } else {
-                logger.warning("Conversion picker could not set initial value from user defaults. this will get wonky")
-            }
+            selectedUnit = appState.preferredConversionUnit
         })
-        .onChange(of: selectedUnitString) { oldValue, newValue in
-            if let unit = Unit(newValue) {
-                appState.preferredConversionUnit = unit
-            }
+        .onChange(of: selectedUnit) { oldValue, newValue in
+            appState.preferredConversionUnit = newValue
         }
     }
 }

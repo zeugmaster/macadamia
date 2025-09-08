@@ -39,18 +39,26 @@ class AppState: ObservableObject {
     }
     
     struct ExchangeRate: Decodable, Equatable {
-        let usd: Int
-        let eur: Int
+        let rates: [String: Double]
+        
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            rates = try container.decode([String: Double].self)
+        }
+        
+        func rate(for unit: ConversionUnit) -> Double? {
+            return rates[unit.rawValue.lowercased()]
+        }
     }
     
-    @Published var preferredConversionUnit: Unit {
+    @Published var preferredConversionUnit: ConversionUnit {
         didSet {
             UserDefaults.standard.setValue(preferredConversionUnit.rawValue, forKey: AppState.conversionUnitKey)
         }
     }
     
     init() {
-        if let unit = Unit(UserDefaults.standard.string(forKey: AppState.conversionUnitKey)) {
+        if let unit = ConversionUnit(UserDefaults.standard.string(forKey: AppState.conversionUnitKey)) {
             preferredConversionUnit = unit
         } else {
             preferredConversionUnit = .usd
@@ -64,7 +72,8 @@ class AppState: ObservableObject {
     func loadExchangeRates() {
         logger.info("loading exchange rates...")
         
-        guard let url = URL(string: "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,eur") else {
+        let currencies = ConversionUnit.allCases.map { $0.rawValue.lowercased() }.joined(separator: ",")
+        guard let url = URL(string: "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=\(currencies)") else {
             logger.warning("could not fetch exchange rates from API due to an invalid URL.")
             return
         }

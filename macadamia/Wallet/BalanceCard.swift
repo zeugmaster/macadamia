@@ -53,17 +53,12 @@ struct BalanceCard: View {
                             .foregroundColor(Color.gray)
                     }
                     Spacer()
-                    switch appState.preferredConversionUnit {
-                    case .usd, .eur:
-                        HStack {
-                            Text(convertedBalance)
-                            Spacer()
-                        }
-                        .opacity(0.7)
-                        .animation(.default, value: convertedBalance)
-                    default:
-                        EmptyView()
+                    HStack {
+                        Text(convertedBalance)
+                        Spacer()
                     }
+                    .opacity(0.7)
+                    .animation(.default, value: convertedBalance)
                 }
                 .padding(24)
                 .frame(width: cardWidth, height: cardHeight)
@@ -99,15 +94,13 @@ struct BalanceCard: View {
             return
         }
                 
-        let bitcoinPrice:Int
-        switch appState.preferredConversionUnit {
-        case .usd: bitcoinPrice = prices.usd
-        case .eur: bitcoinPrice = prices.eur
-        default: convertedBalance = "?"; return
+        guard let bitcoinPrice = prices.rate(for: appState.preferredConversionUnit) else {
+            convertedBalance = "?"
+            return
         }
                 
         let bitcoinAmount = Double(balance) / 100_000_000.0
-        let fiatValue = bitcoinAmount * Double(bitcoinPrice)
+        let fiatValue = bitcoinAmount * bitcoinPrice
         var cents = Int(round(fiatValue * 100.0))
         
         var prefix = ""
