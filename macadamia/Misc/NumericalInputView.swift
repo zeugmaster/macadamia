@@ -113,6 +113,7 @@ struct NumericalInputView: View {
         }
         .onAppear {
             updateOutput()
+            isInputFocused = true
         }
     }
     
