@@ -189,7 +189,7 @@ struct MessageSendView: View {
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 60
     
     private var buttonDisabled: Bool {
-        amount > 0 ? false : true && amount >= mint.balance(for: .sat)
+        amount <= 0 || amount > mint.balance(for: .sat)
     }
     
     private var amount: Int {

@@ -28,11 +28,13 @@
       "size" : "29x29"
     },
     {
+      "filename" : "messagemessages ipad@2x.png",
       "idiom" : "ipad",
       "scale" : "2x",
       "size" : "67x50"
     },
     {
+      "filename" : "messagemessages ipad pro@2x.png",
       "idiom" : "ipad",
       "scale" : "2x",
       "size" : "74x55"
@@ -44,24 +46,28 @@
       "size" : "1024x1024"
     },
     {
+      "filename" : "message27x20@2x.png",
       "idiom" : "universal",
       "platform" : "ios",
       "scale" : "2x",
       "size" : "27x20"
     },
     {
+      "filename" : "message27x20@3x.png",
       "idiom" : "universal",
       "platform" : "ios",
       "scale" : "3x",
       "size" : "27x20"
     },
     {
+      "filename" : "message32x24@2x.png",
       "idiom" : "universal",
       "platform" : "ios",
       "scale" : "2x",
       "size" : "32x24"
     },
     {
+      "filename" : "message32x24@3x.png",
       "idiom" : "universal",
       "platform" : "ios",
       "scale" : "3x",
