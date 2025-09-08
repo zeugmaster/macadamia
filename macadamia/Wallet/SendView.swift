@@ -4,6 +4,7 @@ import SwiftUI
 
 struct SendView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var appState: AppState
     
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
@@ -21,15 +22,13 @@ struct SendView: View {
     
     @State private var selectedMint:Mint?
     
-    @State private var numberString = ""
+    @State private var amount = 0
     @State private var selectedMintBalance = 0
 
     @State private var buttonState: ActionButtonState = .idle("")
 
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
-
-    @FocusState var amountFieldInFocus: Bool
 
     init(token: CashuSwift.Token? = nil) {
         self.token = token
@@ -39,13 +38,12 @@ struct SendView: View {
         ZStack {
             Form {
                 Section {
-                    HStack {
-                        TextField("enter amount", text: $numberString)
-                            .keyboardType(.numberPad)
-                            .monospaced()
-                            .focused($amountFieldInFocus)
-                        Text("sats")
-                    }
+                    NumericalInputView(
+                        output: $amount,
+                        baseUnit: .sat,
+                        appState: appState
+                    )
+                    
                     // TODO: CHECK FOR EMPTY MINT LIST
                     MintPicker(label: "Send from", selectedMint: $selectedMint)
                         .onChange(of: selectedMint) { _, _ in
@@ -81,14 +79,13 @@ struct SendView: View {
             .navigationBarTitleDisplayMode(.inline)
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
             .onAppear(perform: {
-                amountFieldInFocus = true
                 buttonState = .idle("Generate Token", action: generateToken)
             })
 
             VStack {
                 Spacer()
                 ActionButton(state: $buttonState)
-                    .actionDisabled(numberString.isEmpty || amount <= 0)
+                    .actionDisabled(amount <= 0 || amount > selectedMintBalance)
             }
         }
     }
@@ -105,10 +102,6 @@ struct SendView: View {
             return
         }
         selectedMintBalance = proofsOfSelectedMint.filter({ $0.state == .valid }).sum
-    }
-
-    var amount: Int {
-        return Int(numberString) ?? 0
     }
     
     func generateToken() {

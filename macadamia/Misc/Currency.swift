@@ -71,6 +71,17 @@ enum ConversionUnit: String, Codable, CaseIterable {
             return nil
         }
     }
+    
+    /// Access the preferred conversion unit directly from UserDefaults without initializing AppState
+    static var preferred: ConversionUnit {
+        let key = "PreferredCurrencyConversionUnit"
+        if let unitString = UserDefaults.standard.string(forKey: key),
+           let unit = ConversionUnit(unitString) {
+            return unit
+        } else {
+            return .usd // Default fallback
+        }
+    }
 }
 
 func amountDisplayString(_ amount: Int, unit: ConversionUnit, negative: Bool = false) -> String {

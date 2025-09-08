@@ -112,7 +112,7 @@ struct ConversionPicker: View {
     }
     
     var body: some View {
-        Picker("Display Fiat Value as:", selection: $selectedUnit) {
+        Picker("Show Fiat: ", selection: $selectedUnit) {
             ForEach(conversionUnits, id: \.self) { unit in
                 Text(unit.displayName).tag(unit)
             }
