@@ -107,6 +107,14 @@ extension AppSchemaV1.Mint {
         }
     }
     
+    func setDerivationCounterForKeysetWithID(_ keysetID:String, to value:Int) {
+        if let index = self.keysets.firstIndex(where: { $0.keysetID == keysetID }) {
+            var updatedKeysets = self.keysets
+            updatedKeysets[index].derivationCounter = value
+            self.keysets = updatedKeysets
+        }
+    }
+    
     func select_v2(allProofs: [Proof], amount: Int, unit: Unit) -> (selected: [Proof], fee: Int)? {
         let validProofs = allProofs.filter { $0.unit == unit && $0.state == .valid && $0.mint == self }
         guard !validProofs.isEmpty else { return nil }
