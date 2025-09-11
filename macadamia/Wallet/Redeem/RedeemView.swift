@@ -119,17 +119,17 @@ struct RedeemView<AdditionalControls: View>: View {
                             }
                             .listRowBackground(EmptyView())
                         case .notLocked:
-#if APP_EXTENSION
+                            #if APP_EXTENSION
                             selector(hideSwapOption: true)
                                 .onAppear {
                                     buttonState = .idle("Select")
                                 }
-#else
+                            #else
                             selector(hideSwapOption: false)
                                 .onAppear {
                                     buttonState = .idle("Select")
                                 }
-#endif
+                            #endif
                         }
                     }
                 } else {
@@ -268,6 +268,8 @@ struct RedeemView<AdditionalControls: View>: View {
             return
         }
         
+        buttonState = .loading()
+        
         // make sure token is only sat for now
         if token.unit != "sat" {
             displayAlert(alert: AlertDetail(with: macadamiaError.unsupportedUnit))
@@ -318,6 +320,8 @@ struct RedeemView<AdditionalControls: View>: View {
         guard let token else {
             return
         }
+        
+        buttonState = .loading()
         
         let swapManager = SwapManager(modelContext: modelContext) { state in
             switch state {

@@ -159,11 +159,24 @@ extension AppSchemaV1.Mint {
                    unit: Unit,
                    increaseDerivationCounter: Bool = true) throws -> [Proof]  {
         
+        // check for duplicates within passed array
+        let uniqueCs = Set(proofs.map(\.C))
+        guard proofs.count == uniqueCs.count else {
+            throw macadamiaError.databaseError("This operation contained duplicate ecash proofs.")
+        }
+        
         guard let wallet = self.wallet else {
             throw macadamiaError.databaseError("No wallet associated with mint when trying to save \(proofs.count)")
         }
         
-        let internalRepresentation = proofs.map { p in
+        let Cs = self.proofs?.map(\.C) ?? []
+        
+        let internalRepresentation:[Proof] = proofs.compactMap { p in
+            if Cs.contains(p.C) {
+                mintLogger.warning("tried to add proof with duplicate C to the database. will be skipped.")
+                return nil
+            }
+            
             let keyset = self.keysets.first(where: { $0.keysetID == p.keysetID })
             let fee = keyset?.inputFeePPK ?? 0
             
