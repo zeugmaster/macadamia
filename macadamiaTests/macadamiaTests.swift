@@ -92,14 +92,6 @@ final class macadamiaTests: XCTestCase {
         print(proofs.sum)
     }
     
-    func testAmountString() {
-        print(amountDisplayString(123, unit: .sat))
-        print(amountDisplayString(-123, unit: .sat, negative: true))
-        print(amountDisplayString(123, unit: .usd))
-        print(amountDisplayString(123, unit: .eur, negative: true))
-        print(amountDisplayString(0, unit: .eur))
-    }
-    
     func testInputValidator() {
         
         // Test BOLT11 invoices

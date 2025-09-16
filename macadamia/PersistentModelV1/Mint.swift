@@ -173,7 +173,7 @@ extension AppSchemaV1.Mint {
         
         let internalRepresentation:[Proof] = proofs.compactMap { p in
             if Cs.contains(p.C) {
-                mintLogger.warning("tried to add proof with duplicate C to the database. will be skipped.")
+                mintLogger.warning("tried to add proof with duplicate C \(p.C) to the database for mint \(self.url). will be skipped.")
                 return nil
             }
             
