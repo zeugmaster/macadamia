@@ -69,7 +69,7 @@ struct SwapManager {
                 
                 try await MainActor.run  {
                     swapLogger.debug("attempting swap from token with total amount \(tokenSum) and swapAmount \(swapAmount)")
-                    #warning("TODO: preserve derivation counters ?")
+                    // proofs from the new mint can be added without counter increase because they are from a diff seed and will be swapped immediately
                     let fromMint = try AppSchemaV1.addMint(fromMint, to: modelContext, hidden: true, proofs: proofs)
                     swap(fromMint: fromMint, toMint: toMint, amount: swapAmount, seed: seed)
                 }
