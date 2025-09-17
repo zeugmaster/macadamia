@@ -34,29 +34,28 @@ struct MintManagerView: View {
                 Form {
                     if !mints.isEmpty {
                         Section {
-                            List {
-                                ForEach(sortedMintsOfActiveWallet) { mint in
-                                    NavigationLink(destination: MintInfoView(mint: mint, onRemove: {
-                                        sortedMintsOfActiveWallet.setHidden(true, for: mint)
-                                        try? modelContext.save()
-                                    })) {
-                                        // Pass proofs related to the mint to MintInfoRowView
-                                        MintInfoRowView(mint: mint,
-                                                        amountDisplayString: balanceStrings[mint.mintID] ?? nil)
-                                    }
+                            ForEach(sortedMintsOfActiveWallet) { mint in
+                                NavigationLink(destination: MintInfoView(mint: mint, onRemove: {
+                                    sortedMintsOfActiveWallet.setHidden(true, for: mint)
+                                    try? modelContext.save()
+                                })) {
+                                    // Pass proofs related to the mint to MintInfoRowView
+                                    MintInfoRowView(mint: mint,
+                                                    amountDisplayString: balanceStrings[mint.mintID] ?? nil)
+                                    .lineLimit(1)
                                 }
-                                .onMove { source, destination in
-                                    var m = sortedMintsOfActiveWallet
-                                    m.move(fromOffsets: source, toOffset: destination)
-                                    for (index, mint) in m.enumerated() {
-                                        mint.userIndex = index
-                                    }
-                                    
-                                    do {
-                                        try modelContext.save()
-                                    } catch {
-                                        print("Error saving order: \(error)")
-                                    }
+                            }
+                            .onMove { source, destination in
+                                var m = sortedMintsOfActiveWallet
+                                m.move(fromOffsets: source, toOffset: destination)
+                                for (index, mint) in m.enumerated() {
+                                    mint.userIndex = index
+                                }
+                                
+                                do {
+                                    try modelContext.save()
+                                } catch {
+                                    print("Error saving order: \(error)")
                                 }
                             }
                         } footer: {
