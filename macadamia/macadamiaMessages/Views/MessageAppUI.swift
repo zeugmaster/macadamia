@@ -49,17 +49,37 @@ struct MessageMintList: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal)
                             
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 20) {
-                                ForEach(mints) { mint in
-                                    NavigationLink {
-                                        MessageSendView(mint: mint, vc: vc)
-                                    } label: {
-                                        MintGridItem(mint: mint)
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
+                            if mints.isEmpty {
+                                VStack(spacing: 16) {
+                                    Image(systemName: "building.columns")
+                                        .font(.system(size: 48))
+                                        .foregroundColor(.secondary)
+                                    
+                                    Text("No Mints Available")
+                                        .font(.title2)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.primary)
+                                    
+                                    Text("Add a mint in the main wallet app to start sending ecash tokens.")
+                                        .font(.body)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.center)
+                                        .padding(.horizontal, 32)
                                 }
+                                .padding(.top, 60)
+                            } else {
+                                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 20) {
+                                    ForEach(mints) { mint in
+                                        NavigationLink {
+                                            MessageSendView(mint: mint, vc: vc)
+                                        } label: {
+                                            MintGridItem(mint: mint)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                    }
+                                }
+                                .padding(.horizontal)
                             }
-                            .padding(.horizontal)
                         }
                         .padding(.vertical)
                     }
@@ -184,6 +204,7 @@ struct MessageSendView: View {
     @State private var amountString: String = ""
     @State private var buttonState = ActionButtonState.idle("...")
     @State private var mintIcon: UIImage?
+    @State private var selectedBanner: String = ""
     
     @FocusState private var amountFieldInFocus
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 60
@@ -260,6 +281,28 @@ struct MessageSendView: View {
                     
                     TextField("Optional memo...", text: $memo)
                 }
+                
+                Section {
+                    NavigationLink {
+                        BannerSelectionView(selectedBanner: $selectedBanner)
+                    } label: {
+                        HStack {
+                            Text("Message Banner")
+                            Spacer()
+                            if selectedBanner.isEmpty {
+                                Text("Random")
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Image(selectedBanner)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 40, height: 24)
+                                    .cornerRadius(4)
+                            }
+                        }
+                    }
+                }
+                
                 Spacer(minLength: 50)
                     .listRowBackground(Color.clear)
             }
@@ -328,7 +371,8 @@ struct MessageSendView: View {
         message.url = url
         
         let layout = MSMessageTemplateLayout()
-        layout.image = UIImage(named: "message-banner")
+        let bannerName = selectedBanner.isEmpty ? "banner-\(Int.random(in: 1...6))" : selectedBanner
+        layout.image = UIImage(named: bannerName)
         layout.caption = amountDisplayString(token.sum(), unit: .sat)
         layout.subcaption = token.memo
         
@@ -406,6 +450,72 @@ struct TokenDisplayView: View {
                     vc?.requestPresentationStyle(.compact)
                 }
             }
+        }
+    }
+}
+
+struct BannerSelectionView: View {
+    @Binding var selectedBanner: String
+    @Environment(\.dismiss) private var dismiss
+    
+    private let banners = ["banner-1", "banner-2", "banner-3", "banner-4", "banner-5", "banner-6"]
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2), spacing: 16) {
+                    // Random option
+                    Button {
+                        selectedBanner = ""
+                        dismiss()
+                    } label: {
+                        VStack(spacing: 8) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.secondary.opacity(0.2))
+                                    .aspectRatio(16/9, contentMode: .fit)
+                                
+                                VStack {
+                                    Image(systemName: "shuffle")
+                                        .font(.title2)
+                                        .foregroundColor(.primary)
+                                    Text("Random")
+                                        .font(.caption)
+                                        .foregroundColor(.primary)
+                                }
+                            }
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(selectedBanner.isEmpty ? Color.accentColor : Color.clear, lineWidth: 2)
+                            )
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    // Banner options
+                    ForEach(banners, id: \.self) { banner in
+                        Button {
+                            selectedBanner = banner
+                            dismiss()
+                        } label: {
+                            VStack(spacing: 8) {
+                                Image(banner)
+                                    .resizable()
+                                    .aspectRatio(16/9, contentMode: .fit)
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(selectedBanner == banner ? Color.accentColor : Color.clear, lineWidth: 2)
+                                    )
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Select Banner")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }
