@@ -1,6 +1,5 @@
 import CryptoKit
 import MarkdownUI
-import secp256k1
 import SwiftUI
 import WebKit
 

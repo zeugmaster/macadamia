@@ -5,12 +5,59 @@ import CashuSwift
 import SwiftData
 import secp256k1
 
+
+final class macadamiaWalletSimulationTest: XCTestCase {
+    var container: ModelContainer!
+    
+    override func setUp() async throws {
+        try await super.setUp()
+        
+        let schema = Schema([Proof.self, Mint.self, Wallet.self])
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        
+        do {
+            container = try ModelContainer(for: schema, configurations: [configuration])
+        } catch {
+            XCTFail("Failed to create in-memory container: \(error)")
+        }
+    }
+    
+    override func tearDown() {
+        container = nil
+        super.tearDown()
+    }
+    
+    override func setUpWithError() throws {
+        // Put setup code here. This method is called before the invocation of each test method in the class.
+    }
+
+    override func tearDownWithError() throws {
+        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    }
+}
+
 final class macadamiaTests: XCTestCase {
+    
+    // Success Mint (5s delay) - Always succeeds after 5 seconds
+    let successMint = "http://localhost:3338"
+
+    // Success Mint Long (90s delay) - Always succeeds after 90 seconds with MPP support
+    let successMintLong = "http://localhost:3342"
+
+    // Long Error Mint (120s delay) - Always fails after 120 seconds
+    let longErrorMint = "http://localhost:3339"
+
+    // Short Error Mint (3s delay) - Always fails after 3 seconds
+    let shortErrorMint = "http://localhost:3340"
+
+    // Exception Mint - Immediately throws exceptions
+    let exceptionMint = "http://localhost:3341"
     
     var container: ModelContainer!
 
     override func setUp() {
         super.setUp()
+        
         
         let schema = Schema([Proof.self, Mint.self, Wallet.self])
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -90,6 +137,115 @@ final class macadamiaTests: XCTestCase {
         })
         print(selection.fee)
         print(proofs.sum)
+    }
+    
+    @MainActor
+    func testMintEcashDerivationCounter() {
+        // Set up the test environment synchronously
+        let context = container.mainContext
+        let mnemonic = Mnemonic()
+        let wallet = Wallet(mnemonic: mnemonic.phrase.joined(separator: " "), seed: String(bytes: mnemonic.seed))
+        context.insert(wallet)
+        
+        // Use expectation for async operations
+        let setupExpectation = XCTestExpectation(description: "Mint setup completed")
+        let mintExpectation = XCTestExpectation(description: "Mint operation completed")
+        
+        var testMint: Mint?
+        var initialDerivationCounter: Int = 0
+        var testKeysetID: String = ""
+        var mintedProofs: [CashuSwift.Proof]?
+        
+        // Create sendable types for async operations
+        let mintURL = URL(string: successMint)!
+        let seed = wallet.seed
+        
+        // Set up mint in a Task using sendable types
+        Task {
+            do {
+                // Load mint using CashuSwift
+                let sendableMint = try await CashuSwift.loadMint(url: mintURL)
+                
+                // Convert back to AppSchemaV1.Mint on MainActor
+                await MainActor.run {
+                    let mint = Mint(url: sendableMint.url, keysets: sendableMint.keysets)
+                    mint.wallet = wallet
+                    context.insert(mint)
+                    testMint = mint
+                    
+                    // Store initial state
+                    XCTAssertFalse(mint.keysets.isEmpty, "Mint should have keysets")
+                    testKeysetID = mint.keysets.first!.keysetID
+                    initialDerivationCounter = mint.keysets.first!.derivationCounter
+                    
+                    setupExpectation.fulfill()
+                }
+                
+                // Now get quote and mint using sendable types
+                let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat", amount: 100)
+                let quote = try await CashuSwift.getQuote(mint: sendableMint, quoteRequest: quoteRequest)
+                
+                guard let mintQuote = quote as? CashuSwift.Bolt11.MintQuote else {
+                    XCTFail("Quote should be a MintQuote")
+                    mintExpectation.fulfill()
+                    return
+                }
+                
+                // Perform minting with sendable types
+                let issueResult = try await CashuSwift.issue(for: mintQuote, mint: sendableMint, seed: seed)
+                mintedProofs = issueResult.proofs
+                
+                // Check DLEQ verification result
+                switch issueResult.dleqResult {
+                case .valid:
+                    print("✅ DLEQ verification: Valid")
+                case .fail:
+                    print("❌ DLEQ verification: Failed")
+                    XCTFail("DLEQ verification failed")
+                case .noData:
+                    print("⚠️ DLEQ verification: No DLEQ data available")
+                }
+                
+                mintExpectation.fulfill()
+                
+            } catch {
+                XCTFail("Operation failed with error: \(error)")
+                setupExpectation.fulfill()
+                mintExpectation.fulfill()
+            }
+        }
+        
+        // Wait for async operations to complete
+        wait(for: [setupExpectation, mintExpectation], timeout: 15.0)
+        
+        // Verify results synchronously on MainActor
+        guard let mint = testMint else {
+            XCTFail("Mint was not initialized")
+            return
+        }
+        
+        // Verify that proofs were minted
+        XCTAssertNotNil(mintedProofs, "Minted proofs should not be nil")
+        XCTAssertFalse(mintedProofs?.isEmpty ?? true, "Should have minted some proofs")
+        
+        let proofsCount = mintedProofs?.count ?? 0
+        
+        // Update derivation counter in mint (simulating what would happen in the app)
+        mint.increaseDerivationCounterForKeysetWithID(testKeysetID, by: proofsCount)
+        
+        // Get the updated derivation counter for the keyset
+        let updatedKeyset = mint.keysets.first { $0.keysetID == testKeysetID }
+        XCTAssertNotNil(updatedKeyset, "Keyset should still exist")
+        
+        let finalDerivationCounter = updatedKeyset!.derivationCounter
+        
+        // Verify the derivation counter was increased correctly
+        XCTAssertGreaterThan(finalDerivationCounter, initialDerivationCounter, 
+                           "Derivation counter should have increased")
+        XCTAssertEqual(finalDerivationCounter, initialDerivationCounter + proofsCount,
+                      "Derivation counter should have increased by the number of minted proofs (\(proofsCount))")
+        
+        print("✅ Test passed: Derivation counter increased from \(initialDerivationCounter) to \(finalDerivationCounter) (increase of \(proofsCount) proofs)")
     }
     
     func testInputValidator() {

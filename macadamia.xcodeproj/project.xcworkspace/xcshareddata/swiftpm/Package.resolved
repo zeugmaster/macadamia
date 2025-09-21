@@ -1,5 +1,5 @@
 {
-  "originHash" : "5fe7da51673daab537dd458d6bd870e4673b5877ce77a6d1c7957afdfd6767e4",
+  "originHash" : "25816d52ed750b6ad0627bcfccf41e0aa0f3018f490e3a36b9db76f09590a32e",
   "pins" : [
     {
       "identity" : "base58",
@@ -79,7 +79,7 @@
       "location" : "https://github.com/zeugmaster/cashu-swift.git",
       "state" : {
         "branch" : "main",
-        "revision" : "6e38f46d7b1bc0fa384d75afb71cf54718029496"
+        "revision" : "8ad4399254b6650a521f61584e0a705c878d1117"
       }
     },
     {
@@ -132,8 +132,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-cmark",
       "state" : {
-        "revision" : "b022b08312decdc46585e0b3440d97f6f22ef703",
-        "version" : "0.6.0"
+        "revision" : "b97d09472e847a416629f026eceae0e2afcfad65",
+        "version" : "0.7.0"
       }
     },
     {
@@ -157,7 +157,7 @@
     {
       "identity" : "swift-secp256k1",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/21-DOT-DEV/swift-secp256k1.git",
+      "location" : "https://github.com/zeugmaster/swift-secp256k1.git",
       "state" : {
         "branch" : "main",
         "revision" : "73cf2403b7a69de8efc612d251a6e0d01211e1c4"

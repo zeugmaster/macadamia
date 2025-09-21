@@ -20,7 +20,6 @@
 		377FFF022BC451AB00DD2635 /* release-notes.md in Resources */ = {isa = PBXBuildFile; fileRef = 377FFF012BC451AB00DD2635 /* release-notes.md */; };
 		3792122E2B29E7520081F161 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 3792122D2B29E7520081F161 /* BigNumber */; };
 		379212342B29E7B30081F161 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212332B29E7B30081F161 /* BIP39 */; };
-		37965DDC2E6CBABE00681744 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDB2E6CBABE00681744 /* secp256k1 */; };
 		37965DDE2E6CBAD600681744 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDD2E6CBAD600681744 /* BigNumber */; };
 		37965DE02E6CBAD600681744 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDF2E6CBAD600681744 /* BIP39 */; };
 		37965DE12E6CBB2F00681744 /* Messages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37C4CC2F2E5CA4660028E4FE /* Messages.framework */; };
@@ -163,7 +162,6 @@
 			files = (
 				37965DDE2E6CBAD600681744 /* BigNumber in Frameworks */,
 				37965DE02E6CBAD600681744 /* BIP39 in Frameworks */,
-				37965DDC2E6CBABE00681744 /* secp256k1 in Frameworks */,
 				37C4CC4B2E5CAAE30028E4FE /* CashuSwift in Frameworks */,
 				37965DE12E6CBB2F00681744 /* Messages.framework in Frameworks */,
 			);
@@ -286,7 +284,6 @@
 			dependencies = (
 				37BC5F542E6CCF23000E1799 /* PBXTargetDependency */,
 				37BC5F562E6CCF23000E1799 /* PBXTargetDependency */,
-				37BC5F582E6CCF23000E1799 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				3793B9A42D0049F60077F755 /* PersistentModelV1 */,
@@ -295,7 +292,6 @@
 			name = macadamiaMessages;
 			packageProductDependencies = (
 				37C4CC4A2E5CAAE30028E4FE /* CashuSwift */,
-				37965DDB2E6CBABE00681744 /* secp256k1 */,
 				37965DDD2E6CBAD600681744 /* BigNumber */,
 				37965DDF2E6CBAD600681744 /* BIP39 */,
 			);
@@ -363,7 +359,6 @@
 				370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 				377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */,
 				371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */,
-				37965DDA2E6CBABE00681744 /* XCRemoteSwiftPackageReference "swift-secp256k1" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -443,10 +438,6 @@
 		37BC5F562E6CCF23000E1799 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = 37BC5F552E6CCF23000E1799 /* CashuSwift */;
-		};
-		37BC5F582E6CCF23000E1799 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = 37BC5F572E6CCF23000E1799 /* secp256k1 */;
 		};
 		37C4CC3B2E5CA4670028E4FE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -861,14 +852,6 @@
 				kind = branch;
 			};
 		};
-		37965DDA2E6CBABE00681744 /* XCRemoteSwiftPackageReference "swift-secp256k1" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/21-DOT-DEV/swift-secp256k1.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.21.1;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -907,11 +890,6 @@
 			package = 379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */;
 			productName = BIP39;
 		};
-		37965DDB2E6CBABE00681744 /* secp256k1 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 37965DDA2E6CBABE00681744 /* XCRemoteSwiftPackageReference "swift-secp256k1" */;
-			productName = secp256k1;
-		};
 		37965DDD2E6CBAD600681744 /* BigNumber */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */;
@@ -931,11 +909,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */;
 			productName = CashuSwift;
-		};
-		37BC5F572E6CCF23000E1799 /* secp256k1 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 37965DDA2E6CBABE00681744 /* XCRemoteSwiftPackageReference "swift-secp256k1" */;
-			productName = secp256k1;
 		};
 		37C4CC4A2E5CAAE30028E4FE /* CashuSwift */ = {
 			isa = XCSwiftPackageProductDependency;
