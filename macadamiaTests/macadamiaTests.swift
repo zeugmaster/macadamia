@@ -5,37 +5,6 @@ import CashuSwift
 import SwiftData
 import secp256k1
 
-
-final class macadamiaWalletSimulationTest: XCTestCase {
-    var container: ModelContainer!
-    
-    override func setUp() async throws {
-        try await super.setUp()
-        
-        let schema = Schema([Proof.self, Mint.self, Wallet.self])
-        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
-        
-        do {
-            container = try ModelContainer(for: schema, configurations: [configuration])
-        } catch {
-            XCTFail("Failed to create in-memory container: \(error)")
-        }
-    }
-    
-    override func tearDown() {
-        container = nil
-        super.tearDown()
-    }
-    
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-}
-
 final class macadamiaTests: XCTestCase {
     
     // Success Mint (5s delay) - Always succeeds after 5 seconds
