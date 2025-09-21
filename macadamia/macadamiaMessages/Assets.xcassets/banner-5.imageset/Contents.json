@@ -1,11 +1,11 @@
 {
   "images" : [
     {
+      "filename" : "banner-5.jpg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "messages-banner.jpg",
       "idiom" : "universal",
       "scale" : "2x"
     },
