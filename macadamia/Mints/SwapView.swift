@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import CashuSwift
 
+
 struct SwapView: View {
     
     enum PaymentState {
@@ -41,7 +42,18 @@ struct SwapView: View {
             // List with form controls
             List {
                 Section {
-                    MintPicker(label: "From: ", selectedMint: $fromMint, allowsNoneState: false, hide: $toMint)
+                    VStack(alignment: .leading) {
+                        MintPicker(label: "From: ", selectedMint: $fromMint, allowsNoneState: false, hide: $toMint)
+                        HStack {
+                            Text("Balance: ")
+                            Spacer()
+                            Text(String(fromMint?.balance(for: .sat) ?? 0))
+                            Text("sat")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                    
                     MintPicker(label: "To: ", selectedMint: $toMint, allowsNoneState: true, hide: $fromMint)
                 }
 
@@ -148,7 +160,7 @@ struct SwapView: View {
             })
             .buttonStyle(.bordered)
             .padding()
-            .disabled(state != .ready)
+            .disabled(state != .ready || (amount ?? 0 > fromMint?.balance(for: .sat) ?? 0))
             .opacity(state != .ready ? 0.5 : 1)
         }
         .onChange(of: fromMint, { oldValue, newValue in

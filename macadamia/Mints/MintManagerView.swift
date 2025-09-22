@@ -71,6 +71,18 @@ struct MintManagerView: View {
                                 Image(systemName: "arrow.down.left.arrow.up.right")
                                     .imageScale(.small)
                                 Text("Mint Swap")
+//                                Text("BETA")
+//                                    .font(.caption)
+//                                    .padding(2)
+//                                    .foregroundStyle(.black)
+//                                    .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(.white.opacity(0.7)))
+                            }
+                        }
+                        NavigationLink(destination: BalancerView()) {
+                            HStack {
+                                Image(systemName: "scale.3d")
+                                    .imageScale(.small)
+                                Text("Distribute Funds")
                                 Text("BETA")
                                     .font(.caption)
                                     .padding(2)
