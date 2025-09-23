@@ -16,7 +16,7 @@ struct BalancerView: View {
     @State private var currentAlert: AlertDetail?
     
     @State private var buttonState = ActionButtonState.idle("Select")
-//    @State private var
+    @State private var allocations: Dictionary<Mint, Double> = [:]
     
     private var activeWallet: Wallet? {
         wallets.first
@@ -37,11 +37,24 @@ struct BalancerView: View {
                 ForEach(mints) { mint in
                     VStack(alignment: .leading) {
                         Button {
-                            // toggle
+                            toggleSelection(of: mint)
                         } label: {
-                            Text(mint.displayName)
+                            HStack {
+                                Image(systemName: allocations.keys.contains(mint) ? "checkmark.circle.fill" : "circle")
+                                Text(mint.displayName)
+                            }
                         }
-                        
+                        HStack {
+                            Text(mint.supportsMPP ? "MPP ✓" : "MPP X")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            HStack {
+                                SmallKnobSlider(value: sliderValue(for: mint), range: 0...100)
+                                Text("\(Int(allocations[mint] ?? 0))%")
+                            }
+                            .opacity(allocations.keys.contains(mint) ? 1 : 0)
+                            .animation(.default, value: allocations.keys.contains(mint))
+                        }
                     }
                 }
                 
@@ -55,121 +68,60 @@ struct BalancerView: View {
         }
     }
     
-}
-
-import SwiftUI
-
-struct PercentSlidersSelectable: View {
-    @State private var values: [Double] = [25, 25, 25, 25]
-    @State private var active: Set<Int> = [0, 1, 2, 3]
-
-    var body: some View {
-        NavigationView {
-            List {
-                ForEach(values.indices, id: \.self) { i in
-                    HStack(spacing: 12) {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                toggleSelection(i)
-                            }
-                        } label: {
-                            Image(systemName: active.contains(i) ? "checkmark.circle.fill" : "circle")
-                                .imageScale(.large)
-                        }
-                        Text("Item \(i + 1)")
-                            .frame(width: 80, alignment: .leading)
-                        SmallKnobSlider(value: binding(for: i), range: 0...100)
-                            .disabled(!active.contains(i))
-                            .opacity(active.contains(i) ? 1 : 0.35)
-                        Text("\(Int(round(values[i])))%")
-                            .monospacedDigit()
-                            .frame(width: 50, alignment: .trailing)
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        withAnimation(.easeInOut(duration: 0.25)) {
-                            toggleSelection(i)
-                        }
-                    }
-                }
-                HStack {
-                    Spacer()
-                    Text("Active total \(Int(round(activeTotal)))%")
-                        .font(.subheadline)
-                }
-            }
-            .navigationTitle("Percent Allocations")
-            .onAppear {
-                equalSplitActive()
-            }
+    private func sliderValue(for mint: Mint) -> Binding<Double> {
+        Binding {
+            allocations[mint] ?? 0.0
+        } set: { newValue in
+            redistribute(changing: mint, to: newValue)
         }
     }
-
-    private var activeTotal: Double {
-        values.enumerated().filter { active.contains($0.offset) }.map { $0.element }.reduce(0, +)
-    }
-
-    private func binding(for i: Int) -> Binding<Double> {
-        Binding(
-            get: { values[i] },
-            set: { newValue in
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    if active.contains(i) {
-                        redistributeActive(changed: i, to: newValue)
-                    }
-                }
-            }
-        )
-    }
-
-    private func toggleSelection(_ i: Int) {
-        if active.contains(i) {
-            guard active.count > 1 else { return }
-            active.remove(i)
-            values[i] = 0
-            equalSplitActive()
-        } else {
-            active.insert(i)
-            equalSplitActive()
-        }
-    }
-
-    private func equalSplitActive() {
-        let count = active.count
-        guard count > 0 else { return }
-        let share = 100.0 / Double(count)
-        for j in values.indices {
-            values[j] = active.contains(j) ? share : 0
-        }
-    }
-
-    private func redistributeActive(changed i: Int, to newValue: Double) {
+    
+    private func redistribute(changing mint: Mint, to newValue: Double) {
+        guard allocations.keys.contains(mint) else { return }
         let clamped = min(100, max(0, newValue))
-        if !active.contains(i) { return }
-        let actives = Array(active)
-        if actives.count == 1 {
-            values[i] = 100
+
+        // If only one active mint, it must take 100%
+        if allocations.count == 1 {
+            allocations[mint] = 100
             return
         }
-        let oldOthers = actives.filter { $0 != i }.map { values[$0] }.reduce(0, +)
-        values[i] = clamped
+
+        let oldOthers = allocations
+            .filter { $0.key != mint }
+            .map(\.value)
+            .reduce(0, +)
+
+        allocations[mint] = clamped
         let targetOthers = 100 - clamped
+
         if oldOthers == 0 {
-            let share = targetOthers / Double(actives.count - 1)
-            for j in actives where j != i { values[j] = share }
+            let share = targetOthers / Double(allocations.count - 1)
+            for (key, _) in allocations where key != mint {
+                allocations[key] = share
+            }
         } else {
             let scale = targetOthers / oldOthers
-            for j in actives where j != i { values[j] *= scale }
+            for (key, value) in allocations where key != mint {
+                allocations[key] = value * scale
+            }
         }
-        for j in values.indices where !active.contains(j) { values[j] = 0 }
+    }
+    
+    private func toggleSelection(of mint: Mint) {
+        if allocations.keys.contains(mint) {
+            allocations.removeValue(forKey: mint)
+            for key in allocations.keys {
+                allocations[key] = 100.0 / Double(allocations.count)
+            }
+        } else {
+            let newAllocation = 100.0 / Double(allocations.count + 1)
+            allocations[mint] = newAllocation
+            for key in allocations.keys {
+                allocations[key] = newAllocation
+            }
+        }
     }
 }
-
-#Preview {
-    PercentSlidersSelectable()
-}
-
-import SwiftUI
 
 struct SmallKnobSlider: UIViewRepresentable {
     @Binding var value: Double
@@ -186,7 +138,7 @@ struct SmallKnobSlider: UIViewRepresentable {
         )
 
         // smaller circular knob
-        let knobSize: CGFloat = 6
+        let knobSize: CGFloat = 10
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: knobSize, height: knobSize))
         let image = renderer.image { ctx in
             UIColor.white.setFill()
@@ -212,13 +164,4 @@ struct SmallKnobSlider: UIViewRepresentable {
         }
     }
 }
-
-struct Demo: View {
-    @State private var val: Double = 0.5
-    var body: some View {
-        SmallKnobSlider(value: $val)
-            .padding()
-    }
-}
-
 
