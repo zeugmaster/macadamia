@@ -48,12 +48,13 @@ struct BalancerView: View {
                             Text(mint.supportsMPP ? "MPP ✓" : "MPP X")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            HStack {
-                                SmallKnobSlider(value: sliderValue(for: mint), range: 0...100)
-                                Text("\(Int(allocations[mint] ?? 0))%")
+                            if allocations.keys.contains(mint) {
+                                HStack {
+                                    SmallKnobSlider(value: sliderValue(for: mint), range: 0...100)
+                                    Text("\(Int(allocations[mint] ?? 0))%")
+                                }
+                                .transition(.opacity)
                             }
-                            .opacity(allocations.keys.contains(mint) ? 1 : 0)
-                            .animation(.default, value: allocations.keys.contains(mint))
                         }
                     }
                 }
@@ -108,16 +109,18 @@ struct BalancerView: View {
     }
     
     private func toggleSelection(of mint: Mint) {
-        if allocations.keys.contains(mint) {
-            allocations.removeValue(forKey: mint)
-            for key in allocations.keys {
-                allocations[key] = 100.0 / Double(allocations.count)
-            }
-        } else {
-            let newAllocation = 100.0 / Double(allocations.count + 1)
-            allocations[mint] = newAllocation
-            for key in allocations.keys {
-                allocations[key] = newAllocation
+        withAnimation(.easeInOut) {
+            if allocations.keys.contains(mint) {
+                allocations.removeValue(forKey: mint)
+                for key in allocations.keys {
+                    allocations[key] = 100.0 / Double(allocations.count)
+                }
+            } else {
+                let newAllocation = 100.0 / Double(allocations.count + 1)
+                allocations[mint] = newAllocation
+                for key in allocations.keys {
+                    allocations[key] = newAllocation
+                }
             }
         }
     }
