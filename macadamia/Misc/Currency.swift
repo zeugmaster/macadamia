@@ -24,6 +24,7 @@ enum ConversionUnit: String, Codable, CaseIterable {
     case sgd = "SGD"
     case nok = "NOK"
     case mxn = "MXN"
+    case pln = "PLN"
     
     var displayName: String {
         switch self {
@@ -43,6 +44,7 @@ enum ConversionUnit: String, Codable, CaseIterable {
         case .sgd: return "Singapore Dollar"
         case .nok: return "Norwegian Krone"
         case .mxn: return "Mexican Peso"
+        case .pln: return "Polish Złoty"
         }
     }
     
@@ -64,6 +66,7 @@ enum ConversionUnit: String, Codable, CaseIterable {
         case .sgd: return "S$"
         case .nok: return "kr"
         case .mxn: return "$"
+        case .pln: return "zł"
         }
     }
     
