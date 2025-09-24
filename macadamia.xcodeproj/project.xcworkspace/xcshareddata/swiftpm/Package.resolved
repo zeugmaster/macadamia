@@ -61,7 +61,7 @@
       "location" : "https://github.com/zeugmaster/BIP32.git",
       "state" : {
         "branch" : "main",
-        "revision" : "1be94093fb7fe87dc0ccc8e2c041cc05218efff6"
+        "revision" : "bab5346c4738b925ebe5b97bc8dea040ae4ce013"
       }
     },
     {
@@ -79,7 +79,7 @@
       "location" : "https://github.com/zeugmaster/cashu-swift.git",
       "state" : {
         "branch" : "main",
-        "revision" : "8ad4399254b6650a521f61584e0a705c878d1117"
+        "revision" : "bfd2b6ae86cc967a7843c129c36729a04c9a09b1"
       }
     },
     {
