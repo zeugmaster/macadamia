@@ -23,7 +23,7 @@ struct WalletInfoListView: View {
                         Text(wallet.dateCreated.formatted())
                     }
                     Text("Mnemonic: \(wallet.mnemonic)")
-                    Text("Seed hex: ...\(wallet.seed.dropFirst(wallet.seed.count - 16))")
+                    CopyableRow(label: "Seed hex", value: wallet.seed)
                     Text("Name: \(wallet.name ?? "nil")")
                     Text("ID: \(wallet.walletID)")
                     Text("Mints (including hidden): \(wallet.mints.count)")
