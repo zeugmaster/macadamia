@@ -290,15 +290,16 @@ enum AppSchemaV1: VersionedSchema {
             } else {
                 return try await updatedInfo()
             }
-            
-            func updatedInfo() async throws -> CashuSwift.Mint.Info {
-                let info = try await CashuSwift.loadMintInfo(from: CashuSwift.Mint(self))
-                try await MainActor.run {
-                    infoData = try JSONEncoder().encode(info)
-                    infoLastUpdated = Date.now
-                }
-                return info
+        }
+        
+        @MainActor
+        func updatedInfo() async throws -> CashuSwift.Mint.Info {
+            let info = try await CashuSwift.loadMintInfo(from: CashuSwift.Mint(self))
+            try await MainActor.run {
+                infoData = try JSONEncoder().encode(info)
+                infoLastUpdated = Date.now
             }
+            return info
         }
     }
 

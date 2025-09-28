@@ -120,13 +120,11 @@ extension AppSchemaV1.Mint {
         Task {
             do {
                 meltLogger.debug("Attempting to melt...")
-                
-                
-                let meltResult = try await CashuSwift.meltState(mint: sendableMint,
-                                                                quoteID: quote.quote,
+                let meltResult = try await CashuSwift.meltState(for: quote.quote,
+                                                                with: sendableMint,
                                                                 blankOutputs: blankOutputs)
                 
-                if meltResult.paid {
+                if meltResult.quote.state == .paid {
                     // make sendable change proofs
                     let sendableProofs = meltResult.change
                     // ON MAIN: create event and return internal change proofs
@@ -145,8 +143,8 @@ extension AppSchemaV1.Mint {
                                                                               unit: unit,
                                                                               inputFeePPK: inputFee,
                                                                               state: .valid,
-                                                                              mint: self,           // TODO: this does not actually cross thread boundaries, find a way to silence warning
-                                                                              wallet: wallet) })    // TODO: same here
+                                                                              mint: self,
+                                                                              wallet: wallet) })
                             
                             self.proofs?.append(contentsOf: internalChangeProofs)
                             wallet.proofs.append(contentsOf: internalChangeProofs)
@@ -161,7 +159,6 @@ extension AppSchemaV1.Mint {
                         completion(.success((internalChangeProofs, meltEvent)))
                     }
                 } else {
-                    
                     DispatchQueue.main.async {
                         meltLogger.info("""
                                     Melt function returned a quote with state NOT PAID, \

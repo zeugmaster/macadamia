@@ -52,13 +52,11 @@ extension AppSchemaV1.Mint {
         } else if proofs.sum > targetAmount {
             Task {
                 do {
-                    // swap on background thread
-
-                    let (sendProofs, changeProofs, dleqPassed) = try await CashuSwift.swap(with: sendableMint,
-                                                                                          inputs: proofs.sendable(),
-                                                                                          amount: targetAmount,
-                                                                                          seed: wallet.seed)
-                    sendLogger.info("DLEQ check on swapped proofs was\(dleqPassed ? " " : " NOT ")successful.")
+                    let (sendProofs, changeProofs, inDLEQ, outDLEQ) = try await CashuSwift.swap(inputs: proofs.sendable(),
+                                                                                           with: sendableMint,
+                                                                                           seed: wallet.seed)
+                    
+                    sendLogger.info("DLEQ check for swap operation: inputs - \(String(describing: inDLEQ)), outputs - \(String(describing: outDLEQ))")
                     
                     await MainActor.run {
                         // if the swap succeeds the input proofs need to be marked as spent

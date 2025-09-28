@@ -105,9 +105,7 @@ struct RedeemLaterView: View {
                                                                   privateKey: privateKeyHex)
                 
                 try await MainActor.run {
-                    let internalProofs = try wallet.internalRepresentation(of: proofs,
-                                                                       mint: mint,
-                                                                       state: .valid)
+                    let internalProofs = try mint.addProofs(proofs, to: modelContext)
                     
                     let receiveEvent = Event.receiveEvent(unit: Unit(token.unit) ?? .sat,
                                                    shortDescription: "Receive",
@@ -119,7 +117,7 @@ struct RedeemLaterView: View {
                                                    mint: mint,
                                                    redeemed: true)
                     
-                    AppSchemaV1.insert(internalProofs + [receiveEvent], into: modelContext)
+                    modelContext.insert(receiveEvent)
                     event.visible = false
                     try modelContext.save()
                     buttonState = .success()
@@ -138,42 +136,5 @@ struct RedeemLaterView: View {
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
-    }
-}
-
-extension AppSchemaV1.Wallet {
-    
-    @MainActor
-    func internalRepresentation(of proofs: [CashuSwift.Proof],
-                                mint: Mint,
-                                state: Proof.State,
-                                increaseDerivationCounter: Bool = true) throws -> [Proof] {
-         
-        let grouped = Dictionary(grouping: proofs, by: { $0.keysetID })
-        
-        var new = [Proof]()
-        for (id, proofsByID) in grouped {
-            guard let keyset = mint.keysets.first(where: { $0.keysetID == id }) else {
-                throw macadamiaError.unknownKeyset("""
-                            The wallet has no record of a keyset \(id) for \
-                            mint \(mint.url.absoluteString) and cannot associate proof data.
-                            """)
-            }
-            let internalProofs = proofsByID.map({ Proof($0,
-                                                  unit: Unit(keyset.unit) ?? .sat,
-                                                  inputFeePPK: keyset.inputFeePPK,
-                                                  state: state,
-                                                  mint: mint,
-                                                  wallet: self) })
-            new.append(contentsOf: internalProofs)
-            self.proofs.append(contentsOf: internalProofs)
-            mint.proofs?.append(contentsOf: internalProofs)
-            
-            if increaseDerivationCounter {
-                mint.increaseDerivationCounterForKeysetWithID(keyset.keysetID,
-                                                              by: internalProofs.count)
-            }
-        }
-        return new
     }
 }

@@ -604,8 +604,7 @@ struct MeltView: View {
             }
             
             let internalChange = try? mint.addProofs(result.change,
-                                                     to: modelContext,
-                                                     unit: .sat)
+                                                     to: modelContext)
             
             events.append(Event.meltEvent(unit: .sat,
                                           shortDescription: "Payment",

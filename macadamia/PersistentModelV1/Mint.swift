@@ -152,11 +152,11 @@ extension AppSchemaV1.Mint {
             return (selected, fee(for: selected))
         }
     }
-
+    
     @MainActor
     func addProofs(_ proofs: [CashuSwift.Proof],
                    to context: ModelContext,
-                   unit: Unit,
+                   state: Proof.State = .valid,
                    increaseDerivationCounter: Bool = true) throws -> [Proof]  {
         
         // check for duplicates within passed array
@@ -171,19 +171,20 @@ extension AppSchemaV1.Mint {
         
         let Cs = self.proofs?.map(\.C) ?? []
         
-        let internalRepresentation:[Proof] = proofs.compactMap { p in
+        let internalRepresentation:[Proof] = try proofs.compactMap { p in
             if Cs.contains(p.C) {
                 mintLogger.warning("tried to add proof with duplicate C \(p.C) to the database for mint \(self.url). will be skipped.")
                 return nil
             }
             
-            let keyset = self.keysets.first(where: { $0.keysetID == p.keysetID })
-            let fee = keyset?.inputFeePPK ?? 0
+            guard let keyset = self.keysets.first(where: { $0.keysetID == p.keysetID }) else {
+                throw macadamiaError.databaseError("Keyset \(p.keysetID.prefix(16)) of proof could not be found on mint \(self.url.absoluteString).")
+            }
             
             return Proof(p,
-                         unit: unit,
-                         inputFeePPK: fee,
-                         state: .valid,
+                         unit: AppSchemaV1.Unit(keyset.unit) ?? .sat,
+                         inputFeePPK: keyset.inputFeePPK,
+                         state: state,
                          mint: self,
                          wallet: wallet)
         }

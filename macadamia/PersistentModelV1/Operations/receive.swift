@@ -19,7 +19,7 @@ extension AppSchemaV1.Mint {
         Task {
             do {
               
-                let (sendableProofs, inputDLEQ, outputDLEQ) = try await CashuSwift.receive(token: token,
+                let (sendableProofs, _, outputDLEQ) = try await CashuSwift.receive(token: token,
                                                                                            of: CashuSwift.Mint(self),
                                                                                            seed: wallet.seed,
                                                                                            privateKey: privateKeyString)

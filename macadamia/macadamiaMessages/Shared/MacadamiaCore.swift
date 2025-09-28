@@ -64,11 +64,6 @@ extension AppSchemaV1.Mint {
     @MainActor
     func generateToken(amount: Int, memo: String, allProofs: [Proof], completion: @escaping (Result<String, Error>) -> Void) {
         
-        guard let wallet = self.wallet else {
-            completion(.failure(MacadamiaCoreError.databaseError("Mint has no associated wallet")))
-            return
-        }
-        
         // Select proofs
         guard let selection = self.select(allProofs: allProofs, amount: amount, unit: .sat) else {
             completion(.failure(MacadamiaCoreError.insufficientFunds))
