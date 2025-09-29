@@ -365,4 +365,193 @@ final class macadamiaTests: XCTestCase {
             }
         }
     }
+    
+    func testBalancerCalculateTransactions() {
+        // Test Case 1: 4 mints with perfect balance
+        let testCase1 = [
+            Balancer.Mint(id: UUID(), delta: 100),   // Has 100 to give
+            Balancer.Mint(id: UUID(), delta: 50),    // Has 50 to give
+            Balancer.Mint(id: UUID(), delta: -80),   // Needs 80
+            Balancer.Mint(id: UUID(), delta: -70)    // Needs 70
+        ]
+        
+        let transactions1 = Balancer.calculateTransactions(for: testCase1)
+        
+        // Verify we got transactions
+        XCTAssertFalse(transactions1.isEmpty, "Should have generated transactions")
+        
+        // Verify all transaction amounts are positive
+        for transaction in transactions1 {
+            XCTAssertGreaterThan(transaction.amount, 0, "All transaction amounts should be positive")
+        }
+        
+        // Calculate total sent and received
+        var sentByMint: [UUID: Int] = [:]
+        var receivedByMint: [UUID: Int] = [:]
+        
+        for transaction in transactions1 {
+            sentByMint[transaction.from.id, default: 0] += transaction.amount
+            receivedByMint[transaction.to.id, default: 0] += transaction.amount
+        }
+        
+        // Verify balance for each mint
+        for mint in testCase1 {
+            let sent = sentByMint[mint.id, default: 0]
+            let received = receivedByMint[mint.id, default: 0]
+            let finalBalance = mint.delta - sent + received
+            
+            print("Mint \(mint.id): delta=\(mint.delta), sent=\(sent), received=\(received), final=\(finalBalance)")
+            XCTAssertEqual(finalBalance, 0, "Mint should be balanced")
+        }
+        
+        // Test Case 2: Simple two mint exchange
+        let testCase2 = [
+            Balancer.Mint(id: UUID(), delta: 60),
+            Balancer.Mint(id: UUID(), delta: -60)
+        ]
+        
+        let transactions2 = Balancer.calculateTransactions(for: testCase2)
+        
+        // Should have exactly one transaction
+        XCTAssertEqual(transactions2.count, 1, "Should have exactly one transaction for simple exchange")
+        
+        if let transaction = transactions2.first {
+            XCTAssertEqual(transaction.amount, 60, "Should transfer the full amount")
+        }
+        
+        // Test Case 3: Multiple mints needing partial transfers
+        let testCase3 = [
+            Balancer.Mint(id: UUID(), delta: 150),
+            Balancer.Mint(id: UUID(), delta: -50),
+            Balancer.Mint(id: UUID(), delta: -60),
+            Balancer.Mint(id: UUID(), delta: -40)
+        ]
+        
+        let transactions3 = Balancer.calculateTransactions(for: testCase3)
+        
+        // Verify all targets get their needed amounts
+        var received3: [UUID: Int] = [:]
+        for transaction in transactions3 {
+            received3[transaction.to.id, default: 0] += transaction.amount
+        }
+        
+        for mint in testCase3.filter({ $0.delta < 0 }) {
+            XCTAssertEqual(received3[mint.id, default: 0], -mint.delta, 
+                          "Each target should receive exactly what they need")
+        }
+        
+        // Test Case 4: Unbalanced scenario (total positive != total negative)
+        let testCase4 = [
+            Balancer.Mint(id: UUID(), delta: 100),
+            Balancer.Mint(id: UUID(), delta: -60),
+            Balancer.Mint(id: UUID(), delta: -30)
+        ]
+        
+        let transactions4 = Balancer.calculateTransactions(for: testCase4)
+        
+        // Should still generate valid transactions for what can be balanced
+        XCTAssertFalse(transactions4.isEmpty, "Should generate transactions even when not perfectly balanced")
+        
+        // Calculate total transferred
+        let totalTransferred = transactions4.reduce(0) { $0 + $1.amount }
+        let totalNeeded = testCase4.filter { $0.delta < 0 }.reduce(0) { $0 + (-$1.delta) }
+        
+        XCTAssertEqual(totalTransferred, totalNeeded, 
+                      "Should transfer up to the total amount needed")
+        
+        // Test Case 5: Large scale test with 7 mints
+        let testCase5 = [
+            Balancer.Mint(id: UUID(), delta: 200),
+            Balancer.Mint(id: UUID(), delta: 150),
+            Balancer.Mint(id: UUID(), delta: 100),
+            Balancer.Mint(id: UUID(), delta: -120),
+            Balancer.Mint(id: UUID(), delta: -90),
+            Balancer.Mint(id: UUID(), delta: -80),
+            Balancer.Mint(id: UUID(), delta: -160)
+        ]
+        
+        let transactions5 = Balancer.calculateTransactions(for: testCase5)
+        
+        print("Test Case 5: Generated \(transactions5.count) transactions")
+        
+        // Verify all transactions are valid
+        for transaction in transactions5 {
+            XCTAssertGreaterThan(transaction.amount, 0, "All amounts should be positive")
+            XCTAssertTrue(transaction.from.delta > 0, "Should only send from positive delta mints")
+            XCTAssertTrue(transaction.to.delta < 0, "Should only send to negative delta mints")
+        }
+        
+        // Verify final balance
+        var finalBalances: [UUID: Int] = [:]
+        for mint in testCase5 {
+            finalBalances[mint.id] = mint.delta
+        }
+        
+        for transaction in transactions5 {
+            finalBalances[transaction.from.id]! -= transaction.amount
+            finalBalances[transaction.to.id]! += transaction.amount
+        }
+        
+        for (_, balance) in finalBalances {
+            XCTAssertEqual(balance, 0, "All mints should be perfectly balanced")
+        }
+        
+        // Test Case 6: Edge case with zero deltas
+        let testCase6 = [
+            Balancer.Mint(id: UUID(), delta: 50),
+            Balancer.Mint(id: UUID(), delta: 0),     // Zero delta, should be ignored
+            Balancer.Mint(id: UUID(), delta: -50),
+            Balancer.Mint(id: UUID(), delta: 0)      // Zero delta, should be ignored
+        ]
+        
+        let transactions6 = Balancer.calculateTransactions(for: testCase6)
+        
+        // Should have exactly one transaction (50 from first to third mint)
+        XCTAssertEqual(transactions6.count, 1, "Should have exactly one transaction for non-zero mints")
+        
+        if let transaction = transactions6.first {
+            XCTAssertEqual(transaction.from.delta, 50, "Should send from the positive delta mint")
+            XCTAssertEqual(transaction.to.delta, -50, "Should send to the negative delta mint")
+            XCTAssertEqual(transaction.amount, 50, "Should transfer the full amount")
+        }
+        
+        // Test Case 7: Complex partial transfers
+        let testCase7 = [
+            Balancer.Mint(id: UUID(), delta: 75),
+            Balancer.Mint(id: UUID(), delta: 25),
+            Balancer.Mint(id: UUID(), delta: -60),
+            Balancer.Mint(id: UUID(), delta: -40)
+        ]
+        
+        let transactions7 = Balancer.calculateTransactions(for: testCase7)
+        
+        // Count how many transactions each source is involved in
+        var transactionsBySource: [UUID: Int] = [:]
+        for transaction in transactions7 {
+            transactionsBySource[transaction.from.id, default: 0] += 1
+        }
+        
+        // The algorithm should create efficient transactions
+        print("Test Case 7: Transaction distribution:")
+        for mint in testCase7.filter({ $0.delta > 0 }) {
+            let count = transactionsBySource[mint.id, default: 0]
+            print("  Mint with delta \(mint.delta) created \(count) transaction(s)")
+        }
+        
+        // Verify correctness
+        var sent7: [UUID: Int] = [:]
+        var received7: [UUID: Int] = [:]
+        
+        for transaction in transactions7 {
+            sent7[transaction.from.id, default: 0] += transaction.amount
+            received7[transaction.to.id, default: 0] += transaction.amount
+        }
+        
+        for mint in testCase7 {
+            let sent = sent7[mint.id, default: 0]
+            let received = received7[mint.id, default: 0]
+            let finalBalance = mint.delta - sent + received
+            XCTAssertEqual(finalBalance, 0, "All mints should be balanced")
+        }
+    }
 }
