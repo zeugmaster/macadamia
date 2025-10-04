@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import CashuSwift
 
 struct BalancerView: View {
     
@@ -48,12 +49,21 @@ struct BalancerView: View {
                             HStack {
                                 Image(systemName: allocations.keys.contains(mint) ? "checkmark.circle.fill" : "circle")
                                 Text(mint.displayName)
+                                Spacer()
+                                Group {
+                                    let balance = mint.balance(for: .sat)
+
+                                    Text(balance, format: .number)
+                                        .monospaced()
+                                        .contentTransition(.numericText(value: Double(balance)))
+                                        .animation(.snappy, value: balance)
+
+                                    Text(" sat")
+                                }
+                                .monospaced()
                             }
                         }
                         HStack {
-                            Text(mint.supportsMPP ? "MPP ✓" : "MPP X")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
                             if allocations.keys.contains(mint) {
                                 HStack {
                                     SmallKnobSlider(value: sliderValue(for: mint), range: 0...100)
@@ -156,6 +166,16 @@ struct BalancerView: View {
         print("Generated \(transactions.count) transactions")
         for transaction in transactions {
             print("  Transfer \(transaction.amount) from \(transaction.from.displayName) to \(transaction.to.displayName)")
+        }
+        
+        let sendableTransactions = transactions.map { t in
+            (CashuSwift.Mint(t.from), CashuSwift.Mint(t.to), t.amount)
+        }
+        
+        Task {
+            //
+            
+            
         }
     }
     

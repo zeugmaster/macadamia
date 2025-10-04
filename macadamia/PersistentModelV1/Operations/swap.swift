@@ -235,3 +235,72 @@ struct SwapManager {
         updateHandler(.success)
     }
 }
+
+actor SwapService {
+    
+    enum State {
+        case ready, loading, melting, minting, success
+        case fail(Error)
+    }
+    
+    let modelContext: ModelContext
+    
+    init() {
+        self.modelContext = DatabaseManager.shared.newContext()
+    }
+    
+    private var activeWallet: Wallet? {
+        try? modelContext.fetch(FetchDescriptor<Wallet>()).first(where: { $0.active == true })
+    }
+    
+    func swap(from: PersistentIdentifier,
+              to:PersistentIdentifier,
+              amount: Int) -> AsyncStream<State> {
+        
+        guard let fromMint:Mint = modelContext.registeredModel(for: from),
+              let toMint:Mint = modelContext.registeredModel(for: to) else {
+            fatalError()
+        }
+        
+        guard let activeWallet else {
+            fatalError()
+        }
+        
+        return AsyncStream { continuation in
+            Task {
+                continuation.yield(.loading)
+                do {
+                    let mintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
+                                                                              amount: amount)
+                    guard let mintQuote = try await CashuSwift.getQuote(mint: toMint,
+                                                                        quoteRequest: mintQuoteRequest) as? CashuSwift.Bolt11.MintQuote else {
+                        fatalError()
+                    }
+                    
+                    let meltQuoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat",
+                                                                              request: mintQuote.request,
+                                                                              options: nil)
+                    
+                    continuation.yield(.melting)
+                    
+                    continuation.yield(.minting)
+                    
+                    continuation.yield(.success)
+                    continuation.finish()
+                } catch {
+                    continuation.yield(.fail(error))
+                }
+            }
+        }
+    }
+    
+    private func performSwap() async throws {
+        // get mint quote for toMint
+        
+        // get melt quote for fromMint
+        
+        // perform melt
+        
+        // save change and event
+    }
+}
