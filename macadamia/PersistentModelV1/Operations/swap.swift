@@ -239,7 +239,7 @@ struct SwapManager {
 actor SwapService {
     
     enum State {
-        case ready, preparing, melting, minting, success
+        case preparing, melting, minting, success
         case fail(Error)
     }
     
@@ -247,6 +247,7 @@ actor SwapService {
     
     init() {
         self.modelContext = DatabaseManager.shared.newContext()
+        print("SwapService initialized with modelContext \(Unmanaged.passUnretained(modelContext.container).toOpaque())")
     }
     
     private var activeWallet: Wallet? {
@@ -261,13 +262,13 @@ actor SwapService {
             Task {
                 continuation.yield(.preparing)
                 do {
-                    guard let fromMint:Mint = modelContext.registeredModel(for: from),
-                          let toMint:Mint = modelContext.registeredModel(for: to) else {
-                        fatalError()
+                    guard let fromMint:Mint = modelContext.model(for: from) as? Mint,
+                          let toMint:Mint = modelContext.model(for: to) as? Mint else {
+                        throw macadamiaError.databaseError("Unable to fetch data models by persistent identifier.")
                     }
                     
                     guard let activeWallet else {
-                        fatalError()
+                        throw macadamiaError.databaseError("Unable to find active wallet.")
                     }
                     
                     let mintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
@@ -299,6 +300,7 @@ actor SwapService {
                                                                            seed: activeWallet.seed)
                     
                     if let keysetID = blankOutputs.outputs.first?.id, blankOutputs.outputs.count > 0 {
+                        swapLogger.debug("increasing derivation counter for keyset \(keysetID) by \(blankOutputs.outputs.count)")
                         fromMint.increaseDerivationCounterForKeysetWithID(keysetID, by: blankOutputs.outputs.count)
                     } else {
                         swapLogger.error("\(blankOutputs.outputs.count) blank outputs where created but no keyset ID could be determined for counter increase.")
@@ -323,7 +325,8 @@ actor SwapService {
                     
                     let meltResult = try await CashuSwift.melt(quote: meltQuote,
                                                                mint: CashuSwift.Mint(fromMint),
-                                                               proofs: selection.selected.sendable())
+                                                               proofs: selection.selected.sendable(),
+                                                               blankOutputs: blankOutputs)
                     selection.selected.setState(.spent)
                     
                     let meltEvent = Event.meltEvent(unit: .sat,
@@ -346,7 +349,7 @@ actor SwapService {
                                                                 mint: CashuSwift.Mint(toMint),
                                                                 seed: activeWallet.seed)
                     
-                    let addedProofs = try toMint.addProofs(mintResult.proofs, to: modelContext)
+                    _ = try toMint.addProofs(mintResult.proofs, to: modelContext)
                     
                     let mintEvent = Event.mintEvent(unit: .sat,
                                                     shortDescription: "Ecash created",
