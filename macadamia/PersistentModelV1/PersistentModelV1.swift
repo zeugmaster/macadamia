@@ -328,7 +328,7 @@ enum AppSchemaV1: VersionedSchema {
         @Relationship(inverse: \Wallet.proofs)
         var wallet: Wallet?
         
-        @MainActor
+//        @MainActor
         init(keysetID: String,
              C: String,
              secret: String,
@@ -351,7 +351,7 @@ enum AppSchemaV1: VersionedSchema {
             self.inputFeePPK = inputFeePPK
         }
 
-        @MainActor
+//        @MainActor
         init(_ proofRepresenting: ProofRepresenting,
              unit: Unit,
              inputFeePPK:Int,

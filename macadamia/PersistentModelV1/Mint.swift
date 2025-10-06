@@ -153,7 +153,7 @@ extension AppSchemaV1.Mint {
         }
     }
     
-    @MainActor
+//    @MainActor
     func addProofs(_ proofs: [CashuSwift.Proof],
                    to context: ModelContext,
                    state: Proof.State = .valid,

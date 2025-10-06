@@ -89,7 +89,7 @@ extension AppSchemaV1.Mint {
                     case let quote as CashuSwift.Bolt11.MeltQuote:
                         
                         event = Event.pendingMeltEvent(unit: .sat,
-                                                       shortDescription: "Melt Quote",
+                                                       shortDescription: "Pending Payment",
                                                        wallet: wallet,
                                                        quote: quote,
                                                        amount: (quote.amount),

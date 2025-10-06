@@ -239,7 +239,7 @@ struct SwapManager {
 actor SwapService {
     
     enum State {
-        case ready, loading, melting, minting, success
+        case ready, preparing, melting, minting, success
         case fail(Error)
     }
     
@@ -257,19 +257,19 @@ actor SwapService {
               to:PersistentIdentifier,
               amount: Int) -> AsyncStream<State> {
         
-        guard let fromMint:Mint = modelContext.registeredModel(for: from),
-              let toMint:Mint = modelContext.registeredModel(for: to) else {
-            fatalError()
-        }
-        
-        guard let activeWallet else {
-            fatalError()
-        }
-        
-        return AsyncStream { continuation in
+        AsyncStream { continuation in
             Task {
-                continuation.yield(.loading)
+                continuation.yield(.preparing)
                 do {
+                    guard let fromMint:Mint = modelContext.registeredModel(for: from),
+                          let toMint:Mint = modelContext.registeredModel(for: to) else {
+                        fatalError()
+                    }
+                    
+                    guard let activeWallet else {
+                        fatalError()
+                    }
+                    
                     let mintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
                                                                               amount: amount)
                     guard let mintQuote = try await CashuSwift.getQuote(mint: toMint,
@@ -280,10 +280,83 @@ actor SwapService {
                     let meltQuoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat",
                                                                               request: mintQuote.request,
                                                                               options: nil)
+                    guard let meltQuote = try await CashuSwift.getQuote(mint: fromMint,
+                                                                        quoteRequest: meltQuoteRequest) as? CashuSwift.Bolt11.MeltQuote else {
+                        fatalError()
+                    }
                     
                     continuation.yield(.melting)
+                    guard let selection = fromMint.select(amount: amount + meltQuote.feeReserve,
+                                                          unit: .sat) else {
+                        fatalError()
+                    }
+                    
+                    // create blank output set
+                    let blankOutputs = try CashuSwift.generateBlankOutputs(quote: meltQuote,
+                                                                           proofs: selection.selected,
+                                                                           mint: fromMint,
+                                                                           unit: "sat",
+                                                                           seed: activeWallet.seed)
+                    
+                    if let keysetID = blankOutputs.outputs.first?.id, blankOutputs.outputs.count > 0 {
+                        fromMint.increaseDerivationCounterForKeysetWithID(keysetID, by: blankOutputs.outputs.count)
+                    } else {
+                        swapLogger.error("\(blankOutputs.outputs.count) blank outputs where created but no keyset ID could be determined for counter increase.")
+                    }
+                    
+                    let pendingMeltEvent = Event.pendingMeltEvent(unit: .sat,
+                                                                  shortDescription: "Pending Payment",
+                                                                  visible: true,
+                                                                  wallet: activeWallet,
+                                                                  quote: meltQuote,
+                                                                  amount: amount,
+                                                                  expiration: meltQuote.expiry.map({ Date(timeIntervalSince1970: TimeInterval($0)) }),
+                                                                  mints: [fromMint],
+                                                                  proofs: selection.selected,
+                                                                  groupingID: nil)
+                    
+                    pendingMeltEvent.blankOutputs = BlankOutputSet(tuple: blankOutputs)
+                    selection.selected.setState(.pending)
+                    
+                    modelContext.insert(pendingMeltEvent)
+                    try modelContext.save()
+                    
+                    let meltResult = try await CashuSwift.melt(quote: meltQuote,
+                                                               mint: CashuSwift.Mint(fromMint),
+                                                               proofs: selection.selected.sendable())
+                    selection.selected.setState(.spent)
+                    
+                    let meltEvent = Event.meltEvent(unit: .sat,
+                                                    shortDescription: "Payment",
+                                                    wallet: activeWallet,
+                                                    amount: amount,
+                                                    longDescription: "",
+                                                    mints: [fromMint])
+                    
+                    modelContext.insert(meltEvent)
+                    pendingMeltEvent.visible = false
+                    try modelContext.save()
+                    
+                    if let change = meltResult.change {
+                        _ = try fromMint.addProofs(change, to: modelContext)
+                    }
                     
                     continuation.yield(.minting)
+                    let mintResult = try await CashuSwift.issue(for: mintQuote,
+                                                                mint: CashuSwift.Mint(toMint),
+                                                                seed: activeWallet.seed)
+                    
+                    let addedProofs = try toMint.addProofs(mintResult.proofs, to: modelContext)
+                    
+                    let mintEvent = Event.mintEvent(unit: .sat,
+                                                    shortDescription: "Ecash created",
+                                                    wallet: activeWallet,
+                                                    quote: mintQuote,
+                                                    mint: toMint,
+                                                    amount: amount)
+                    
+                    modelContext.insert(mintEvent)
+                    try modelContext.save()
                     
                     continuation.yield(.success)
                     continuation.finish()
@@ -292,15 +365,5 @@ actor SwapService {
                 }
             }
         }
-    }
-    
-    private func performSwap() async throws {
-        // get mint quote for toMint
-        
-        // get melt quote for fromMint
-        
-        // perform melt
-        
-        // save change and event
     }
 }

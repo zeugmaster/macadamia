@@ -57,7 +57,7 @@ extension AppSchemaV1.Mint {
                     wallet.proofs.append(contentsOf: proofs)
                     
                     let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
-                                                shortDescription: "Lightning",
+                                                shortDescription: "Ecash created",
                                                 wallet: wallet,
                                                 quote: quote,
                                                 mint: self,

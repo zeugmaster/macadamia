@@ -71,7 +71,7 @@ extension AppSchemaV1.Mint {
                         }
                         
                         let meltEvent = Event.meltEvent(unit: .sat, // FIXME: remove hard coded unit
-                                                        shortDescription: "Lightning",
+                                                        shortDescription: "Payment",
                                                         wallet: wallet,
                                                         amount: (quote.amount),
                                                         longDescription: "",
@@ -151,7 +151,7 @@ extension AppSchemaV1.Mint {
                         }
                         
                         let meltEvent = Event.meltEvent(unit: .sat, // FIXME: remove hard coded unit
-                                                        shortDescription: "Lightning",
+                                                        shortDescription: "Payment",
                                                         wallet: wallet,
                                                         amount: (quote.amount),
                                                         longDescription: "",
