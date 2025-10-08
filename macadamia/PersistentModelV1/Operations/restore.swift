@@ -41,7 +41,7 @@ extension macadamiaApp {
                     resultsListPerMint[oldMint.url.absoluteString] = proofsByKeyset
                 }
         
-                DispatchQueue.main.async {
+                await MainActor.run {
                     let newWallet = Wallet(mnemonic: mnemo.phrase.joined(separator: " "),
                                            seed: seed)
         

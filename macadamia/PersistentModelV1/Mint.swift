@@ -105,6 +105,7 @@ extension AppSchemaV1.Mint {
             keyset.derivationCounter += n
             self.keysets[index] = keyset
         }
+        mintLogger.debug("increased counter for keyset \(keysetID) by \(n)")
     }
     
     func setDerivationCounterForKeysetWithID(_ keysetID:String, to value:Int) {
@@ -154,6 +155,7 @@ extension AppSchemaV1.Mint {
     }
     
 //    @MainActor
+    @discardableResult
     func addProofs(_ proofs: [CashuSwift.Proof],
                    to context: ModelContext,
                    state: Proof.State = .valid,

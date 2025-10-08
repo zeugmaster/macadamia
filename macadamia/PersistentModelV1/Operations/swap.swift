@@ -144,21 +144,29 @@ struct SwapManager {
         
         updateHandler(.melting)
         
-        if meltAttemptEvent.blankOutputs == nil,
-           let outputs = try? CashuSwift.generateBlankOutputs(quote: meltQuote,
-                                                              proofs: selectedProofs,
-                                                              mint: fromMint,
-                                                              unit: meltQuote.quoteRequest?.unit ?? "sat",
-                                                              seed: seed) {
+        if meltAttemptEvent.blankOutputs == nil {
+            guard let outputs = try? CashuSwift.generateBlankOutputs(quote: meltQuote,
+                                                                     proofs: selectedProofs,
+                                                                     mint: fromMint,
+                                                                     unit: meltQuote.quoteRequest?.unit ?? "sat",
+                                                                     seed: seed) else {
+                updateHandler(.fail(error: CashuError.cryptoError("Unable to create change outputs.")))
+                return
+            }
+                    
             swapLogger.debug("no blank outputs were assigned, creating new")
             let blankOutputSet = BlankOutputSet(tuple: outputs)
             meltAttemptEvent.blankOutputs = blankOutputSet
-            if let keysetID = outputs.outputs.first?.id {
-                fromMint.increaseDerivationCounterForKeysetWithID(keysetID,
-                                                                  by: outputs.outputs.count)
-            } else {
-                swapLogger.error("unable to determine correct keyset to increase det sec counter.")
+            
+            if !blankOutputSet.outputs.isEmpty {
+                if let keysetID = outputs.outputs.first?.id {
+                    fromMint.increaseDerivationCounterForKeysetWithID(keysetID,
+                                                                      by: outputs.outputs.count)
+                } else {
+                    swapLogger.error("unable to determine correct keyset to increase det sec counter.")
+                }
             }
+            
             try? modelContext.save()
         }
         
@@ -236,7 +244,8 @@ struct SwapManager {
     }
 }
 
-actor SwapService {
+@MainActor
+final class SwapService {
     
     enum State {
         case preparing, melting, minting, success
@@ -245,9 +254,8 @@ actor SwapService {
     
     let modelContext: ModelContext
     
-    init() {
-        self.modelContext = DatabaseManager.shared.newContext()
-        print("SwapService initialized with modelContext \(Unmanaged.passUnretained(modelContext.container).toOpaque())")
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
     }
     
     private var activeWallet: Wallet? {
@@ -255,7 +263,7 @@ actor SwapService {
     }
     
     func swap(from: PersistentIdentifier,
-              to:PersistentIdentifier,
+              to: PersistentIdentifier,
               amount: Int) -> AsyncStream<State> {
         
         AsyncStream { continuation in
@@ -291,6 +299,8 @@ actor SwapService {
                                                           unit: .sat) else {
                         fatalError()
                     }
+                    
+                    swapLogger.debug("sum of selected proofs: \(selection.selected.sum), target amount + fee reserve: \(amount+meltQuote.feeReserve)")
                     
                     // create blank output set
                     let blankOutputs = try CashuSwift.generateBlankOutputs(quote: meltQuote,
@@ -341,7 +351,7 @@ actor SwapService {
                     try modelContext.save()
                     
                     if let change = meltResult.change {
-                        _ = try fromMint.addProofs(change, to: modelContext)
+                        try fromMint.addProofs(change, to: modelContext, increaseDerivationCounter: false)
                     }
                     
                     continuation.yield(.minting)
@@ -349,7 +359,7 @@ actor SwapService {
                                                                 mint: CashuSwift.Mint(toMint),
                                                                 seed: activeWallet.seed)
                     
-                    _ = try toMint.addProofs(mintResult.proofs, to: modelContext)
+                    try toMint.addProofs(mintResult.proofs, to: modelContext)
                     
                     let mintEvent = Event.mintEvent(unit: .sat,
                                                     shortDescription: "Ecash created",

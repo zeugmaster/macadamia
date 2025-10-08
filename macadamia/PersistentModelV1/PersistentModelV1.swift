@@ -464,7 +464,7 @@ enum AppSchemaV1: VersionedSchema {
             self.longDescription = longDescription
             self.proofs = proofs
             self.memo = memo
-            self.mints = Array(mints ?? [])
+            self.mints = mints
             self.redeemed = redeemed
             self.groupingID = groupingID
             self.preImage = preImage

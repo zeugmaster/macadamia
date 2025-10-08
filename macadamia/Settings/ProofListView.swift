@@ -10,6 +10,7 @@ struct MintListView: View {
     
     var mintOfActiveWallet: [Mint] {
         mints.filter { $0.wallet?.active == true }
+             .sorted { ($0.userIndex ?? Int.max) < ($1.userIndex ?? Int.max) }
     }
     
     var body: some View {
@@ -17,7 +18,12 @@ struct MintListView: View {
             ForEach(mintOfActiveWallet) { m in
                 NavigationLink(destination: ProofListView(mintID: m.mintID),
                                label: {
-                    Text(m.url.absoluteString)
+                    VStack(alignment: .leading) {
+                        Text(m.displayName)
+                        Text(m.url.absoluteString)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 })
             }
         }
@@ -76,7 +82,7 @@ struct ProofListView: View {
                                 var dict = [String : CashuSwift.Proof.ProofState]()
                                 for (i, p) in mintProofs.enumerated() {
                                     dict[p.C] = result[i]
-                                    print("e: \(p.dleq?.e ?? "") has state: \(p.state) remote is: \(result[i])")
+//                                    print("e: \(p.dleq?.e ?? "") has state: \(p.state) remote is: \(result[i])")
                                 }
                                 remoteStates = dict
                             }
