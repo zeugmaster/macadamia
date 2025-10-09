@@ -66,13 +66,6 @@ struct MintManagerView: View {
                         }
                     }
                     Section {
-                        NavigationLink(destination: SwapView()) {
-                            HStack {
-                                Image(systemName: "arrow.down.left.arrow.up.right")
-                                    .imageScale(.small)
-                                Text("Transfer")
-                            }
-                        }
                         NavigationLink(destination: BalancerView()) {
                             HStack {
                                 Image(systemName: "scale.3d")
@@ -86,10 +79,17 @@ struct MintManagerView: View {
                                     .opacity(0.7)
                             }
                         }
+                        NavigationLink(destination: SwapView()) {
+                            HStack {
+                                Image(systemName: "arrow.down.left.arrow.up.right")
+                                    .imageScale(.small)
+                                Text("Transfer")
+                            }
+                        }
                     } footer: {
                         Text("""
-                             An inter-mint swap allows you to move an amount of ecash from \
-                             one trusted mint to another via Lightning.
+                             An inter-mint transfer allows you to move an amount of ecash from \
+                             one trusted mint to another via the Lightning Network.
                              """)
                     }
                     .disabled(sortedMintsOfActiveWallet.count < 2)
