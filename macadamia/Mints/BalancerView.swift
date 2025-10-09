@@ -31,6 +31,32 @@ struct BalancerView: View {
             .sorted { ($0.userIndex ?? Int.max) < ($1.userIndex ?? Int.max) } ?? []
     }
     
+    /// Returns true if the proposed redistribution represents less than 1% change
+    private var isNegligibleChange: Bool {
+        guard !allocations.isEmpty else { return true }
+        
+        // Calculate total balance across selected mints
+        var total = 0
+        for mint in allocations.keys {
+            total += mint.balance(for: .sat)
+        }
+        
+        guard total > 0 else { return true }
+        
+        // Calculate sum of absolute deltas
+        var totalDelta = 0
+        for (mint, percentage) in allocations {
+            let currentBalance = mint.balance(for: .sat)
+            let targetBalance = Int((percentage / 100.0) * Double(total))
+            let delta = abs(targetBalance - currentBalance)
+            totalDelta += delta
+        }
+        
+        // Check if total change is less than 1% of total balance
+        let changePercentage = Double(totalDelta) / Double(total)
+        return changePercentage < 0.01
+    }
+    
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
     }) private var wallets: [Wallet]
@@ -89,7 +115,7 @@ struct BalancerView: View {
             VStack {
                 Spacer()
                 ActionButton(state: $buttonState)
-                    .actionDisabled(false)
+                    .actionDisabled(isNegligibleChange)
             }
         }
         .onAppear {
@@ -108,6 +134,7 @@ struct BalancerView: View {
         }
     }
     
+    // updates the sliders in real time
     private func redistribute(changing mint: Mint, to newValue: Double) {
         guard allocations.keys.contains(mint) else { return }
         let clamped = min(100, max(0, newValue))
