@@ -95,6 +95,9 @@ struct BalancerView: View {
         .onAppear {
             buttonState = .idle("Distribute", action: {distribute()})
         }
+        .navigationBarBackButtonHidden(buttonState.type == .loading)
+        .navigationTitle("Distribute Funds")
+        .navigationBarTitleDisplayMode(.inline)
     }
     
     private func sliderValue(for mint: Mint) -> Binding<Double> {
@@ -187,7 +190,7 @@ struct BalancerView: View {
         
         buttonState = .loading()
         
-//        performTransaction()
+        performTransaction()
         
         func performTransaction(at index: Int = 0) {
             
@@ -266,7 +269,7 @@ struct SmallKnobSlider: UIViewRepresentable {
     class Coordinator: NSObject {
         var parent: SmallKnobSlider
         init(_ parent: SmallKnobSlider) { self.parent = parent }
-        @objc func changed(_ sender: UISlider) {
+        @MainActor @objc func changed(_ sender: UISlider) {
             parent.value = Double(sender.value)
         }
     }
