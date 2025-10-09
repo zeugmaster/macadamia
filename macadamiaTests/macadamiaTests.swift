@@ -365,4 +365,160 @@ final class macadamiaTests: XCTestCase {
             }
         }
     }
+    
+    // MARK: - Balance Calculator Tests
+    
+    func testBalanceCalculatorSimpleTransfer() {
+        // Test case: Two accounts, one needs to send, one needs to receive
+        let deltas: [String: Int] = [
+            "A": -100,  // A needs to send 100
+            "B": 100    // B needs to receive 100
+        ]
+        
+        let transactions = BalanceCalculator<String>.calculateTransactions(for: deltas)
+        
+        XCTAssertEqual(transactions.count, 1, "Should generate exactly 1 transaction")
+        XCTAssertEqual(transactions[0].from, "A")
+        XCTAssertEqual(transactions[0].to, "B")
+        XCTAssertEqual(transactions[0].amount, 100)
+    }
+    
+    func testBalanceCalculatorMultipleAccounts() {
+        // Test case: Multiple accounts with various deltas
+        let deltas: [String: Int] = [
+            "A": -300,  // A needs to send 300
+            "B": -200,  // B needs to send 200
+            "C": 250,   // C needs to receive 250
+            "D": 250    // D needs to receive 250
+        ]
+        
+        let transactions = BalanceCalculator<String>.calculateTransactions(for: deltas)
+        
+        // Verify total amount sent equals total amount received
+        let totalSent = transactions.reduce(0) { $0 + $1.amount }
+        XCTAssertEqual(totalSent, 500, "Total amount transferred should be 500")
+        
+        // Verify each account's net change matches the delta
+        var netChanges: [String: Int] = ["A": 0, "B": 0, "C": 0, "D": 0]
+        for tx in transactions {
+            netChanges[tx.from, default: 0] -= tx.amount
+            netChanges[tx.to, default: 0] += tx.amount
+        }
+        
+        for (account, expectedDelta) in deltas {
+            XCTAssertEqual(netChanges[account], expectedDelta, 
+                         "Account \(account) should have net change of \(expectedDelta)")
+        }
+    }
+    
+    func testBalanceCalculatorNoTransactionsNeeded() {
+        // Test case: All accounts already balanced (zero deltas)
+        let deltas: [String: Int] = [
+            "A": 0,
+            "B": 0,
+            "C": 0
+        ]
+        
+        let transactions = BalanceCalculator<String>.calculateTransactions(for: deltas)
+        
+        XCTAssertEqual(transactions.count, 0, "Should generate no transactions when all deltas are zero")
+    }
+    
+    func testBalanceCalculatorComplexRebalancing() {
+        // Test case: Complex scenario with multiple sources and targets
+        let deltas: [String: Int] = [
+            "MintA": -500,  // Has 500 extra
+            "MintB": -300,  // Has 300 extra
+            "MintC": 200,   // Needs 200
+            "MintD": 400,   // Needs 400
+            "MintE": 200    // Needs 200
+        ]
+        
+        let transactions = BalanceCalculator<String>.calculateTransactions(for: deltas)
+        
+        // Verify conservation of amount
+        let totalSent = transactions.reduce(0) { $0 + $1.amount }
+        XCTAssertEqual(totalSent, 800, "Total amount transferred should be 800")
+        
+        // Verify each mint's net change matches the delta
+        var netChanges: [String: Int] = [:]
+        for tx in transactions {
+            netChanges[tx.from, default: 0] -= tx.amount
+            netChanges[tx.to, default: 0] += tx.amount
+        }
+        
+        for (mint, expectedDelta) in deltas {
+            XCTAssertEqual(netChanges[mint], expectedDelta, 
+                         "Mint \(mint) should have net change of \(expectedDelta), got \(netChanges[mint] ?? 0)")
+        }
+        
+        // Print for debugging
+        print("\nComplex Rebalancing Test:")
+        for tx in transactions {
+            print("  \(tx.from) → \(tx.to): \(tx.amount)")
+        }
+    }
+    
+    func testBalanceCalculatorThreeWayBalance() {
+        // Test case: Three accounts forming a triangle
+        let deltas: [Int: Int] = [
+            1: -100,
+            2: -50,
+            3: 150
+        ]
+        
+        let transactions = BalanceCalculator<Int>.calculateTransactions(for: deltas)
+        
+        XCTAssertEqual(transactions.reduce(0) { $0 + $1.amount }, 150, "Total should be 150")
+        
+        var netChanges: [Int: Int] = [1: 0, 2: 0, 3: 0]
+        for tx in transactions {
+            netChanges[tx.from, default: 0] -= tx.amount
+            netChanges[tx.to, default: 0] += tx.amount
+        }
+        
+        XCTAssertEqual(netChanges[1], -100)
+        XCTAssertEqual(netChanges[2], -50)
+        XCTAssertEqual(netChanges[3], 150)
+    }
+    
+    func testBalanceCalculatorRealWorldScenario() {
+        // Real-world scenario: User wants to distribute 1000 sats across 3 mints
+        // Current: MintA=800, MintB=100, MintC=100
+        // Target:  MintA=333, MintB=333, MintC=334 (33.3% each, rounded)
+        let deltas: [String: Int] = [
+            "MintA": 333 - 800,  // -467
+            "MintB": 333 - 100,  // +233
+            "MintC": 334 - 100   // +234
+        ]
+        
+        let transactions = BalanceCalculator<String>.calculateTransactions(for: deltas)
+        
+        print("\nReal World Scenario - Balancing 1000 sats across 3 mints:")
+        print("Initial: A=800, B=100, C=100")
+        print("Target:  A=333, B=333, C=334")
+        print("Deltas:  A=-467, B=+233, C=+234")
+        print("Transactions:")
+        for tx in transactions {
+            print("  \(tx.from) → \(tx.to): \(tx.amount)")
+        }
+        
+        // Verify correctness
+        var netChanges: [String: Int] = ["MintA": 0, "MintB": 0, "MintC": 0]
+        for tx in transactions {
+            netChanges[tx.from, default: 0] -= tx.amount
+            netChanges[tx.to, default: 0] += tx.amount
+        }
+        
+        for (mint, expectedDelta) in deltas {
+            XCTAssertEqual(netChanges[mint], expectedDelta,
+                         "Mint \(mint) should have delta \(expectedDelta), got \(netChanges[mint] ?? 0)")
+        }
+    }
+    
+    func testBalanceCalculatorEmptyInput() {
+        let deltas: [String: Int] = [:]
+        let transactions = BalanceCalculator<String>.calculateTransactions(for: deltas)
+        XCTAssertEqual(transactions.count, 0, "Empty input should produce no transactions")
+    }
 }

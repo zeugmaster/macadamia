@@ -35,11 +35,7 @@ struct BalancerView: View {
         wallet.active == true
     }) private var wallets: [Wallet]
     
-    struct Transaction {
-        let from:   Mint
-        let to:     Mint
-        let amount: Int
-    }
+    typealias Transaction = BalanceCalculator<Mint>.Transaction
     
     var body: some View {
         ZStack {
@@ -165,20 +161,24 @@ struct BalancerView: View {
         
         // Calculate deltas based on allocations
         var deltas: Dictionary<Mint, Int> = [:]
+        print("\n=== Balance Distribution ===")
+        print("Total balance: \(total) sat")
         for (mint, percentage) in allocations {
             let currentBalance = mint.balance(for: .sat)
             let targetBalance = Int((percentage / 100.0) * Double(total))
-            deltas[mint] = targetBalance - currentBalance
+            let delta = targetBalance - currentBalance
+            deltas[mint] = delta
+            print("\(mint.displayName): \(currentBalance) sat → \(targetBalance) sat (delta: \(delta >= 0 ? "+" : "")\(delta))")
         }
         
         // Calculate transactions to balance the mints
-        let transactions = calculateTransactions(for: deltas)
+        let transactions = BalanceCalculator<Mint>.calculateTransactions(for: deltas)
         
-        // TODO: Execute the transactions
-        print("Generated \(transactions.count) transactions")
+        print("\nGenerated \(transactions.count) transactions:")
         for transaction in transactions {
-            print("   Transfer \(transaction.amount) from \(transaction.from.displayName) to \(transaction.to.displayName)")
+            print("   Transfer \(transaction.amount) sat from \(transaction.from.displayName) to \(transaction.to.displayName)")
         }
+        print("=========================\n")
         
 
         guard let activeWallet else {
@@ -227,58 +227,6 @@ struct BalancerView: View {
         currentSwapManager = nil
         swapStatus = nil
         buttonState = .success()
-    }
-    
-    private func calculateTransactions(for deltas: Dictionary<Mint, Int>) -> [Transaction] {
-        var transactions: [Transaction] = []
-        
-        // Separate mints into sources (positive delta) and targets (negative delta)
-        var sources = deltas.compactMap { (mint, delta) -> (mint: Mint, available: Int)? in
-            delta > 0 ? (mint: mint, available: delta) : nil
-        }
-        var targets = deltas.compactMap { (mint, delta) -> (mint: Mint, needed: Int)? in
-            delta < 0 ? (mint: mint, needed: -delta) : nil
-        }
-        
-        // Sort sources and targets by amount (descending) for better matching
-        sources.sort { $0.available > $1.available }
-        targets.sort { $0.needed > $1.needed }
-        
-        var sourceIndex = 0
-        var targetIndex = 0
-        
-        while sourceIndex < sources.count && targetIndex < targets.count {
-            let source = sources[sourceIndex]
-            let target = targets[targetIndex]
-            
-            // Calculate transfer amount
-            let amountToTransfer = min(source.available, target.needed)
-            
-            if amountToTransfer > 0 {
-                // Create transaction
-                transactions.append(Transaction(
-                    from: source.mint,
-                    to: target.mint,
-                    amount: amountToTransfer
-                ))
-                
-                // Update remaining amounts
-                sources[sourceIndex].available -= amountToTransfer
-                targets[targetIndex].needed -= amountToTransfer
-                
-                // Move to next source if current is exhausted
-                if sources[sourceIndex].available == 0 {
-                    sourceIndex += 1
-                }
-                
-                // Move to next target if current is satisfied
-                if targets[targetIndex].needed == 0 {
-                    targetIndex += 1
-                }
-            }
-        }
-        
-        return transactions
     }
 }
 
