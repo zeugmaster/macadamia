@@ -80,9 +80,10 @@ struct MintManagerView: View {
                                 Text("Distribute")
                                 Text("BETA")
                                     .font(.caption)
-                                    .padding(2)
-                                    .foregroundStyle(.black)
-                                    .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(.white.opacity(0.7)))
+                                    .padding(3)
+                                    .foregroundStyle(.white)
+                                    .background(RoundedRectangle(cornerRadius: 5).stroke(.white, lineWidth: 1))
+                                    .opacity(0.7)
                             }
                         }
                     } footer: {

@@ -16,6 +16,9 @@ struct BalancerView: View {
     @State private var showAlert = false
     @State private var currentAlert: AlertDetail?
     
+    @State private var swapStatus: String?
+    @State private var currentSwapManager: SwapManager?
+    
     @State private var buttonState = ActionButtonState.idle("Select")
     @State private var allocations: Dictionary<Mint, Double> = [:]
     
@@ -41,37 +44,46 @@ struct BalancerView: View {
     var body: some View {
         ZStack {
             List {
-                ForEach(mints) { mint in
-                    VStack(alignment: .leading) {
-                        Button {
-                            toggleSelection(of: mint)
-                        } label: {
-                            HStack {
-                                Image(systemName: allocations.keys.contains(mint) ? "checkmark.circle.fill" : "circle")
-                                Text(mint.displayName)
-                                Spacer()
-                                Group {
-                                    let balance = mint.balance(for: .sat)
-
-                                    Text(balance, format: .number)
-                                        .monospaced()
-                                        .contentTransition(.numericText(value: Double(balance)))
-                                        .animation(.snappy, value: balance)
-
-                                    Text(" sat")
-                                }
-                                .monospaced()
-                            }
-                        }
-                        HStack {
-                            if allocations.keys.contains(mint) {
+                Section {
+                    ForEach(mints) { mint in
+                        VStack(alignment: .leading) {
+                            Button {
+                                toggleSelection(of: mint)
+                            } label: {
                                 HStack {
-                                    SmallKnobSlider(value: sliderValue(for: mint), range: 0...100)
-                                    Text("\(Int(allocations[mint] ?? 0))%")
+                                    Image(systemName: allocations.keys.contains(mint) ? "checkmark.circle.fill" : "circle")
+                                    Text(mint.displayName)
+                                    Spacer()
+                                    Group {
+                                        let balance = mint.balance(for: .sat)
+
+                                        Text(balance, format: .number)
+                                            .monospaced()
+                                            .contentTransition(.numericText(value: Double(balance)))
+                                            .animation(.snappy, value: balance)
+
+                                        Text(" sat")
+                                    }
+                                    .monospaced()
                                 }
-                                .transition(.opacity)
+                            }
+                            HStack {
+                                if allocations.keys.contains(mint) {
+                                    HStack {
+                                        SmallKnobSlider(value: sliderValue(for: mint), range: 0...100)
+                                        Text("\(Int(allocations[mint] ?? 0))%")
+                                    }
+                                    .transition(.opacity)
+                                }
                             }
                         }
+                    }
+                }
+                
+                if let swapStatus {
+                    Section {
+                        Text(swapStatus)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 
@@ -165,18 +177,56 @@ struct BalancerView: View {
         // TODO: Execute the transactions
         print("Generated \(transactions.count) transactions")
         for transaction in transactions {
-            print("  Transfer \(transaction.amount) from \(transaction.from.displayName) to \(transaction.to.displayName)")
+            print("   Transfer \(transaction.amount) from \(transaction.from.displayName) to \(transaction.to.displayName)")
         }
         
-        let sendableTransactions = transactions.map { t in
-            (CashuSwift.Mint(t.from), CashuSwift.Mint(t.to), t.amount)
+
+        guard let activeWallet else {
+            return
         }
         
-        Task {
-            //
+        buttonState = .loading()
+        
+//        performTransaction()
+        
+        func performTransaction(at index: Int = 0) {
             
+            guard transactions.indices.contains(index) else {
+                print("swap queue index out of bounds, returning")
+                transactionsDidFinish()
+                
+                return
+            }
             
+            withAnimation {
+                swapStatus = "Transfer \(index + 1) of \(transactions.count)..."
+            }
+            
+            let transaction = transactions[index]
+            
+            currentSwapManager = SwapManager(modelContext: modelContext) { swapState in
+                switch swapState {
+                case .ready, .loading, .melting, .minting:
+                    print("tx from \(transaction.from.url) to \(transaction.to.url) has changed state to \(swapState)")
+                case .success:
+                    performTransaction(at: index + 1)
+                case .fail(let error):
+                    print("swap failed due to error: \(String(describing: error))")
+                    performTransaction(at: index + 1)
+                }
+            }
+            
+            currentSwapManager?.swap(fromMint: transaction.from,
+                                     toMint: transaction.to,
+                                     amount: transaction.amount,
+                                     seed: activeWallet.seed)
         }
+    }
+    
+    private func transactionsDidFinish() {
+        currentSwapManager = nil
+        swapStatus = nil
+        buttonState = .success()
     }
     
     private func calculateTransactions(for deltas: Dictionary<Mint, Int>) -> [Transaction] {
