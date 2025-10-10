@@ -68,34 +68,40 @@ struct BalancerView: View {
             List {
                 Section {
                     ForEach(mints) { mint in
-                        VStack(alignment: .leading) {
-                            Button {
-                                toggleSelection(of: mint)
-                            } label: {
-                                HStack {
-                                    Image(systemName: allocations.keys.contains(mint) ? "checkmark.circle.fill" : "circle")
-                                    Text(mint.displayName)
-                                    Spacer()
-                                    Group {
-                                        let balance = mint.balance(for: .sat)
+                        HStack {
+                            Image(systemName: allocations.keys.contains(mint) ? "checkmark.circle.fill" : "circle")
+                            VStack(alignment: .leading) {
+                                Button {
+                                    toggleSelection(of: mint)
+                                } label: {
+                                    HStack { // mint name and balance
+                                        Text(mint.displayName)
+                                            .lineLimit(1)
+                                        Spacer()
+                                        Group {
+                                            let balance = mint.balance(for: .sat)
 
-                                        Text(balance, format: .number)
-                                            .monospaced()
-                                            .contentTransition(.numericText(value: Double(balance)))
-                                            .animation(.snappy, value: balance)
+                                            Text(balance, format: .number)
+                                                .monospaced()
+                                                .contentTransition(.numericText(value: Double(balance)))
+                                                .animation(.snappy, value: balance)
 
-                                        Text(" sat")
+                                            Text(" sat")
+                                        }
+                                        .monospaced()
                                     }
-                                    .monospaced()
                                 }
-                            }
-                            HStack {
-                                if allocations.keys.contains(mint) {
-                                    HStack {
-                                        SmallKnobSlider(value: sliderValue(for: mint), range: 0...100)
-                                        Text("\(Int(allocations[mint] ?? 0))%")
+                                HStack {
+                                    if allocations.keys.contains(mint) {
+                                        HStack {
+                                            SmallKnobSlider(value: sliderValue(for: mint), range: 0...100)
+                                            Text("\(Int(allocations[mint] ?? 0))%")
+                                        }
+                                        .transition(.opacity)
+                                    } else {
+                                        Text("...")
+                                            .foregroundStyle(.secondary)
                                     }
-                                    .transition(.opacity)
                                 }
                             }
                         }
@@ -167,18 +173,16 @@ struct BalancerView: View {
     }
     
     private func toggleSelection(of mint: Mint) {
-        withAnimation(.easeInOut) {
-            if allocations.keys.contains(mint) {
-                allocations.removeValue(forKey: mint)
-                for key in allocations.keys {
-                    allocations[key] = 100.0 / Double(allocations.count)
-                }
-            } else {
-                let newAllocation = 100.0 / Double(allocations.count + 1)
-                allocations[mint] = newAllocation
-                for key in allocations.keys {
-                    allocations[key] = newAllocation
-                }
+        if allocations.keys.contains(mint) {
+            allocations.removeValue(forKey: mint)
+            for key in allocations.keys {
+                allocations[key] = 100.0 / Double(allocations.count)
+            }
+        } else {
+            let newAllocation = 100.0 / Double(allocations.count + 1)
+            allocations[mint] = newAllocation
+            for key in allocations.keys {
+                allocations[key] = newAllocation
             }
         }
     }
