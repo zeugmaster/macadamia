@@ -19,6 +19,8 @@ struct EventList: View {
     enum Style { case minimal, full }
     let style: Style
     
+    let shortListLength = 10
+    
     @Environment(\.modelContext) private var modelContext
     @Query private var allEvents: [Event]
     @Query private var wallets: [Wallet]
@@ -66,10 +68,10 @@ struct EventList: View {
                         Text("No transactions yet.")
                             .monospaced()
                     } else {
-                        ForEach(eventGroups.prefix(5)) { group in
+                        ForEach(eventGroups.prefix(shortListLength)) { group in
                             MinimalRow(eventGroup: group)
                         }
-                        if eventGroups.count > 5 {
+                        if eventGroups.count > shortListLength {
                             NavigationLink(destination: EventList(style: .full),
                                            label: {
                                 HStack {

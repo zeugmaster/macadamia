@@ -51,7 +51,7 @@ struct WalletView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                Spacer().frame(maxHeight: 40)
+                Spacer().frame(maxHeight: 35)
                 BalanceCard(balance: activeWallet?.balance() ?? 0,
                             unit: .sat)
                     .onAppear(perform: {
@@ -68,7 +68,7 @@ struct WalletView: View {
                         logger.critical("Wallet seems to contain duplicate proofs.")
                     }
                 })
-                Spacer().frame(maxHeight: 20)
+                Spacer().frame(maxHeight: 15)
                 EventList(style: .minimal)
                     .padding(.horizontal, 30)
                 Spacer().frame(maxHeight: 20)
@@ -111,6 +111,17 @@ struct WalletView: View {
                             .padding(16)
                             .background(Color.secondary.opacity(0.3))
                             .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [Color.gray.opacity(0.8), Color.gray.opacity(0.3)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            )
                     } onResult: { result in
                         switch result.type {
                             case .bolt11Invoice:
@@ -188,6 +199,18 @@ struct WalletView: View {
             .frame(maxWidth: .infinity)
             .background(Color.secondary.opacity(0.3))
             .cornerRadius(10)
+            .lineLimit(1)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.gray.opacity(0.5), Color.gray.opacity(0.2)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
     }
     
     private func menuButtonLabel(title: String,

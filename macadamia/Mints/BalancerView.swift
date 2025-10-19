@@ -63,16 +63,45 @@ struct BalancerView: View {
     
     typealias Transaction = BalanceCalculator<Mint>.Transaction
     
+    enum BalancerItem: Identifiable, Equatable {
+        case mintRow(Mint)
+        case sliderRow(Mint)
+        
+        var id: String {
+            switch self {
+            case .mintRow(let mint): return "row:\(mint.id)"
+            case .sliderRow(let mint): return "slider:\(mint.id)"
+            }
+        }
+        
+        static func == (lhs: BalancerItem, rhs: BalancerItem) -> Bool {
+            lhs.id == rhs.id
+        }
+    }
+    
+    var items: [BalancerItem] {
+        mints.flatMap { mint in
+            var arr: [BalancerItem] = [.mintRow(mint)]
+            if allocations.keys.contains(mint) {
+                arr.append(.sliderRow(mint))
+            }
+            return arr
+        }
+    }
+    
     var body: some View {
         ZStack {
             List {
                 Section {
-                    ForEach(mints) { mint in
-                        HStack {
-                            Image(systemName: allocations.keys.contains(mint) ? "checkmark.circle.fill" : "circle")
-                            VStack(alignment: .leading) {
+                    ForEach(items) { item in
+                        switch item {
+                        case .mintRow(let mint):
+                            HStack {
+                                Image(systemName: allocations.keys.contains(mint) ? "checkmark.circle.fill" : "circle")
                                 Button {
-                                    toggleSelection(of: mint)
+                                    withAnimation {
+                                        toggleSelection(of: mint)
+                                    }
                                 } label: {
                                     HStack { // mint name and balance
                                         Text(mint.displayName)
@@ -91,19 +120,14 @@ struct BalancerView: View {
                                         .monospaced()
                                     }
                                 }
-                                HStack {
-                                    if allocations.keys.contains(mint) {
-                                        HStack {
-                                            SmallKnobSlider(value: sliderValue(for: mint), range: 0...100)
-                                            Text("\(Int(allocations[mint] ?? 0))%")
-                                        }
-                                        .transition(.opacity)
-                                    } else {
-                                        Text("...")
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
                             }
+                        case .sliderRow(let mint):
+                            HStack {
+                                SmallKnobSlider(value: sliderValue(for: mint), range: 0...100)
+                                Text("\(Int(allocations[mint] ?? 0))%")
+                                    .foregroundStyle(.secondary)
+                            }
+                            .transition(.opacity)
                         }
                     }
                 }
@@ -278,6 +302,9 @@ struct SmallKnobSlider: UIViewRepresentable {
             for: .valueChanged
         )
 
+        // Set darker color for filled part of slider
+        slider.minimumTrackTintColor = UIColor.lightGray
+
         // smaller circular knob
         let knobSize: CGFloat = 10
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: knobSize, height: knobSize))
@@ -304,4 +331,59 @@ struct SmallKnobSlider: UIViewRepresentable {
             parent.value = Double(sender.value)
         }
     }
+}
+
+enum Item: Identifiable, Equatable {
+    case row(String)
+    case detail(String)
+    var id: String {
+        switch self {
+        case .row(let s): return "row:\(s)"
+        case .detail(let s): return "detail:\(s)"
+        }
+    }
+}
+
+struct RowResizeTestView: View {
+    let rows = ["One", "Two", "Three", "Four"]
+    @State var selection = Set<String>()
+    
+    var items: [Item] {
+        rows.flatMap { s in
+            var arr: [Item] = [.row(s)]
+            if selection.contains(s) { arr.append(.detail(s)) }
+            return arr
+        }
+    }
+    
+    var body: some View {
+        List {
+            ForEach(items) { item in
+                switch item {
+                case .row(let s):
+                    HStack {
+                        Image(systemName: selection.contains(s) ? "checkmark.circle.fill" : "circle")
+                        Text(s)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.default) {
+                            toggle(s)
+                        }
+                    }
+                case .detail(let s):
+                    Text("Here goes the slider for \(s)")
+                }
+            }
+        }
+    }
+    
+    func toggle(_ row: String) {
+        if selection.contains(row) { selection.remove(row) }
+        else { selection.insert(row) }
+    }
+}
+
+#Preview {
+    RowResizeTestView()
 }
