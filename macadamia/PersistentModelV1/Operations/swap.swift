@@ -558,8 +558,6 @@ struct InlineSwapManager {
         
         try? modelContext.save()
         
-        let sendableMint = CashuSwift.Mint(from)
-        
         Task {
             do {
                 swapLogger.debug("Attempting to melt...")
@@ -576,7 +574,6 @@ struct InlineSwapManager {
                         proofs.setState(.spent)
                     
                         let sendableProofs = meltResult.change ?? []
-                        var internalChangeProofs = [Proof]()
                         
                         do {
                             try from.addProofs(sendableProofs,

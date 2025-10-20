@@ -141,12 +141,9 @@ struct EventList: View {
                     .font(.body)
                     HStack {
                         Spacer().frame(width: 28)
-                        let mints = eventGroup.events.compactMap { $0.mints }.flatMap { $0 }
-                        ForEach(mints) { mint in
-                            Text(mint.displayName)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
+                        mintLabel
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
@@ -174,6 +171,24 @@ struct EventList: View {
                 Image(systemName: "xmark")
             case .transfer, .pendingTransfer:
                 Image(systemName: "arrow.down.left.arrow.up.right")
+            }
+        }
+        
+        private var mintLabel: Text {
+            switch eventGroup.events.first?.kind {
+            case .pendingTransfer, .transfer:
+                if let from = eventGroup.events.first?.mints?[0],
+                   let to = eventGroup.events.first?.mints?[1] {
+                    return Text("\(from.displayName) ") + Text(Image(systemName: "arrow.right")) + Text(" \(to.displayName)")
+                } else {
+                    return Text("...")
+                }
+            case nil:
+                return Text("")
+            default:
+                let mints = eventGroup.events.compactMap { $0.mints }.flatMap { $0 }
+                let names = mints.map(\.displayName)
+                return Text(names.joined(separator: ", "))
             }
         }
     }
