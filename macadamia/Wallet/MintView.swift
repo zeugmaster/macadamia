@@ -31,6 +31,7 @@ struct MintView: View {
     
     @State private var pollingTimer: Timer?
     @State private var isCheckingInvoiceState = false
+    @State private var hasLoggedPollingStart = false
 
     init(pendingMintEvent: Event? = nil) {
         
@@ -179,11 +180,19 @@ struct MintView: View {
         Task {
             do {
                 buttonState = .loading()
+                if !hasLoggedPollingStart {
+                    print("auto polling for quote state with mint \(selectedMint.url.absoluteString) and id \(quote.quote)", terminator: "")
+                    fflush(stdout)
+                    hasLoggedPollingStart = true
+                } else {
+                    print(".", terminator: "")
+                    fflush(stdout)
+                }
                 isCheckingInvoiceState = true
-                logger.debug("auto polling for quote state with mint \(selectedMint.url.absoluteString) and id \(quote.quote)")
                 let mintQuote = try await CashuSwift.mintQuoteState(for: quote.quote, mint: CashuSwift.Mint(selectedMint))
                 
                 if mintQuote.state == .paid || mintQuote.paid == true {
+                    print("")  // New line after polling completes
                     isCheckingInvoiceState = false
                     await MainActor.run {
                         requestMint()
@@ -193,6 +202,7 @@ struct MintView: View {
                     isCheckingInvoiceState = false
                 }
             } catch {
+                print("")  // New line after error
                 buttonState = .idle("Mint", action: { requestMint() })
                 // stop trying automatically if the operation fails
                 pollingTimer?.invalidate()
