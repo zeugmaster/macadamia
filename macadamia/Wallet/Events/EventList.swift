@@ -172,6 +172,8 @@ struct EventList: View {
                 Image(systemName: "arrow.uturn.right")
             case .none:
                 Image(systemName: "xmark")
+            case .transfer, .pendingTransfer:
+                Image(systemName: "arrow.down.left.arrow.up.right")
             }
         }
     }
@@ -249,6 +251,8 @@ struct EventList: View {
         case .melt:             return ("Payment", nil)
         case .restore:          return ("Restore", nil)
         case .drain:            return ("Drain", nil)
+        case .pendingTransfer:  return ("Pending Transfer", nil)
+        case .transfer:         return ("Transfer", nil)
         }
     }
     
@@ -283,7 +287,7 @@ struct EventList: View {
         case .restore:
             if let e = group.events.first { RestoreEventSummary(event: e) } else { Text("No restore event provided") }
         default:
-            EmptyView()
+            Text("Unknown event kind.")
         }
     }
 }

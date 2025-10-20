@@ -115,7 +115,7 @@ struct WalletView: View {
                                 RoundedRectangle(cornerRadius: 10)
                                     .stroke(
                                         LinearGradient(
-                                            colors: [Color.gray.opacity(0.8), Color.gray.opacity(0.3)],
+                                            colors: [Color.gray.opacity(0.6), Color.gray.opacity(0.2)],
                                             startPoint: .topLeading,
                                             endPoint: .bottomTrailing
                                         ),
@@ -204,7 +204,7 @@ struct WalletView: View {
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(
                         LinearGradient(
-                            colors: [Color.gray.opacity(0.5), Color.gray.opacity(0.2)],
+                            colors: [Color.gray.opacity(0.6), Color.gray.opacity(0.2)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),

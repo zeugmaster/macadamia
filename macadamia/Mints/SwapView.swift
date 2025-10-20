@@ -158,7 +158,7 @@ struct SwapView: View {
         
         state = .ready
           
-        let swapManager = SwapManager(modelContext: modelContext) { swapState in
+        let swapManager = InlineSwapManager(modelContext: modelContext) { swapState in
             switch swapState {
             case .ready:
                 state = .ready

@@ -156,7 +156,7 @@ class DatabaseManager {
 
 enum AppSchemaV1: VersionedSchema {
     
-    static var versionIdentifier = Schema.Version(1,0,0)
+    static let versionIdentifier = Schema.Version(1,0,0)
     
     static var models: [any PersistentModel.Type] {
         [Wallet.self,
@@ -428,6 +428,8 @@ enum AppSchemaV1: VersionedSchema {
             case melt
             case restore
             case drain
+            case pendingTransfer
+            case transfer
         }
         
         init(date: Date,

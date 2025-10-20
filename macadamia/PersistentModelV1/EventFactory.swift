@@ -153,13 +153,15 @@ extension AppSchemaV1.Event {
                           mints:[Mint],
                           change: [Proof]? = nil,
                           preImage: String? = nil, // FIXME: should not be optional
-                          groupingID: UUID? = nil) -> Event {
+                          groupingID: UUID? = nil,
+                          meltQuote: CashuSwift.Bolt11.MeltQuote? = nil /* should not be optional either */) -> Event {
         Event(date: Date(),
               unit: unit,
               shortDescription: shortDescription,
               visible: visible,
               kind: .melt,
               wallet: wallet,
+              bolt11MeltQuote: meltQuote,
               amount: amount,
               longDescription: longDescription,
               proofs: change,
@@ -180,5 +182,62 @@ extension AppSchemaV1.Event {
               kind: .restore,
               wallet: wallet,
               longDescription: longDescription)
+    }
+    
+    static func pendingTransferEvent(wallet: Wallet,
+                                     amount: Int,
+                                     unit: Unit = .sat,
+                                     from: Mint,
+                                     to: Mint,
+                                     proofs: [Proof],
+                                     meltQuote: CashuSwift.Bolt11.MeltQuote,
+                                     mintQuote: CashuSwift.Bolt11.MintQuote,
+                                     groupingID: UUID?) -> Event {
+        Event(date: Date(),
+              unit: unit,
+              shortDescription: "Pending Transfer",
+              visible: true,
+              kind: .pendingTransfer,
+              wallet: wallet,
+              bolt11MintQuote: mintQuote,
+              bolt11MeltQuote: meltQuote,
+              amount: amount,
+              expiration: nil,
+              longDescription: nil,
+              proofs: nil,
+              memo: nil,
+              mints: [from, to],
+              preImage: nil,
+              redeemed: nil,
+              groupingID: groupingID)
+    }
+    
+    static func transferEvent(wallet: Wallet,
+                              amount: Int,
+                              unit: Unit = .sat,
+                              from: Mint,
+                              to: Mint,
+                              proofs: [Proof],
+                              meltQuote: CashuSwift.Bolt11.MeltQuote,
+                              mintQuote: CashuSwift.Bolt11.MintQuote,
+                              preImage: String?,
+                              groupingID: UUID?) -> Event {
+        Event(date: Date(),
+              unit: unit, shortDescription: "Transfer",
+              visible: true,
+              kind: .transfer,
+              wallet: wallet,
+              bolt11MintQuote: mintQuote,
+              bolt11MeltQuote: meltQuote,
+              amount: amount,
+              token: nil,
+              expiration: nil,
+              longDescription: nil,
+              proofs: proofs,
+              memo: nil,
+              mints: [from, to],
+              preImage: preImage,
+              redeemed: nil,
+              groupingID: groupingID)
     }
 }
