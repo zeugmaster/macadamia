@@ -568,10 +568,10 @@ struct InlineSwapManager {
                                                            mint: CashuSwift.Mint(from),
                                                            proofs: proofs.sendable())
                 
-                swapLogger.info("DLEQ check on melt change proofs: \(meltResult.dleqResult)")
+                swapLogger.info("DLEQ check on melt change proofs: \(String(describing: meltResult.dleqResult))")
                 
                 await MainActor.run {
-                    if meltResult.quote.paid || meltResult.quote.state == .paid {
+                    if meltResult.quote.paid ?? false || meltResult.quote.state == .paid {
                     
                         let sendableProofs = meltResult.change
                         var internalChangeProofs = [Proof]()
@@ -642,25 +642,29 @@ struct InlineSwapManager {
                                                             mint: sendableMint,
                                                             seed: wallet.seed)
                 
-                swapLogger.info("DLEQ check on newly minted proofs: \(mintResult.dleqResult)")
+                swapLogger.info("DLEQ check on newly minted proofs: \(String(describing: mintResult.dleqResult))")
                 
-                try await MainActor.run {
-                    let internalProofs = try to.addProofs(mintResult.proofs, to: modelContext)
-                    
-                    let transferEvent = Event.transferEvent(wallet: wallet,
-                                                            amount: pendingTransferEvent.amount,
-                                                            from: from,
-                                                            to: to,
-                                                            proofs: internalProofs,
-                                                            meltQuote: meltResult,
-                                                            mintQuote: mintQuote,
-                                                            preImage: meltResult.paymentPreimage,
-                                                            groupingID: nil)
-                    modelContext.inser(transferEvent)
-                    pendingTransferEvent.visible = false
-                    try modelContext.save()
-                    
-                    updateHandler(.success)
+                await MainActor.run {
+                    do {
+                        let internalProofs = try to.addProofs(mintResult.proofs, to: modelContext)
+                        
+                        let transferEvent = Event.transferEvent(wallet: wallet,
+                                                                amount: pendingTransferEvent.amount ?? 0,
+                                                                from: from,
+                                                                to: to,
+                                                                proofs: internalProofs,
+                                                                meltQuote: meltResult,
+                                                                mintQuote: mintQuote,
+                                                                preImage: meltResult.paymentPreimage,
+                                                                groupingID: nil)
+                        modelContext.insert(transferEvent)
+                        pendingTransferEvent.visible = false
+                        try modelContext.save()
+                        
+                        updateHandler(.success)
+                    } catch {
+                        updateHandler(.fail(error: error))
+                    }
                 }
             } catch {
                 DispatchQueue.main.async {
