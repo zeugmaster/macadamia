@@ -621,46 +621,46 @@ struct InlineSwapManager {
         }
     }
     
-    private func transferIssue(for quote: CashuSwift.Bolt11.MintQuote,
-                               on mint: AppSchemaV1.Mint,
+    private func transferIssue(mintQuote: CashuSwift.Bolt11.MintQuote,
+                               meltResult: CashuSwift.Bolt11.MeltQuote,
+                               from: Mint,
+                               to: Mint,
                                pendingTransferEvent: Event) {
         
-        guard let wallet = mint.wallet else {
-            updateHandler(.fail(error: macadamiaError.databaseError("mint \(mint.url.absoluteString) does not have an associated wallet.")))
+        guard let wallet = from.wallet else {
+            updateHandler(.fail(error: macadamiaError.databaseError("mint \(from.url.absoluteString) does not have an associated wallet.")))
             return
         }
         
         updateHandler(.minting)
         
-        let sendableMint = CashuSwift.Mint(mint)
+        let sendableMint = CashuSwift.Mint(to)
         
         Task {
             do {
-                let mintResult = try await CashuSwift.issue(for: quote,
+                let mintResult = try await CashuSwift.issue(for: mintQuote,
                                                             mint: sendableMint,
                                                             seed: wallet.seed)
                 
                 swapLogger.info("DLEQ check on newly minted proofs: \(mintResult.dleqResult)")
                 
-                await MainActor.run {
-                    do {
-                        try mint.addProofs(mintResult.proofs, to: modelContext)
-                        
-//                        let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
-//                                                    shortDescription: "Ecash created",
-//                                                    wallet: wallet,
-//                                                    quote: quote,
-//                                                    mint: mint,
-//                                                    amount: quote.requestDetail?.amount ?? 0)
-                        
-                        
-//                        completion(.success((proofs, event)))
-                        
-                        // call mintdidsucceed
-                        
-                    } catch {
-                        updateHandler(.fail(error: error))
-                    }
+                try await MainActor.run {
+                    let internalProofs = try to.addProofs(mintResult.proofs, to: modelContext)
+                    
+                    let transferEvent = Event.transferEvent(wallet: wallet,
+                                                            amount: pendingTransferEvent.amount,
+                                                            from: from,
+                                                            to: to,
+                                                            proofs: internalProofs,
+                                                            meltQuote: meltResult,
+                                                            mintQuote: mintQuote,
+                                                            preImage: meltResult.paymentPreimage,
+                                                            groupingID: nil)
+                    modelContext.inser(transferEvent)
+                    pendingTransferEvent.visible = false
+                    try modelContext.save()
+                    
+                    updateHandler(.success)
                 }
             } catch {
                 DispatchQueue.main.async {
@@ -671,17 +671,4 @@ struct InlineSwapManager {
             }
         }
     }
-//    
-//    private func mintingDidSucceed(mintAttemptEvent: Event,
-//                                   mintEvent: Event,
-//                                   proofs: [Proof]) {
-//        
-//        // MARK: hide pending transfer event
-//        // MARK: create and save transfer event
-//
-//        mintAttemptEvent.visible = false
-//        AppSchemaV1.insert(proofs + [mintEvent], into: modelContext)
-//
-//        updateHandler(.success)
-//    }
 }
