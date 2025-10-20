@@ -507,7 +507,6 @@ struct InlineSwapManager {
                 
         swapLogger.debug("no blank outputs were assigned, creating new")
         let changeOutputSet = BlankOutputSet(tuple: changeOutputs)
-//        meltAttemptEvent.blankOutputs = changeOutputSet
         
         if !changeOutputSet.outputs.isEmpty {
             if let keysetID = changeOutputs.outputs.first?.id {
@@ -554,11 +553,12 @@ struct InlineSwapManager {
         
         pendingTransferEvent.blankOutputs = blankOutputSet
         modelContext.insert(pendingTransferEvent)
+        
+        proofs.setState(.pending)
+        
         try? modelContext.save()
         
         let sendableMint = CashuSwift.Mint(from)
-        
-        
         
         Task {
             do {
@@ -572,26 +572,18 @@ struct InlineSwapManager {
                 
                 await MainActor.run {
                     if meltResult.quote.paid ?? false || meltResult.quote.state == .paid {
+                        
+                        proofs.setState(.spent)
                     
-                        let sendableProofs = meltResult.change
+                        let sendableProofs = meltResult.change ?? []
                         var internalChangeProofs = [Proof]()
                         
-                        if let sendableProofs,
-                           !sendableProofs.isEmpty,
-                           let changeKeyset = sendableMint.keysets.first(where: { $0.keysetID == sendableProofs.first?.keysetID }) {
-                            
-                            swapLogger.debug("Melt quote includes change, attempting saving to db.")
-                            
-                            let unit = Unit(changeKeyset.unit) ?? .other
-                            let inputFee = changeKeyset.inputFeePPK
-                            
-                            do {
-                                try from.addProofs(sendableProofs,
-                                                   to: modelContext,
-                                                   increaseDerivationCounter: false)
-                            } catch {
-                                swapLogger.error("unable to add \(sendableProofs.count) change proofs to mint \(from.url)")
-                            }
+                        do {
+                            try from.addProofs(sendableProofs,
+                                               to: modelContext,
+                                               increaseDerivationCounter: false)
+                        } catch {
+                            swapLogger.error("unable to add \(sendableProofs.count) change proofs to mint \(from.url)")
                         }
                         
                         transferIssue(mintQuote: mintQuote,
@@ -601,24 +593,30 @@ struct InlineSwapManager {
                                       pendingTransferEvent: pendingTransferEvent)
                     } else {
                         
-                        #warning("update proof state, remove from pending transfer event")
-                        
                         swapLogger.info("""
                                         Melt function returned a quote with state NOT PAID, \
                                         probably because the lightning payment failed
                                         """)
-                        updateHandler(.fail(error: CashuError.unknownError("Transfer did not complete because the melt quote was returned with state UNPAID.")))
+                        meltFailed(with: CashuError.unknownError("Transfer did not complete because the melt quote was returned with state UNPAID."),
+                                         proofs: proofs,
+                                         pendingTransferEvent: pendingTransferEvent)
                     }
                 }
             } catch {
-                DispatchQueue.main.async {
-                    
-                    #warning("update proof state, remove from pending transfer event")
-                    
-                    updateHandler(.fail(error: error))
+                await MainActor.run {
+                    meltFailed(with: error, proofs: proofs, pendingTransferEvent: pendingTransferEvent)
                 }
             }
         }
+    }
+    
+    private func meltFailed(with error: Error, proofs: [Proof], pendingTransferEvent: Event) {
+        proofs.setState(.valid)
+        pendingTransferEvent.blankOutputs = nil
+        pendingTransferEvent.proofs = nil
+        
+        try? modelContext.save()
+        updateHandler(.fail(error: error))
     }
     
     private func transferIssue(mintQuote: CashuSwift.Bolt11.MintQuote,
