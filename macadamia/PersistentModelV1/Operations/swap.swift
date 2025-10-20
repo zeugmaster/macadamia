@@ -564,16 +564,14 @@ struct InlineSwapManager {
             do {
                 swapLogger.debug("Attempting to melt...")
                 
-                let meltResult = try await CashuSwift.melt(with: meltQuote,
-                                                           mint: sendableMint,
-                                                           proofs: proofs.sendable(),
-                                                           blankOutputs: blankOutputSet?.tuple())
+                let meltResult = try await CashuSwift.melt(quote: meltQuote,
+                                                           mint: CashuSwift.Mint(from),
+                                                           proofs: proofs.sendable())
                 
-                swapLogger.info("DLEQ check on melt change proofs was\(meltResult.dleqValid ? " " : " NOT ")successful.")
+                swapLogger.info("DLEQ check on melt change proofs: \(meltResult.dleqResult)")
                 
                 await MainActor.run {
-                    if meltResult.paid {
-                    
+                    if meltResult.quote.paid || meltResult.quote.state == .paid {
                     
                         let sendableProofs = meltResult.change
                         var internalChangeProofs = [Proof]()
@@ -596,8 +594,10 @@ struct InlineSwapManager {
                             }
                         }
                         
-                        transferIssue(for: mintQuote,
-                                      on: to,
+                        transferIssue(mintQuote: mintQuote,
+                                      meltResult: meltResult.quote,
+                                      from: from,
+                                      to: to,
                                       pendingTransferEvent: pendingTransferEvent)
                     } else {
                         
