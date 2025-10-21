@@ -17,7 +17,7 @@ struct BalancerView: View {
     @State private var currentAlert: AlertDetail?
     
     @State private var swapStatus: String?
-    @State private var currentSwapManager: SwapManager?
+    @State private var currentSwapManager: InlineSwapManager?
     
     @State private var buttonState = ActionButtonState.idle("Select")
     @State private var allocations: Dictionary<Mint, Double> = [:]
@@ -262,7 +262,7 @@ struct BalancerView: View {
             
             let transaction = transactions[index]
             
-            currentSwapManager = SwapManager(modelContext: modelContext) { swapState in
+            currentSwapManager = InlineSwapManager(modelContext: modelContext) { swapState in
                 switch swapState {
                 case .ready, .loading, .melting, .minting:
                     print("tx from \(transaction.from.url) to \(transaction.to.url) has changed state to \(swapState)")

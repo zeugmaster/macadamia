@@ -323,7 +323,7 @@ struct RedeemView<AdditionalControls: View>: View {
         
         buttonState = .loading()
         
-        let swapManager = SwapManager(modelContext: modelContext) { state in
+        let swapManager = InlineSwapManager(modelContext: modelContext) { state in
             switch state {
             case .ready:
                 break
