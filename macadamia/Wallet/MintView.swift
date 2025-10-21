@@ -95,11 +95,11 @@ struct MintView: View {
                 Spacer(minLength: 50)
                     .listRowBackground(Color.clear)
             }
-            .navigationTitle("Mint")
+            .navigationTitle("Issue Ecash")
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
             .onAppear {
                 if quote != nil {
-                    buttonState = .idle("Mint", action: requestMint)
+                    buttonState = .idle("Issue", action: requestMint)
                 } else {
                     buttonState = .idle("Get Invoice", action: getQuote)
                 }
@@ -153,7 +153,7 @@ struct MintView: View {
                 pendingMintEvent = event
                 AppSchemaV1.insert([event], into: modelContext)
                 
-                buttonState = .idle("Mint", action: {
+                buttonState = .idle("Issue Ecash", action: {
                     requestMint()
                 })
             case .failure(let error):
@@ -198,12 +198,12 @@ struct MintView: View {
                         requestMint()
                     }
                 } else {
-                    buttonState = .idle("Mint", action: { requestMint() })
+                    buttonState = .idle("Issue Ecash", action: { requestMint() })
                     isCheckingInvoiceState = false
                 }
             } catch {
                 print("")  // New line after error
-                buttonState = .idle("Mint", action: { requestMint() })
+                buttonState = .idle("Issue Ecash", action: { requestMint() })
                 // stop trying automatically if the operation fails
                 pollingTimer?.invalidate()
                 isCheckingInvoiceState = false
@@ -246,7 +246,7 @@ struct MintView: View {
                 logger.error("Minting was not successful with mint \(selectedMint.url.absoluteString) due to error \(error)")
                 buttonState = .fail()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    buttonState = .idle("Mint", action: requestMint)
+                    buttonState = .idle("Issue Ecash", action: requestMint)
                 }
             }
         }
