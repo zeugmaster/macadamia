@@ -497,10 +497,10 @@ struct InlineSwapManager {
                                  selectedProofs: [Proof]) {
         
         guard let changeOutputs = try? CashuSwift.generateBlankOutputs(quote: meltQuote,
-                                                                 proofs: selectedProofs,
-                                                                 mint: fromMint,
-                                                                 unit: meltQuote.quoteRequest?.unit ?? "sat",
-                                                                 seed: seed) else {
+                                                                       proofs: selectedProofs,
+                                                                       mint: fromMint,
+                                                                       unit: meltQuote.quoteRequest?.unit ?? "sat",
+                                                                       seed: seed) else {
             updateHandler(.fail(error: CashuError.cryptoError("Unable to create change outputs.")))
             return
         }

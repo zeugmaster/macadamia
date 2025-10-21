@@ -294,13 +294,15 @@ struct EventList: View {
         case .receive:
             if let e = group.events.first { ReceiveEventSummary(event: e) } else { Text("No receive event provided.") }
         case .pendingReceive:
-            if let e = group.events.first { RedeemLaterView(event: e) } else { Text("No pending receive event provided") }
+            if let e = group.events.first { RedeemLaterView(event: e) } else { Text("No pending receive event provided.") }
         case .pendingMelt:
             MeltView(events: group.events)
         case .melt:
             MeltEventSummary(events: group.events)
         case .restore:
-            if let e = group.events.first { RestoreEventSummary(event: e) } else { Text("No restore event provided") }
+            if let e = group.events.first { RestoreEventSummary(event: e) } else { Text("No restore event provided.") }
+        case .transfer:
+            if let e = group.events.first { TransferEventSummary(event: e) } else { Text("No transfer event provided.")}
         default:
             Text("Unknown event kind.")
         }

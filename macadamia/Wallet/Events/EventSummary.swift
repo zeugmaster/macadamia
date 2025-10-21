@@ -328,3 +328,71 @@ struct RestoreEventSummary: View {
         }
     }
 }
+
+struct TransferEventSummary: View {
+    let event: Event
+    @State private var showDetails = false
+    
+    var body: some View {
+        List {
+            Section {
+                VStack (alignment: .leading) {
+                    Text("From")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(event.mints?[0].displayName ?? "Not found")
+                }
+                
+                VStack (alignment: .leading) {
+                    Text("To")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(event.mints?[1].displayName ?? "Not found")
+                }
+            } header: {
+                Text("Mints")
+            }
+            
+            Section {
+                Text("\(String(event.amount ?? 0)) \(event.unit.rawValue)")
+                    .monospaced()
+            } header: {
+                Text("Amount")
+            }
+            
+            Section {
+                Button {
+                    withAnimation {
+                        showDetails.toggle()
+                    }
+                } label: {
+                    HStack {
+                        Text("\(showDetails ? "Hide" : "Show") details")
+                            .opacity(0.8)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.footnote)
+                            .rotationEffect(.degrees(showDetails ? 90 : 0))
+                    }
+                }
+            }
+            
+            if showDetails {
+                Section {
+                    CopyableRow(label: "Quote ID", value: event.bolt11MeltQuote?.quote ?? "nil")
+                    CopyableRow(label: "Payment Preimage", value: event.bolt11MeltQuote?.paymentPreimage ?? "nil")
+                    CopyableRow(label: "Fee Reserve", value: String(event.bolt11MeltQuote?.feeReserve ?? 0))
+                } header: {
+                    Text("Payment")
+                }
+                
+                Section {
+                    CopyableRow(label: "Quote ID", value: event.bolt11MintQuote?.quote ?? "nil")
+                } header: {
+                    Text("Ecash Created")
+                }
+            }
+        }
+    }
+}
