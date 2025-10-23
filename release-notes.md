@@ -1,18 +1,9 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**iMessage Extension 🤖**
+**Distribute Funds 💰⚖️**
 
-This version of *macadamia* includes an iMessage Extension that lets you send ecash straight from the messages app 🚀.
-
-Note: The recipient needs to also have *macadamia* installed to open the message. If they do not have it, 
-send them a regular token using the main app's share sheet.
-
-**Build 4** adds the option to select from a handful of banner images to be included with the ecash message! 🪄
-
-**Input Conversion 💶**
-
-The wallet can now convert amounts to and from your preferred fiat unit. Select it in the Setting tab. 
+This version of *macadamia Wallet* allows you to make batch-transfers to distribute funds from multiple mints according to your desired allocation! Have too much on one mint? Move the sliders and let *macadamia* do the rest! 
 
 ------
 

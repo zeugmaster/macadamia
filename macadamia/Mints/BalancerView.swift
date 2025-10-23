@@ -285,6 +285,9 @@ struct BalancerView: View {
         currentSwapManager = nil
         swapStatus = nil
         buttonState = .success()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            dismiss()
+        }
     }
 }
 
