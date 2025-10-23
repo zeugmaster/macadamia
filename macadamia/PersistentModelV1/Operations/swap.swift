@@ -388,6 +388,12 @@ final class SwapService {
 @MainActor
 struct InlineSwapManager {
     
+    enum TransferError: Error {
+        case missingData(String)
+        case meltFailure(Error)
+        case unknownQuoteState
+    }
+    
     enum State {
         case ready, loading, melting, minting, success
         case fail(error: Error?)
@@ -489,6 +495,98 @@ struct InlineSwapManager {
         }
     }
     
+    func resumeTransfer(with pendingTransferEvent: Event) {
+        guard let mintQuote = pendingTransferEvent.bolt11MintQuote,
+              let meltQuote = pendingTransferEvent.bolt11MeltQuote,
+              let mints     = pendingTransferEvent.mints,
+              mints.count  >= 2 else {
+            updateHandler(.fail(error: TransferError.missingData("Unable to find mint quote, mwlt quote or associated mints for this transfer event.")))
+            return
+        }
+        
+//        guard let wallet = pendingTransferEvent.wallet else {
+//            updateHandler(.fail(error: TransferError.missingData("Unable to find associated wallet for pending transfer event.")))
+//            return
+//        }
+//        
+        let from = mints[0]
+        let to   = mints[1]
+        
+        guard let blankOutputSet = pendingTransferEvent.blankOutputs else {
+            updateHandler(.fail(error: TransferError.missingData("No change outputs where assigned to this operation.")))
+            return
+        }
+        
+        let sendableFrom = CashuSwift.Mint(from)
+        
+        guard let proofs = pendingTransferEvent.proofs else {
+            updateHandler(.fail(error: TransferError.missingData("Trying to resume transfer, but no ecash was previously assigned to the operation.")))
+            return
+        }
+        
+        Task {
+            do {
+                let meltResult = try await CashuSwift.meltState(for: meltQuote.quote,
+                                                                with: sendableFrom,
+                                                                blankOutputs: blankOutputSet.tuple())
+                
+                await MainActor.run {
+                    switch meltResult.quote.state {
+                    case .paid:
+                        
+                        meltDidSucceed(mintQuote: mintQuote,
+                                       newMeltQuote: meltResult.quote,
+                                       change: meltResult.change ?? [],
+                                       proofs: proofs,
+                                       from: from,
+                                       to: to,
+                                       pendingTransferEvent: pendingTransferEvent)
+                        
+                    case .pending:
+                        
+                        updateHandler(.fail(error: TransferError.unknownQuoteState))
+                        
+                    case .unpaid:
+                        
+                        transferMelt(meltQuote: meltQuote,
+                                     mintQuote: mintQuote,
+                                     from: from,
+                                     to: to,
+                                     with: proofs,
+                                     pendingTransferEvent: pendingTransferEvent)
+                        
+                    case .none:
+                        
+                        switch meltResult.quote.paid {
+                        case true:
+                            meltDidSucceed(mintQuote: mintQuote,
+                                           newMeltQuote: meltResult.quote,
+                                           change: meltResult.change ?? [],
+                                           proofs: proofs,
+                                           from: from,
+                                           to: to,
+                                           pendingTransferEvent: pendingTransferEvent)
+                        case false:
+                            transferMelt(meltQuote: meltQuote,
+                                         mintQuote: mintQuote,
+                                         from: from,
+                                         to: to,
+                                         with: proofs,
+                                         pendingTransferEvent: pendingTransferEvent)
+                        default:
+                            
+                            updateHandler(.fail(error: TransferError.unknownQuoteState))
+                        }
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    updateHandler(.fail(error: error))
+                }
+            }
+        }
+    }
+    
     private func setupDidSucceed(fromMint: Mint,
                                  toMint: Mint,
                                  seed: String,
@@ -517,6 +615,27 @@ struct InlineSwapManager {
             }
         }
         
+        guard let wallet = fromMint.wallet else {
+            updateHandler(.fail(error: macadamiaError.databaseError("mint \(fromMint.url.absoluteString) does not have an associated wallet.")))
+            return
+        }
+        
+        
+        
+        let pendingTransferEvent = Event.pendingTransferEvent(wallet: wallet,
+                                                              amount: meltQuote.amount,
+                                                              from: fromMint,
+                                                              to: toMint,
+                                                              proofs: selectedProofs,
+                                                              meltQuote: meltQuote,
+                                                              mintQuote: mintQuote,
+                                                              groupingID: nil)
+        
+        pendingTransferEvent.blankOutputs = changeOutputSet
+        modelContext.insert(pendingTransferEvent)
+        
+        selectedProofs.setState(.pending)
+        
         try? modelContext.save()
         
         transferMelt(meltQuote: meltQuote,
@@ -524,7 +643,7 @@ struct InlineSwapManager {
                      from: fromMint,
                      to: toMint,
                      with: selectedProofs,
-                     blankOutputSet: changeOutputSet)
+                     pendingTransferEvent: pendingTransferEvent)
     }
     
     // MARK: - Inlined melt operation
@@ -533,30 +652,9 @@ struct InlineSwapManager {
                               from: Mint,
                               to: Mint,
                               with proofs: [Proof],
-                              blankOutputSet: BlankOutputSet?) {
-        
-        guard let wallet = from.wallet else {
-            updateHandler(.fail(error: macadamiaError.databaseError("mint \(from.url.absoluteString) does not have an associated wallet.")))
-            return
-        }
+                              pendingTransferEvent: Event) {
         
         updateHandler(.melting)
-        
-        let pendingTransferEvent = Event.pendingTransferEvent(wallet: wallet,
-                                                              amount: meltQuote.amount,
-                                                              from: from,
-                                                              to: to,
-                                                              proofs: proofs,
-                                                              meltQuote: meltQuote,
-                                                              mintQuote: mintQuote,
-                                                              groupingID: nil)
-        
-        pendingTransferEvent.blankOutputs = blankOutputSet
-        modelContext.insert(pendingTransferEvent)
-        
-        proofs.setState(.pending)
-        
-        try? modelContext.save()
         
         Task {
             do {
@@ -564,30 +662,21 @@ struct InlineSwapManager {
                 
                 let meltResult = try await CashuSwift.melt(quote: meltQuote,
                                                            mint: CashuSwift.Mint(from),
-                                                           proofs: proofs.sendable())
+                                                           proofs: proofs.sendable(),
+                                                           blankOutputs: pendingTransferEvent.blankOutputs?.tuple())
                 
                 swapLogger.info("DLEQ check on melt change proofs: \(String(describing: meltResult.dleqResult))")
                 
                 await MainActor.run {
                     if meltResult.quote.paid ?? false || meltResult.quote.state == .paid {
                         
-                        proofs.setState(.spent)
-                    
-                        let sendableProofs = meltResult.change ?? []
-                        
-                        do {
-                            try from.addProofs(sendableProofs,
-                                               to: modelContext,
-                                               increaseDerivationCounter: false)
-                        } catch {
-                            swapLogger.error("unable to add \(sendableProofs.count) change proofs to mint \(from.url)")
-                        }
-                        
-                        transferIssue(mintQuote: mintQuote,
-                                      meltResult: meltResult.quote,
-                                      from: from,
-                                      to: to,
-                                      pendingTransferEvent: pendingTransferEvent)
+                        meltDidSucceed(mintQuote: mintQuote,
+                                       newMeltQuote: meltResult.quote,
+                                       change: meltResult.change ?? [],
+                                       proofs: proofs,
+                                       from: from,
+                                       to: to,
+                                       pendingTransferEvent: pendingTransferEvent)
                     } else {
                         
                         swapLogger.info("""
@@ -605,6 +694,32 @@ struct InlineSwapManager {
                 }
             }
         }
+    }
+    
+    private func meltDidSucceed(mintQuote: CashuSwift.Bolt11.MintQuote,
+                                newMeltQuote: CashuSwift.Bolt11.MeltQuote,
+                                change: [CashuSwift.Proof],
+                                proofs: [Proof],
+                                from: Mint,
+                                to: Mint,
+                                pendingTransferEvent: Event) {
+        
+        proofs.setState(.spent)
+        
+        do {
+            try from.addProofs(change,
+                               to: modelContext,
+                               increaseDerivationCounter: false)
+        } catch {
+            swapLogger.error("unable to add \(change.count) change proofs to mint \(from.url)")
+        }
+        
+        transferIssue(mintQuote: mintQuote,
+                      meltResult: newMeltQuote,
+                      from: from,
+                      to: to,
+                      pendingTransferEvent: pendingTransferEvent)
+        
     }
     
     private func meltFailed(with error: Error, proofs: [Proof], pendingTransferEvent: Event) {

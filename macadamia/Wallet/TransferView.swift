@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import CashuSwift
 
 // FIXME: rename pending transfer view
 struct TransferView: View {
@@ -14,6 +15,8 @@ struct TransferView: View {
     @State private var pendingTransferEvent: Event
     
     @State private var buttonState = ActionButtonState.idle("")
+    
+    @State private var currentSwapManager: InlineSwapManager?
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -105,7 +108,61 @@ struct TransferView: View {
     }
     
     private func complete() {
-        print(String(describing: pendingTransferEvent.proofs))
+        
+        currentSwapManager = InlineSwapManager(modelContext: modelContext, updateHandler: { state in
+            switch state {
+            case .ready:
+                print("swap manager ready")
+            case .loading:
+                buttonState = .loading()
+            case .melting:
+                buttonState = .loading("Paying...")
+            case .minting:
+                buttonState = .loading("Issuing Ecash")
+            case .success:
+                buttonState = .success()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    dismiss()
+                }
+            case .fail(let error):
+                buttonState = .fail()
+                
+                switch error {
+                case let .meltFailure(meltError) as InlineSwapManager.TransferError:
+                    
+                    let primary = AlertButton(title: "Remove Payment",
+                                                role: .destructive,
+                                                action: { removeEvent() })
+                    
+                    displayAlert(alert: AlertDetail(title: "Unpaid ⚠",
+                                                    description: "This payment did not go through and one or more parts are marked \"unpaid\". The Ecash reserved for this operation is still valid and can be made available by removing the pending transfer event.",
+                                                    primaryButton: primary))
+                    
+                
+                case let .missingData(string) as InlineSwapManager.TransferError:
+                    displayAlert(alert: AlertDetail(title: "Missing Data", description: string))
+                case let error?:
+                    displayAlert(alert: AlertDetail(title: "Error", description: error.localizedDescription))
+                case nil:
+                    displayAlert(alert: AlertDetail(title: "Something went wrong...", description: "No error provided."))
+                }
+            }
+        })
+        
+        currentSwapManager?.resumeTransfer(with: pendingTransferEvent)
+        
+    }
+    
+    private func removeEvent() {
+        pendingTransferEvent.proofs?.setState(.valid)
+        pendingTransferEvent.proofs = nil
+        pendingTransferEvent.visible = false
+        dismiss()
+    }
+    
+    private func displayAlert(alert: AlertDetail) {
+        currentAlert = alert
+        showAlert = true
     }
 }
 
