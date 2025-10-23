@@ -336,19 +336,10 @@ struct TransferEventSummary: View {
     var body: some View {
         List {
             Section {
-                VStack (alignment: .leading) {
-                    Text("From")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(event.mints?[0].displayName ?? "Not found")
-                }
-                
-                VStack (alignment: .leading) {
-                    Text("To")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(event.mints?[1].displayName ?? "Not found")
-                }
+                TransferMintLabel(from: event.mints?[0].displayName ?? "Not found",
+                                  to: event.mints?[1].displayName ?? "Not found")
+                .listRowBackground(EmptyView())
+                .listRowInsets(EdgeInsets())
             } header: {
                 Text("Mints")
             }
