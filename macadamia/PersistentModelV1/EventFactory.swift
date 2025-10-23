@@ -204,7 +204,7 @@ extension AppSchemaV1.Event {
               amount: amount,
               expiration: nil,
               longDescription: nil,
-              proofs: nil,
+              proofs: proofs,
               memo: nil,
               mints: [from, to],
               preImage: nil,

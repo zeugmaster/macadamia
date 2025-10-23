@@ -303,6 +303,8 @@ struct EventList: View {
             if let e = group.events.first { RestoreEventSummary(event: e) } else { Text("No restore event provided.") }
         case .transfer:
             if let e = group.events.first { TransferEventSummary(event: e) } else { Text("No transfer event provided.")}
+        case .pendingTransfer:
+            if let e = group.events.first { TransferView(pendingTransferEvent: e) } else { Text("No pending transfer event provided.") }
         default:
             Text("Unknown event kind.")
         }
