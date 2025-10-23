@@ -346,6 +346,9 @@ struct MeltView: View {
                     results.append((mint, QuoteState.quote(quote)))
                 } catch CashuError.networkError {
                     results.append((mint, QuoteState.error("Network error")))
+                } catch CashuError.unknownError(let message) where message.contains("internal mpp not allowed") {
+                    logger.warning("user tried to perform self-pay")
+                    results.append((mint, QuoteState.error("Self-pay not possible")))
                 } catch {
                     logger.warning("Error when fetching quote: \(error)")
                     results.append((mint, QuoteState.error("Unknown error")))
