@@ -39,8 +39,6 @@ struct SectionOverlayTest: View {
         List {
             Section {
                 TransferMintLabel(from: "mint.coinos.io", to: "mint.macadamia.cash")
-                    .listRowBackground(EmptyView())
-                    .listRowInsets(EdgeInsets())
             } header: {
                 Text("MInts")
             }
@@ -95,6 +93,8 @@ struct TransferMintLabel: View {
         }
         .background(RoundedRectangle(cornerRadius: 8)
             .fill(Color(uiColor: .secondarySystemGroupedBackground)))
+        .listRowBackground(EmptyView())
+        .listRowInsets(EdgeInsets())
     }
 }
 

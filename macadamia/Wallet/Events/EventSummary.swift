@@ -338,8 +338,6 @@ struct TransferEventSummary: View {
             Section {
                 TransferMintLabel(from: event.mints?[0].displayName ?? "Not found",
                                   to: event.mints?[1].displayName ?? "Not found")
-                .listRowBackground(EmptyView())
-                .listRowInsets(EdgeInsets())
             } header: {
                 Text("Mints")
             }
