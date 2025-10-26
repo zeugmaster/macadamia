@@ -67,6 +67,12 @@ class AppState: ObservableObject {
         loadExchangeRates()
     }
     
+    // Preview/Mock initializer - skips network calls and UserDefaults
+    init(preview: Bool, preferredUnit: ConversionUnit = .none) {
+        self.preferredConversionUnit = preferredUnit
+        // Don't call loadExchangeRates() for previews
+    }
+    
     @Published var exchangeRates: ExchangeRate?
     
     func loadExchangeRates() {

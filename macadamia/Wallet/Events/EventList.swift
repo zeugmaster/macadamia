@@ -66,7 +66,7 @@ struct EventList: View {
                 List {
                     if eventGroups.isEmpty {
                         Text("No transactions yet.")
-                            .monospaced()
+                            .foregroundStyle(.secondary)
                     } else {
                         ForEach(eventGroups.prefix(shortListLength)) { group in
                             MinimalRow(eventGroup: group)

@@ -24,20 +24,30 @@ struct BalanceCard: View {
         VStack {
             ZStack {
                 // Card background with gradient and border
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(
-                        RadialGradient(
-                            gradient: Gradient(colors: [Color(white: 0.12), Color.black]),
-                            center: .topTrailing,
-                            startRadius: 0,
-                            endRadius: cardWidth * 3
+                if #available(iOS 26.0, *) {
+                    ConcentricRectangle(corners: .concentric(minimum: 20), isUniform: true)
+                        .fill(Color.clear)
+                        .glassEffect(.regular, in: .containerRelative)
+                } else {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            RadialGradient(
+                                gradient: Gradient(colors: [Color(white: 0.15), Color.black.opacity(0.3)]),
+                                center: .topTrailing,
+                                startRadius: 0,
+                                endRadius: cardWidth * 1.5
+                            )
+//                            Color.clear
                         )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.gray.opacity(0.6), lineWidth: 1)
-                    )
-                    .frame(width: cardWidth, height: cardHeight)
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.gray.opacity(0.6), lineWidth: 1)
+                        )
+                        .frame(width: cardWidth, height: cardHeight)
+                        .shadow(color: .black.opacity(0.5), radius: 20)
+                }
 
                 // Content inside the card
                 VStack {
@@ -67,7 +77,6 @@ struct BalanceCard: View {
             }
             .frame(width: cardWidth, height: cardHeight)
         }
-        .background(Color.black.edgesIgnoringSafeArea(.all))
         .task(id: balance) {
             convert()
         }
@@ -120,5 +129,15 @@ struct BalanceCard: View {
 }
 
 #Preview {
-    BalanceCard(balance: 500, unit: .sat)
+    ZStack(alignment: .top) {
+        List {
+            ForEach(0..<10) { _ in
+                Text("Hello, World!")
+            }
+        }
+        .safeAreaPadding(.top, 100)
+        BalanceCard(balance: 500, unit: .sat)
+            .environmentObject(AppState(preview: true, preferredUnit: .usd))
+            .padding()
+    }
 }
