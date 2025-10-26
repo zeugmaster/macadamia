@@ -115,27 +115,15 @@ struct SendView: View {
             return
         }
         
-        let selectedUnit: Unit = .sat
-        
-        guard let preSelect = selectedMint.select(allProofs:allProofs,
-                                              amount: amount,
-                                              unit: selectedUnit) else {
-            displayAlert(alert: AlertDetail(with: CashuError.insufficientInputs("")))
-            logger.warning("no proofs could be selected to generate a token with this amount.")
-            tokenGenerationFailed()
-            return
-        }
-        
         buttonState = .loading()
         
-        selectedMint.send(proofs: preSelect.selected,
-                          targetAmount: amount,
-                          memo: tokenMemo) { result in
+        selectedMint.send(amount: amount,
+                          memo: tokenMemo,
+                          modelContext: modelContext) { result in
             switch result {
-            case .success(let (token, swappedProofs, event)):
-                self.token = token
-                AppSchemaV1.insert(swappedProofs + [event], into: modelContext)
+            case .success(let token):
                 buttonState = .success()
+                self.token = token
             case .failure(let error):
                 logger.error("unable to generate token due to error: \(error)")
                 displayAlert(alert: AlertDetail(with: error))

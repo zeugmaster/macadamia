@@ -263,9 +263,6 @@ struct SendEventView: View {
                 TokenShareView(token: token)
             }
         }
-        .onAppear {
-            print(String(describing: token))
-        }
     }
     
     private func checkTokenState(with proofs:[Proof]) {
