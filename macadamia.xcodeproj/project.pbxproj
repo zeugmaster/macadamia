@@ -12,6 +12,7 @@
 		371AA9132E33EB61006D487F /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 371AA9122E33EB61006D487F /* CashuSwift */; };
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
 		3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3725D4D72CD5001A0037DD08 /* AVKit.framework */; };
+		373CE6582EAE6D66000AC589 /* pull_request_template.md in Resources */ = {isa = PBXBuildFile; fileRef = 373CE6572EAE6D54000AC589 /* pull_request_template.md */; };
 		376E88432BE5468B0026FF8D /* Popovers in Frameworks */ = {isa = PBXBuildFile; productRef = 376E88422BE5468B0026FF8D /* Popovers */; };
 		376F43B22B4FEC0D00E55B0F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 376F43B12B4FEC0D00E55B0F /* README.md */; };
 		377A1BC82E6D9E3B00BC1BC1 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
@@ -81,6 +82,7 @@
 		372034BB2B29E1BC00C4F955 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		372034BD2B29E1BD00C4F955 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3725D4D72CD5001A0037DD08 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
+		373CE6572EAE6D54000AC589 /* pull_request_template.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = pull_request_template.md; sourceTree = "<group>"; };
 		376F43B12B4FEC0D00E55B0F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		377FFF012BC451AB00DD2635 /* release-notes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "release-notes.md"; sourceTree = "<group>"; };
 		378B20472D09F3FD003FEEBD /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
@@ -182,6 +184,7 @@
 			children = (
 				376F43B12B4FEC0D00E55B0F /* README.md */,
 				370A83FE2CB94CCD0039A413 /* .swiftformat */,
+				373CE6572EAE6D54000AC589 /* pull_request_template.md */,
 				377FFF012BC451AB00DD2635 /* release-notes.md */,
 				372034B82B29E1BC00C4F955 /* macadamia */,
 				377A1BAA2E6CF53F00BC1BC1 /* macadamiaTests */,
@@ -377,6 +380,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */,
+				373CE6582EAE6D66000AC589 /* pull_request_template.md in Resources */,
 				370A83FF2CB94CCD0039A413 /* .swiftformat in Resources */,
 				376F43B22B4FEC0D00E55B0F /* README.md in Resources */,
 				377FFF022BC451AB00DD2635 /* release-notes.md in Resources */,
