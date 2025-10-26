@@ -35,7 +35,8 @@ struct TokenShareView: View {
             }
             
             TokenText(text: tokenString)
-                .frame(idealHeight: 70)
+                .frame(idealHeight: 90)
+                .listRowInsets(EdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 14))
             Button {
                 copyToClipboard()
             } label: {
