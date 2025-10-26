@@ -55,7 +55,7 @@ struct WalletView: View {
                 ZStack(alignment: .top) {
                     // Event list comes first to be visually behind the balance card
                     EventList(style: .minimal)
-                        .padding(.horizontal, 30)
+                        .padding(.horizontal, 40)
                         .safeAreaPadding(EdgeInsets(top: 180, leading: 0, bottom: 0, trailing: 0))
                     
                     BalanceCard(balance: activeWallet?.balance() ?? 0,
