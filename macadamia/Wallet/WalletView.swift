@@ -51,27 +51,30 @@ struct WalletView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                Spacer().frame(maxHeight: 35)
-                BalanceCard(balance: activeWallet?.balance() ?? 0,
-                            unit: .sat)
-                    .onAppear(perform: {
-                        // quick sanity check for uniqueness of C across list of proofs
-                        guard let activeWallet else {
-                            logger.warning("""
-                                           wallet view appeared with no activeWallet. \
-                                           this will give undefined behaviour.
-                                           """)
-                            return
+                Spacer(minLength: 40)
+                ZStack(alignment: .top) {
+                    // Event list comes first to be visually behind the balance card
+                    EventList(style: .minimal)
+                        .padding(.horizontal, 30)
+                        .safeAreaPadding(EdgeInsets(top: 180, leading: 0, bottom: 0, trailing: 0))
+                    
+                    BalanceCard(balance: activeWallet?.balance() ?? 0,
+                                unit: .sat)
+                        .onAppear(perform: {
+                            // quick sanity check for uniqueness of C across list of proofs
+                            guard let activeWallet else {
+                                logger.warning("""
+                                               wallet view appeared with no activeWallet. \
+                                               this will give undefined behaviour.
+                                               """)
+                                return
+                            }
+                        let uniqueCs = Set(activeWallet.proofs.map( { $0.C }))
+                        if uniqueCs.count != activeWallet.proofs.count {
+                            logger.critical("Wallet seems to contain duplicate proofs.")
                         }
-                    let uniqueCs = Set(activeWallet.proofs.map( { $0.C }))
-                    if uniqueCs.count != activeWallet.proofs.count {
-                        logger.critical("Wallet seems to contain duplicate proofs.")
-                    }
-                })
-                Spacer().frame(maxHeight: 15)
-                EventList(style: .minimal)
-                    .padding(.horizontal, 30)
-                Spacer().frame(maxHeight: 20)
+                    })
+                }
                 HStack(alignment: .center) {
                     // MARK: BUTTON "RECEIVE" -
                     Templates.Menu(

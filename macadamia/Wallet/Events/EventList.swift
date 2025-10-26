@@ -69,6 +69,7 @@ struct EventList: View {
                     } else {
                         ForEach(eventGroups.prefix(shortListLength)) { group in
                             MinimalRow(eventGroup: group)
+                                .listRowSeparator(.hidden)
                         }
                         if eventGroups.count > shortListLength {
                             NavigationLink(destination: EventList(style: .full),
@@ -82,12 +83,6 @@ struct EventList: View {
                     }
                 }
                 .listStyle(.plain)
-                .safeAreaInset(edge: .top) {
-                    LinearGradient(gradient: Gradient(colors: [.black, Color.black.opacity(0)]),
-                                   startPoint: .top,
-                                   endPoint: .bottom)
-                    .frame(height: shadowHeight)
-                }
                 .safeAreaInset(edge: .bottom) {
                     LinearGradient(gradient: Gradient(colors: [Color.black.opacity(0), .black]),
                                    startPoint: .top,
@@ -118,6 +113,7 @@ struct EventList: View {
         HStack {
             Spacer()
             VStack(alignment: .center) {
+                Spacer().frame(height: 20)
                 HStack {
                     Image(systemName: "list.bullet")
                     Image(systemName: "hourglass")
