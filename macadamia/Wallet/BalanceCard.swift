@@ -32,15 +32,14 @@ struct BalanceCard: View {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(
                             RadialGradient(
-                                gradient: Gradient(colors: [Color(white: 0.15), Color.black.opacity(0.3)]),
+                                gradient: Gradient(colors: [Color.white.opacity(0.03), Color.black.opacity(0.3)]),
                                 center: .topTrailing,
                                 startRadius: 0,
                                 endRadius: cardWidth * 1.5
                             )
 //                            Color.clear
                         )
-                        .background(.ultraThinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
                         .overlay(
                             RoundedRectangle(cornerRadius: 16)
                                 .stroke(Color.gray.opacity(0.6), lineWidth: 1)

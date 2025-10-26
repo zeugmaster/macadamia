@@ -65,8 +65,7 @@ struct EventList: View {
             case .minimal:
                 List {
                     if eventGroups.isEmpty {
-                        Text("No transactions yet.")
-                            .foregroundStyle(.secondary)
+                        emptyListLabel
                     } else {
                         ForEach(eventGroups.prefix(shortListLength)) { group in
                             MinimalRow(eventGroup: group)
@@ -113,6 +112,27 @@ struct EventList: View {
             }
         }
         .lineLimit(1)
+    }
+    
+    private var emptyListLabel: some View {
+        HStack {
+            Spacer()
+            VStack(alignment: .center) {
+                HStack {
+                    Image(systemName: "list.bullet")
+                    Image(systemName: "hourglass")
+                }
+                .font(.largeTitle)
+                .padding()
+                Text("No transactions yet")
+                    .bold()
+            }
+            Spacer()
+        }
+        .foregroundStyle(.secondary)
+        .opacity(0.7)
+        .listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets())
     }
     
     struct MinimalRow: View {

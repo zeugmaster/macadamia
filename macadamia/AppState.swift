@@ -46,6 +46,11 @@ class AppState: ObservableObject {
             rates = try container.decode([String: Double].self)
         }
         
+        // Regular initializer for mocking/testing
+        init(rates: [String: Double]) {
+            self.rates = rates
+        }
+        
         func rate(for unit: ConversionUnit) -> Double? {
             return rates[unit.rawValue.lowercased()]
         }
@@ -70,6 +75,19 @@ class AppState: ObservableObject {
     // Preview/Mock initializer - skips network calls and UserDefaults
     init(preview: Bool, preferredUnit: ConversionUnit = .none) {
         self.preferredConversionUnit = preferredUnit
+        
+        // Provide mock exchange rates for previews
+        if preferredUnit != .none {
+            self.exchangeRates = ExchangeRate(rates: [
+                "usd": 95000.0,
+                "eur": 87000.0,
+                "gbp": 75000.0,
+                "jpy": 13500000.0,
+                "cny": 680000.0,
+                "chf": 85000.0
+            ])
+        }
+        
         // Don't call loadExchangeRates() for previews
     }
     
