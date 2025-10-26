@@ -41,7 +41,12 @@ extension AppSchemaV1.Mint {
                 await MainActor.run {
                     
                     do {
-                        try self.addProofs(sendResult.change, to: modelContext)
+                        try self.addProofs(sendResult.change, to: modelContext, increaseDerivationCounter: false)
+                        
+                        if let counterIncrease = sendResult.counterIncrease {
+                            self.increaseDerivationCounterForKeysetWithID(counterIncrease.keysetID,
+                                                                          by: counterIncrease.increase)
+                        }
                     } catch {
                         sendLogger.error("send operation returned a result, but the \(sendResult.change.count) change proofs could not be saved to the database due to error \(error)")
                     }

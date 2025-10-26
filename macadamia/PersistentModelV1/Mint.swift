@@ -154,7 +154,7 @@ extension AppSchemaV1.Mint {
         }
     }
     
-//    @MainActor
+    @MainActor
     @discardableResult
     func addProofs(_ proofs: [CashuSwift.Proof],
                    to context: ModelContext,

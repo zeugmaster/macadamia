@@ -327,23 +327,20 @@ struct MessageSendView: View {
             return
         }
         
-        mint.send(proofs: proofs.selected,
-                  targetAmount: amount,
-                  memo: memo,
-                  completion: { result in
+        mint.send(amount: amount, memo: memo, modelContext: modelContext) { result in
             switch result {
-            case .success(let success):
+            case .success(let token):
                 buttonState = .success()
-                onSuccess(token: success.token, event: success.event, swapped: success.swapped)
+                onSuccess(token: token)
             case .failure(let error):
                 buttonState = .fail()
                 print("send failed due to error: \(error)")
             }
-        })
+        }
     }
     
-    private func onSuccess(token: CashuSwift.Token, event: Event, swapped: [AppSchemaV1.Proof]) {
-        AppSchemaV1.insert(swapped + [event], into: modelContext)
+    private func onSuccess(token: CashuSwift.Token) {
+//        AppSchemaV1.insert(swapped + [event], into: modelContext)
         
         vc?.requestPresentationStyle(.compact)
         
