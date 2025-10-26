@@ -163,7 +163,7 @@ struct WalletView: View {
                         menuLabel(imageName: "arrow.up", text: "Send", fade: fade)
                     }
                 }
-                .padding(EdgeInsets(top: 20, leading: 6, bottom: 40, trailing: 6))
+                .padding(EdgeInsets(top: 20, leading: 16, bottom: 40, trailing: 16))
             }
             .navigationDestination(item: $navigationDestination) { destination in
                 switch destination {

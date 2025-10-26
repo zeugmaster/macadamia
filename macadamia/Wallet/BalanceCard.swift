@@ -119,8 +119,6 @@ struct BalanceCard: View {
     }
 }
 
-
-
 #Preview {
     BalanceCard(balance: 500, unit: .sat)
 }
