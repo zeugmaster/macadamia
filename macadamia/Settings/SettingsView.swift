@@ -2,6 +2,8 @@ import SwiftUI
 import UIKit
 
 struct SettingsView: View {
+    @EnvironmentObject private var appState: AppState
+    
     let sourceRepoURL = URL(string: "https://github.com/zeugmaster/macadamia")!
     let mailURL = URL(string: "mailto:contact@macadamia.cash")!
     let faqURL = URL(string: "https://macadamia.cash/faq")!
@@ -36,7 +38,16 @@ struct SettingsView: View {
                 }
                 
                 Section {
-                    ConversionPicker()
+                    NavigationLink(destination: CurrencySelectionView()) {
+                        HStack {
+                            Text("Fiat Currency")
+                            Spacer()
+                            Text(appState.preferredConversionUnit.displayName)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Display")
                 }
                 Section {
                     NavigationLink("About this Release", destination: ReleaseNoteView())
@@ -100,32 +111,7 @@ struct SettingsView: View {
     }
 }
 
-struct ConversionPicker: View {
-    @EnvironmentObject private var appState: AppState
-    
-    let conversionUnits = ConversionUnit.allCases
-    
-    @State private var selectedUnit: ConversionUnit
-    
-    init() {
-        _selectedUnit = State(initialValue: .usd)
-    }
-    
-    var body: some View {
-        Picker("Show Fiat: ", selection: $selectedUnit) {
-            ForEach(conversionUnits, id: \.self) { unit in
-                Text(unit.displayName).tag(unit)
-            }
-        }
-        .onAppear(perform: {
-            selectedUnit = appState.preferredConversionUnit
-        })
-        .onChange(of: selectedUnit) { oldValue, newValue in
-            appState.preferredConversionUnit = newValue
-        }
-    }
-}
-
 #Preview {
     SettingsView()
+        .environmentObject(AppState(preview: true, preferredUnit: .usd))
 }
