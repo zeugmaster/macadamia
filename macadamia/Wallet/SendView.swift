@@ -24,6 +24,8 @@ struct SendView: View {
     
     @State private var amount = 0
     @State private var selectedMintBalance = 0
+    
+    @State private var lockingKey: String = ""
 
     @State private var buttonState: ActionButtonState = .idle("")
 
@@ -67,6 +69,28 @@ struct SendView: View {
                     } header: {
                         Text("Memo")
                     }
+                }
+                
+                Section {
+                    HStack {
+                        TextField("", text: $lockingKey, prompt: Text("Type, paste or scan..."))
+                            .monospaced()
+                            .autocorrectionDisabled(true)
+                            .textInputAutocapitalization(.never)
+                        InputViewModalButton(inputTypes: [.publicKey]) {
+                            Image(systemName: "qrcode.viewfinder")
+                        } onResult: { result in
+                            switch result.type {
+                            case .publicKey:
+                                self.lockingKey = result.payload
+                            default:
+                                logger.error("")
+                            }
+                        }
+
+                    }
+                } header: {
+                    Text("Lock to Public Key")
                 }
                 
                 if let token {
@@ -119,7 +143,8 @@ struct SendView: View {
         
         selectedMint.send(amount: amount,
                           memo: tokenMemo,
-                          modelContext: modelContext) { result in
+                          modelContext: modelContext,
+                          lockingKey: lockingKey.isEmpty ? nil : lockingKey) { result in
             switch result {
             case .success(let token):
                 buttonState = .success()

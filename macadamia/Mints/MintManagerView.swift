@@ -96,6 +96,7 @@ struct MintManagerView: View {
                     Section {
                         TextField("Add new Mint URL...", text: $newMintURLString)
                             .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled(true)
                             .keyboardType(.URL)
                             .onSubmit {
                                 addMint(urlString: newMintURLString)

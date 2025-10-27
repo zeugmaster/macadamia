@@ -11,6 +11,7 @@ extension AppSchemaV1.Mint {
     func send(amount: Int,
               memo: String?,
               modelContext: ModelContext,
+              lockingKey: String? = nil,
               completion: @escaping (Result<CashuSwift.Token, Error>) -> Void) {
         
         guard let wallet = self.wallet else {
@@ -36,7 +37,7 @@ extension AppSchemaV1.Mint {
                                                            amount: amount,
                                                            seed: wallet.seed,
                                                            memo: memo,
-                                                           lockToPublicKey: nil)
+                                                           lockToPublicKey: lockingKey)
                 
                 await MainActor.run {
                     
