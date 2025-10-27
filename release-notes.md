@@ -9,6 +9,10 @@ This version of *macadamia Wallet* allows you to make batch-transfers to distrib
 
 Starting with Build 4, the app is adopting elements of the platform's new design language for a slightly refreshed look! Also included are some bug fixes and general improvements. 👾
 
+**Send Locked Tokens 🔐**
+
+You can now also lock a token to the public key of the receiver! Just scan or paste the key when sending ecash.
+
 ------
 
 As always, thanks for using **macadamia**!
