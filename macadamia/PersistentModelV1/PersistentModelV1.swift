@@ -402,7 +402,9 @@ enum AppSchemaV1: VersionedSchema {
         
         var memo: String?
         
-        var token: CashuSwift.Token?
+        
+//        var token: CashuSwift.Token? // commenting this out will lead to deletion via lightweight db migration
+        private var tokenData: Data?
         
         @Relationship(deleteRule: .noAction, inverse: \Mint.events)
         var mints: [Mint]?
@@ -489,6 +491,16 @@ enum AppSchemaV1: VersionedSchema {
             }
             set {
                 blankOutputData = try? JSONEncoder().encode(newValue)
+            }
+        }
+        
+        var token: CashuSwift.Token? {
+            get {
+                guard let data = tokenData else { return nil }
+                return try? JSONDecoder().decode(CashuSwift.Token.self, from: data)
+            }
+            set {
+                tokenData = try? JSONEncoder().encode(newValue)
             }
         }
     }

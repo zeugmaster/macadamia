@@ -7,7 +7,7 @@ This version of *macadamia Wallet* allows you to make batch-transfers to distrib
 
 **Updated for iOS 26** 
 
-Starting with Build 4, the app is adopting elements of the platform's new design language for a slightly refreshed look! Also included are some bug fixes and general improvements. 👾
+Starting with Build 2, the app is adopting elements of the platform's new design language for a slightly refreshed look! Also included are some bug fixes and general improvements. 👾
 
 **Send Locked Tokens 🔐**
 

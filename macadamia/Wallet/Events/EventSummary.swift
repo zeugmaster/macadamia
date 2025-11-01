@@ -196,7 +196,6 @@ struct SendEventView: View {
     }
     
     var token: CashuSwift.Token? {
-                
         if let proofs = event.proofs,
            !proofs.isEmpty,
            let mints = event.mints,

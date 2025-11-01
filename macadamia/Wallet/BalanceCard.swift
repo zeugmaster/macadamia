@@ -37,7 +37,6 @@ struct BalanceCard: View {
                                 startRadius: 0,
                                 endRadius: cardWidth * 1.5
                             )
-//                            Color.clear
                         )
                         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
                         .overlay(

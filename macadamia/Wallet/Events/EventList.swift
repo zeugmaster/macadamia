@@ -144,10 +144,15 @@ struct EventList: View {
                             .frame(width: 20, alignment: .leading)
                         let (main, secondary) = description(for: eventGroup)
                         Text(main)
-                        if let secondary {
-                            Text(secondary)
-                                .foregroundStyle(.secondary)
+                        Group {
+                            if eventGroup.events.first?.token?.isP2PKLocked ?? false {
+                                Image(systemName: "lock.fill")
+                            }
+                            if let secondary {
+                                Text(secondary)
+                            }
                         }
+                        .foregroundStyle(.secondary)
                         Spacer()
                         if let amountString = amountString(for: eventGroup) {
                             Text(amountString)
@@ -232,10 +237,15 @@ struct EventList: View {
                         HStack(spacing: 4) {
                             let (main, secondary) = description(for: eventGroup)
                             Text(main)
-                            if let secondary {
-                                Text(secondary)
-                                    .foregroundStyle(.secondary)
+                            Group {
+                                if eventGroup.events.first?.token?.isP2PKLocked ?? false {
+                                    Image(systemName: "lock.fill")
+                                }
+                                if let secondary {
+                                    Text(secondary)
+                                }
                             }
+                            .foregroundStyle(.secondary)
                         }
                         Spacer()
                         if let amountString = amountString(for: eventGroup) {
@@ -275,8 +285,8 @@ struct EventList: View {
         switch primaryEvent.kind {
         case .pendingMint:      return ("Pending Ecash", nil)
         case .mint:             return ("Ecash created", nil)
-        case .send:             return ("Send", primaryEvent.memo)
-        case .receive:          return ("Receive", primaryEvent.memo)
+        case .send:             return ("Send", primaryEvent.memo.nilWhenEmtpy)
+        case .receive:          return ("Receive", primaryEvent.memo.nilWhenEmtpy)
         case .pendingReceive:   return ("Locked Token", nil)
         case .pendingMelt:      return ("Pending Payment", nil)
         case .melt:             return ("Payment", nil)
@@ -324,5 +334,12 @@ struct EventList: View {
         default:
             Text("Unknown event kind.")
         }
+    }
+}
+
+extension String? {
+    var nilWhenEmtpy: String? {
+        guard let self else { return nil }
+        return self.isEmpty ? nil : self
     }
 }

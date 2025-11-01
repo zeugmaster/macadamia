@@ -78,8 +78,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/cashu-swift.git",
       "state" : {
-        "revision" : "6ffbf3aeb89804167114e15b03fcc6b554da6598",
-        "version" : "0.2.3"
+        "revision" : "d49e2072228a1c51baaaf2b4419e47dd5945d861",
+        "version" : "0.2.5"
       }
     },
     {
@@ -132,8 +132,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-cmark",
       "state" : {
-        "revision" : "b97d09472e847a416629f026eceae0e2afcfad65",
-        "version" : "0.7.0"
+        "revision" : "5d9bdaa4228b381639fff09403e39a04926e2dbe",
+        "version" : "0.7.1"
       }
     },
     {

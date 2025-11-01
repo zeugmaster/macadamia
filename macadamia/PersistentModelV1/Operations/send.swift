@@ -58,6 +58,7 @@ extension AppSchemaV1.Mint {
                                                 shortDescription: "Send",
                                                 wallet: wallet,
                                                 amount: amount,
+                                                token: sendResult.token,
                                                 longDescription: "",
                                                 proofs: selection.selected,
                                                 memo: memo ?? "",
