@@ -617,7 +617,8 @@ struct MeltView: View {
                                           mints: [mint],
                                           change: internalChange,
                                           preImage: result.quote.paymentPreimage,
-                                          groupingID: groupingID))
+                                          groupingID: groupingID,
+                                          meltQuote: result.quote))
         }
         
         events.forEach({ modelContext.insert($0) })

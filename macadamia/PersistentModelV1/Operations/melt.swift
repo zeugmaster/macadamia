@@ -75,7 +75,8 @@ extension AppSchemaV1.Mint {
                                                         wallet: wallet,
                                                         amount: (quote.amount),
                                                         longDescription: "",
-                                                        mints: [self])
+                                                        mints: [self],
+                                                        meltQuote: quote)
                         
                         completion(.success((internalChangeProofs, meltEvent)))
                     }
@@ -155,7 +156,8 @@ extension AppSchemaV1.Mint {
                                                         wallet: wallet,
                                                         amount: (quote.amount),
                                                         longDescription: "",
-                                                        mints: [self])
+                                                        mints: [self],
+                                                        meltQuote: quote)
                         completion(.success((internalChangeProofs, meltEvent)))
                     }
                 } else {

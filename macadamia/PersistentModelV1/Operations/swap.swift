@@ -346,7 +346,8 @@ final class SwapService {
                                                     wallet: activeWallet,
                                                     amount: amount,
                                                     longDescription: "",
-                                                    mints: [fromMint])
+                                                    mints: [fromMint],
+                                                    meltQuote: meltQuote)
                     
                     modelContext.insert(meltEvent)
                     pendingMeltEvent.visible = false

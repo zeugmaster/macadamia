@@ -5,7 +5,6 @@ import OSLog
 
 fileprivate var redeemLogger = Logger(subsystem: "macadamia", category: "redeem")
 
-
 struct RedeemView<AdditionalControls: View>: View {
         
     @Environment(\.modelContext) private var modelContext

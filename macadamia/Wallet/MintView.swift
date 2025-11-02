@@ -23,6 +23,7 @@ struct MintView: View {
     
     @State private var amount: Int = 0
     @State private var selectedMint:Mint?
+    @State private var showDetails = false
 
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
@@ -90,6 +91,28 @@ struct MintView: View {
                         pollingTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: { _ in
                             checkInvoiceState()
                         })
+                    }
+                    
+                    Section {
+                        Button {
+                            withAnimation {
+                                showDetails.toggle()
+                            }
+                        } label: {
+                            HStack {
+                                Text("\(showDetails ? "Hide" : "Show") details")
+                                    .opacity(0.8)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                                    .font(.footnote)
+                                    .rotationEffect(.degrees(showDetails ? 90 : 0))
+                            }
+                        }
+                        
+                        if showDetails {
+                            CopyableRow(label: "Quote ID", value: quote.quote)
+                        }
                     }
                 }
                 Spacer(minLength: 50)

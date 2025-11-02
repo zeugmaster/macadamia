@@ -11,36 +11,52 @@ import SwiftData
 
 struct MintEventSummary: View {
     let event: Event
+    @State private var showDetails = false
     
     var body: some View {
         List {
-            HStack {
-                Text("Minted at: ")
-                Spacer()
-                Text(event.date.formatted())
+            Section {
+                HStack {
+                    Text("Minted at: ")
+                    Spacer()
+                    Text(event.date.formatted())
+                }
+                HStack {
+                    Text("Amount: ")
+                    Spacer()
+                    Text(String(event.amount ?? 0))
+                }
+                HStack {
+                    Text("Unit: ")
+                    Spacer()
+                    Text(event.unit.rawValue)
+                }
+                if let text = event.bolt11MintQuote?.request {
+                    CopyableRow(label: "Bolt11 Invoice", value: text)
+                        .foregroundStyle(.secondary)
+                }
             }
-            HStack {
-                Text("Amount: ")
-                Spacer()
-                Text(String(event.amount ?? 0))
-            }
-            HStack {
-                Text("Unit: ")
-                Spacer()
-                Text(event.unit.rawValue)
-            }
-            if let text = event.bolt11MintQuote?.request {
-                TokenText(text: text)
-                    .frame(idealHeight: 70)
-                    .contextMenu {
-                        Button(action: {
-                            UIPasteboard.general.string = text
-                        }) {
-                            Text("Copy")
-                            Spacer()
-                            Image(systemName: "clipboard")
-                        }
+            
+            Section {
+                Button {
+                    withAnimation {
+                        showDetails.toggle()
                     }
+                } label: {
+                    HStack {
+                        Text("\(showDetails ? "Hide" : "Show") details")
+                            .opacity(0.8)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.footnote)
+                            .rotationEffect(.degrees(showDetails ? 90 : 0))
+                    }
+                }
+                
+                if showDetails {
+                    CopyableRow(label: "Quote ID", value: event.bolt11MintQuote?.quote ?? "nil")
+                }
             }
         }
     }
@@ -48,6 +64,8 @@ struct MintEventSummary: View {
 
 struct MeltEventSummary: View {
     let events: [Event]
+    
+    @State private var showDetails = false
     
     var totalAmount: Int {
         events.compactMap { $0.amount }.reduce(0, +)
@@ -95,87 +113,46 @@ struct MeltEventSummary: View {
                 }
             }
             
-            if isMultiPath {
-                Section("Payment Parts") {
-                    ForEach(Array(events.enumerated()), id: \.offset) { index, event in
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("Part \(index + 1)")
-                                    .font(.headline)
-                                Spacer()
-                                Text("\(event.amount ?? 0) sats")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                            
-                            if let mint = event.mints?.first {
-                                HStack {
-                                    Text("Mint:")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                    Text(mint.displayName)
-                                        .font(.caption)
-                                }
-                            }
-                            
-                            if let preImage = event.preImage {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Preimage:")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                    Text(preImage)
-                                        .font(.system(.caption, design: .monospaced))
-                                        .lineLimit(1)
-                                        .truncationMode(.middle)
-                                        .contextMenu {
-                                            Button(action: {
-                                                UIPasteboard.general.string = preImage
-                                            }) {
-                                                Text("Copy Preimage")
-                                                Image(systemName: "doc.on.clipboard")
-                                            }
-                                        }
-                                }
-                            }
-                        }
-                        .padding(.vertical, 4)
-                        
-                        if index < events.count - 1 {
-                            Divider()
-                        }
+            Section {
+                ForEach(events) { event in
+                    HStack {
+                        Text(event.mints?.first?.displayName ?? "nil")
+                        Spacer()
+                        Text(amountDisplayString(event.amount ?? 0, unit: .sat))
+                            .monospaced()
                     }
+                    .lineLimit(1)
                 }
-            } else {
-                // Single payment
-                if let mint = events.first?.mints?.first {
-                    Section("Payment Details") {
-                        HStack {
-                            Text("Mint")
-                            Spacer()
-                            Text(mint.displayName)
-                                .foregroundStyle(.secondary)
-                        }
+            } header: {
+                HStack {
+                    Text("Mint")
+                    Spacer()
+                    Text("Amount")
+                }
+            }
+            
+            Section {
+                Button {
+                    withAnimation {
+                        showDetails.toggle()
+                    }
+                } label: {
+                    HStack {
+                        Text("\(showDetails ? "Hide" : "Show") details")
+                            .opacity(0.8)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.footnote)
+                            .rotationEffect(.degrees(showDetails ? 90 : 0))
                     }
                 }
                 
-                if let preImage = events.first?.preImage {
-                    Section("Payment Proof") {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Preimage")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                            TokenText(text: preImage)
-                                .frame(idealHeight: 70)
-                                .contextMenu {
-                                    Button(action: {
-                                        UIPasteboard.general.string = preImage
-                                    }) {
-                                        Text("Copy Preimage")
-                                        Image(systemName: "doc.on.clipboard")
-                                    }
-                                }
-                        }
+                if showDetails {
+                    ForEach(events) { event in
+                        CopyableRow(label: (event.mints?.first?.displayName ?? "nil") + " - Quote ID", value: event.bolt11MeltQuote?.quote ?? "nil")
                     }
+                    CopyableRow(label: "Preimage", value: events.first?.preImage ?? "nil")
                 }
             }
         }
