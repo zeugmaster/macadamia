@@ -22,9 +22,7 @@ final class SwapManager: ObservableObject {
     @Published var multiTransactionState: [State]?
     @Published var singleTransactionState: State?
     
-    var modelContext: ModelContext
-    
-    private var swapList: [(from: Mint, to: Mint, amount: Int, seed: String)]?
+    private var swapList: [(from: Mint, to: Mint, amount: Int, seed: String, modelContext: ModelContext)]?
     private var currentSwapIndex: Int = 0
     
     private func setCurrentSwapState(_ state: State) {
@@ -39,13 +37,16 @@ final class SwapManager: ObservableObject {
         }
     }
     
-    init(transactionStates: [State]? = nil, modelContext: ModelContext) {
-        self.multiTransactionState = transactionStates
-        self.modelContext = modelContext
+    init() {
+        print("--- SwapManager initialized.")
+    }
+    
+    deinit {
+        print("--- SwapManager released.")
     }
     
     // batch tx function
-    func swap(transfers: [(from: Mint, to: Mint, amount: Int, seed: String)]) {
+    func swap(transfers: [(from: Mint, to: Mint, amount: Int, seed: String)], modelContext: ModelContext) {
         
         if swapList == nil {
             multiTransactionState = transfers.map({ _ in
@@ -53,7 +54,7 @@ final class SwapManager: ObservableObject {
             })
             singleTransactionState = nil
             currentSwapIndex = 0
-            swapList = transfers
+            swapList = transfers.map({ (from: $0.from, to: $0.to, amount: $0.amount, seed: $0.seed, modelContext: modelContext) })
         }
         
         guard let swapList else {
@@ -72,11 +73,12 @@ final class SwapManager: ObservableObject {
         swap(fromMint: swapList[currentSwapIndex].from,
              toMint: swapList[currentSwapIndex].to,
              amount: swapList[currentSwapIndex].amount,
-             seed: swapList[currentSwapIndex].seed)
+             seed: swapList[currentSwapIndex].seed,
+             modelContext: swapList[currentSwapIndex].modelContext)
     }
     
-    func swap(token: CashuSwift.Token, toMint: AppSchemaV1.Mint, seed: String) {
-        setCurrentSwapState(.loading)
+    func swap(token: CashuSwift.Token, toMint: AppSchemaV1.Mint, seed: String, modelContext: ModelContext) {
+        setCurrentSwapState(.preparing)
         
         let tokenSum = token.sum()
         
@@ -93,7 +95,7 @@ final class SwapManager: ObservableObject {
                 let dummyMintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: token.unit, amount: tokenSum)
                 guard let dummyMintQuote = try await CashuSwift.getQuote(mint: CashuSwift.Mint(toMint),
                                                                          quoteRequest: dummyMintQuoteRequest) as? CashuSwift.Bolt11.MintQuote else {
-                    setCurrentSwapState(.fail(error: nil))
+                    setCurrentSwapState(.fail(CashuError.unknownError("Unable to get mint quote")))
                     return
                 }
                 
@@ -103,12 +105,12 @@ final class SwapManager: ObservableObject {
                 
                 guard let dummyMeltQuote = try await CashuSwift.getQuote(mint: fromMint,
                                                                          quoteRequest: dummyMeltQuoteRequest) as? CashuSwift.Bolt11.MeltQuote else {
-                    setCurrentSwapState(.fail(error: nil))
+                    setCurrentSwapState(.fail(CashuError.unknownError("Unable to get melt quote")))
                     return
                 }
                 
                 guard let proofs = token.proofsByMint.first?.value else {
-                    setCurrentSwapState(.fail(error: nil))
+                    setCurrentSwapState(.fail(CashuError.unknownError("No proofs found in token")))
                     return
                 }
                 
@@ -118,16 +120,16 @@ final class SwapManager: ObservableObject {
                 try await MainActor.run  {
                     swapLogger.debug("attempting swap from token with total amount \(tokenSum) and swapAmount \(swapAmount)")
                     let fromMint = try AppSchemaV1.addMint(fromMint, to: modelContext, hidden: true, proofs: proofs)
-                    swap(fromMint: fromMint, toMint: toMint, amount: swapAmount, seed: seed)
+                    swap(fromMint: fromMint, toMint: toMint, amount: swapAmount, seed: seed, modelContext: modelContext)
                 }
             } catch {
-                setCurrentSwapState(.fail(error: error))
+                setCurrentSwapState(.fail(error))
             }
         }
     }
     
-    func swap(fromMint: AppSchemaV1.Mint, toMint: AppSchemaV1.Mint, amount: Int, seed: String) {
-//        setCurrentSwapState(.loading)
+    func swap(fromMint: AppSchemaV1.Mint, toMint: AppSchemaV1.Mint, amount: Int, seed: String, modelContext: ModelContext) {
+        setCurrentSwapState(.preparing)
         
         Task {
             do {
@@ -144,7 +146,7 @@ final class SwapManager: ObservableObject {
                 await MainActor.run {
                     guard let selection = fromMint.select(amount: amount + meltQuote.feeReserve,
                                                           unit: .sat) else {
-//                        setCurrentSwapState(.fail(error: CashuError.insufficientInputs("")))
+                        setCurrentSwapState(.fail(CashuError.insufficientInputs("")))
                         return
                     }
                     
@@ -153,22 +155,23 @@ final class SwapManager: ObservableObject {
                                     seed: seed,
                                     mintQuote: mintQuote,
                                     meltQuote: meltQuote,
-                                    selectedProofs: selection.selected)
+                                    selectedProofs: selection.selected,
+                                    modelContext: modelContext)
                 }
             } catch {
                 await MainActor.run {
-//                    setCurrentSwapState(.fail(error: error))
+                    setCurrentSwapState(.fail(error))
                 }
             }
         }
     }
     
-    func resumeTransfer(with pendingTransferEvent: Event) {
+    func resumeTransfer(with pendingTransferEvent: Event, modelContext: ModelContext) {
         guard let mintQuote = pendingTransferEvent.bolt11MintQuote,
               let meltQuote = pendingTransferEvent.bolt11MeltQuote,
               let mints     = pendingTransferEvent.mints,
               mints.count  >= 2 else {
-//            setCurrentSwapState(.fail(error: TransferError.missingData("Unable to find mint quote, mwlt quote or associated mints for this transfer event.")))
+            setCurrentSwapState(.fail(TransferError.missingData("Unable to find mint quote, mwlt quote or associated mints for this transfer event.")))
             return
         }
 
@@ -176,14 +179,14 @@ final class SwapManager: ObservableObject {
         let to   = mints[1]
         
         guard let blankOutputSet = pendingTransferEvent.blankOutputs else {
-//            setCurrentSwapState(.fail(error: TransferError.missingData("No change outputs where assigned to this operation.")))
+            setCurrentSwapState(.fail(TransferError.missingData("No change outputs where assigned to this operation.")))
             return
         }
         
         let sendableFrom = CashuSwift.Mint(from)
         
         guard let proofs = pendingTransferEvent.proofs else {
-//            setCurrentSwapState(.fail(error: TransferError.missingData("Trying to resume transfer, but no ecash was previously assigned to the operation.")))
+            setCurrentSwapState(.fail(TransferError.missingData("Trying to resume transfer, but no ecash was previously assigned to the operation.")))
             return
         }
         
@@ -203,11 +206,12 @@ final class SwapManager: ObservableObject {
                                        proofs: proofs,
                                        from: from,
                                        to: to,
-                                       pendingTransferEvent: pendingTransferEvent)
+                                       pendingTransferEvent: pendingTransferEvent,
+                                       modelContext: modelContext)
                         
                     case .pending:
                         
-//                        setCurrentSwapState(.fail(error: TransferError.unknownQuoteState))
+                        setCurrentSwapState(.fail(TransferError.unknownQuoteState))
                         
                     case .unpaid:
                         
@@ -216,7 +220,8 @@ final class SwapManager: ObservableObject {
                                      from: from,
                                      to: to,
                                      with: proofs,
-                                     pendingTransferEvent: pendingTransferEvent)
+                                     pendingTransferEvent: pendingTransferEvent,
+                                     modelContext: modelContext)
                         
                     case .none:
                         
@@ -228,23 +233,25 @@ final class SwapManager: ObservableObject {
                                            proofs: proofs,
                                            from: from,
                                            to: to,
-                                           pendingTransferEvent: pendingTransferEvent)
+                                           pendingTransferEvent: pendingTransferEvent,
+                                           modelContext: modelContext)
                         case false:
                             transferMelt(meltQuote: meltQuote,
                                          mintQuote: mintQuote,
                                          from: from,
                                          to: to,
                                          with: proofs,
-                                         pendingTransferEvent: pendingTransferEvent)
+                                         pendingTransferEvent: pendingTransferEvent,
+                                         modelContext: modelContext)
                         default:
                             
-//                            setCurrentSwapState(.fail(error: TransferError.unknownQuoteState))
+                            setCurrentSwapState(.fail(TransferError.unknownQuoteState))
                         }
                     }
                 }
             } catch {
                 await MainActor.run {
-//                    setCurrentSwapState(.fail(error: error))
+                    setCurrentSwapState(.fail(error))
                 }
             }
         }
@@ -255,7 +262,8 @@ final class SwapManager: ObservableObject {
                                  seed: String,
                                  mintQuote: CashuSwift.Bolt11.MintQuote,
                                  meltQuote: CashuSwift.Bolt11.MeltQuote,
-                                 selectedProofs: [Proof]) {
+                                 selectedProofs: [Proof],
+                                 modelContext: ModelContext) {
         swapLogger.info("melt input proof sum \(selectedProofs.sum), quote amount \(meltQuote.amount)")
         
         guard let changeOutputs = try? CashuSwift.generateBlankOutputs(quote: meltQuote,
@@ -263,7 +271,7 @@ final class SwapManager: ObservableObject {
                                                                        mint: fromMint,
                                                                        unit: meltQuote.quoteRequest?.unit ?? "sat",
                                                                        seed: seed) else {
-//            setCurrentSwapState(.fail(error: CashuError.cryptoError("Unable to create change outputs.")))
+            setCurrentSwapState(.fail(CashuError.cryptoError("Unable to create change outputs.")))
             return
         }
         
@@ -277,7 +285,7 @@ final class SwapManager: ObservableObject {
         }
         
         guard let wallet = fromMint.wallet else {
-//            setCurrentSwapState(.fail(error: macadamiaError.databaseError("mint \(fromMint.url.absoluteString) does not have an associated wallet.")))
+            setCurrentSwapState(.fail(macadamiaError.databaseError("mint \(fromMint.url.absoluteString) does not have an associated wallet.")))
             return
         }
         
@@ -303,7 +311,8 @@ final class SwapManager: ObservableObject {
                      from: fromMint,
                      to: toMint,
                      with: selectedProofs,
-                     pendingTransferEvent: pendingTransferEvent)
+                     pendingTransferEvent: pendingTransferEvent,
+                     modelContext: modelContext)
     }
     
     // MARK: - Inlined melt operation
@@ -312,9 +321,10 @@ final class SwapManager: ObservableObject {
                               from: Mint,
                               to: Mint,
                               with proofs: [Proof],
-                              pendingTransferEvent: Event) {
+                              pendingTransferEvent: Event,
+                              modelContext: ModelContext) {
         
-//        setCurrentSwapState(.melting)
+        setCurrentSwapState(.melting)
         
         Task {
             do {
@@ -338,7 +348,8 @@ final class SwapManager: ObservableObject {
                                        proofs: proofs,
                                        from: from,
                                        to: to,
-                                       pendingTransferEvent: pendingTransferEvent)
+                                       pendingTransferEvent: pendingTransferEvent,
+                                       modelContext: modelContext)
                     } else {
                         
                         swapLogger.info("""
@@ -347,12 +358,13 @@ final class SwapManager: ObservableObject {
                                         """)
                         meltFailed(with: CashuError.unknownError("Transfer did not complete because the melt quote was returned with state UNPAID."),
                                          proofs: proofs,
-                                         pendingTransferEvent: pendingTransferEvent)
+                                         pendingTransferEvent: pendingTransferEvent,
+                                         modelContext: modelContext)
                     }
                 }
             } catch {
                 await MainActor.run {
-                    meltFailed(with: error, proofs: proofs, pendingTransferEvent: pendingTransferEvent)
+                    meltFailed(with: error, proofs: proofs, pendingTransferEvent: pendingTransferEvent, modelContext: modelContext)
                 }
             }
         }
@@ -364,7 +376,8 @@ final class SwapManager: ObservableObject {
                                 proofs: [Proof],
                                 from: Mint,
                                 to: Mint,
-                                pendingTransferEvent: Event) {
+                                pendingTransferEvent: Event,
+                                modelContext: ModelContext) {
         
         proofs.setState(.spent)
         
@@ -380,31 +393,35 @@ final class SwapManager: ObservableObject {
                       meltResult: newMeltQuote,
                       from: from,
                       to: to,
-                      pendingTransferEvent: pendingTransferEvent)
+                      pendingTransferEvent: pendingTransferEvent,
+                      modelContext: modelContext)
         
     }
     
-    private func meltFailed(with error: Error, proofs: [Proof], pendingTransferEvent: Event) {
+    private func meltFailed(with error: Error, proofs: [Proof], pendingTransferEvent: Event, modelContext: ModelContext) {
         proofs.setState(.valid)
         pendingTransferEvent.blankOutputs = nil
         pendingTransferEvent.proofs = nil
         
         try? modelContext.save()
-//        setCurrentSwapState(.fail(error: error))
+        setCurrentSwapState(.fail(error))
+        
+        nextSwapIfPresent()
     }
     
     private func transferIssue(mintQuote: CashuSwift.Bolt11.MintQuote,
                                meltResult: CashuSwift.Bolt11.MeltQuote,
                                from: Mint,
                                to: Mint,
-                               pendingTransferEvent: Event) {
+                               pendingTransferEvent: Event,
+                               modelContext: ModelContext) {
         
         guard let wallet = from.wallet else {
-//            setCurrentSwapState(.fail(error: macadamiaError.databaseError("mint \(from.url.absoluteString) does not have an associated wallet.")))
+            setCurrentSwapState(.fail(macadamiaError.databaseError("mint \(from.url.absoluteString) does not have an associated wallet.")))
             return
         }
         
-//        setCurrentSwapState(.minting)
+        setCurrentSwapState(.minting)
         
         let sendableMint = CashuSwift.Mint(to)
         
@@ -416,35 +433,45 @@ final class SwapManager: ObservableObject {
                 
                 swapLogger.info("DLEQ check on newly minted proofs: \(String(describing: mintResult.dleqResult))")
                 
-                await MainActor.run {
-                    do {
-                        let internalProofs = try to.addProofs(mintResult.proofs, to: modelContext)
-                        
-                        let transferEvent = Event.transferEvent(wallet: wallet,
-                                                                amount: pendingTransferEvent.amount ?? 0,
-                                                                from: from,
-                                                                to: to,
-                                                                proofs: internalProofs,
-                                                                meltQuote: meltResult,
-                                                                mintQuote: mintQuote,
-                                                                preImage: meltResult.paymentPreimage,
-                                                                groupingID: nil)
-                        modelContext.insert(transferEvent)
-                        pendingTransferEvent.visible = false
-                        try modelContext.save()
-                        
-//                        setCurrentSwapState(.success)
-                    } catch {
-//                        setCurrentSwapState(.fail(error: error))
-                    }
+                try await MainActor.run {
+                
+                    let internalProofs = try to.addProofs(mintResult.proofs, to: modelContext)
+                    
+                    let transferEvent = Event.transferEvent(wallet: wallet,
+                                                            amount: pendingTransferEvent.amount ?? 0,
+                                                            from: from,
+                                                            to: to,
+                                                            proofs: internalProofs,
+                                                            meltQuote: meltResult,
+                                                            mintQuote: mintQuote,
+                                                            preImage: meltResult.paymentPreimage,
+                                                            groupingID: nil)
+                    modelContext.insert(transferEvent)
+                    pendingTransferEvent.visible = false
+                    try modelContext.save()
+                    
+                    setCurrentSwapState(.success)
+                    
+                    nextSwapIfPresent()
                 }
             } catch {
-                DispatchQueue.main.async {
-                    #warning("handle error during minting")
-                    
-//                    self.setCurrentSwapState(.fail(error: error))
+                await MainActor.run {
+                    setCurrentSwapState(.fail(error))
+                    nextSwapIfPresent()
                 }
             }
+        }
+    }
+    
+    @MainActor
+    private func nextSwapIfPresent() {
+        if let swapList {
+            currentSwapIndex += 1
+            swap(fromMint: swapList[currentSwapIndex].from,
+                 toMint: swapList[currentSwapIndex].to,
+                 amount: swapList[currentSwapIndex].amount,
+                 seed: swapList[currentSwapIndex].seed,
+                 modelContext: swapList[currentSwapIndex].modelContext)
         }
     }
 }

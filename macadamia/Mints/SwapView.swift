@@ -24,6 +24,8 @@ struct SwapView: View {
     @Query private var mints: [Mint]
     @Query private var allProofs: [Proof]
     
+    @StateObject private var swapManager = SwapManager()
+    
     @State private var buttonState = ActionButtonState.idle("")
     @State private var fromMint: Mint?
     @State private var toMint: Mint?
@@ -142,12 +144,38 @@ struct SwapView: View {
         .onAppear {
             buttonState = .idle("Transfer", action: { swap() })
         }
+        .onChange(of: $swapManager.singleTransactionState) { _, newState in
+            handleStateChange(newState)
+        }
         .navigationTitle("Transfer")
         .navigationBarTitleDisplayMode(.inline)
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
     
-    
+    private func handleStateChange(_ newState: SwapManager.State?) {
+        guard let newState else { return }
+        
+        switch newState {
+        case .waiting:
+            state = .ready
+        case .preparing:
+            state = .setup
+        case .melting:
+            state = .melting
+        case .minting:
+            state = .minting
+        case .success:
+            state = .success
+            buttonState = .success()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                dismiss()
+            }
+        case .fail(let error):
+            state = .fail
+            buttonState = .fail()
+            displayAlert(alert: AlertDetail(with: error))
+        }
+    }
     
     private func swap() {
         amountFieldInFocus = false
@@ -157,39 +185,11 @@ struct SwapView: View {
         }
         
         state = .ready
-          
-        let swapManager = InlineSwapManager(modelContext: modelContext) { swapState in
-            switch swapState {
-            case .ready:
-                state = .ready
-            case .loading:
-                state = .setup
-            case .melting:
-                state = .melting
-            case .minting:
-                state = .minting
-            case .success:
-                state = .success
-                buttonState = .success()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    dismiss()
-                }
-            case .fail(let error):
-                state = .fail
-                buttonState = .fail()
-                if let error {
-                    displayAlert(alert: AlertDetail(with: error))
-                } else {
-                    displayAlert(alert: AlertDetail(title: "Unknown Error", description: "The operation was not successful but no error was specified."))
-                }
-            }
-        }
-        
         swapManager.swap(fromMint: fromMint,
                          toMint: toMint,
                          amount: amount,
-                         seed: activeWallet.seed)
-        
+                         seed: activeWallet.seed,
+                         modelContext: modelContext)
     }
     
     private func displayAlert(alert: AlertDetail) {
