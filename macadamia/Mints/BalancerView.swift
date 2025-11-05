@@ -131,6 +131,7 @@ struct BalancerView: View {
                         }
                     }
                 }
+                .disabled(swapStatus != nil)
                 
                 if let swapStatus {
                     Section {
@@ -250,7 +251,7 @@ struct BalancerView: View {
         func performTransaction(at index: Int = 0) {
             
             guard transactions.indices.contains(index) else {
-                print("swap queue index out of bounds, returning")
+                print("swap queue index out of bounds, returning ---> end of transfer queue")
                 transactionsDidFinish()
                 
                 return

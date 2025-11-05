@@ -111,7 +111,11 @@ struct ProofListView: View {
                                 Text(String(keyset.derivationCounter))
                                     .monospaced()
                             }
-                            Text(keyset.active ? "ACTIVE" : "inactive")
+                            HStack {
+                                Text(keyset.active ? "ACTIVE" : "inactive")
+                                Spacer()
+                                Text("\(keyset.inputFeePPK) ppk")
+                            }
                         }
                         .foregroundStyle(.secondary)
                     }

@@ -414,7 +414,7 @@ enum AppSchemaV1: VersionedSchema {
         // Persistence for NUT-08 blank outputs and secrets, blinding factors to allow for melt operation repeatability
         // another case where SwiftData refuses to store the "complex" codable struct
         // so we need to (de-) serialize it ourselves
-        var blankOutputData: Data?
+        private var blankOutputData: Data?
         
         var redeemed: Bool?
         
