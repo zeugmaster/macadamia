@@ -16,8 +16,6 @@ struct BalancerView: View {
     @State private var showAlert = false
     @State private var currentAlert: AlertDetail?
     
-//    @State private var swapStatus: String?
-    
     @StateObject private var swapManager: SwapManager = SwapManager()
     
     @State private var buttonState = ActionButtonState.idle("Select")
@@ -137,10 +135,24 @@ struct BalancerView: View {
                     Section(header: Text("Transfer Progress")) {
                         ForEach(states.indices, id: \.self) { index in
                             HStack {
-                                stateIcon(for: states[index])
-                                Text("Transfer \(index + 1)")
-                                Spacer()
-                                stateText(for: states[index])
+                                stateIcon(for: states[index].state)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text("Transfer \(index + 1)")
+                                        Spacer()
+                                        stateText(for: states[index].state)
+                                    }
+                                    HStack(spacing: 4) {
+                                        Text(states[index].from.displayName)
+                                            .lineLimit(1)
+                                        Image(systemName: "arrow.right")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Text(states[index].to.displayName)
+                                            .lineLimit(1)
+                                    }
+                                    .font(.subheadline)
+                                }
                             }
                         }
                     }
@@ -221,20 +233,20 @@ struct BalancerView: View {
         }
     }
     
-    private func handleSwapStateChange(_ states: [SwapManager.State]?) {
+    private func handleSwapStateChange(_ states: [SwapManager.TransferState]?) {
         guard let states else { return }
         
         // Check if all swaps are complete (either success or fail)
-        let allComplete = states.allSatisfy { state in
-            if case .success = state { return true }
-            if case .fail = state { return true }
+        let allComplete = states.allSatisfy { transferState in
+            if case .success = transferState.state { return true }
+            if case .fail = transferState.state { return true }
             return false
         }
         
         if allComplete {
             // Check if all succeeded
-            let allSucceeded = states.allSatisfy { state in
-                if case .success = state { return true }
+            let allSucceeded = states.allSatisfy { transferState in
+                if case .success = transferState.state { return true }
                 return false
             }
             
