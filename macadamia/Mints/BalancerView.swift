@@ -16,8 +16,9 @@ struct BalancerView: View {
     @State private var showAlert = false
     @State private var currentAlert: AlertDetail?
     
-    @State private var swapStatus: String?
-    @State private var currentSwapManager: InlineSwapManager?
+//    @State private var swapStatus: String?
+    
+    @StateObject private var swapManager: SwapManager = SwapManager()
     
     @State private var buttonState = ActionButtonState.idle("Select")
     @State private var allocations: Dictionary<Mint, Double> = [:]
@@ -131,12 +132,17 @@ struct BalancerView: View {
                         }
                     }
                 }
-                .disabled(swapStatus != nil)
                 
-                if let swapStatus {
-                    Section {
-                        Text(swapStatus)
-                            .foregroundStyle(.secondary)
+                if let states = swapManager.multiTransactionState {
+                    Section(header: Text("Transfer Progress")) {
+                        ForEach(states.indices, id: \.self) { index in
+                            HStack {
+                                stateIcon(for: states[index])
+                                Text("Transfer \(index + 1)")
+                                Spacer()
+                                stateText(for: states[index])
+                            }
+                        }
                     }
                 }
                 
@@ -151,6 +157,9 @@ struct BalancerView: View {
         }
         .onAppear {
             buttonState = .idle("Distribute", action: {distribute()})
+        }
+        .onChange(of: swapManager.multiTransactionState) { _, states in
+            handleSwapStateChange(states)
         }
         .navigationBarBackButtonHidden(buttonState.type == .loading)
         .navigationTitle("Distribute Funds")
@@ -212,6 +221,76 @@ struct BalancerView: View {
         }
     }
     
+    private func handleSwapStateChange(_ states: [SwapManager.State]?) {
+        guard let states else { return }
+        
+        // Check if all swaps are complete (either success or fail)
+        let allComplete = states.allSatisfy { state in
+            if case .success = state { return true }
+            if case .fail = state { return true }
+            return false
+        }
+        
+        if allComplete {
+            // Check if all succeeded
+            let allSucceeded = states.allSatisfy { state in
+                if case .success = state { return true }
+                return false
+            }
+            
+            if allSucceeded {
+                buttonState = .success()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    dismiss()
+                }
+            } else {
+                buttonState = .fail()
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func stateIcon(for state: SwapManager.State) -> some View {
+        switch state {
+        case .waiting:
+            Image(systemName: "clock")
+                .foregroundColor(.secondary)
+        case .preparing:
+            ProgressView()
+                .scaleEffect(0.7)
+        case .melting, .minting:
+            ProgressView()
+                .scaleEffect(0.7)
+        case .success:
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.green)
+        case .fail:
+            Image(systemName: "xmark.circle.fill")
+                .foregroundColor(.red)
+        }
+    }
+    
+    @ViewBuilder
+    private func stateText(for state: SwapManager.State) -> some View {
+        switch state {
+        case .waiting:
+            Text("Waiting...")
+                .foregroundColor(.secondary)
+        case .preparing:
+            Text("Preparing...")
+        case .melting:
+            Text("Melting...")
+        case .minting:
+            Text("Minting...")
+        case .success:
+            Text("Complete")
+                .foregroundColor(.green)
+        case .fail(let error):
+            Text("Failed")
+                .foregroundColor(.red)
+        }
+    }
+    
     private func distribute() {
         var total = 0
         for mint in allocations.keys {
@@ -246,50 +325,23 @@ struct BalancerView: View {
         
         buttonState = .loading()
         
-        performTransaction()
-        
-        func performTransaction(at index: Int = 0) {
-            
-            guard transactions.indices.contains(index) else {
-                print("swap queue index out of bounds, returning ---> end of transfer queue")
-                transactionsDidFinish()
-                
-                return
-            }
-            
-            withAnimation {
-                swapStatus = "Transfer \(index + 1) of \(transactions.count)..."
-            }
-            
-            let transaction = transactions[index]
-            
-            currentSwapManager = InlineSwapManager(modelContext: modelContext) { swapState in
-                switch swapState {
-                case .ready, .loading, .melting, .minting:
-                    print("tx from \(transaction.from.url) to \(transaction.to.url) has changed state to \(swapState)")
-                case .success:
-                    performTransaction(at: index + 1)
-                case .fail(let error):
-                    print("swap failed due to error: \(String(describing: error))")
-                    performTransaction(at: index + 1)
-                }
-            }
-            
-            currentSwapManager?.swap(fromMint: transaction.from,
-                                     toMint: transaction.to,
-                                     amount: transaction.amount,
-                                     seed: activeWallet.seed)
+        // Convert transactions to the format SwapManager expects
+        let swapTransfers = transactions.map { transaction in
+            (from: transaction.from, to: transaction.to, amount: transaction.amount, seed: activeWallet.seed)
         }
+        
+        // Start the batch swap
+        swapManager.swap(transfers: swapTransfers, modelContext: modelContext)
     }
     
-    private func transactionsDidFinish() {
-        currentSwapManager = nil
-        swapStatus = nil
-        buttonState = .success()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            dismiss()
-        }
-    }
+//    private func transactionsDidFinish() {
+//        currentSwapManager = nil
+//        swapStatus = nil
+//        buttonState = .success()
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+//            dismiss()
+//        }
+//    }
 }
 
 struct SmallKnobSlider: UIViewRepresentable {

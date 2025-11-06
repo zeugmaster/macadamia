@@ -14,9 +14,21 @@ final class SwapManager: ObservableObject {
         case unknownQuoteState
     }
     
-    enum State {
+    enum State: Equatable {
         case waiting, preparing, melting, minting, success
         case fail(Error)
+        
+        static func == (lhs: State, rhs: State) -> Bool {
+            switch (lhs, rhs) {
+            case (.waiting, .waiting): return true
+            case (.preparing, .preparing): return true
+            case (.melting, .melting): return true
+            case (.minting, .minting): return true
+            case (.success, .success): return true
+            case (.fail, .fail): return true
+            default: return false
+            }
+        }
     }
     
     @Published var multiTransactionState: [State]?
@@ -26,7 +38,7 @@ final class SwapManager: ObservableObject {
     private var currentSwapIndex: Int = 0
     
     private func setCurrentSwapState(_ state: State) {
-        if let swapList {
+        if swapList != nil {
             guard let multiTransactionState, multiTransactionState.indices.contains(currentSwapIndex) else {
                 return
             }
@@ -465,14 +477,24 @@ final class SwapManager: ObservableObject {
     
     @MainActor
     private func nextSwapIfPresent() {
-        if let swapList {
-            currentSwapIndex += 1
-            swap(fromMint: swapList[currentSwapIndex].from,
-                 toMint: swapList[currentSwapIndex].to,
-                 amount: swapList[currentSwapIndex].amount,
-                 seed: swapList[currentSwapIndex].seed,
-                 modelContext: swapList[currentSwapIndex].modelContext)
+        guard let swapList else { return }
+        
+        currentSwapIndex += 1
+        
+        // Check if there's another swap to process
+        guard currentSwapIndex < swapList.count else {
+            // All swaps complete, reset
+            self.swapList = nil
+            self.currentSwapIndex = 0
+            return
         }
+        
+        // Process next swap
+        swap(fromMint: swapList[currentSwapIndex].from,
+             toMint: swapList[currentSwapIndex].to,
+             amount: swapList[currentSwapIndex].amount,
+             seed: swapList[currentSwapIndex].seed,
+             modelContext: swapList[currentSwapIndex].modelContext)
     }
 }
 

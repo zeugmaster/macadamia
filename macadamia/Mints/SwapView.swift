@@ -40,94 +40,97 @@ struct SwapView: View {
         Int(amountString)
     }
     
+    var isTransferDisabled: Bool {
+        guard let toMint, let amount else { return true }
+        guard let fromBalance = fromMint?.balance(for: .sat) else { return true }
+        return amount > fromBalance || amount < 0
+    }
+    
+    var isProgressSectionVisible: Bool {
+        state == .melting || state == .setup || state == .minting || state == .success
+    }
+    
+    var shouldShowSetupCheckmark: Bool {
+        state == .melting || state == .minting || state == .success
+    }
+    
+    var shouldShowMeltingCheckmark: Bool {
+        state == .minting || state == .success
+    }
+    
+    var listContent: some View {
+        List {
+            Section {
+                VStack(alignment: .leading) {
+                    MintPicker(label: "From: ", selectedMint: $fromMint, allowsNoneState: false, hide: $toMint)
+                    HStack {
+                        Text("Balance: ")
+                        Spacer()
+                        Text(String(fromMint?.balance(for: .sat) ?? 0))
+                        Text("sat")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+                
+                MintPicker(label: "To: ", selectedMint: $toMint, allowsNoneState: true, hide: $fromMint)
+            }
+
+            Section {
+                HStack {
+                    TextField("enter amount", text: $amountString)
+                        .keyboardType(.numberPad)
+                        .monospaced()
+                        .focused($amountFieldInFocus)
+                        .onAppear {
+                            amountFieldInFocus = true
+                        }
+                    Text("sats")
+                        .monospaced()
+                }
+            } footer: {
+                Text("The mint from which the ecash originates will charge fees for this operation. IMPORTANT: If a swap fails during the Lightning payment you can manually retry from the transaction history.")
+            }
+            
+            Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    progressRow(title: "Getting mint quote...", isActive: state == .setup, showCheckmark: shouldShowSetupCheckmark)
+                    progressRow(title: "Melting ecash...", isActive: state == .melting, showCheckmark: shouldShowMeltingCheckmark)
+                    progressRow(title: "Minting ecash...", isActive: state == .minting, showCheckmark: state == .success)
+                }
+                .opacity(isProgressSectionVisible ? 1.0 : 0)
+                .animation(.easeInOut(duration: 0.2), value: state)
+                .listRowBackground(Color.clear)
+            }
+        }
+    }
+    
+    var actionButtonOverlay: some View {
+        VStack {
+            Spacer()
+            ActionButton(state: $buttonState)
+                .actionDisabled(isTransferDisabled)
+        }
+    }
+    
+    @ViewBuilder
+    func progressRow(title: String, isActive: Bool, showCheckmark: Bool) -> some View {
+        HStack {
+            if isActive {
+                ProgressView()
+                    .scaleEffect(0.8)
+            } else if showCheckmark {
+                Image(systemName: "checkmark.circle.fill")
+            }
+            Text(title)
+                .opacity(isActive ? 1 : 0.5)
+        }
+    }
+    
     var body: some View {
         ZStack {
-            List {
-                Section {
-                    VStack(alignment: .leading) {
-                        MintPicker(label: "From: ", selectedMint: $fromMint, allowsNoneState: false, hide: $toMint)
-                        HStack {
-                            Text("Balance: ")
-                            Spacer()
-                            Text(String(fromMint?.balance(for: .sat) ?? 0))
-                            Text("sat")
-                        }
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    }
-                    
-                    MintPicker(label: "To: ", selectedMint: $toMint, allowsNoneState: true, hide: $fromMint)
-                }
-
-                Section {
-                    HStack {
-                        TextField("enter amount", text: $amountString)
-                            .keyboardType(.numberPad)
-                            .monospaced()
-                            .focused($amountFieldInFocus)
-                            .onAppear(perform: {
-                                amountFieldInFocus = true
-                            })
-                        Text("sats")
-                            .monospaced()
-                    }
-                } footer: {
-                    Text("""
-                         The mint from which the ecash originates will charge fees for this operation. 
-                         IMPORTANT: If a swap fails during the Lightning payment \
-                         you can manually retry from the transaction history.
-                         """)
-                }
-                
-                Section {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            if state == .setup {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                            } else if state == .melting || state == .minting || state == .success {
-                                Image(systemName: "checkmark.circle.fill")
-                            }
-                            Text("Getting mint quote...")
-                                .opacity(state == .setup ? 1 : 0.5)
-                        }
-                        
-                        HStack {
-                            if state == .melting {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                            } else if state == .minting || state == .success {
-                                Image(systemName: "checkmark.circle.fill")
-                            }
-                            Text("Melting ecash...")
-                                .opacity(state == .melting ? 1 : 0.5)
-                        }
-                        
-                        HStack {
-                            if state == .minting {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                            } else if state == .success {
-                                Image(systemName: "checkmark.circle.fill")
-                            }
-                            Text("Minting ecash...")
-                                .opacity(state == .minting ? 1 : 0.5)
-                        }
-                    }
-                    .opacity(state == .melting || state == .setup || state == .minting || state == .success ? 1.0 : 0)
-                    .animation(.easeInOut(duration: 0.2), value: state)
-                    .listRowBackground(Color.clear)
-                }
-            }
-            VStack {
-                Spacer()
-                
-                ActionButton(state: $buttonState)
-                    .actionDisabled(toMint == nil ||
-                                    amount == nil ||
-                                    amount ?? 0 > fromMint?.balance(for: .sat) ?? 0 ||
-                                    amount ?? 0 < 0)
-            }
+            listContent
+            actionButtonOverlay
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -144,7 +147,7 @@ struct SwapView: View {
         .onAppear {
             buttonState = .idle("Transfer", action: { swap() })
         }
-        .onChange(of: $swapManager.singleTransactionState) { _, newState in
+        .onChange(of: swapManager.singleTransactionState) { _, newState in
             handleStateChange(newState)
         }
         .navigationTitle("Transfer")
