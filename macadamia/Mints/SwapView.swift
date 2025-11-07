@@ -58,6 +58,34 @@ struct SwapView: View {
         state == .minting || state == .success
     }
     
+    private var selectedMintBalance: Int {
+        fromMint?.balance(for: .sat) ?? 0
+    }
+    
+    private enum InputRemark: Equatable {
+        static func == (lhs: InputRemark, rhs: InputRemark) -> Bool {
+            switch (lhs, rhs) {
+            case (.warning(let message), .warning(let message2)):
+                return message == message2
+            case (.error(let message), .error(let message2)):
+                return message == message2
+            default: return false
+            }
+        }
+        
+        case warning(String), error(String)
+    }
+    
+    private var inputRemark: InputRemark? {
+        if amount ?? 0 > selectedMintBalance {
+            return .error("Insufficient balance.")
+        } else if amount ?? 0 > Int(Double(selectedMintBalance) * 0.95) {
+            return .warning("Transfer amount approaching the total balance risks payment failure due to fees.")
+        } else {
+            return nil
+        }
+    }
+    
     var listContent: some View {
         List {
             Section {
@@ -70,7 +98,8 @@ struct SwapView: View {
                         Text("sat")
                     }
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(amount ?? 0 > selectedMintBalance ? .failureRed : .secondary)
+                    .animation(.linear(duration: 0.2), value: amount ?? 0 > selectedMintBalance)
                 }
                 
                 MintPicker(label: "To: ", selectedMint: $toMint, allowsNoneState: true, hide: $fromMint)
@@ -88,8 +117,20 @@ struct SwapView: View {
                     Text("sats")
                         .monospaced()
                 }
-            } footer: {
-                Text("The mint from which the ecash originates will charge fees for this operation. IMPORTANT: If a swap fails during the Lightning payment you can manually retry from the transaction history.")
+                Group {
+                    if let inputRemark {
+                        switch inputRemark {
+                        case .warning(let string):
+                            Text(string)
+                                .foregroundStyle(.orange)
+                        case .error(let string):
+                            Text(string)
+                                .foregroundStyle(.red)
+                        }
+                    }
+                }
+                .font(.caption)
+                .animation(.default, value: inputRemark)
             }
             
             Section {

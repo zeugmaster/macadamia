@@ -236,7 +236,11 @@ extension AppSchemaV1.Mint {
         let safetyMargin = max(50, balance / 50)
         
         // Total amount to reserve
-        let reserved = estimatedInputFee + estimatedMeltFee + safetyMargin
+        var reserved = estimatedInputFee + estimatedMeltFee + safetyMargin
+        
+        // Cap reserve at 2% of balance to ensure it's a low single-digit percentage
+        let maxReservePercentage = balance / 50  // 2%
+        reserved = min(reserved, maxReservePercentage)
         
         // Maximum safe transferable amount
         let maxTransferable = max(0, balance - reserved)
