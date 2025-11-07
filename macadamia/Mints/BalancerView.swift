@@ -126,6 +126,7 @@ struct BalancerView: View {
                                 Text("\(Int(allocations[mint] ?? 0))%")
                                     .foregroundStyle(.secondary)
                             }
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                             .transition(.opacity)
                         }
                     }
@@ -176,6 +177,7 @@ struct BalancerView: View {
         .navigationBarBackButtonHidden(buttonState.type == .loading)
         .navigationTitle("Distribute Funds")
         .navigationBarTitleDisplayMode(.inline)
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
     
     private func sliderValue(for mint: Mint) -> Binding<Double> {
@@ -305,31 +307,68 @@ struct BalancerView: View {
     
     private func distribute() {
         var total = 0
+        var transferLimits: [Mint: Mint.TransferLimits] = [:]
+        
+        // Calculate total and limits for each mint
         for mint in allocations.keys {
-            total += mint.balance(for: .sat)
+            let balance = mint.balance(for: .sat)
+            total += balance
+            transferLimits[mint] = mint.transferLimits(for: .sat)
         }
         
-        // Calculate deltas based on allocations
+        // Calculate deltas based on allocations, respecting transfer limits
         var deltas: Dictionary<Mint, Int> = [:]
         print("\n=== Balance Distribution ===")
         print("Total balance: \(total) sat")
+        
         for (mint, percentage) in allocations {
             let currentBalance = mint.balance(for: .sat)
             let targetBalance = Int((percentage / 100.0) * Double(total))
-            let delta = targetBalance - currentBalance
+            var delta = targetBalance - currentBalance
+            
+            // If this mint needs to send funds (negative delta), check transfer limits
+            if delta < 0 {
+                let limits = transferLimits[mint]!
+                let amountToSend = -delta
+                
+                if amountToSend > limits.maxTransferable {
+                    print("⚠️  \(mint.displayName) would exceed safe transfer limit:")
+                    print("    Requested: \(amountToSend) sat")
+                    print("    Safe max: \(limits.maxTransferable) sat")
+                    print("    Reserved for fees: \(limits.reservedForFees) sat")
+                    
+                    // Cap the delta to safe maximum
+                    delta = -limits.maxTransferable
+                }
+            }
+            
             deltas[mint] = delta
-            print("\(mint.displayName): \(currentBalance) sat → \(targetBalance) sat (delta: \(delta >= 0 ? "+" : "")\(delta))")
+            print("\(mint.displayName): \(currentBalance) sat → \(currentBalance + delta) sat (delta: \(delta >= 0 ? "+" : "")\(delta))")
         }
         
-        // Calculate transactions to balance the mints
+        // Validate transfers before proceeding
         let transactions = BalanceCalculator<Mint>.calculateTransactions(for: deltas)
         
         print("\nGenerated \(transactions.count) transactions:")
+        var hasInvalidTransfer = false
         for transaction in transactions {
-            print("   Transfer \(transaction.amount) sat from \(transaction.from.displayName) to \(transaction.to.displayName)")
+            let limits = transferLimits[transaction.from]!
+            if transaction.amount > limits.maxTransferable {
+                print("   ❌ Transfer \(transaction.amount) sat from \(transaction.from.displayName) EXCEEDS LIMIT (\(limits.maxTransferable) sat)")
+                hasInvalidTransfer = true
+            } else {
+                print("   ✓ Transfer \(transaction.amount) sat from \(transaction.from.displayName) to \(transaction.to.displayName)")
+            }
         }
         print("=========================\n")
         
+        if hasInvalidTransfer {
+            displayAlert(alert: AlertDetail(
+                title: "Transfer Limit Exceeded",
+                description: "One or more transfers would exceed safe limits. Please adjust your allocation to leave more balance for fees."
+            ))
+            return
+        }
 
         guard let activeWallet else {
             return
@@ -344,6 +383,11 @@ struct BalancerView: View {
         
         // Start the batch swap
         swapManager.swap(transfers: swapTransfers, modelContext: modelContext)
+    }
+    
+    private func displayAlert(alert: AlertDetail) {
+        currentAlert = alert
+        showAlert = true
     }
     
 //    private func transactionsDidFinish() {

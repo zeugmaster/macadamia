@@ -64,7 +64,7 @@ struct SwapView: View {
                 VStack(alignment: .leading) {
                     MintPicker(label: "From: ", selectedMint: $fromMint, allowsNoneState: false, hide: $toMint)
                     HStack {
-                        Text("Balance: ")
+                        Text("Balance:")
                         Spacer()
                         Text(String(fromMint?.balance(for: .sat) ?? 0))
                         Text("sat")

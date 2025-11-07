@@ -203,4 +203,48 @@ extension AppSchemaV1.Mint {
         print("added \(internalRepresentation.count) proofs to db")
         return internalRepresentation
     }
+    
+    /// Information about safe transfer limits for this mint
+    struct TransferLimits {
+        let totalBalance: Int
+        let maxTransferable: Int
+        let reservedForFees: Int
+        
+        var canTransferAll: Bool {
+            maxTransferable >= totalBalance
+        }
+    }
+    
+    /// Calculate safe transfer limits accounting for melt fees and input fees
+    func transferLimits(for unit: Unit = .sat) -> TransferLimits {
+        let balance = self.balance(for: unit)
+        
+        guard balance > 0 else {
+            return TransferLimits(totalBalance: 0, maxTransferable: 0, reservedForFees: 0)
+        }
+        
+        // Get all valid proofs for fee calculation
+        let proofs = self.proofs?.filter { $0.unit == unit && $0.state == .valid } ?? []
+        
+        // Calculate estimated input fees (proofs that would be spent)
+        let estimatedInputFee = proofs.reduce(0) { $0 + $1.inputFeePPK } / 1000
+        
+        // Conservative estimate for melt quote fee (typically 0-100 sats)
+        let estimatedMeltFee = 100
+        
+        // Safety margin: 2% of balance or minimum 50 sats
+        let safetyMargin = max(50, balance / 50)
+        
+        // Total amount to reserve
+        let reserved = estimatedInputFee + estimatedMeltFee + safetyMargin
+        
+        // Maximum safe transferable amount
+        let maxTransferable = max(0, balance - reserved)
+        
+        return TransferLimits(
+            totalBalance: balance,
+            maxTransferable: maxTransferable,
+            reservedForFees: reserved
+        )
+    }
 }
