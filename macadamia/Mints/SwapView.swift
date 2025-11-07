@@ -63,26 +63,38 @@ struct SwapView: View {
     }
     
     private enum InputRemark: Equatable {
-        static func == (lhs: InputRemark, rhs: InputRemark) -> Bool {
-            switch (lhs, rhs) {
-            case (.warning(let message), .warning(let message2)):
-                return message == message2
-            case (.error(let message), .error(let message2)):
-                return message == message2
-            default: return false
+        var title: String {
+            switch self {
+            case .fullSendWarning:
+                return "Transfer amount approaching the total balance risks payment failure due to fees."
+            case .insufficientFunds: 
+                return "Insufficient balance."
+            case .defaultRemark:
+                return "A transfers incurs fees with the selected mints."
             }
         }
         
-        case warning(String), error(String)
+        var color: Color {
+            switch self {
+            case .defaultRemark:
+                return .secondary
+            case .fullSendWarning:
+                return .orange
+            case .insufficientFunds:
+                return .red
+            }
+        }
+        
+        case defaultRemark, fullSendWarning, insufficientFunds
     }
     
-    private var inputRemark: InputRemark? {
+    private var inputRemark: InputRemark {
         if amount ?? 0 > selectedMintBalance {
-            return .error("Insufficient balance.")
+            return .insufficientFunds
         } else if amount ?? 0 > Int(Double(selectedMintBalance) * 0.95) {
-            return .warning("Transfer amount approaching the total balance risks payment failure due to fees.")
+            return .fullSendWarning
         } else {
-            return nil
+            return .defaultRemark
         }
     }
     
@@ -106,33 +118,25 @@ struct SwapView: View {
             }
 
             Section {
-                HStack {
-                    TextField("enter amount", text: $amountString)
-                        .keyboardType(.numberPad)
-                        .monospaced()
-                        .focused($amountFieldInFocus)
-                        .onAppear {
-                            amountFieldInFocus = true
-                        }
-                    Text("sats")
-                        .monospaced()
-                }
-                Group {
-                    if let inputRemark {
-                        switch inputRemark {
-                        case .warning(let string):
-                            Text(string)
-                                .foregroundStyle(.orange)
-                        case .error(let string):
-                            Text(string)
-                                .foregroundStyle(.red)
-                        }
+                VStack(alignment: .leading) {
+                    HStack {
+                        TextField("enter amount", text: $amountString)
+                            .keyboardType(.numberPad)
+                            .monospaced()
+                            .focused($amountFieldInFocus)
+                            .onAppear { amountFieldInFocus = true }
+                        Text("sats").monospaced()
                     }
+        
+                    Text(inputRemark.title)
+                        .font(.caption)
+                        .foregroundStyle(inputRemark.color)
+                        .contentTransition(.opacity)
+                        .animation(.easeInOut(duration: 0.2), value: inputRemark)
+                        .padding(.vertical, 4)
                 }
-                .font(.caption)
-                .animation(.default, value: inputRemark)
             }
-            
+
             Section {
                 VStack(alignment: .leading, spacing: 12) {
                     progressRow(title: "Getting mint quote...", isActive: state == .setup, showCheckmark: shouldShowSetupCheckmark)
