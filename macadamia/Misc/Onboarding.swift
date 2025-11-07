@@ -173,7 +173,7 @@ struct SeedPhrasePage: View {
                                 HStack {
                                     Text(String(index + 1) + ".")
                                         .frame(minWidth: 30)
-                                    Text(phrase[index])
+                                    Text(phrase[index]).bold()
                                 }
                             }
                         }
@@ -182,13 +182,12 @@ struct SeedPhrasePage: View {
                             ForEach(phrase.indices.dropFirst(6), id: \.self) { index in
                                 HStack {
                                     Text(String(index + 1) + ".").frame(minWidth: 30)
-                                    Text(phrase[index])
+                                    Text(phrase[index]).bold()
                                 }
                             }
                         }
                         .padding()
                     }
-                    .monospaced()
                 } else {
                     Text("Not a valid mnemonic.")
                 }
