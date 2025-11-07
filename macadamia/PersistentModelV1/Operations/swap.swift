@@ -417,8 +417,13 @@ final class SwapManager: ObservableObject {
             try from.addProofs(change,
                                to: modelContext,
                                increaseDerivationCounter: false)
+            // Save immediately to persist change proofs to database
+            try modelContext.save()
+            swapLogger.debug("Successfully saved \(change.count) change proofs for mint \(from.url)")
         } catch {
-            swapLogger.error("unable to add \(change.count) change proofs to mint \(from.url)")
+            swapLogger.error("Failed to add/save \(change.count) change proofs to mint \(from.url): \(error.localizedDescription)")
+            // This is a critical error - change proofs are lost, but we continue with minting
+            // The user effectively paid the full amount without getting change back
         }
         
         transferIssue(mintQuote: mintQuote,
@@ -981,8 +986,11 @@ final class InlineSwapManager: ObservableObject {
             try from.addProofs(change,
                                to: modelContext,
                                increaseDerivationCounter: false)
+            // Save immediately to persist change proofs to database
+            try modelContext.save()
+            swapLogger.debug("Successfully saved \(change.count) change proofs for mint \(from.url)")
         } catch {
-            swapLogger.error("unable to add \(change.count) change proofs to mint \(from.url)")
+            swapLogger.error("Failed to add/save \(change.count) change proofs to mint \(from.url): \(error.localizedDescription)")
         }
         
         transferIssue(mintQuote: mintQuote,
