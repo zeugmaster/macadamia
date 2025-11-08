@@ -58,51 +58,6 @@ extension AppSchemaV1.Mint {
     }
 }
 
-//// MARK: - Core Token Generation
-//extension AppSchemaV1.Mint {
-//    /// Simplified token generation for extension use
-//    @MainActor
-//    func generateToken(amount: Int, memo: String, modelContect: ModelContext, allProofs: [Proof], completion: @escaping (Result<String, Error>) -> Void) {
-//        
-//        // Select proofs
-//        guard let selection = self.select(allProofs: allProofs, amount: amount, unit: .sat) else {
-//            completion(.failure(MacadamiaCoreError.insufficientFunds))
-//            return
-//        }
-//        
-//        // Generate token using existing send operation
-////        self.send(proofs: selection.selected, targetAmount: amount, memo: memo) { result in
-////            switch result {
-////            case .success(let (token, _, _)):
-////                // Serialize token to string
-////                do {
-////                    let tokenString = try token.serialize(to: .V4)
-////                    completion(.success(tokenString))
-////                } catch {
-////                    completion(.failure(MacadamiaCoreError.tokenGenerationFailed))
-////                }
-////            case .failure(let error):
-////                completion(.failure(error))
-////            }
-////        }
-//        
-//        self.send(amount: amount, memo: memo, modelContext: modelContect) { result in
-//            switch result {
-//            case .success(let (token)):
-//                // Serialize token to string
-//                do {
-//                    let tokenString = try token.serialize(to: .V4)
-//                    completion(.success(tokenString))
-//                } catch {
-//                    completion(.failure(MacadamiaCoreError.tokenGenerationFailed))
-//                }
-//            case .failure(let error):
-//                completion(.failure(error))
-//            }
-//        }
-//    }
-//}
-
 // MARK: - Array Extensions
 extension Array where Element == AppSchemaV1.Proof {
     var sum: Int {

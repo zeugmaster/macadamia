@@ -265,12 +265,3 @@ struct CheckboxToggleStyle: ToggleStyle {
         print("onClose closure executed")
     }
 }
-//#Preview {
-//    DisclaimerPage()
-//}
-//#Preview {
-//    SeedPhrasePage(seedPhraseWrittenDown: .constant(true), phrase: dummySeed)
-//}
-//#Preview {
-//    TOSPage(tosAcknoledged: .constant(true))
-//}
