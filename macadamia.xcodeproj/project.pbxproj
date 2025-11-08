@@ -24,6 +24,7 @@
 		37965DDE2E6CBAD600681744 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDD2E6CBAD600681744 /* BigNumber */; };
 		37965DE02E6CBAD600681744 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDF2E6CBAD600681744 /* BIP39 */; };
 		37965DE12E6CBB2F00681744 /* Messages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37C4CC2F2E5CA4660028E4FE /* Messages.framework */; };
+		37A988492EBF9A7C0065FCE6 /* NostrSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 37A988482EBF9A7C0065FCE6 /* NostrSDK */; };
 		37C4CC3C2E5CA4670028E4FE /* macadamiaMessages.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 37C4CC2E2E5CA4660028E4FE /* macadamiaMessages.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		37C4CC4B2E5CAAE30028E4FE /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 37C4CC4A2E5CAAE30028E4FE /* CashuSwift */; };
 		37C4CC8F2E5CB1A90028E4FE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034BB2B29E1BC00C4F955 /* ContentView.swift */; };
@@ -149,6 +150,7 @@
 			files = (
 				3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */,
 				377D26262E1FDE7800CFB880 /* URUI in Frameworks */,
+				37A988492EBF9A7C0065FCE6 /* NostrSDK in Frameworks */,
 				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
 				371AA9132E33EB61006D487F /* CashuSwift in Frameworks */,
 				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
@@ -268,6 +270,7 @@
 				370A84062CC18AEE0039A413 /* Flow */,
 				377D26252E1FDE7800CFB880 /* URUI */,
 				371AA9122E33EB61006D487F /* CashuSwift */,
+				37A988482EBF9A7C0065FCE6 /* NostrSDK */,
 			);
 			productName = macadamia;
 			productReference = 372034B62B29E1BC00C4F955 /* macadamia.app */;
@@ -362,6 +365,7 @@
 				370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 				377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */,
 				371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */,
+				37A988472EBF9A7C0065FCE6 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -862,6 +866,14 @@
 				kind = branch;
 			};
 		};
+		37A988472EBF9A7C0065FCE6 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/zeugmaster/nostr-sdk-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.3.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -909,6 +921,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */;
 			productName = BIP39;
+		};
+		37A988482EBF9A7C0065FCE6 /* NostrSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 37A988472EBF9A7C0065FCE6 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */;
+			productName = NostrSDK;
 		};
 		37BC5F532E6CCF23000E1799 /* BIP39 */ = {
 			isa = XCSwiftPackageProductDependency;
