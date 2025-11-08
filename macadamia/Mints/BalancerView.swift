@@ -18,6 +18,8 @@ struct BalancerView: View {
     
     @StateObject private var swapManager: SwapManager = SwapManager()
     
+    @State private var collapseSelector = false
+    
     @State private var buttonState = ActionButtonState.idle("Select")
     @State private var allocations: Dictionary<Mint, Double> = [:]
     
@@ -92,42 +94,49 @@ struct BalancerView: View {
         ZStack {
             List {
                 Section {
-                    ForEach(items) { item in
-                        switch item {
-                        case .mintRow(let mint):
-                            HStack {
-                                Image(systemName: allocations.keys.contains(mint) ? "checkmark.circle.fill" : "circle")
-                                Button {
-                                    withAnimation {
-                                        toggleSelection(of: mint)
-                                    }
-                                } label: {
-                                    HStack { // mint name and balance
-                                        Text(mint.displayName)
-                                            .lineLimit(1)
-                                        Spacer()
-                                        Group {
-                                            let balance = mint.balance(for: .sat)
-
-                                            Text(balance, format: .number)
-                                                .monospaced()
-                                                .contentTransition(.numericText(value: Double(balance)))
-                                                .animation(.snappy, value: balance)
-
-                                            Text(" sat")
+                    if collapseSelector {
+                        VStack(alignment: .leading) {
+                            Text("\(allocations.count) Mints selected")
+                        }
+                        .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(items) { item in
+                            switch item {
+                            case .mintRow(let mint):
+                                HStack {
+                                    Image(systemName: allocations.keys.contains(mint) ? "checkmark.circle.fill" : "circle")
+                                    Button {
+                                        withAnimation {
+                                            toggleSelection(of: mint)
                                         }
-                                        .monospaced()
+                                    } label: {
+                                        HStack { // mint name and balance
+                                            Text(mint.displayName)
+                                                .lineLimit(1)
+                                            Spacer()
+                                            Group {
+                                                let balance = mint.balance(for: .sat)
+
+                                                Text(balance, format: .number)
+                                                    .monospaced()
+                                                    .contentTransition(.numericText(value: Double(balance)))
+                                                    .animation(.snappy, value: balance)
+
+                                                Text(" sat")
+                                            }
+                                            .monospaced()
+                                        }
                                     }
                                 }
+                            case .sliderRow(let mint):
+                                HStack {
+                                    SmallKnobSlider(value: sliderValue(for: mint), range: 0...100)
+                                    Text("\(Int(allocations[mint] ?? 0))%")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                .transition(.opacity)
                             }
-                        case .sliderRow(let mint):
-                            HStack {
-                                SmallKnobSlider(value: sliderValue(for: mint), range: 0...100)
-                                Text("\(Int(allocations[mint] ?? 0))%")
-                                    .foregroundStyle(.secondary)
-                            }
-                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                            .transition(.opacity)
                         }
                     }
                 }
@@ -156,6 +165,7 @@ struct BalancerView: View {
                                 }
                             }
                         }
+                        .lineLimit(1)
                     }
                 }
                 
@@ -300,8 +310,12 @@ struct BalancerView: View {
             Text("Complete")
                 .foregroundColor(.green)
         case .fail(let error):
-            Text("Failed")
-                .foregroundColor(.red)
+            VStack(alignment: .leading) {
+                Text("Failed")
+                    .foregroundColor(.red)
+                Text(String(describing: error))
+                    .font(.caption2)
+            }
         }
     }
     
@@ -369,9 +383,13 @@ struct BalancerView: View {
             ))
             return
         }
-
+        
         guard let activeWallet else {
             return
+        }
+        
+        withAnimation {
+            collapseSelector = true
         }
         
         buttonState = .loading()
