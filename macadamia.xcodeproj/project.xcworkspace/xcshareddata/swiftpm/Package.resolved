@@ -1,5 +1,5 @@
 {
-  "originHash" : "d7dccde6c28a0ff1e2ca6bf76e3a3e2c107d3ba24078e8d72dc660337f5f03d9",
+  "originHash" : "a9e39d8f53ee4a9676d4fb1a1d7cdbb994ea70782a2ad5390d339d606ef3d093",
   "pins" : [
     {
       "identity" : "base58",
@@ -47,6 +47,15 @@
       }
     },
     {
+      "identity" : "bech32swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/zeugmaster/Bech32Swift.git",
+      "state" : {
+        "revision" : "72ff0e36f88290396190bd3067800e44e851a2a4",
+        "version" : "1.0.0"
+      }
+    },
+    {
       "identity" : "bigint",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/attaswift/BigInt.git",
@@ -71,6 +80,15 @@
       "state" : {
         "branch" : "master",
         "revision" : "e79bd90275e50643cf8f97208ffa536d0def3ec7"
+      }
+    },
+    {
+      "identity" : "bolt11",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/zeugmaster/Bolt11.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "fa8ffb4d3c0d2cc6d7cbdcb84eeb8f5b44e68548"
       }
     },
     {

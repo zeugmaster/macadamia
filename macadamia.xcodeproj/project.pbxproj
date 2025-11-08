@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		370A2B332EBFD23800C4A6A5 /* Bolt11 in Frameworks */ = {isa = PBXBuildFile; productRef = 370A2B322EBFD23800C4A6A5 /* Bolt11 */; };
 		370A83FF2CB94CCD0039A413 /* .swiftformat in Resources */ = {isa = PBXBuildFile; fileRef = 370A83FE2CB94CCD0039A413 /* .swiftformat */; };
 		370A84072CC18AEE0039A413 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 370A84062CC18AEE0039A413 /* Flow */; };
 		371AA9132E33EB61006D487F /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 371AA9122E33EB61006D487F /* CashuSwift */; };
@@ -153,6 +154,7 @@
 				37A988492EBF9A7C0065FCE6 /* NostrSDK in Frameworks */,
 				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
 				371AA9132E33EB61006D487F /* CashuSwift in Frameworks */,
+				370A2B332EBFD23800C4A6A5 /* Bolt11 in Frameworks */,
 				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
 				377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */,
 				376E88432BE5468B0026FF8D /* Popovers in Frameworks */,
@@ -271,6 +273,7 @@
 				377D26252E1FDE7800CFB880 /* URUI */,
 				371AA9122E33EB61006D487F /* CashuSwift */,
 				37A988482EBF9A7C0065FCE6 /* NostrSDK */,
+				370A2B322EBFD23800C4A6A5 /* Bolt11 */,
 			);
 			productName = macadamia;
 			productReference = 372034B62B29E1BC00C4F955 /* macadamia.app */;
@@ -366,6 +369,7 @@
 				377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */,
 				371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */,
 				37A988472EBF9A7C0065FCE6 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */,
+				370A2B312EBFD23800C4A6A5 /* XCRemoteSwiftPackageReference "Bolt11" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -810,6 +814,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		370A2B312EBFD23800C4A6A5 /* XCRemoteSwiftPackageReference "Bolt11" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/zeugmaster/Bolt11.git";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 		370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/tevelee/SwiftUI-Flow.git";
@@ -877,6 +889,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		370A2B322EBFD23800C4A6A5 /* Bolt11 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 370A2B312EBFD23800C4A6A5 /* XCRemoteSwiftPackageReference "Bolt11" */;
+			productName = Bolt11;
+		};
 		370A84062CC18AEE0039A413 /* Flow */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
