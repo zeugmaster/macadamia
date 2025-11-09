@@ -23,7 +23,7 @@ struct KeyInput: View {
                     TextField("Enter nsec1... or 64-char hex key", text: $nsecInput)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
-                        .textFieldStyle(.roundedBorder)
+                        .padding()
                         .onChange(of: nsecInput) { oldValue, newValue in
                             showValidation = false
                         }
@@ -53,7 +53,6 @@ struct KeyInput: View {
                     Text(hasStoredKey ? "Update Key" : "Save Key")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
                 .disabled(nsecInput.isEmpty)
                 
                 if hasStoredKey {

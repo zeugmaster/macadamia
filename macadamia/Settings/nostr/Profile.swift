@@ -26,26 +26,19 @@ struct Profile: View {
     var body: some View {
         List {
             Section {
-                HStack {
-                    Image(systemName: "person")
-                        .font(.title2)
-                        .padding()
-                    VStack(alignment: .leading) {
-                        Text("User Name")
-                        Text("Subline")
-                            .font(.caption)
-                    }
-                }
-            }
-            
-            Section {
                 NavigationLink(destination: KeyInput()) {
                     HStack {
-                        Text("Private Key")
-                        Spacer()
-                        if NostrKeychain.hasNsec() {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.green)
+                        Image(systemName: "person")
+                            .font(.title2)
+                            .padding()
+                        VStack(alignment: .leading) {
+                            if NostrKeychain.hasNsec() {
+                                Text("User Name")
+                            } else {
+                                Text("Securely add NSEC")
+                            }
+                            Text("Subline")
+                                .font(.caption)
                         }
                     }
                 }
