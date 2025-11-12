@@ -506,17 +506,6 @@ enum AppSchemaV1: VersionedSchema {
         }
     }
     
-    @Model
-    final class NostrProfile {
-        
-    }
-    
-    @Model
-    final class NostrContact {
-        
-    }
-    
-    
     struct BlankOutputSet: Codable {
         let outputs: [CashuSwift.Output]
         let blindingFactors: [String]

@@ -8,11 +8,13 @@ let logger = Logger(subsystem: "macadamia Wallet", category: "Interface & Databa
 struct macadamiaApp: App {
     
     @StateObject private var appState = AppState()
+    @StateObject private var nostrService = NostrService()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
+                .environmentObject(nostrService)
         }
         .modelContainer(DatabaseManager.shared.container)
     }

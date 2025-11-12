@@ -10,6 +10,8 @@ import secp256k1
 import Bech32Swift
 
 struct KeyInput: View {
+    @EnvironmentObject var nostrService: NostrService
+    
     @State private var nsecInput: String = ""
     @State private var validationMessage: String = ""
     @State private var isValidKey: Bool = false
@@ -174,10 +176,15 @@ struct KeyInput: View {
     
     private func deleteKey() {
         do {
+            // Clear Nostr cache and disconnect service
+            nostrService.clearCacheAndStop()
+            
+            // Delete the key from keychain
             try NostrKeychain.deleteNsec()
+            
             hasStoredKey = false
             isValidKey = false
-            validationMessage = "Key deleted"
+            validationMessage = "Key deleted and cache cleared"
             showValidation = true
         } catch {
             validationMessage = "Failed to delete key: \(error.localizedDescription)"
@@ -189,5 +196,6 @@ struct KeyInput: View {
 #Preview {
     NavigationStack {
         KeyInput()
+            .environmentObject(NostrService())
     }
 }
