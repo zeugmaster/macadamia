@@ -1,5 +1,5 @@
 {
-  "originHash" : "a9e39d8f53ee4a9676d4fb1a1d7cdbb994ea70782a2ad5390d339d606ef3d093",
+  "originHash" : "be9d253f6c2a82f6b1cd6b4854255e6c7abf65583a48c23989c4ad497ac66b55",
   "pins" : [
     {
       "identity" : "base58",
@@ -123,8 +123,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/nostr-sdk-ios.git",
       "state" : {
-        "revision" : "197553677cb76edec223845323ad8b27d7ef4d07",
-        "version" : "0.3.1"
+        "revision" : "7fc5c341756f54db9da015f72fd02415c8f3d1c3",
+        "version" : "0.3.4"
       }
     },
     {

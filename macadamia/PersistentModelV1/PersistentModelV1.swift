@@ -278,6 +278,7 @@ enum AppSchemaV1: VersionedSchema {
             }
         }
         
+        @MainActor
         func loadInfo(invalidateCache: Bool = false) async throws -> CashuSwift.Mint.Info? {
             let oneDayAgo: Date = Date().addingTimeInterval(-86400)
             
@@ -504,6 +505,17 @@ enum AppSchemaV1: VersionedSchema {
             }
         }
     }
+    
+    @Model
+    final class NostrProfile {
+        
+    }
+    
+    @Model
+    final class NostrContact {
+        
+    }
+    
     
     struct BlankOutputSet: Codable {
         let outputs: [CashuSwift.Output]
