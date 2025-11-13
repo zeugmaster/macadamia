@@ -20,9 +20,9 @@ extension AppSchemaV1.Mint {
             do {
               
                 let (sendableProofs, _, outputDLEQ) = try await CashuSwift.receive(token: token,
-                                                                                           of: CashuSwift.Mint(self),
-                                                                                           seed: wallet.seed,
-                                                                                           privateKey: privateKeyString)
+                                                                                   of: CashuSwift.Mint(self),
+                                                                                   seed: wallet.seed,
+                                                                                   privateKey: privateKeyString)
                 
                 receiveLogger.info("DLEQ check on incoming: \(String(describing: outputDLEQ))")
                 

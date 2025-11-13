@@ -109,9 +109,10 @@ struct ContentView: View {
                 for mint in activeWallet.mints {
                     do {
                         let newKeysets = try await CashuSwift.updatedKeysetsForMint(CashuSwift.Mint(mint))
-                        await MainActor.run {
+                        try await MainActor.run {
                             mint.keysets = newKeysets
                             print("mint: \(mint.url.absoluteString), new keyset counters: \(newKeysets.map({ $0.derivationCounter }))")
+                            try modelContext.save()
                         }
                     } catch {
                         logger.warning("""

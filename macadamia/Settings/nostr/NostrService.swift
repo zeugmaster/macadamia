@@ -325,8 +325,40 @@ class NostrService: ObservableObject, EventCreating {
     
     @MainActor
     func sendNIP17Message(to recipientPubkey: String, content: String, subject: String? = nil) async throws {
-        // TODO: Implement NIP-17 sending - temporarily using NIP-4 as fallback
-        try await sendNIP4Message(to: recipientPubkey, content: content)
+        guard let keypair = currentUserKeypair else {
+            throw NostrServiceError.noKeypairAvailable
+        }
+        
+        guard let recipientPublicKey = PublicKey(hex: recipientPubkey) else {
+            throw NostrServiceError.invalidRecipientPubkey
+        }
+        
+        // Create the DirectMessageEvent rumor (unsigned)
+        // The rumor must include a p tag for the recipient to define the chat room
+        let recipientTag = NostrTag(name: "p", value: recipientPubkey, otherParameters: [])
+        var builder = DirectMessageEvent.Builder()
+            .content(content)
+            .appendTags(recipientTag)
+        
+        // Add subject if provided
+        if let subject = subject {
+            builder = builder.subject(subject)
+        }
+        
+        // Build as rumor (unsigned event)
+        let directMessageRumor = builder.build(pubkey: keypair.publicKey)
+        
+        // Create the gift wrap (handles seal + wrap internally)
+        let giftWrapEvent = try giftWrap(
+            withDirectMessageEvent: directMessageRumor,
+            toRecipient: recipientPublicKey,
+            signedBy: keypair
+        )
+        
+        // Publish to all connected relays
+        relayPool?.publishEvent(giftWrapEvent)
+        
+        nostrLogger.info("Sent NIP-17 gift wrapped message to \(recipientPubkey.prefix(8))...")
     }
     
     func updateRelays(_ urls: [URL]) {

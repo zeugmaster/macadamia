@@ -7,12 +7,17 @@ struct ComposeMessage: View {
     let contact: NostrContact
     let profile: NostrProfile?
     
-    @State private var messageText: String = ""
-    @State private var subject: String = ""
+    @State private var messageText: String
     @State private var useNIP17: Bool = true
     @State private var isSending: Bool = false
     @State private var showError: Bool = false
     @State private var errorMessage: String = ""
+    
+    init(contact: NostrContact, profile: NostrProfile?, prefilledContent: String? = nil) {
+        self.contact = contact
+        self.profile = profile
+        self._messageText = State(initialValue: prefilledContent ?? "")
+    }
     
     private var recipientName: String {
         if let petname = contact.petname, !petname.isEmpty {
@@ -44,14 +49,6 @@ struct ComposeMessage: View {
                     Text("Protocol")
                 } footer: {
                     Text(useNIP17 ? "NIP-17 provides better privacy by hiding the sender in a gift wrap." : "NIP-4 is the legacy encrypted DM format (deprecated).")
-                }
-                
-                if useNIP17 {
-                    Section {
-                        TextField("Subject (optional)", text: $subject)
-                    } header: {
-                        Text("Subject")
-                    }
                 }
                 
                 Section {
@@ -101,11 +98,10 @@ struct ComposeMessage: View {
         
         do {
             if useNIP17 {
-                let subjectText = subject.isEmpty ? nil : subject
                 try await nostrService.sendNIP17Message(
                     to: contact.contactPubkey,
                     content: messageText,
-                    subject: subjectText
+                    subject: nil
                 )
             } else {
                 try await nostrService.sendNIP4Message(
