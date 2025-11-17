@@ -8,6 +8,7 @@
 import SwiftUI
 import secp256k1
 import Bech32Swift
+import NostrSDK
 
 struct KeyInput: View {
     @EnvironmentObject var nostrService: NostrService
@@ -17,10 +18,30 @@ struct KeyInput: View {
     @State private var isValidKey: Bool = false
     @State private var showValidation: Bool = false
     @State private var hasStoredKey: Bool = false
+    @State private var generatedNpub: String = ""
     
     var body: some View {
         List {
-            Section(header: Text("Nostr Private Key")) {
+            if hasStoredKey && !generatedNpub.isEmpty {
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Your wallet public key (npub)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        Text(generatedNpub)
+                            .font(.system(.body, design: .monospaced))
+                            .textSelection(.enabled)
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Text("Generated Key")
+                } footer: {
+                    Text("A wallet-specific Nostr key has been generated for you. You can replace it with your own key below if desired.")
+                }
+            }
+            
+            Section(header: Text("Replace with Custom Key")) {
                 VStack(alignment: .leading, spacing: 8) {
                     TextField("Enter nsec1... or 64-char hex key", text: $nsecInput)
                         .textInputAutocapitalization(.never)
@@ -52,7 +73,7 @@ struct KeyInput: View {
                 }
                 
                 Button(action: validateAndSaveKey) {
-                    Text(hasStoredKey ? "Update Key" : "Save Key")
+                    Text(hasStoredKey ? "Replace Key" : "Save Key")
                         .frame(maxWidth: .infinity)
                 }
                 .disabled(nsecInput.isEmpty)
@@ -65,10 +86,11 @@ struct KeyInput: View {
                 }
             }
         }
-        .navigationTitle("Private Key")
+        .navigationTitle("Nostr Key")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             checkStoredKey()
+            generateKeyIfNeeded()
         }
     }
     
@@ -184,11 +206,73 @@ struct KeyInput: View {
             
             hasStoredKey = false
             isValidKey = false
+            generatedNpub = ""
             validationMessage = "Key deleted and cache cleared"
             showValidation = true
         } catch {
             validationMessage = "Failed to delete key: \(error.localizedDescription)"
             showValidation = true
+        }
+    }
+    
+    private func generateKeyIfNeeded() {
+        // Only generate if no key exists
+        guard !NostrKeychain.hasNsec() else {
+            loadNpubFromStoredKey()
+            return
+        }
+        
+        // Generate a new keypair
+        guard let keypair = Keypair() else {
+            validationMessage = "Failed to generate keypair"
+            isValidKey = false
+            showValidation = true
+            return
+        }
+        
+        let nsecString = keypair.privateKey.nsec
+        
+        // Save to keychain
+        do {
+            try NostrKeychain.saveNsec(nsecString)
+            hasStoredKey = true
+            generatedNpub = keypair.publicKey.npub
+            
+            isValidKey = true
+            validationMessage = "Wallet key generated successfully"
+            showValidation = true
+        } catch {
+            validationMessage = "Failed to generate key: \(error.localizedDescription)"
+            isValidKey = false
+            showValidation = true
+        }
+    }
+    
+    private func loadNpubFromStoredKey() {
+        guard NostrKeychain.hasNsec() else {
+            generatedNpub = ""
+            return
+        }
+        
+        do {
+            let nsecString = try NostrKeychain.getNsec()
+            let trimmed = nsecString.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            // Parse the keypair
+            let keypair: Keypair?
+            if trimmed.lowercased().hasPrefix("nsec") {
+                keypair = Keypair(nsec: trimmed)
+            } else {
+                keypair = Keypair(hex: trimmed)
+            }
+            
+            if let keypair = keypair {
+                generatedNpub = keypair.publicKey.npub
+            } else {
+                generatedNpub = "Invalid key"
+            }
+        } catch {
+            generatedNpub = "Error loading key"
         }
     }
 }

@@ -21,28 +21,23 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 Section {
-                    NavigationLink(destination: Profile()) {
-                        HStack {
-                            Image(systemName: "person")
-                                .font(.title2)
-                                .padding()
-                            VStack(alignment: .leading) {
-                                Text("User Name")
-                                Text("Subline")
-                                    .font(.caption)
-                            }
-                        }
-                    }
-                } header: {
-                    Text("Nostr")
-                }
-                
-                Section {
                     NavigationLink(destination: MnemonicView()) { Text("Show Seed Phrase") }
                     NavigationLink(destination: RestoreView()) { Text("Restore") }
                     NavigationLink(destination: PublicKeyView()) { Text("Show Locking Key") }
                 } header: {
                     Text("Cashu")
+                }
+                
+                Section {
+                    NavigationLink(destination: NostrSettingsView()) {
+                        HStack {
+                            Image(systemName: "bolt")
+                                .font(.title2)
+                            Text("Nostr")
+                        }
+                    }
+                } header: {
+                    Text("Nostr")
                 }
                 
                 if hiddenMenuShowing {

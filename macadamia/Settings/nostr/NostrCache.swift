@@ -4,6 +4,7 @@ import OSLog
 fileprivate let cacheLogger = Logger(subsystem: "macadamia", category: "NostrCache")
 
 /// A file-based cache manager for Nostr data using JSON serialization
+/// Simplified for wallet-specific key management
 class NostrCache {
     static let shared = NostrCache()
     
@@ -29,14 +30,6 @@ class NostrCache {
     }
     
     // MARK: - File URLs
-    
-    private var profilesFileURL: URL {
-        cacheDirectory.appendingPathComponent("profiles.json")
-    }
-    
-    private var contactsFileURL: URL {
-        cacheDirectory.appendingPathComponent("contacts.json")
-    }
     
     private var currentUserPubkeyFileURL: URL {
         cacheDirectory.appendingPathComponent("current_user.txt")
@@ -72,81 +65,11 @@ class NostrCache {
         setCurrentUserPubkey(currentPubkey)
     }
     
-    // MARK: - Profile Cache
-    
-    func saveProfiles(_ profiles: [String: NostrProfile]) {
-        do {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            let data = try encoder.encode(profiles)
-            try data.write(to: profilesFileURL)
-            cacheLogger.info("Saved \(profiles.count) profiles to cache")
-        } catch {
-            cacheLogger.error("Failed to save profiles: \(error.localizedDescription)")
-        }
-    }
-    
-    func loadProfiles() -> [String: NostrProfile] {
-        guard fileManager.fileExists(atPath: profilesFileURL.path) else {
-            return [:]
-        }
-        
-        do {
-            let data = try Data(contentsOf: profilesFileURL)
-            let profiles = try JSONDecoder().decode([String: NostrProfile].self, from: data)
-            cacheLogger.info("Loaded \(profiles.count) profiles from cache")
-            return profiles
-        } catch {
-            cacheLogger.error("Failed to load profiles: \(error.localizedDescription)")
-            return [:]
-        }
-    }
-    
-    // MARK: - Contacts Cache
-    
-    func saveContacts(_ contacts: [NostrContact]) {
-        do {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            let data = try encoder.encode(contacts)
-            try data.write(to: contactsFileURL)
-            cacheLogger.info("Saved \(contacts.count) contacts to cache")
-        } catch {
-            cacheLogger.error("Failed to save contacts: \(error.localizedDescription)")
-        }
-    }
-    
-    func loadContacts() -> [NostrContact] {
-        guard fileManager.fileExists(atPath: contactsFileURL.path) else {
-            return []
-        }
-        
-        do {
-            let data = try Data(contentsOf: contactsFileURL)
-            let contacts = try JSONDecoder().decode([NostrContact].self, from: data)
-            cacheLogger.info("Loaded \(contacts.count) contacts from cache")
-            return contacts
-        } catch {
-            cacheLogger.error("Failed to load contacts: \(error.localizedDescription)")
-            return []
-        }
-    }
-    
     // MARK: - Clear Cache
     
     func clearAll() {
         do {
             // Remove all cache files
-            if fileManager.fileExists(atPath: profilesFileURL.path) {
-                try fileManager.removeItem(at: profilesFileURL)
-                cacheLogger.info("Cleared profiles cache")
-            }
-            
-            if fileManager.fileExists(atPath: contactsFileURL.path) {
-                try fileManager.removeItem(at: contactsFileURL)
-                cacheLogger.info("Cleared contacts cache")
-            }
-            
             if fileManager.fileExists(atPath: currentUserPubkeyFileURL.path) {
                 try fileManager.removeItem(at: currentUserPubkeyFileURL)
                 cacheLogger.info("Cleared current user cache")
@@ -158,4 +81,3 @@ class NostrCache {
         }
     }
 }
-

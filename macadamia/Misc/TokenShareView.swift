@@ -14,7 +14,6 @@ struct TokenShareView: View {
     @State private var preferredTokenVersion: CashuSwift.TokenVersion = .V4
     @State private var isCopied = false
     @State private var tokenString = ""
-    @State private var showNostrContactPicker = false
     
     init(token: CashuSwift.Token) {
         self.token = token
@@ -54,16 +53,6 @@ struct TokenShareView: View {
                 }
             }
             
-            Button {
-                showNostrContactPicker = true
-            } label: {
-                HStack {
-                    Text("Send via Nostr")
-                    Spacer()
-                    Image(systemName: "paperplane")
-                }
-            }
-            
             ShareLink(item: URL(string: "cashu:" + tokenString)!) {
                 HStack {
                     Text("Share")
@@ -74,9 +63,6 @@ struct TokenShareView: View {
         }
         .onChange(of: preferredTokenVersion) { oldValue, newValue in
             tokenString = (try? token.serialize(to: newValue)) ?? ""
-        }
-        .fullScreenCover(isPresented: $showNostrContactPicker) {
-            ContactPickerView(tokenString: tokenString)
         }
         
         Section {
