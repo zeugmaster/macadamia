@@ -31,9 +31,7 @@ struct SettingsView: View {
                 Section {
                     NavigationLink(destination: NostrSettingsView()) {
                         HStack {
-                            Image(systemName: "bolt")
-                                .font(.title2)
-                            Text("Nostr")
+                            Text("Wallet Key & Relays")
                         }
                     }
                 } header: {
