@@ -56,6 +56,8 @@ struct ActionButton: View {
     @Binding var state: ActionButtonState
     let hideShadow: Bool
     
+    private let cornerRadius: CGFloat = 20
+    
     @GestureState private var isPressed = false
     
     @Environment(\.actionButtonDisabled) private var isDisabled
@@ -94,7 +96,7 @@ struct ActionButton: View {
                     Circle()
                         .scale(circleScale)
                         .stroke(animationColor, lineWidth: circleLineWidth)
-                    RoundedRectangle(cornerRadius: 14)
+                    RoundedRectangle(cornerRadius: cornerRadius)
                         .stroke(borderColor.opacity(0.6), lineWidth:6.0)
                 }
                     
@@ -114,7 +116,7 @@ struct ActionButton: View {
                 Color.white.opacity(isPressed ? 0.1 : 0.0)
                     .animation(.linear(duration: 0.07), value: isPressed)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 15))
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         }
         .fixedSize(horizontal: false, vertical: true)
         .gesture(gesture)

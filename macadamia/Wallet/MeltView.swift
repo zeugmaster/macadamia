@@ -262,7 +262,6 @@ struct MeltView: View {
                                     let balance = mint.balance(for: .sat)
 
                                     Text(balance, format: .number)
-                                        .monospaced()
                                         .contentTransition(.numericText(value: Double(balance)))
                                         .animation(.snappy, value: balance)
 

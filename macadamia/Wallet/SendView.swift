@@ -40,11 +40,9 @@ struct SendView: View {
         ZStack {
             Form {
                 Section {
-                    NumericalInputView(
-                        output: $amount,
-                        baseUnit: .sat,
-                        appState: appState
-                    )
+                    NumericalInputView(output: $amount,
+                                       baseUnit: .sat,
+                                       appState: appState)
                     
                     // TODO: CHECK FOR EMPTY MINT LIST
                     MintPicker(label: "Send from", selectedMint: $selectedMint)
@@ -71,26 +69,27 @@ struct SendView: View {
                     }
                 }
                 
-                Section {
-                    HStack {
-                        TextField("", text: $lockingKey, prompt: Text("Type, paste or scan..."))
-                            .monospaced()
-                            .autocorrectionDisabled(true)
-                            .textInputAutocapitalization(.never)
-                        InputViewModalButton(inputTypes: [.publicKey]) {
-                            Image(systemName: "qrcode.viewfinder")
-                        } onResult: { result in
-                            switch result.type {
-                            case .publicKey:
-                                self.lockingKey = result.payload
-                            default:
-                                logger.error("")
+                if token == nil || !lockingKey.isEmpty {
+                    Section {
+                        HStack {
+                            TextField("", text: $lockingKey, prompt: Text("Type, paste or scan..."))
+                                .autocorrectionDisabled(true)
+                                .textInputAutocapitalization(.never)
+                            InputViewModalButton(inputTypes: [.publicKey]) {
+                                Image(systemName: "qrcode.viewfinder")
+                            } onResult: { result in
+                                switch result.type {
+                                case .publicKey:
+                                    self.lockingKey = result.payload
+                                default:
+                                    logger.error("")
+                                }
                             }
                         }
-
+                        .disabled(token != nil)
+                    } header: {
+                        Text("Lock to Public Key")
                     }
-                } header: {
-                    Text("Lock to Public Key")
                 }
                 
                 if let token {

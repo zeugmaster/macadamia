@@ -21,6 +21,7 @@ struct WalletView: View {
         case send
         case receive(urlString: String?)
         case melt(invoice: String?)
+        case reqPay(req: CashuSwift.PaymentRequest)
 
         var id: String {
             switch self {
@@ -32,6 +33,8 @@ struct WalletView: View {
                 return "receive_\(urlString ?? "nil")"
             case .melt:
                 return "melt"
+            case .reqPay(_):
+                return "reqPay"
             }
         }
     }
@@ -107,7 +110,7 @@ struct WalletView: View {
                     }
                     
                     // MARK: - SCANNER
-                    InputViewModalButton(inputTypes: [.bolt11Invoice, .token]) {
+                    InputViewModalButton(inputTypes: [.bolt11Invoice, .token, .creq]) {
                         Image(systemName: "qrcode")
                             .font(.largeTitle)
                             .fontWeight(.semibold)
@@ -131,6 +134,13 @@ struct WalletView: View {
                             navigationDestination = .melt(invoice: result.payload)
                         case .token:
                             navigationDestination = .receive(urlString: result.payload)
+                        case .creq:
+                            do {
+                                let req = try CashuSwift.PaymentRequest(encodedRequest: result.payload)
+                                navigationDestination = .reqPay(req: req)
+                            } catch {
+                                displayAlert(alert: AlertDetail(with: error))
+                            }
                         default:
                             break
                         }
@@ -178,6 +188,8 @@ struct WalletView: View {
                     RedeemContainerView(tokenString: urlString)
                 case .melt(let invoice):
                     MeltView(invoice: invoice)
+                case .reqPay(req: let req):
+                    RequestPay(paymentRequest: req)
                 }
             }
             .onChange(of: urlState, { oldValue, newValue in

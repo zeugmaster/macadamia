@@ -96,8 +96,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/cashu-swift.git",
       "state" : {
-        "revision" : "9c9b7deffaba2865bb1ea0571b05ff39ad4259f8",
-        "version" : "0.2.6"
+        "branch" : "creq",
+        "revision" : "6b465b59f553d50dff6590e9734e833c470e78ed"
       }
     },
     {

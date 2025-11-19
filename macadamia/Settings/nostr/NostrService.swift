@@ -88,7 +88,7 @@ class NostrService: ObservableObject, EventCreating {
         // Check if user has a key - if not, clear any stale cache
         if !NostrKeychain.hasNsec() {
             nostrLogger.info("No Nostr key found, clearing any stale cache")
-            NostrCache.shared.clearAll()
+//            NostrCache.shared.clearAll()
         }
         
         // Observe relay changes
@@ -118,7 +118,7 @@ class NostrService: ObservableObject, EventCreating {
         currentUserKeypair = keypair
         
         // Check if user changed and clear cache if so
-        NostrCache.shared.checkAndClearIfUserChanged(currentPubkey: keypair.publicKey.hex)
+//        NostrCache.shared.checkAndClearIfUserChanged(currentPubkey: keypair.publicKey.hex)
         
         // Connect to relays
         connectToRelays()
@@ -164,7 +164,7 @@ class NostrService: ObservableObject, EventCreating {
         currentUserKeypair = nil
         
         // Clear the cache files
-        NostrCache.shared.clearAll()
+//        NostrCache.shared.clearAll()
         
         nostrLogger.info("All Nostr data and cache cleared")
     }

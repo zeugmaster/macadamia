@@ -834,8 +834,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/zeugmaster/cashu-swift.git";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.2.0;
+				branch = creq;
+				kind = branch;
 			};
 		};
 		376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */ = {
