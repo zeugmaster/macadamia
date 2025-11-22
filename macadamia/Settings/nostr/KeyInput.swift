@@ -199,7 +199,7 @@ struct KeyInput: View {
     private func deleteKey() {
         do {
             // Clear Nostr cache and disconnect service
-            nostrService.clearCacheAndStop()
+//            nostrService.clearCacheAndStop()
             
             // Delete the key from keychain
             try NostrKeychain.deleteNsec()

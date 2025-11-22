@@ -145,7 +145,8 @@ struct EventList: View {
                         let (main, secondary) = description(for: eventGroup)
                         Text(main)
                         Group {
-                            if eventGroup.events.first?.token?.isP2PKLocked ?? false {
+                            if (eventGroup.events.first?.token?.isP2PKLocked ?? false) &&
+                                eventGroup.events.first?.kind != .pendingReceive {
                                 Image(systemName: "lock.fill")
                             }
                             if let secondary {
@@ -238,7 +239,8 @@ struct EventList: View {
                             let (main, secondary) = description(for: eventGroup)
                             Text(main)
                             Group {
-                                if eventGroup.events.first?.token?.isP2PKLocked ?? false {
+                                if (eventGroup.events.first?.token?.isP2PKLocked ?? false) &&
+                                    eventGroup.events.first?.kind != .pendingReceive    { //
                                     Image(systemName: "lock.fill")
                                 }
                                 if let secondary {
@@ -287,7 +289,7 @@ struct EventList: View {
         case .mint:             return ("Ecash created", nil)
         case .send:             return ("Send", primaryEvent.memo.nilWhenEmtpy)
         case .receive:          return ("Receive", primaryEvent.memo.nilWhenEmtpy)
-        case .pendingReceive:   return ("Locked Token", nil)
+        case .pendingReceive:   return ("Pending Receive", nil)
         case .pendingMelt:      return ("Pending Payment", nil)
         case .melt:             return ("Payment", nil)
         case .restore:          return ("Restore", nil)
