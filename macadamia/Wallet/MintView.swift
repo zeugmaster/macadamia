@@ -56,7 +56,10 @@ struct MintView: View {
                 Section {
                     NumericalInputView(output: $amount,
                                        baseUnit: .sat,
-                                       appState: appState)
+                                       exchangeRates: appState.exchangeRates,
+                                       onReturn: {
+                        getQuote()
+                    })
                     MintPicker(label: "Mint", selectedMint: $selectedMint)
                 }
                 .disabled(pendingMintEvent != nil)
@@ -161,6 +164,10 @@ struct MintView: View {
                          unable to request quote because one or more of the following variables are nil:
                          selectedMInt: \(selectedMint.debugDescription)
                          """)
+            return
+        }
+        
+        guard amount > 0 else {
             return
         }
         

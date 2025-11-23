@@ -42,7 +42,8 @@ struct SendView: View {
                 Section {
                     NumericalInputView(output: $amount,
                                        baseUnit: .sat,
-                                       appState: appState)
+                                       exchangeRates: appState.exchangeRates,
+                                       onReturn: {})
                     
                     // TODO: CHECK FOR EMPTY MINT LIST
                     MintPicker(label: "Send from", selectedMint: $selectedMint)

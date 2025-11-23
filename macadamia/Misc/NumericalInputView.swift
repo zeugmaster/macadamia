@@ -16,6 +16,7 @@ struct NumericalInputView: View {
     
     // Optional exchange rates - if nil, conversion features are disabled
     let exchangeRates: AppState.ExchangeRate?
+    let onReturn: () -> Void
     
     @State private var input: String = ""
     @State private var inputIsFiat = false
@@ -81,10 +82,13 @@ struct NumericalInputView: View {
                         .keyboardType(keyboardType)
                         .focused($isInputFocused)
                         .font(.title3)
-                            .onChange(of: input) { _, newValue in
-                                input = validateInput(newValue)
-                                updateOutput()
-                            }
+                        .onChange(of: input) { _, newValue in
+                            input = validateInput(newValue)
+                            updateOutput()
+                        }
+                        .onSubmit {
+                            onReturn()
+                        }
                     
                     Text(inputUnit)
                         .font(.body)
@@ -105,7 +109,7 @@ struct NumericalInputView: View {
                 Button {
                     toggleInputMode()
                 } label: {
-                    Image(systemName: "arrow.trianglehead.2.clockwise")
+                    Image(systemName: "arrow.up.arrow.down")
                         .foregroundColor(toggleButtonDisabled ? .gray : .accentColor)
                 }
                 .disabled(toggleButtonDisabled)
@@ -219,15 +223,6 @@ struct NumericalInputView: View {
     }
 }
 
-// Convenience initializer for use with AppState
-extension NumericalInputView {
-    init(output: Binding<Int>, baseUnit: AppSchemaV1.Unit, appState: AppState) {
-        self._output = output
-        self.baseUnit = baseUnit
-        self.exchangeRates = appState.exchangeRates
-    }
-}
-
 #Preview {
     struct PreviewWrapper: View {
         @State private var amount = 100000
@@ -241,7 +236,10 @@ extension NumericalInputView {
                 NumericalInputView(
                     output: $amount,
                     baseUnit: .sat,
-                    exchangeRates: nil
+                    exchangeRates: nil,
+                    onReturn: {
+                        print("user hit return")
+                    }
                 )
                 .padding()
                 
