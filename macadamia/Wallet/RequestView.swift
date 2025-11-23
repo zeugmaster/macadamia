@@ -25,6 +25,9 @@ struct RequestView: View {
     @State private var selectedMints = Set<Mint>()
     @State private var showMintSelector = false
     @State private var useNIP17Transport = false
+    @State private var useP2PK = false
+    @State private var description = ""
+    @State private var copied = false
     
     @Query private var allProofs:[Proof]
     @State private var showAlert: Bool = false
@@ -44,7 +47,13 @@ struct RequestView: View {
     }
     
     private var doneButtonDisabled: Bool {
-        false
+        
+        // Disable if NIP-17 is selected but no Nostr key is available
+        if useNIP17Transport && !NostrKeychain.hasNsec() {
+            return true
+        }
+        
+        return false
     }
     
     var body: some View {
@@ -52,14 +61,30 @@ struct RequestView: View {
             Section {
                 NumericalInputView(output: $amount,
                                    baseUnit: .sat,
-                                   exchangeRates: appState.exchangeRates) {
-                    
-                }
+                                   exchangeRates: appState.exchangeRates) {}
+                                   .disabled(paymentRequest != nil)
             }
             
             if let paymentRequest, let string = try? paymentRequest.serialize() {
                 Section {
                     StaticQRView(string: string)
+                    Button {
+                        UIPasteboard.general.string = string
+                        withAnimation {
+                            copied = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            withAnimation {
+                                copied = false
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text(copied ? "Copied!" : "Copy to clipboad")
+                            Spacer()
+                            Image(systemName: copied ? "clipboard.fill" : "clipboard")
+                        }
+                    }
                 } footer: {
                     Text(paymentRequest.paymentId ?? "No ID")
                 }
@@ -86,17 +111,46 @@ struct RequestView: View {
                 } header: {
                     Text("Receive via")
                 }
+                
+                if let publicKeyString = activeWallet?.publicKeyString {
+                    Section {
+                        Button {
+                            useP2PK.toggle()
+                        } label: {
+                            HStack {
+                                Image(systemName: useP2PK ? "checkmark.circle.fill" : "circle")
+                                VStack(alignment: .leading) {
+                                    Text("P2PK")
+                                    Text(publicKeyString)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .lineLimit(1)
+                                Spacer()
+                                Image(systemName: "lock")
+                            }
+                        }
+                    } header: {
+                        Text("Lock to wallet key")
+                    }
+                }
+                
+                Section {
+                    TextField("", text: $description, prompt: Text("Optional description..."))
+                }
             }
         }
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    generatePaymentRequest()
-                }) {
-                    Text("Done")
+            if paymentRequest == nil {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        generatePaymentRequest()
+                    }) {
+                        Text("Done")
+                    }
+                    .disabled(doneButtonDisabled)
+                    .opacity(paymentRequest == nil ? 1 : 0)
                 }
-                .disabled(doneButtonDisabled)
-                .opacity(paymentRequest == nil ? 1 : 0)
             }
         }
         .navigationTitle("Payment Request")
@@ -166,6 +220,57 @@ struct RequestView: View {
     
     private func generatePaymentRequest() {
         
+        // Convert selected mints to URL strings
+        let mintURLs: [String]? = selectedMints.isEmpty ? nil : selectedMints.map { $0.url.absoluteString }
+        
+        // Create transports array if NIP-17 is enabled
+        var transports: [CashuSwift.Transport]? = nil
+        if useNIP17Transport {
+            do {
+                let npub = try NostrKeychain.getNpub()
+                let nostrTransport = CashuSwift.Transport(type: CashuSwift.Transport.TransportType.nostr, target: npub)
+                transports = [nostrTransport]
+            } catch {
+                displayAlert(alert: AlertDetail(title: "⚠️ Nostr Key Error", description: "Failed to get your Nostr public key: \(error.localizedDescription)"))
+                return
+            }
+        }
+        
+        // Extract complex expressions to help type inference
+        let requestAmount: Int? = amount > 0 ? amount : nil
+        let requestDescription: String? = description.isEmpty ? nil : description
+        
+        // Create NUT-10 locking condition if P2PK is enabled and we have a public key
+        let lockingCondition: CashuSwift.NUT10Option?
+        if useP2PK, let publicKeyString = activeWallet?.publicKeyString {
+            lockingCondition = CashuSwift.NUT10Option(kind: CashuSwift.NUT10Option.Kind.p2pk,
+                                                      data: publicKeyString,
+                                                      tags: nil)
+        } else {
+            lockingCondition = nil
+        }
+        
+        let request = CashuSwift.PaymentRequest(paymentId: createPaymentRequestIdentifier(),
+                                                amount: requestAmount,
+                                                unit: "sat",
+                                                singleUse: false,
+                                                mints: mintURLs,
+                                                description: requestDescription,
+                                                transports: transports,
+                                                lockingCondition: lockingCondition)
+        
+        withAnimation {
+            paymentRequest = request
+        }
+        
+    }
+
+    func createPaymentRequestIdentifier() -> String {
+        let uuid = UUID().uuidString.lowercased()
+        if let firstComponent = uuid.components(separatedBy: "-").first {
+            return firstComponent
+        }
+        return ""
     }
     
     private func displayAlert(alert: AlertDetail) {
