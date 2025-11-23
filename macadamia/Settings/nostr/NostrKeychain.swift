@@ -1,5 +1,6 @@
 import Foundation
 import Security
+import NostrSDK
 
 enum NostrKeychainError: Error {
     case invalidData
@@ -138,6 +139,60 @@ class NostrKeychain {
         
         if status != errSecSuccess && status != errSecItemNotFound {
             throw NostrKeychainError.unableToDelete
+        }
+    }
+    
+    /// Gets the npub (public key in bech32 format) derived from the stored nsec
+    /// - Returns: The npub string
+    /// - Throws: NostrKeychainError if the key cannot be retrieved or parsed
+    static func getNpub() throws -> String {
+        let nsec = try getNsec()
+        let normalized = nsec.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        let keypair: Keypair?
+        if normalized.lowercased().hasPrefix("nsec") {
+            keypair = Keypair(nsec: normalized)
+        } else {
+            keypair = Keypair(hex: normalized)
+        }
+        
+        guard let keypair = keypair else {
+            throw NostrKeychainError.invalidData
+        }
+        
+        return keypair.publicKey.npub
+    }
+    
+    /// Gets the nprofile (public key with relay hints in bech32 format) derived from the stored nsec
+    /// - Parameter relays: Optional array of relay URLs to include in the nprofile
+    /// - Returns: The nprofile string
+    /// - Throws: NostrKeychainError if the key cannot be retrieved or parsed, or TLVCodingError if encoding fails
+    static func getNprofile(relays: [String]? = nil) throws -> String {
+        let nsec = try getNsec()
+        let normalized = nsec.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        let keypair: Keypair?
+        if normalized.lowercased().hasPrefix("nsec") {
+            keypair = Keypair(nsec: normalized)
+        } else {
+            keypair = Keypair(hex: normalized)
+        }
+        
+        guard let keypair = keypair else {
+            throw NostrKeychainError.invalidData
+        }
+        
+        // Create metadata with pubkey and optional relays
+        let metadata = Metadata(pubkey: keypair.publicKey.hex, relays: relays)
+        
+        // Encode as nprofile using MetadataCoding
+        struct MetadataEncoder: MetadataCoding {}
+        let encoder = MetadataEncoder()
+        
+        do {
+            return try encoder.encodedIdentifier(with: metadata, identifierType: .profile)
+        } catch {
+            throw NostrKeychainError.invalidData
         }
     }
 }

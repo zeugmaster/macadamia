@@ -22,6 +22,7 @@ struct WalletView: View {
         case receive(urlString: String?)
         case melt(invoice: String?)
         case reqPay(req: CashuSwift.PaymentRequest)
+        case reqView
 
         var id: String {
             switch self {
@@ -35,6 +36,8 @@ struct WalletView: View {
                 return "melt"
             case .reqPay(_):
                 return "reqPay"
+            case .reqView:
+                return "reqView"
             }
         }
     }
@@ -87,6 +90,15 @@ struct WalletView: View {
                             $0.backgroundColor = Color.black.opacity(0.5)
                         }
                     ) {
+                        Templates.MenuItem {
+                            navigationDestination = .reqView
+                        } label: { fade in
+                            menuButtonLabel(title: "Request",
+                                            subtitle: "Create Payment Request",
+                                            imageSystemName: "wallet.pass",
+                                            fade: fade)
+                        }
+                        .background(Color.black)
                         Templates.MenuItem {
                             navigationDestination = .receive(urlString: nil)
                         } label: { fade in
@@ -190,6 +202,8 @@ struct WalletView: View {
                     MeltView(invoice: invoice)
                 case .reqPay(req: let req):
                     RequestPay(paymentRequest: req)
+                case .reqView:
+                    RequestView()
                 }
             }
             .onChange(of: urlState, { oldValue, newValue in
