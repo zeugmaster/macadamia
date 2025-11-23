@@ -22,7 +22,8 @@ enum NostrServiceError: Error {
     case eventCreationFailed
 }
 
-class NostrService: ObservableObject, EventCreating {
+
+class NostrService: ObservableObject, EventCreating, MetadataCoding {
     
     enum ConnectionState {
         case noneConnected, partiallyConnected(Int), allConnected(Int)
@@ -81,8 +82,77 @@ class NostrService: ObservableObject, EventCreating {
         
     }
     
-    func sendNIP17(from nsec: String, to receiverNpub: String, message: String) {
+    /// Sends a NIP-17 direct message
+    /// - Parameters:
+    ///   - nsec: The sender's private key in nsec (bech32) or hex format
+    ///   - receiverNpub: The receiver's public key in npub or nprofile (bech32) format
+    ///   - message: The message content to send
+    /// - Throws: NostrServiceError if keypair parsing, recipient parsing, or event creation fails
+    @MainActor
+    func sendNIP17(from nsec: String, to receiverNpub: String, message: String) async throws {
+        // Parse sender's keypair
+        guard let keypair = parseKeypair(from: nsec) else {
+            nostrLogger.error("Failed to parse sender keypair")
+            throw NostrServiceError.noKeypairAvailable
+        }
         
+        // Parse receiver's public key (supports npub and nprofile)
+        let recipientPublicKey: PublicKey
+        let normalized = receiverNpub.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if normalized.lowercased().hasPrefix("npub") {
+            guard let pubkey = PublicKey(npub: normalized) else {
+                nostrLogger.error("Failed to parse npub")
+                throw NostrServiceError.invalidRecipientPubkey
+            }
+            recipientPublicKey = pubkey
+        } else if normalized.lowercased().hasPrefix("nprofile") {
+            // Extract pubkey from nprofile
+            guard let metadata = try? decodedMetadata(from: normalized),
+                  let pubkeyHex = metadata.pubkey,
+                  let pubkey = PublicKey(hex: pubkeyHex) else {
+                nostrLogger.error("Failed to parse nprofile")
+                throw NostrServiceError.invalidRecipientPubkey
+            }
+            recipientPublicKey = pubkey
+        } else if normalized.count == 64 {
+            // Try as hex public key
+            guard let pubkey = PublicKey(hex: normalized) else {
+                nostrLogger.error("Failed to parse hex public key")
+                throw NostrServiceError.invalidRecipientPubkey
+            }
+            recipientPublicKey = pubkey
+        } else {
+            nostrLogger.error("Invalid recipient format")
+            throw NostrServiceError.invalidRecipientPubkey
+        }
+        
+        // Build the direct message event
+        let dmBuilder = DirectMessageEvent.Builder()
+        dmBuilder.content(message)
+        dmBuilder.appendTags(NostrSDK.Tag(name: TagName.pubkey.rawValue, value: recipientPublicKey.hex))
+        
+        let directMessageEvent = dmBuilder.build(pubkey: keypair.publicKey)
+        
+        // Gift wrap the direct message
+        guard let giftWrapEvent = try? giftWrap(
+            withDirectMessageEvent: directMessageEvent,
+            toRecipient: recipientPublicKey,
+            signedBy: keypair
+        ) else {
+            nostrLogger.error("Failed to create gift wrap")
+            throw NostrServiceError.encryptionFailed
+        }
+        
+        // Publish to relays
+        guard let relayPool = relayPool else {
+            nostrLogger.error("RelayPool not initialized")
+            throw NostrServiceError.eventCreationFailed
+        }
+        
+        relayPool.publishEvent(giftWrapEvent)
+        
+        nostrLogger.info("Successfully published NIP-17 DM to relays")
     }
     
     // MARK: - Helper Methods

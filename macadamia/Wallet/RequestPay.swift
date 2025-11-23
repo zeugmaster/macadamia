@@ -191,16 +191,7 @@ struct RequestPay: View {
     
     private var mintSelector: some View {
         Section {
-//            if let mints = paymentRequest.mints {
-//                ForEach(mints, id: \.self) { urlString in
-//                    if let url = URL(string: urlString) {
-//                        Text(url.host() ?? urlString)
-//                    } else {
-//                        Text(urlString)
-//                    }
-//                }
-//            }
-            
+
             if possibleMints.isEmpty {
                 NavigationLink(destination: SwapView(), label: {
                     HStack {
@@ -324,6 +315,8 @@ struct RequestPay: View {
                     return
                 }
                 
+                proofs.selected.setState(.pending)
+                
                 // TODO: add memo field
                 let requestResponse = try await CashuSwift.send(request: paymentRequest,
                                                                 mint: CashuSwift.Mint(selectedMint),
@@ -335,6 +328,8 @@ struct RequestPay: View {
                     selectedMint.increaseDerivationCounterForKeysetWithID(counterIncrease.keysetID,
                                                                           by: counterIncrease.increase)
                 }
+                
+                proofs.selected.setState(.spent)
                 
                 try selectedMint.addProofs(requestResponse.change,
                                            to: modelContext,
@@ -355,8 +350,8 @@ struct RequestPay: View {
                 
                 if let transport = selectedTransport {
                     if transport.type == "nostr" {
-                        sendViaNIP17(payload: requestResponse.payload, receiveerNPUB: transport.target)
-                    } else if transport.type == "http" {
+                        await sendViaNIP17(payload: requestResponse.payload, receiveerNPUB: transport.target)
+                    } else if transport.type == "post" {
                         await sendViaHTTP(payload: requestResponse.payload, urlString: transport.target)
                     } else {
                         // TODO: show error
@@ -372,12 +367,51 @@ struct RequestPay: View {
         }
     }
     
-    private func sendViaNIP17(payload: CashuSwift.PaymentRequestPayload, receiveerNPUB: String) {
-        // ...
-        
-        buttonState = .success()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            dismiss()
+    private func sendViaNIP17(payload: CashuSwift.PaymentRequestPayload, receiveerNPUB: String) async {
+        do {
+            // Get sender's nsec from keychain
+            guard let senderNsec = try? NostrKeychain.getNsec() else {
+                displayAlert(alert: AlertDetail(title: "⚠️ Nostr Key Missing", description: "Please configure your Nostr key in Settings to send DMs."))
+                buttonState = .fail()
+                return
+            }
+            
+            // Encode payload as JSON
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            let jsonData = try encoder.encode(payload)
+            guard let jsonString = String(data: jsonData, encoding: .utf8) else {
+                displayAlert(alert: AlertDetail(title: "⚠️ Encoding Error", description: "Failed to encode payment data."))
+                buttonState = .fail()
+                return
+            }
+            
+            // Send the DM via NIP-17
+            try await nostrService.sendNIP17(from: senderNsec, to: receiveerNPUB, message: jsonString)
+            
+            buttonState = .success()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                dismiss()
+            }
+        } catch {
+            let errorMessage: String
+            if let nostrError = error as? NostrServiceError {
+                switch nostrError {
+                case .noKeypairAvailable:
+                    errorMessage = "Invalid Nostr key format"
+                case .invalidRecipientPubkey:
+                    errorMessage = "Invalid recipient public key"
+                case .encryptionFailed:
+                    errorMessage = "Failed to encrypt message"
+                case .eventCreationFailed:
+                    errorMessage = "Failed to create message event"
+                }
+            } else {
+                errorMessage = error.localizedDescription
+            }
+            
+            displayAlert(alert: AlertDetail(title: "🛰️ Transmission Error", description: errorMessage))
+            buttonState = .fail()
         }
     }
     
