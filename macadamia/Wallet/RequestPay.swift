@@ -14,6 +14,7 @@ struct RequestPay: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var nostrService: NostrService
     @EnvironmentObject private var appState: AppState
+    @Environment(\.dismiss) private var dismiss
     
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
@@ -44,6 +45,7 @@ struct RequestPay: View {
     @State private var expandMintSelector = false
     
     @State private var buttonState: ActionButtonState = .idle("")
+    @State private var token: CashuSwift.Token?
     
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
@@ -103,6 +105,7 @@ struct RequestPay: View {
                         } else {
                             TextField("", text: $userProvidedAmountString, prompt: Text("Amount..."))
                                 .keyboardType(.numberPad)
+                                .disabled(buttonState.type != .idle)
                         }
                         Spacer()
                         Text(paymentRequest.unit ?? "sat")
@@ -124,6 +127,7 @@ struct RequestPay: View {
                 }
                 
                 mintSelector
+                    .disabled(buttonState.type != .idle || token != nil)
                 transportSelector
                 
                 if let lockingCondition = paymentRequest.lockingCondition {
@@ -137,6 +141,10 @@ struct RequestPay: View {
                     } header: {
                         Text("Lock to public key")
                     }
+                }
+                
+                if let token {
+                    TokenShareView(token: token)
                 }
                 
                 Spacer(minLength: 50)
@@ -164,17 +172,21 @@ struct RequestPay: View {
             
             showBalanceError = insufficentBalance
         }
-        .onChange(of: userProvidedAmount) { _, _ in
+        .onChange(of: userProvidedAmount) {
             withAnimation {
                 showBalanceError = insufficentBalance
             }
         }
-        .onChange(of: selectedMint) { _, _ in
+        .onChange(of: selectedMint) {
             withAnimation {
                 showBalanceError = insufficentBalance
             }
         }
+        .onChange(of: selectedTransport, {
+            token = nil
+        })
         .navigationTitle("Payment Request")
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
     
     private var mintSelector: some View {
@@ -341,20 +353,79 @@ struct RequestPay: View {
                 modelContext.insert(event)
                 try modelContext.save()
                 
-                // check for 
+                if let transport = selectedTransport {
+                    if transport.type == "nostr" {
+                        sendViaNIP17(payload: requestResponse.payload, receiveerNPUB: transport.target)
+                    } else if transport.type == "http" {
+                        await sendViaHTTP(payload: requestResponse.payload, urlString: transport.target)
+                    } else {
+                        // TODO: show error
+                    }
+                } else {
+                    token = requestResponse.payload.toToken()
+                }
                 
             } catch {
-                fatalError()
+                buttonState = .fail()
+                displayAlert(alert: AlertDetail(with: error))
             }
         }
     }
     
     private func sendViaNIP17(payload: CashuSwift.PaymentRequestPayload, receiveerNPUB: String) {
-        //...
+        // ...
+        
+        buttonState = .success()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            dismiss()
+        }
     }
     
-    private func sendViaHTTP(payload: CashuSwift.PaymentRequestPayload, url: URL) async throws {
+    private func sendViaHTTP(payload: CashuSwift.PaymentRequestPayload, urlString: String) async {
+        let string = urlString.lowercased()
         
+        guard (string.hasPrefix("http") || string.hasPrefix("https")),
+              let url = URL(string: urlString) else {
+            displayAlert(alert: AlertDetail(title: "HTTP transport URL invalid.", description: "The provided string \(urlString) does not seem to be valid. Please send the ecash manually or reclaim it."))
+            token = payload.toToken() // show the token so the user has a fallback
+            return
+        }
+        
+        do {
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.httpBody = try JSONEncoder().encode(payload)
+            let (_, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                if !(200...299).contains(httpResponse.statusCode) {
+                    displayAlert(alert: AlertDetail(title: "⚠️ Unexpected HTTP Response", description: "The request returned status: \(String(describing: httpResponse))"))
+                }
+            }
+            
+            buttonState = .success()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                dismiss()
+            }
+        } catch {
+            let alertDetail = AlertDetail(title: "🛰️ Transmission issue",
+                                          description: String(describing: error),
+                                          primaryButton: AlertButton(title: "Retry", action: {
+                                              // TODO: find less convoluted retry logic
+                                              Task { @MainActor in
+                                                  await sendViaHTTP(payload: payload, urlString: urlString)
+                                              }
+                                          }),
+                                          secondaryButton: AlertButton(title: "Cancel", role: .cancel, action: {
+                                              buttonState = .fail()
+                                          }))
+            displayAlert(alert: alertDetail)
+        }
+    }
+    
+    private func displayAlert(alert: AlertDetail) {
+        currentAlert = alert
+        showAlert = true
     }
 }
 
