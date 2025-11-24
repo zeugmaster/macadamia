@@ -27,7 +27,7 @@ struct EventList: View {
     
     @State private var showHidden = false
     
-    private let shadowHeight: CGFloat = 10
+    private let shadowHeight: CGFloat = 30
     
     private var activeWallet: Wallet? {
         wallets.first { $0.active }

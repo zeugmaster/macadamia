@@ -64,8 +64,7 @@ struct WalletView: View {
                         .padding(.horizontal, 40)
                         .safeAreaPadding(EdgeInsets(top: 180, leading: 0, bottom: 0, trailing: 0))
                     
-                    BalanceCard(balance: activeWallet?.balance() ?? 0,
-                                unit: .sat)
+                    BalanceCard(unit: .sat)
                         .onAppear(perform: {
                             // quick sanity check for uniqueness of C across list of proofs
                             guard let activeWallet else {

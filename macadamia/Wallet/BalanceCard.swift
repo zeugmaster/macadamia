@@ -6,12 +6,21 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct BalanceCard: View {
     
     @EnvironmentObject private var appState: AppState
+    @Query private var wallets: [Wallet]
     
-    var balance: Int
+    private var activeWallet: Wallet? {
+        wallets.first
+    }
+    
+    var balance: Int {
+        activeWallet?.balance() ?? 0
+    }
+    
     var unit: Unit
         
     @State private var convertedBalance: String = ""
@@ -50,11 +59,19 @@ struct BalanceCard: View {
                 // Content inside the card
                 VStack {
                     HStack {
-                        Text(balanceString)
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .lineLimit(1)
+                        Group {
+                            if balance == 0 {
+                                Text("-")
+                            } else {
+                                Text(balance.formatted(.number))
+                                    .lineLimit(1)
+                                    .contentTransition(.numericText(value: Double(balance)))
+                                    .animation(.snappy, value: balance)
+                            }
+                        }
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
                         Spacer()
                         Text(unit.rawValue)
                             .font(.title)
@@ -86,13 +103,13 @@ struct BalanceCard: View {
         }
     }
 
-    private var balanceString: String {
-        if balance == 0 {
-            return "-"
-        } else {
-            return balance.formatted(.number)
-        }
-    }
+//    private var balanceString: String {
+//        if balance == 0 {
+//            return "-"
+//        } else {
+//            return balance.formatted(.number)
+//        }
+//    }
     
     @MainActor
     private func convert() {
@@ -126,16 +143,16 @@ struct BalanceCard: View {
     }
 }
 
-#Preview {
-    ZStack(alignment: .top) {
-        List {
-            ForEach(0..<10) { _ in
-                Text("Hello, World!")
-            }
-        }
-        .safeAreaPadding(.top, 100)
-        BalanceCard(balance: 500, unit: .sat)
-            .environmentObject(AppState(preview: true, preferredUnit: .usd))
-            .padding()
-    }
-}
+//#Preview {
+//    ZStack(alignment: .top) {
+//        List {
+//            ForEach(0..<10) { _ in
+//                Text("Hello, World!")
+//            }
+//        }
+//        .safeAreaPadding(.top, 100)
+//        BalanceCard(balance: 500, unit: .sat)
+//            .environmentObject(AppState(preview: true, preferredUnit: .usd))
+//            .padding()
+//    }
+//}
