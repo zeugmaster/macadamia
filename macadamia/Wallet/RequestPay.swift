@@ -405,6 +405,8 @@ struct RequestPay: View {
                     errorMessage = "Failed to encrypt message"
                 case .eventCreationFailed:
                     errorMessage = "Failed to create message event"
+                case .decryptionFailed:
+                    errorMessage = "Failed to decrypt message"
                 }
             } else {
                 errorMessage = error.localizedDescription
