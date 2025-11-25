@@ -101,7 +101,7 @@ struct RequestView: View {
                             Image(systemName: useNIP17Transport ? "checkmark.circle.fill" : "circle")
                             VStack(alignment: .leading) {
                                 Text("Nostr DM")
-                                Text((try? NostrKeychain.getNpub()) ?? "Unable to get NPUB")
+                                Text((try? NostrKeychain.getNprofile(relays: nil)) ?? "Unable to get key")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -227,8 +227,10 @@ struct RequestView: View {
         var transports: [CashuSwift.Transport]? = nil
         if useNIP17Transport {
             do {
-                let npub = try NostrKeychain.getNpub()
-                let nostrTransport = CashuSwift.Transport(type: CashuSwift.Transport.TransportType.nostr, target: npub)
+                // Use nprofile format with relay hints so sender knows where to publish
+                let relayStrings = defaultRelayURLs.map { $0.absoluteString }
+                let nprofile = try NostrKeychain.getNprofile(relays: relayStrings)
+                let nostrTransport = CashuSwift.Transport(type: CashuSwift.Transport.TransportType.nostr, target: nprofile)
                 transports = [nostrTransport]
             } catch {
                 displayAlert(alert: AlertDetail(title: "⚠️ Nostr Key Error", description: "Failed to get your Nostr public key: \(error.localizedDescription)"))

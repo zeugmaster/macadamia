@@ -9,6 +9,7 @@ import SwiftUI
 import NostrSDK
 import Combine
 import OSLog
+import CashuSwift
 
 
 // MARK: - NostrService
@@ -25,19 +26,23 @@ enum NostrServiceError: Error {
 
 // MARK: - Received Message Model
 
-struct ReceivedEcashMessage: Identifiable, Codable {
+struct ReceivedEcashMessage: Identifiable, Equatable {
     let id: String // event id
-    let content: String // ecash token
+    let payload: CashuSwift.PaymentRequestPayload
     let sender: String // sender's pubkey (hex)
     let receivedAt: Date
     let isRedeemed: Bool
     
-    init(id: String, content: String, sender: String, receivedAt: Date = Date(), isRedeemed: Bool = false) {
+    init(id: String, payload: CashuSwift.PaymentRequestPayload, sender: String, receivedAt: Date = Date(), isRedeemed: Bool = false) {
         self.id = id
-        self.content = content
+        self.payload = payload
         self.sender = sender
         self.receivedAt = receivedAt
         self.isRedeemed = isRedeemed
+    }
+    
+    static func == (lhs: ReceivedEcashMessage, rhs: ReceivedEcashMessage) -> Bool {
+        lhs.id == rhs.id
     }
 }
 
@@ -84,28 +89,85 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
     }
     
     func connect() {
-        nostrLogger.debug(".connect() called for nostr service")
+        nostrLogger.info("🔌 connect() called for nostr service")
+        
+        guard relayPool == nil else {
+            nostrLogger.info("RelayPool already exists, skipping creation")
+            return
+        }
+        
         relayPool = try? RelayPool(relayURLs: Set(defaultRelayURLs))
+        nostrLogger.info("Created RelayPool with \(defaultRelayURLs.count) relay URLs")
         
         // subscribe to relay states
         relayPool?.relays.forEach { relay in
+            nostrLogger.info("Setting up state observer for relay: \(relay.url)")
             relay.$state
                 .sink { [weak self] newState in
+                    nostrLogger.info("Relay \(relay.url) state changed to: \(String(describing: newState))")
                     self?.connectionStates[relay.url] = newState
                     
-                    // Start listening for messages when at least one relay is connected
+                    // Check if we should start listening (when most relays are connected)
                     if newState == .connected,
                        self?.isListeningForMessages == false,
                        NostrKeychain.hasNsec() {
-                        Task { @MainActor in
-                            await self?.startListeningForEcashMessages()
-                        }
+                        self?.checkAndStartListening()
                     }
                 }
                 .store(in: &cancellables)
         }
         
+        nostrLogger.info("Calling relayPool.connect()")
         relayPool?.connect()
+    }
+    
+    /// Checks if enough relays are connected and starts listening
+    private func checkAndStartListening() {
+        let connectedCount = connectionStates.filter { $0.value == .connected }.count
+        let totalCount = connectionStates.count
+        
+        nostrLogger.info("Connected relays: \(connectedCount)/\(totalCount)")
+        
+        // If already listening, resubscribe to catch newly connected relays
+        if isListeningForMessages {
+            nostrLogger.info("Already listening, resubscribing to include newly connected relays")
+            Task { @MainActor in
+                await resubscribeToAllRelays()
+            }
+            return
+        }
+        
+        // Start listening when at least half of the relays are connected
+        if connectedCount >= max(1, totalCount / 2) {
+            nostrLogger.info("Enough relays connected, starting message listener")
+            Task { @MainActor in
+                await startListeningForEcashMessages()
+            }
+        }
+    }
+    
+    /// Resubscribes to all connected relays (for when new relays connect after initial subscription)
+    @MainActor
+    private func resubscribeToAllRelays() async {
+        guard let keypair = try? getKeypair(),
+              let relayPool = relayPool,
+              let existingSubscriptionId = messageSubscriptionId else {
+            return
+        }
+        
+        // Close existing subscription
+        relayPool.closeSubscription(with: existingSubscriptionId)
+        
+        // Create new subscription (will subscribe to all currently connected relays)
+        guard let filter = Filter(kinds: [EventKind.giftWrap.rawValue], tags: ["p": [keypair.publicKey.hex]]) else {
+            nostrLogger.error("Failed to create filter for resubscription")
+            return
+        }
+        
+        let newSubscriptionId = relayPool.subscribe(with: filter)
+        messageSubscriptionId = newSubscriptionId
+        
+        nostrLogger.info("Resubscribed with new subscription id: \(newSubscriptionId)")
     }
     
     @MainActor func disconnect() {
@@ -209,31 +271,36 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
             return
         }
         
-        nostrLogger.info("Starting to listen for ecash messages")
+        nostrLogger.info("Starting to listen for ecash messages for pubkey: \(keypair.publicKey.hex)")
         isListeningForMessages = true
         
-        // NIP-17: Gift wrap events are kind 1059, addressed to recipient's pubkey
-        guard let filter = Filter(kinds: [EventKind.giftWrap.rawValue], pubkeys: [keypair.publicKey.hex]) else {
-            nostrLogger.error("Failed to create filter for gift wrap events")
-            isListeningForMessages = false
-            return
-        }
-        
-        // Subscribe to the filter
-        let subscriptionId = relayPool.subscribe(with: filter)
-        messageSubscriptionId = subscriptionId
-        
-        nostrLogger.info("Subscribed to gift wrap events with id: \(subscriptionId)")
-        
-        // Listen for events
+        // Set up event listener FIRST before subscribing
         relayPool.events
             .sink { [weak self] relayEvent in
                 guard let self = self else { return }
+                nostrLogger.info("📩 Received relay event, kind: \(relayEvent.event.kind.rawValue)")
                 Task { @MainActor in
                     await self.handleIncomingEvent(relayEvent.event)
                 }
             }
             .store(in: &cancellables)
+        
+        nostrLogger.info("Event listener set up")
+        
+        // NIP-17: Gift wrap events are kind 1059, addressed to recipient's pubkey via p tag
+        guard let filter = Filter(kinds: [EventKind.giftWrap.rawValue], tags: ["p": [keypair.publicKey.hex]]) else {
+            nostrLogger.error("Failed to create filter for gift wrap events")
+            isListeningForMessages = false
+            return
+        }
+        
+        nostrLogger.info("Created filter for kind 1059 with p tag for pubkey: \(keypair.publicKey.hex)")
+        
+        // Subscribe to the filter
+        let subscriptionId = relayPool.subscribe(with: filter)
+        messageSubscriptionId = subscriptionId
+        
+        nostrLogger.info("Subscribed to gift wrap events with subscription id: \(subscriptionId)")
     }
     
     /// Stops listening for incoming messages
@@ -253,32 +320,40 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
     /// Handles an incoming event from a relay
     @MainActor
     private func handleIncomingEvent(_ event: NostrEvent) async {
-        nostrLogger.debug("Received event \(event.id)")
+        nostrLogger.info("Received event kind: \(event.kind.rawValue), id: \(event.id), type: \(type(of: event))")
         
         guard let keypair = try? getKeypair() else {
             nostrLogger.error("Cannot handle event: no keypair available")
             return
         }
         
-        // Cast to GiftWrapEvent and unwrap it
-        guard let giftWrapEvent = event as? GiftWrapEvent else {
-            nostrLogger.debug("Event \(event.id) is not a GiftWrapEvent")
+        // Check if this is a gift wrap event (kind 1059)
+        guard event.kind == .giftWrap else {
+            nostrLogger.debug("Event \(event.id) is not a gift wrap (kind \(event.kind.rawValue))")
             return
         }
+        
+        // Cast to GiftWrapEvent - NostrSDK should return the correct subtype for kind 1059
+        guard let giftWrapEvent = event as? GiftWrapEvent else {
+            nostrLogger.error("Failed to cast event to GiftWrapEvent (type: \(type(of: event)))")
+            return
+        }
+        
+        nostrLogger.info("Successfully cast to GiftWrapEvent")
         
         // Try to unseal the rumor inside the gift wrap
         guard let unwrappedEvent = try? giftWrapEvent.unsealedRumor(using: keypair.privateKey) else {
-            nostrLogger.debug("Failed to unwrap gift wrap event \(event.id)")
+            nostrLogger.warning("Failed to unwrap gift wrap event \(event.id) - might not be for us or decryption failed")
             return
         }
         
-        nostrLogger.info("Successfully unwrapped gift wrap event \(event.id)")
+        nostrLogger.info("Successfully unwrapped gift wrap event \(event.id), content length: \(unwrappedEvent.content.count)")
         
-        // Check if the content contains ecash tokens
-        if containsEcashToken(unwrappedEvent.content) {
+        // Check if the content is a valid PaymentRequestPayload
+        if let payload = decodePaymentRequestPayload(unwrappedEvent.content) {
             let message = ReceivedEcashMessage(
                 id: unwrappedEvent.id,
-                content: unwrappedEvent.content,
+                payload: payload,
                 sender: unwrappedEvent.pubkey
             )
             
@@ -290,30 +365,26 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
                 nostrLogger.debug("Duplicate ecash message \(message.id), skipping")
             }
         } else {
-            nostrLogger.debug("Message does not contain ecash token")
+            nostrLogger.warning("Message does not contain valid PaymentRequestPayload. Content: \(unwrappedEvent.content.prefix(200))")
         }
     }
     
-    /// Checks if a message contains an ecash token
-    /// Looks for cashu token patterns (cashuA...)
-    private func containsEcashToken(_ content: String) -> Bool {
-        // Cashu tokens typically start with "cashuA" (version A)
-        // They can be embedded in text or standalone
-        let pattern = "cashu[A-Za-z0-9+/=]+"
-        
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
-            return false
+    /// Attempts to decode content as a PaymentRequestPayload
+    /// Returns the decoded payload if successful, nil otherwise
+    private func decodePaymentRequestPayload(_ content: String) -> CashuSwift.PaymentRequestPayload? {
+        guard let data = content.data(using: .utf8) else {
+            nostrLogger.debug("Failed to convert content to data")
+            return nil
         }
         
-        let range = NSRange(content.startIndex..., in: content)
-        let matches = regex.matches(in: content, options: [], range: range)
-        
-        let hasToken = !matches.isEmpty
-        if hasToken {
-            nostrLogger.debug("Found ecash token in content")
+        do {
+            let payload = try JSONDecoder().decode(CashuSwift.PaymentRequestPayload.self, from: data)
+            nostrLogger.debug("Successfully decoded PaymentRequestPayload")
+            return payload
+        } catch {
+            nostrLogger.debug("Failed to decode PaymentRequestPayload: \(error.localizedDescription)")
+            return nil
         }
-        
-        return hasToken
     }
     
     // MARK: - Helper Methods

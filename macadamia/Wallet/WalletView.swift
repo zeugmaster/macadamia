@@ -2,10 +2,14 @@ import CashuSwift
 import Popovers
 import SwiftData
 import SwiftUI
+import OSLog
+
+fileprivate let walletLogger = Logger(subsystem: "macadamia", category: "WalletView")
 
 @MainActor
 struct WalletView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var nostrService: NostrService
     
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
@@ -13,6 +17,7 @@ struct WalletView: View {
     
     @State var showAlert: Bool = false
     @State var currentAlert: AlertDetail?
+    @State private var processedMessageIds = Set<String>()
 
     @Binding var urlState: URLState?
     
@@ -212,7 +217,98 @@ struct WalletView: View {
                     urlState = nil
                 }
             })
+            .onChange(of: nostrService.receivedEcashMessages) { _, newMessages in
+                processNewEcashMessages(newMessages)
+            }
+            .onAppear {
+                connectNostrIfConfigured()
+            }
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+        }
+    }
+    
+    // MARK: - Nostr Ecash Receiving
+    
+    private func connectNostrIfConfigured() {
+        guard NostrKeychain.hasNsec() else {
+            walletLogger.debug("No Nostr key configured, skipping connection")
+            return
+        }
+        
+        walletLogger.info("Connecting to Nostr relays for ecash messages")
+        nostrService.connect()
+    }
+    
+    private func processNewEcashMessages(_ messages: [ReceivedEcashMessage]) {
+        for message in messages where !processedMessageIds.contains(message.id) && !message.isRedeemed {
+            processedMessageIds.insert(message.id)
+            Task {
+                await receiveEcashFromMessage(message)
+            }
+        }
+    }
+    
+    private func receiveEcashFromMessage(_ message: ReceivedEcashMessage) async {
+        guard let activeWallet else {
+            walletLogger.error("No active wallet to receive ecash")
+            return
+        }
+        
+        let token = message.payload.toToken()
+        
+        // Get the mint URL from the token
+        guard let mintURLString = token.proofsByMint.keys.first else {
+            walletLogger.error("Could not determine mint URL from token")
+            return
+        }
+        
+        // Find the mint in our wallet
+        guard let mint = activeWallet.mints.first(where: { $0.url.absoluteString == mintURLString && !$0.hidden }) else {
+            walletLogger.warning("Received ecash from unknown mint: \(mintURLString)")
+            displayAlert(alert: AlertDetail(title: "⚡ Incoming Ecash",
+                                            description: "Received ecash from an unknown mint (\(mintURLString)). Add this mint to receive."))
+            return
+        }
+        
+        // Check if proofs are still valid/unspent
+        guard let proofs = token.proofsByMint[mintURLString] else {
+            walletLogger.error("No proofs found in token")
+            return
+        }
+        
+        do {
+            let proofStates = try await CashuSwift.check(proofs, mint: CashuSwift.Mint(mint))
+            
+            // All proofs must be unspent to proceed
+            guard proofStates.allSatisfy({ $0 == .unspent }) else {
+                walletLogger.warning("Received ecash contains spent proofs, skipping")
+                return
+            }
+            
+            walletLogger.info("Proofs are valid, receiving \(token.sum()) sats")
+            
+            // Get private key for P2PK locked tokens
+            let privateKeyString = activeWallet.privateKeyData.map { String(bytes: $0) }
+            
+            // Receive the ecash
+            mint.redeem(token: token, privateKeyString: privateKeyString) { result in
+                switch result {
+                case .success(let (receivedProofs, event)):
+                    AppSchemaV1.insert(receivedProofs + [event], into: modelContext)
+                    try? modelContext.save()
+                    
+                    walletLogger.info("Successfully received \(token.sum()) sats via Nostr")
+                    displayAlert(alert: AlertDetail(title: "⚡ Ecash Received!",
+                                                    description: "Received \(token.sum()) sats via Nostr DM"))
+                    
+                case .failure(let error):
+                    walletLogger.error("Failed to receive ecash: \(error)")
+                    displayAlert(alert: AlertDetail(title: "⚠️ Receive Failed",
+                                                    description: error.localizedDescription))
+                }
+            }
+        } catch {
+            walletLogger.error("Failed to check proof states: \(error)")
         }
     }
     
