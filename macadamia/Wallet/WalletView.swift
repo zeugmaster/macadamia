@@ -276,39 +276,46 @@ struct WalletView: View {
             return
         }
         
-        do {
-            let proofStates = try await CashuSwift.check(proofs, mint: CashuSwift.Mint(mint))
-            
-            // All proofs must be unspent to proceed
-            guard proofStates.allSatisfy({ $0 == .unspent }) else {
-                walletLogger.warning("Received ecash contains spent proofs, skipping")
-                return
-            }
-            
-            walletLogger.info("Proofs are valid, receiving \(token.sum()) sats")
-            
-            // Get private key for P2PK locked tokens
-            let privateKeyString = activeWallet.privateKeyData.map { String(bytes: $0) }
-            
-            // Receive the ecash
-            mint.redeem(token: token, privateKeyString: privateKeyString) { result in
-                switch result {
-                case .success(let (receivedProofs, event)):
-                    AppSchemaV1.insert(receivedProofs + [event], into: modelContext)
-                    try? modelContext.save()
-                    
-                    walletLogger.info("Successfully received \(token.sum()) sats via Nostr")
-                    displayAlert(alert: AlertDetail(title: "⚡ Ecash Received!",
-                                                    description: "Received \(token.sum()) sats via Nostr DM"))
-                    
-                case .failure(let error):
-                    walletLogger.error("Failed to receive ecash: \(error)")
-                    displayAlert(alert: AlertDetail(title: "⚠️ Receive Failed",
-                                                    description: error.localizedDescription))
+        Task { @MainActor in
+            do {
+                let proofStates = try await CashuSwift.check(proofs, mint: CashuSwift.Mint(mint))
+                
+                // All proofs must be unspent to proceed
+                guard proofStates.allSatisfy({ $0 == .unspent }) else {
+                    walletLogger.warning("Received ecash contains spent proofs, skipping")
+                    return
                 }
+                
+                walletLogger.info("Proofs are valid, receiving \(token.sum()) sats")
+                
+                // Get private key for P2PK locked tokens
+                let privateKeyString = activeWallet.privateKeyData.map { String(bytes: $0) }
+                
+                let redeemResult = try await CashuSwift.receive(token: token,
+                                                                of: CashuSwift.Mint(mint),
+                                                                seed: activeWallet.seed,
+                                                                privateKey: privateKeyString)
+                
+                walletLogger.debug("result of redeeming token DLEQ check; in: \(String(describing: redeemResult.inputDLEQ)) out: \(String(describing: redeemResult.outputDLEQ))")
+                
+                let internalProofs = try mint.addProofs(redeemResult.proofs, to: modelContext)
+                
+                modelContext.insert(Event.receiveEvent(unit: .sat,
+                                                       shortDescription: "Receive",
+                                                       wallet: activeWallet,
+                                                       amount: redeemResult.proofs.sum,
+                                                       longDescription: "",
+                                                       proofs: internalProofs,
+                                                       memo: token.memo,
+                                                       mint: mint,
+                                                       redeemed: true))
+                
+                try modelContext.save()
+                
+            } catch {
+                displayAlert(alert: AlertDetail(title: "Something went wrong", description: "An error occured while trying to redeem a token received via Nostr DMs. \(String(describing: error))"))
+                walletLogger.error("error while trying to auto-redeem token from nostr dm: \(error)")
             }
-        } catch {
-            walletLogger.error("Failed to check proof states: \(error)")
         }
     }
     
