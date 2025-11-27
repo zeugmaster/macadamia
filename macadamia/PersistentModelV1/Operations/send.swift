@@ -60,7 +60,7 @@ extension AppSchemaV1.Mint {
                                                 amount: amount,
                                                 token: sendResult.token,
                                                 longDescription: "",
-                                                proofs: selection.selected,
+                                                proofs: [],
                                                 memo: memo ?? "",
                                                 mint: self)
                     

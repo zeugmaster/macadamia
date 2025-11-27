@@ -13,13 +13,15 @@ struct BalanceCard: View {
     @EnvironmentObject private var appState: AppState
     @Query private var wallets: [Wallet]
     
+    // Query proofs directly to trigger updates when proofs change
+    @Query(animation: .default) private var allProofs: [Proof]
+    
     private var activeWallet: Wallet? {
         wallets.first
     }
     
-    var balance: Int {
-        activeWallet?.balance() ?? 0
-    }
+    // Store balance in @State like MintManagerView does
+    @State private var balance: Int = 0
     
     var unit: Unit
         
@@ -91,6 +93,15 @@ struct BalanceCard: View {
                 .frame(width: cardWidth, height: cardHeight)
             }
             .frame(width: cardWidth, height: cardHeight)
+            .onTapGesture {
+                calculateBalance()
+            }
+        }
+        .onAppear {
+            calculateBalance()
+        }
+        .onChange(of: allProofs) { _, _ in
+            calculateBalance()
         }
         .task(id: balance) {
             convert()
@@ -102,14 +113,22 @@ struct BalanceCard: View {
             convert()
         }
     }
-
-//    private var balanceString: String {
-//        if balance == 0 {
-//            return "-"
-//        } else {
-//            return balance.formatted(.number)
-//        }
-//    }
+    
+    private func calculateBalance() {
+        guard let wallet = activeWallet else {
+            balance = 0
+            return
+        }
+        
+        // Calculate from proofs query like MintManagerView does
+        let newBalance = allProofs
+            .filter { $0.state == .valid && $0.wallet == wallet && $0.mint?.hidden != true }
+            .reduce(0) { $0 + $1.amount }
+        
+        withAnimation {
+            balance = newBalance
+        }
+    }
     
     @MainActor
     private func convert() {

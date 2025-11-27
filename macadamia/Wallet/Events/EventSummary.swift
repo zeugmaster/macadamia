@@ -173,6 +173,8 @@ struct SendEventView: View {
     }
     
     var token: CashuSwift.Token? {
+        if let token = event.token { return token }
+        
         if let proofs = event.proofs,
            !proofs.isEmpty,
            let mints = event.mints,
@@ -242,14 +244,15 @@ struct SendEventView: View {
     }
     
     private func checkTokenState(with proofs:[Proof]) {
-        guard let firstMint = proofs.first?.mint,
-              proofs.allSatisfy({ $0.mint == firstMint }) else {
-            logger.error("function to check proofs can not handle proofs from different mints!")
+        
+        guard let proofs = token?.proofsByMint.first?.value,
+              let mintURLString = token?.proofsByMint.first?.key,
+              let url = URL(string: mintURLString) else {
             return
         }
         
         Task {
-            let result = try await CashuSwift.check(proofs.sendable(), mint: CashuSwift.Mint(firstMint))
+            let result = try await CashuSwift.check(proofs, url: url)
             await MainActor.run {
                 withAnimation {
                     if result.allSatisfy({ $0 == CashuSwift.Proof.ProofState.unspent }) {
