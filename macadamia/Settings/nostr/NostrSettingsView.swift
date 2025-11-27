@@ -19,6 +19,7 @@ struct NostrSettingsView: View {
     @AppStorage("savedURLs") private var savedURLsData: Data = {
         return try! JSONEncoder().encode(defaultRelayURLs)
     }()
+    @AppStorage("nostrAutoConnectEnabled") private var autoConnectEnabled: Bool = true
     
     private var savedURLs: Binding<[URL]> {
         Binding(
@@ -85,6 +86,8 @@ struct NostrSettingsView: View {
             }
             
             Section {
+                Toggle("Auto-connect to Relays", isOn: $autoConnectEnabled)
+                
                 NavigationLink(destination: Relays(urls: savedURLs)) {
                     HStack {
                         Text("Relays")
@@ -95,6 +98,8 @@ struct NostrSettingsView: View {
                 }
             } header: {
                 Text("Network")
+            } footer: {
+                Text("When enabled, the app automatically connects to relays to receive ecash payments via Nostr.")
             }
         }
         .navigationTitle("Nostr")

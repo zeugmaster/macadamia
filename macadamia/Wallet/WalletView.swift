@@ -10,6 +10,7 @@ fileprivate let walletLogger = Logger(subsystem: "macadamia", category: "WalletV
 struct WalletView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var nostrService: NostrService
+    @AppStorage("nostrAutoConnectEnabled") private var autoConnectEnabled: Bool = true
     
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
@@ -230,6 +231,11 @@ struct WalletView: View {
     // MARK: - Nostr Ecash Receiving
     
     private func connectNostrIfConfigured() {
+        guard autoConnectEnabled else {
+            walletLogger.debug("Auto-connect to relays disabled, skipping connection")
+            return
+        }
+        
         guard NostrKeychain.hasNsec() else {
             walletLogger.debug("No Nostr key configured, skipping connection")
             return
