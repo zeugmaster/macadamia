@@ -3,6 +3,14 @@ import SwiftData
 import SwiftUI
 
 struct MintManagerView: View {
+    
+    enum RefreshState {
+        case idle
+        case loading
+        case success
+        case failure
+    }
+    
     @Environment(\.modelContext) private var modelContext
     
     @Query(filter: #Predicate<Wallet> { wallet in
@@ -14,6 +22,7 @@ struct MintManagerView: View {
     @Query(animation: .default) private var allProofs: [Proof]
     
     @State private var balanceStrings = [UUID: String?]()
+    @State private var refreshStates = [UUID: RefreshState]()
     
     @State private var newMintURLString = ""
     @State private var showAlert: Bool = false
@@ -39,9 +48,9 @@ struct MintManagerView: View {
                                     sortedMintsOfActiveWallet.setHidden(true, for: mint)
                                     try? modelContext.save()
                                 })) {
-                                    // Pass proofs related to the mint to MintInfoRowView
                                     MintInfoRowView(mint: mint,
-                                                    amountDisplayString: balanceStrings[mint.mintID] ?? nil)
+                                                    amountDisplayString: balanceStrings[mint.mintID] ?? nil,
+                                                    refreshState: refreshStates[mint.mintID] ?? .idle)
                                     .lineLimit(1)
                                 }
                             }
@@ -214,11 +223,47 @@ struct MintManagerView: View {
         }
     }
     
+    @MainActor
     private func refreshAllMints() async {
-        logger.info("broadcasting mint refresh signal...")
+        logger.info("refreshing all mints...")
         
-        // Send notification to all mint rows to refresh themselves
-        NotificationCenter.default.post(name: .refreshAllMints, object: nil)
+        for mint in sortedMintsOfActiveWallet {
+            refreshStates[mint.mintID] = .loading
+        }
+        
+        for mint in sortedMintsOfActiveWallet {
+            do {
+                let updatedMint = try await CashuSwift.loadMint(url: mint.url)
+                
+                // Update keysets, preserving derivation counters
+                for newKeyset in updatedMint.keysets {
+                    if let existingIndex = mint.keysets.firstIndex(where: { $0.keysetID == newKeyset.keysetID }) {
+                        var updated = newKeyset
+                        updated.derivationCounter = mint.keysets[existingIndex].derivationCounter
+                        mint.keysets[existingIndex] = updated
+                    } else {
+                        mint.keysets.append(newKeyset)
+                    }
+                }
+                
+                _ = try await mint.loadInfo(invalidateCache: true)
+                logger.info("successfully refreshed mint: \(mint.url.absoluteString)")
+                refreshStates[mint.mintID] = .success
+            } catch {
+                logger.warning("failed to refresh mint \(mint.url.absoluteString): \(error)")
+                refreshStates[mint.mintID] = .failure
+            }
+        }
+        
+        try? modelContext.save()
+        
+        // Clear states after delay
+        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        for mint in sortedMintsOfActiveWallet {
+            withAnimation {
+                refreshStates[mint.mintID] = .idle
+            }
+        }
     }
     
     private func displayAlert(alert: AlertDetail) {
@@ -243,10 +288,7 @@ struct MintManagerView: View {
 struct MintInfoRowView: View {
     let mint: Mint
     let amountDisplayString: String?
-    
-    @State private var isRefreshing = false
-    @State private var showSuccessAnimation = false
-    @State private var showFailureAnimation = false
+    let refreshState: MintManagerView.RefreshState
 
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 44
 
@@ -257,24 +299,19 @@ struct MintInfoRowView: View {
                 Image(systemName: "building.columns")
                     .foregroundColor(.white)
                 
-                // Simple success flash
-                if showSuccessAnimation {
+                if refreshState == .success {
                     Circle()
                         .stroke(Color.green, lineWidth: 4)
-                        .opacity(showSuccessAnimation ? 1.0 : 0.0)
-                        .animation(.easeInOut(duration: 0.5), value: showSuccessAnimation)
+                        .transition(.opacity)
                 }
                 
-                // Simple failure flash
-                if showFailureAnimation {
+                if refreshState == .failure {
                     Circle()
                         .stroke(Color.red, lineWidth: 4)
-                        .opacity(showFailureAnimation ? 1.0 : 0.0)
-                        .animation(.easeInOut(duration: 0.5), value: showFailureAnimation)
+                        .transition(.opacity)
                 }
                 
-                // Loading indicator
-                if isRefreshing {
+                if refreshState == .loading {
                     Circle()
                         .stroke(Color.blue, lineWidth: 2)
                         .opacity(0.7)
@@ -282,6 +319,7 @@ struct MintInfoRowView: View {
             }
             .frame(width: iconSize, height: iconSize)
             .clipShape(Circle())
+            .animation(.easeInOut(duration: 0.3), value: refreshState)
 
             VStack(alignment: .leading) {
                 Text(mint.nickName ?? mint.url.host(percentEncoded: false) ?? mint.url.absoluteString)
@@ -291,62 +329,6 @@ struct MintInfoRowView: View {
                     .foregroundStyle(.gray)
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .refreshAllMints)) { _ in
-            Task {
-                await refreshMint()
-            }
-        }
     }
-    
-    private func refreshMint() async {
-        await MainActor.run {
-            isRefreshing = true
-            showSuccessAnimation = false
-            showFailureAnimation = false
-        }
-        
-        do {
-            _ = try await mint.loadInfo(invalidateCache: true)
-            logger.info("successfully refreshed mint: \(mint.url.absoluteString)")
-            
-            await MainActor.run {
-                print("should animate")
-                isRefreshing = false
-                showSuccessAnimation = true
-                
-                // Remove success animation after 2 seconds
-                Task {
-                    try? await Task.sleep(nanoseconds: 2_000_000_000)
-                    await MainActor.run {
-                        withAnimation {
-                            showSuccessAnimation = false
-                        }
-                    }
-                }
-            }
-        } catch {
-            logger.warning("failed to refresh mint \(mint.url.absoluteString): \(error)")
-            
-            await MainActor.run {
-                isRefreshing = false
-                showFailureAnimation = true
-                
-                // Remove failure animation after 2 seconds
-                Task {
-                    try? await Task.sleep(nanoseconds: 2_000_000_000)
-                    await MainActor.run {
-                        withAnimation {
-                            showFailureAnimation = false
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Notification extension
-extension Notification.Name {
-    static let refreshAllMints = Notification.Name("refreshAllMints")
 }
 
