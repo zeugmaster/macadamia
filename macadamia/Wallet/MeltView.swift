@@ -55,11 +55,25 @@ struct MeltView: View {
     
     private var actionButtonDisabled: Bool {
         if pendingMeltEvents.isEmpty {
-            return quoteEntries.values.contains { if case .error(_) = $0 { true } else { false } } ||
-                   quoteEntries.isEmpty
+            if quoteEntries.values.contains(where: { if case .error(_) = $0 { true } else { false } }) ||
+                quoteEntries.isEmpty {
+                return true
+            } else if insufficientBalance {
+                return true
+            } else {
+                return false
+            }
         } else {
             return false
         }
+    }
+    
+    private var totalSelectedMintBalance: Int {
+        selected.reduce(0, { $0 + $1.balance(for: .sat) })
+    }
+    
+    private var insufficientBalance: Bool {
+        totalSelectedMintBalance < (invoiceAmount ?? 0) + totalFee
     }
     
     private var selected: Set<Mint> {
@@ -94,6 +108,18 @@ struct MeltView: View {
         }
     }
     
+    private var totalFee: Int {
+        let totalFeeArray = quoteEntries.values.compactMap { state in
+            switch state {
+            case .quote(let quote):
+                return quote.feeReserve
+            case .error(_):
+                return nil
+            }
+        }
+        return totalFeeArray.reduce(0, { $0 + $1 })
+    }
+    
     @ViewBuilder
     private var subline: some View {
         
@@ -106,22 +132,14 @@ struct MeltView: View {
         } else if buttonState.type == .success {
             Text("Payment successful!")
                 .foregroundStyle(.secondary)
-        } else if selected.reduce(0, { $0 + $1.balance(for: .sat) }) < invoiceAmount ?? 0 {
-            Text("Insufficient balance")
-                .foregroundStyle(.orange)
+        } else if insufficientBalance {
+            Text("Insufficient balance (including fees)")
+                .foregroundStyle(.red)
         } else if quoteEntries.values.contains(where: { if case .error(_) = $0 { true } else { false } }) {
             Text("Error")
                 .foregroundStyle(.orange)
         } else {
-            let totalFeeArray = quoteEntries.values.compactMap { state in
-                switch state {
-                case .quote(let quote):
-                    return quote.feeReserve
-                case .error(_):
-                    return nil
-                }
-            }
-            let totalFee = totalFeeArray.reduce(0, { $0 + $1 })
+            
             Text("Total Lightning Fees: \(totalFee)")
                 .foregroundStyle(.secondary)
         }
@@ -289,6 +307,11 @@ struct MeltView: View {
                     }
                 }
                 .disabled(selectorDisabled)
+            }
+        } footer: {
+            if Double(invoiceAmount ?? 0) > Double(totalSelectedMintBalance) * 0.97 {
+                Text("Payment amount approaching the total balance risks payment failure due to fees.")
+                    .lineLimit(3)
             }
         }
     }
