@@ -206,8 +206,7 @@ struct MOTDCell: View {
         .onTapGesture {
             // Consume taps on the entire cell to prevent default selection
         }
-        .listRowInsets(EdgeInsets(top: 0, leading: 2, bottom: 0, trailing: 2))
-        .padding(.vertical, 4)
+        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
     }

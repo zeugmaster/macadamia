@@ -24,7 +24,7 @@ struct RequestView: View {
     
     @State private var selectedMints = Set<Mint>()
     @State private var showMintSelector = false
-    @State private var useNIP17Transport = false
+    @State private var useNIP17Transport = true
     @State private var useP2PK = false
     @State private var description = ""
     @State private var copied = false

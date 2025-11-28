@@ -163,9 +163,10 @@ struct RequestPay: View {
                 selectedTransport = transports.first
             }
             
-            // TODO: select first possible mint
+            if let amount = paymentRequest.amount {
+                selectedMint = mintsInUse.first(where: { $0.balance(for: .sat) >  amount })
+            }
             
-            // TODO: connect to relays
             if let transports = paymentRequest.transports, transports.contains(where: { $0.type == "nostr" }) {
                 nostrService.connect()
             }
