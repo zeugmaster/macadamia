@@ -104,24 +104,26 @@ struct ContentView: View {
             checkReleaseNotesAndOnboarding()
             selectedTab = .wallet
         })
-        .task {
-            if let activeWallet {
-                for mint in activeWallet.mints {
-                    do {
-                        let newKeysets = try await CashuSwift.updatedKeysetsForMint(CashuSwift.Mint(mint))
-                        try await MainActor.run {
+        .onAppear {
+            Task { @MainActor in
+                if let activeWallet {
+                    for mint in activeWallet.mints {
+                        do {
+                            let newKeysets = try await CashuSwift.updatedKeysetsForMint(CashuSwift.Mint(mint))
                             mint.keysets = newKeysets
-                            print("mint: \(mint.url.absoluteString), new keyset counters: \(newKeysets.map({ $0.derivationCounter }))")
-                            try modelContext.save()
+                        } catch {
+                            logger.warning("""
+                                           Could not update keyset information for mint at \
+                                           \(mint.url.absoluteString), due to error: \(error)
+                                           """)
                         }
-                    } catch {
-                        logger.warning("""
-                                       Could not update keyset information for mint at \
-                                       \(mint.url.absoluteString), due to error: \(error)
-                                       """)
                     }
+                    try modelContext.save()
                 }
             }
+        }
+        .task {
+            
         }
         .popover(isPresented: $releaseNotesPopoverShowing, content: {
             ZStack(alignment: .topTrailing) {

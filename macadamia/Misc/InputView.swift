@@ -101,6 +101,7 @@ struct InputView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8.0))
     }
     
+    @discardableResult
     private func checkInput(_ string: String) -> QRScanner.ResultValidation {
         switch InputValidator.validate(string, supportedTypes: supportedTypes) {
         case .valid(let result):
