@@ -29,6 +29,7 @@ struct WalletView: View {
         case melt(invoice: String?)
         case reqPay(req: CashuSwift.PaymentRequest)
         case reqView
+        case contactless
 
         var id: String {
             switch self {
@@ -44,6 +45,8 @@ struct WalletView: View {
                 return "reqPay"
             case .reqView:
                 return "reqView"
+            case .contactless:
+                return "contactless"
             }
         }
     }
@@ -172,6 +175,15 @@ struct WalletView: View {
                         }
                     ) {
                         Templates.MenuItem {
+                            navigationDestination = .contactless
+                        } label: { fade in
+                            menuButtonLabel(title: "Contactless",
+                                            subtitle: "Pay a terminal using NFC",
+                                            imageSystemName: "wave.3.right",
+                                            fade: fade)
+                        }
+                        .background(Color.black)
+                        Templates.MenuItem {
                             navigationDestination = .send
                         } label: { fade in
                             menuButtonLabel(title: "Ecash",
@@ -209,6 +221,8 @@ struct WalletView: View {
                     RequestPay(paymentRequest: req)
                 case .reqView:
                     RequestView()
+                case .contactless:
+                    Contactless()
                 }
             }
             .onChange(of: urlState, { oldValue, newValue in
