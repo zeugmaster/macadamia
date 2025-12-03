@@ -18,5 +18,7 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NFCReaderUsageDescription</key>
+	<string>macadamia uses NFC to receive payment requests from compatible devices.</string>
 </dict>
 </plist>
