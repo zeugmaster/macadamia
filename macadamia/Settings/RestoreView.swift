@@ -98,7 +98,7 @@ struct RestoreView: View {
         let words = mnemonic.components(separatedBy: CharacterSet.whitespacesAndNewlines)
         
         guard words.count == 12 else {
-            logger.error("The entered test does not appear to be a properly formmatted syeed phrase.")
+            logger.error("The entered test does not appear to be a properly formmatted seed phrase.")
             displayAlert(alert: AlertDetail(title: "Restore Error", description: "The entered text does not appear to be a properly formmatted seed phrase. Make sure its twelve words, separated by spaces or line breaks."))
             restoreDidFail()
             return

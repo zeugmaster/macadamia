@@ -17,7 +17,7 @@ struct BalanceCard: View {
     @Query(animation: .default) private var allProofs: [Proof]
     
     private var activeWallet: Wallet? {
-        wallets.first
+        wallets.first(where: \.active)
     }
     
     // Store balance in @State like MintManagerView does
@@ -124,6 +124,8 @@ struct BalanceCard: View {
         let newBalance = allProofs
             .filter { $0.state == .valid && $0.wallet == wallet && $0.mint?.hidden != true }
             .reduce(0) { $0 + $1.amount }
+        
+        logger.info("calculateBalance() called, result: \(newBalance)")
         
         withAnimation {
             balance = newBalance
