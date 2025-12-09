@@ -57,6 +57,7 @@ enum NFCPaymentError: LocalizedError {
 
 struct Contactless: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
@@ -117,6 +118,9 @@ struct Contactless: View {
             
             Spacer()
         }
+        .onAppear {
+            startContactlessPayment()
+        }
     }
     
     // MARK: - Action Buttons
@@ -146,7 +150,7 @@ struct Contactless: View {
     
     private func startContactlessPayment() {
         guard isNFCAvailable else {
-            errorMessage = NFCPaymentError.nfcUnavailable.localizedDescription
+            errorMessage = String(describing: NFCPaymentError.nfcUnavailable)
             return
         }
         
@@ -206,12 +210,16 @@ struct Contactless: View {
             session.alertMessage = "Payment sent!"
             session.invalidate()
             
+            // Dismiss view after delay
+            try? await Task.sleep(for: .seconds(1.5))
+            dismiss()
+            
         } catch let error as NFCPaymentError {
-            errorMessage = error.localizedDescription
-            session.invalidate(errorMessage: error.localizedDescription)
+            errorMessage = String(describing: error)
+            session.invalidate(errorMessage: String(describing: error))
         } catch {
-            errorMessage = error.localizedDescription
-            session.invalidate(errorMessage: error.localizedDescription)
+            errorMessage = String(describing: error)
+            session.invalidate(errorMessage: String(describing: error))
         }
     }
     
@@ -232,7 +240,7 @@ struct Contactless: View {
         do {
             return try CashuSwift.PaymentRequest(encodedRequest: input)
         } catch {
-            throw NFCPaymentError.invalidPaymentRequest(error.localizedDescription)
+            throw NFCPaymentError.invalidPaymentRequest(String(describing: error))
         }
     }
     
@@ -408,12 +416,11 @@ private final class NFCReaderDelegate: NSObject, NFCNDEFReaderSessionDelegate, @
     
     func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
         let nfcError = error as? NFCReaderError
-        let errorDescription = error.localizedDescription
         
         Task { @MainActor in
             if nfcError?.code != .readerSessionInvalidationErrorUserCanceled &&
                nfcError?.code != .readerSessionInvalidationErrorFirstNDEFTagRead {
-                self.onError(errorDescription)
+                self.onError(String(describing: error))
             }
             self.onSessionEnd()
         }

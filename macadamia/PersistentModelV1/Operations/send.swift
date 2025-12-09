@@ -40,6 +40,10 @@ extension AppSchemaV1 {
                                                     state: .pending,
                                                     increaseDerivationCounter: false)
         
+        if let increase = sendResult.counterIncrease {
+            mint.increaseDerivationCounterForKeysetWithID(increase.keysetID, by: increase.increase)
+        }
+        
         let event = Event.sendEvent(unit: .sat,
                                     shortDescription: "Send",
                                     wallet: activeWallet,
