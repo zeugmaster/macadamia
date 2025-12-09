@@ -5,77 +5,56 @@ import SwiftData
 
 fileprivate let sendLogger = Logger(subsystem: "macadamia", category: "SendOperation")
 
-extension AppSchemaV1.Mint {
+extension AppSchemaV1 {
     
     @MainActor
-    func send(amount: Int,
-              memo: String?,
-              modelContext: ModelContext,
-              lockingKey: String? = nil,
-              completion: @escaping (Result<CashuSwift.Token, Error>) -> Void) {
+    static func createToken(mint: Mint,
+                            activeWallet: Wallet,
+                            amount: Int,
+                            memo: String,
+                            modelContext: ModelContext,
+                            lockingKey: String?) async throws -> CashuSwift.Token {
         
-        guard let wallet = self.wallet else {
-            completion(.failure(macadamiaError.databaseError("mint \(self.url.absoluteString) does not have an associated wallet.")))
-            return
+        guard let selection = mint.select(amount: amount, unit: .sat) else {
+            throw CashuError.insufficientInputs("")
         }
-        
-        let sendableMint = CashuSwift.Mint(self)
-        
-        guard let selection = self.select(amount: amount, unit: .sat) else {
-            completion(.failure(CashuError.insufficientInputs("")))
-            return
-        }
-        
-        sendLogger.info("wallet selected \(selection.selected.count) proofs with a total input fee of \(selection.fee)")
         
         selection.selected.setState(.pending)
         
-        Task {
-            do {
-                let sendResult = try await CashuSwift.send(inputs: selection.selected.sendable(),
-                                                           mint: sendableMint,
-                                                           amount: amount,
-                                                           seed: wallet.seed,
-                                                           memo: memo,
-                                                           lockToPublicKey: lockingKey)
-                
-                await MainActor.run {
-                    
-                    do {
-                        try self.addProofs(sendResult.change, to: modelContext, increaseDerivationCounter: false)
-                        
-                        if let counterIncrease = sendResult.counterIncrease {
-                            self.increaseDerivationCounterForKeysetWithID(counterIncrease.keysetID,
-                                                                          by: counterIncrease.increase)
-                        }
-                    } catch {
-                        sendLogger.error("send operation returned a result, but the \(sendResult.change.count) change proofs could not be saved to the database due to error \(error)")
-                    }
-                    
-                    selection.selected.setState(.spent)
-                    
-                    let event = Event.sendEvent(unit: .sat,
-                                                shortDescription: "Send",
-                                                wallet: wallet,
-                                                amount: amount,
-                                                token: sendResult.token,
-                                                longDescription: "",
-                                                proofs: [],
-                                                memo: memo ?? "",
-                                                mint: self)
-                    
-                    modelContext.insert(event)
-                    try? modelContext.save()
-                    
-                    completion(.success(sendResult.token))
-                }
-            } catch {
-                selection.selected.setState(.valid)
-                completion(.failure(error))
-            }
-        }
+        let sendResult = try await CashuSwift.send(inputs: selection.selected.sendable(),
+                                                   mint: CashuSwift.Mint(mint),
+                                                   amount: amount,
+                                                   seed: activeWallet.seed,
+                                                   memo: memo,
+                                                   lockToPublicKey: lockingKey)
+        
+        selection.selected.setState(.spent)
+        
+        let changeProofs = try mint.addProofs(sendResult.change,
+                                                      to: modelContext,
+                                                      state: .valid,
+                                                      increaseDerivationCounter: false)
+        
+        let sentProofs = try mint.addProofs(sendResult.send,
+                                                    to: modelContext,
+                                                    state: .pending,
+                                                    increaseDerivationCounter: false)
+        
+        let event = Event.sendEvent(unit: .sat,
+                                    shortDescription: "Send",
+                                    wallet: activeWallet,
+                                    amount: amount,
+                                    token: sendResult.token,
+                                    longDescription: "",
+                                    proofs: [],
+                                    memo: memo,
+                                    mint: mint)
+        
+        modelContext.insert(event)
+        try modelContext.save()
+        
+        return sendResult.token
     }
+    
 }
-
-
 

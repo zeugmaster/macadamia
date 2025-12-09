@@ -99,29 +99,29 @@ struct RedeemLaterView: View {
         
         Task {
             do {
-                let (proofs, _, _) = try await CashuSwift.receive(token: token,
+                let receiveResult = try await CashuSwift.receive(token: token,
                                                                   of: CashuSwift.Mint(mint),
                                                                   seed: wallet.seed,
                                                                   privateKey: privateKeyHex)
                 
                 try await MainActor.run {
-                    let internalProofs = try mint.addProofs(proofs, to: modelContext)
+                    let internalProofs = try mint.addProofs(receiveResult.proofs, to: modelContext)
                     
                     let receiveEvent = Event.receiveEvent(unit: Unit(token.unit) ?? .sat,
-                                                   shortDescription: "Receive",
-                                                   wallet: wallet,
-                                                   amount: internalProofs.sum,
-                                                   longDescription: "",
-                                                   proofs: internalProofs,
-                                                   memo: token.memo,
-                                                   mint: mint,
-                                                   redeemed: true)
+                                                          shortDescription: "Receive",
+                                                          wallet: wallet,
+                                                          amount: internalProofs.sum,
+                                                          longDescription: "",
+                                                          proofs: internalProofs,
+                                                          memo: token.memo,
+                                                          mint: mint,
+                                                          redeemed: true)
                     
                     modelContext.insert(receiveEvent)
                     event.visible = false
                     try modelContext.save()
                     buttonState = .success()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                         dismiss()
                     }
                 }
