@@ -32,7 +32,7 @@ struct ContentView: View {
                                 this will result in wallet malfunctions.
                                 """)
             }
-            return wallets.first
+            return wallets.first(where: \.active)
         }
         set {}
     }

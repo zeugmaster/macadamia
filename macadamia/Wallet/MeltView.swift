@@ -506,11 +506,11 @@ struct MeltView: View {
                     
                     for input in taskGroupInputs {
                         group.addTask {
-                            let (quote, change, _) = try await CashuSwift.melt(quote: input.quote,
-                                                                               mint: input.mint,
-                                                                               proofs: input.proofs,
-                                                                               blankOutputs: input.blankOutputs)
-                            return MeltTaskResult(mint: input.mint, quote: quote, change: change ?? [])
+                            let meltResult = try await CashuSwift.melt(quote: input.quote,
+                                                                       mint: input.mint,
+                                                                       proofs: input.proofs,
+                                                                       blankOutputs: input.blankOutputs)
+                            return MeltTaskResult(mint: input.mint, quote: meltResult.quote, change: meltResult.change ?? [])
                         }
                     }
                     

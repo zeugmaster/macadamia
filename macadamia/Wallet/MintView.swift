@@ -245,7 +245,8 @@ struct MintView: View {
     private func requestMint() {
         
         guard let quote,        // TODO: improve handling
-              let selectedMint else {
+              let selectedMint,
+              let activeWallet else {
             logger.error("""
                          unable to request melt because one or more of the following variables are nil:
                          quote: \(quote.debugDescription)
@@ -257,27 +258,36 @@ struct MintView: View {
         pollingTimer?.invalidate()
         
         buttonState = .loading()
+        
+        Task {
+            do {
+                let issueResult = try await CashuSwift.issue(for: quote,
+                                                             mint: CashuSwift.Mint(selectedMint),
+                                                             seed: activeWallet.seed,
+                                                             preferredDistribution: nil)
                 
-        selectedMint.issue(for: quote) { result in
-            switch result {
-            case .success(let (proofs, event)):
-                pendingMintEvent?.visible = false
+                logger.info("DLEQ check on issuance \(String(describing: issueResult.dleqResult))")
                 
-                AppSchemaV1.insert(proofs + [event], into: modelContext)
+                try selectedMint.addProofs(issueResult.proofs, to: modelContext)
                 
+                let event = Event.mintEvent(unit: Unit(quote.requestDetail?.unit) ?? .sat,
+                                            shortDescription: "Ecash created",
+                                            wallet: activeWallet,
+                                            quote: quote,
+                                            mint: selectedMint,
+                                            amount: quote.requestDetail?.amount ?? issueResult.proofs.sum)
+                
+                modelContext.insert(event)
+                try modelContext.save()
                 buttonState = .success()
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     dismiss()
                 }
-                
-            case .failure(let error):
+            } catch {
+                logger.error("an error occurred during issuance \(error)")
                 displayAlert(alert: AlertDetail(with: error))
-                logger.error("Minting was not successful with mint \(selectedMint.url.absoluteString) due to error \(error)")
                 buttonState = .fail()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    buttonState = .idle("Issue Ecash", action: requestMint)
-                }
             }
         }
     }

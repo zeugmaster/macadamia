@@ -200,6 +200,13 @@ struct MessageSendView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
+    @Query(filter: #Predicate<AppSchemaV1.Wallet> { wallet in
+        wallet.active == true
+    }) private var wallets: [AppSchemaV1.Wallet]
+    var activeWallet: AppSchemaV1.Wallet? {
+        wallets.first
+    }
+    
     @State private var memo: String = ""
     @State private var amountString: String = ""
     @State private var buttonState = ActionButtonState.idle("...")
@@ -321,26 +328,30 @@ struct MessageSendView: View {
     }
     
     private func createToken() {
-        buttonState = .loading()
-        
-        guard let proofs = mint.select(amount: amount, unit: .sat) else {
+        guard let activeWallet else {
+            buttonState = .fail("No active wallet")
             return
         }
         
-        mint.send(amount: amount, memo: memo, modelContext: modelContext) { result in
-            switch result {
-            case .success(let token):
-                buttonState = .success()
+        buttonState = .loading()
+        
+        Task {
+            do {
+                let token = try await AppSchemaV1.createToken(mint: mint,
+                                                              activeWallet: activeWallet,
+                                                              amount: amount,
+                                                              memo: memo,
+                                                              modelContext: modelContext,
+                                                              lockingKey: nil)
                 onSuccess(token: token)
-            case .failure(let error):
-                buttonState = .fail()
-                print("send failed due to error: \(error)")
+                buttonState = .success()
+            } catch {
+                // TODO: add alert view
             }
         }
     }
     
     private func onSuccess(token: CashuSwift.Token) {
-//        AppSchemaV1.insert(swapped + [event], into: modelContext)
         
         vc?.requestPresentationStyle(.compact)
         

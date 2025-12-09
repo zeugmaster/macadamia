@@ -13,7 +13,6 @@ struct RedeemView<AdditionalControls: View>: View {
     @Query(filter: #Predicate<AppSchemaV1.Wallet> { wallet in
         wallet.active == true
     }) private var wallets: [AppSchemaV1.Wallet]
-
     var activeWallet: AppSchemaV1.Wallet? {
         wallets.first
     }
@@ -257,6 +256,7 @@ struct RedeemView<AdditionalControls: View>: View {
     
     // MARK: - REDEEM
     
+    @MainActor
     private func redeem() {
         
         guard let activeWallet, let token else {
@@ -266,8 +266,6 @@ struct RedeemView<AdditionalControls: View>: View {
                          """)
             return
         }
-        
-        buttonState = .loading()
         
         // make sure token is only sat for now
         if token.unit != "sat" {
@@ -283,32 +281,49 @@ struct RedeemView<AdditionalControls: View>: View {
             return
         }
         
+        buttonState = .loading()
+        
         let keyString = activeWallet.privateKeyData.map { String(bytes: $0) }
-
-        mint.redeem(token: token, privateKeyString: keyString) { result in
-            switch result {
-            case .success(let (proofs, event)):
-                AppSchemaV1.insert(proofs + [event], into: modelContext)
+        
+        Task {
+            do {
+                let receiveResult = try await CashuSwift.receive(token: token,
+                                                                 of: CashuSwift.Mint(mint),
+                                                                 seed: activeWallet.seed,
+                                                                 privateKey: keyString) // if the token is not locked the key is ignored
+                redeemLogger.info("""
+                                  DLEQ verification for input: \(String(describing: receiveResult.inputDLEQ)), 
+                                  output: \(String(describing: receiveResult.outputDLEQ))
+                                  """)
+                
+                let proofs = try mint.addProofs(receiveResult.proofs, to: modelContext)
+                
+                let event = Event.receiveEvent(unit: .sat,
+                                               shortDescription: "Receive",
+                                               wallet: activeWallet,
+                                               amount: proofs.sum,
+                                               longDescription: "",
+                                               proofs: proofs,
+                                               memo: token.memo ?? "",
+                                               mint: mint,
+                                               redeemed: true)
+                
+                modelContext.insert(event)
+                try modelContext.save()
                 
                 buttonState = .success()
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    dismiss()
-                }
                 
                 if let onSuccess {
                     onSuccess()
                 }
                 
-            case .failure(let error):
-                buttonState = .fail()
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    buttonState = .idle("Receive", action: redeem)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    dismiss()
                 }
-                
-                redeemLogger.error("could not receive token due to error \(error)")
+            } catch {
+                redeemLogger.error("error during redeeming of token \(error)")
                 displayAlert(alert: AlertDetail(with: error))
+                buttonState = .fail()
             }
         }
     }

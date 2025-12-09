@@ -128,40 +128,47 @@ struct SendView: View {
         selectedMintBalance = proofsOfSelectedMint.filter({ $0.state == .valid }).sum
     }
     
+    @MainActor
     func generateToken() {
-        guard let selectedMint else {
+        guard let selectedMint, let activeWallet else {
             logger.error("""
                          unable to generate Token because one or more of the following variables are nil:
                          selectedMInt: \(selectedMint.debugDescription)
                          activeWallet: \(activeWallet.debugDescription)
                          """)
-            tokenGenerationFailed()
+            buttonState = .fail()
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                buttonState = .idle("Generate Token", action: {
+                    generateToken()
+                })
+            }
             return
         }
         
         buttonState = .loading()
         
-        selectedMint.send(amount: amount,
-                          memo: tokenMemo,
-                          modelContext: modelContext,
-                          lockingKey: lockingKey.isEmpty ? nil : lockingKey) { result in
-            switch result {
-            case .success(let token):
+        Task {
+            do {
+                token = try await AppSchemaV1.createToken(mint: selectedMint,
+                                                          activeWallet: activeWallet,
+                                                          amount: amount,
+                                                          memo: tokenMemo,
+                                                          modelContext: modelContext,
+                                                          lockingKey: lockingKey)
                 buttonState = .success()
-                self.token = token
-            case .failure(let error):
-                logger.error("unable to generate token due to error: \(error)")
+            } catch {
+                logger.error("error when preparing send \(error)")
                 displayAlert(alert: AlertDetail(with: error))
-                tokenGenerationFailed()
+                buttonState = .fail()
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    buttonState = .idle("Generate Token", action: {
+                        generateToken()
+                    })
+                }
             }
         }
-    }
-                                          
-    private func tokenGenerationFailed() {
-        buttonState = .fail()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: {
-            buttonState = .idle("Generate Token", action: generateToken)
-        })
     }
 
     private func displayAlert(alert: AlertDetail) {
