@@ -270,34 +270,21 @@ struct Contactless: View {
             throw NFCPaymentError.insufficientBalance(required: amount, available: totalAvailable)
         }
         
-        // 5. Select proofs from the mint
-        guard let proofs = selectedMint.select(amount: amount, unit: .sat) else {
-            throw NFCPaymentError.proofSelectionFailed
-        }
+        // TODO: check for locking requirement
         
-        proofs.selected.setState(.pending)
+        let token = try await AppSchemaV1.createToken(mint: selectedMint,
+                                                      activeWallet: activeWallet,
+                                                      amount: amount,
+                                                      memo: "",
+                                                      modelContext: modelContext,
+                                                      lockingKey: nil)
         
-        let sendResult = try await CashuSwift.send(request: request,
-                                                   mint: CashuSwift.Mint(selectedMint),
-                                                   inputs: proofs.selected.sendable(),
-                                                   amount: nil,
-                                                   memo: nil,
-                                                   seed: activeWallet.seed)
         
-        if let counterIncrease = sendResult.counterIncrease {
-            selectedMint.increaseDerivationCounterForKeysetWithID(counterIncrease.keysetID,
-                                                                  by: counterIncrease.increase)
-        }
-        
-        proofs.selected.setState(.spent)
-        
-        try selectedMint.addProofs(sendResult.change,
-                                   to: modelContext,
-                                   increaseDerivationCounter: false)
+        try modelContext.save()
         
         // TODO: create send event
         
-        return try sendResult.payload.toToken().serialize(to: .V4)
+        return try token.serialize(to: .V4)
     }
     
     // MARK: - NDEF Helpers

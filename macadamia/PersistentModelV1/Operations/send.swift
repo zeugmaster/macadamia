@@ -46,7 +46,7 @@ extension AppSchemaV1 {
                                     amount: amount,
                                     token: sendResult.token,
                                     longDescription: "",
-                                    proofs: [],
+                                    proofs: sentProofs,
                                     memo: memo,
                                     mint: mint)
         
