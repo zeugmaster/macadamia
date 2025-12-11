@@ -5,9 +5,9 @@
 
 You can now settle or create a Cashu payment request! This feature also includes sending and receiving ecash via Nostr DM (NIP-17). 
 
-**Contactless Payment 📡**
+**Contactless Payments 📡**
 
-Pay a payment request from a terminal using NFC!
+Settle a payment request from a terminal using NFC!
 
 **Under the hood 🔧**
 

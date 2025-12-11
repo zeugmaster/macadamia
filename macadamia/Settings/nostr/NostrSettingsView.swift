@@ -92,8 +92,7 @@ struct NostrSettingsView: View {
                     HStack {
                         Text("Relays")
                         Spacer()
-                        Text("\(savedURLs.wrappedValue.count)")
-                            .foregroundStyle(.secondary)
+                        connectionStatusBadge
                     }
                 }
             } header: {
@@ -111,6 +110,20 @@ struct NostrSettingsView: View {
             Button("OK", role: .cancel) { }
         } message: {
             Text("Public key copied to clipboard")
+        }
+    }
+    
+    @ViewBuilder
+    private var connectionStatusBadge: some View {
+        let connected = nostrService.connectionStates.filter { $0.value == .connected }.count
+        let total = savedURLs.wrappedValue.count
+        
+        HStack(spacing: 4) {
+            Circle()
+                .fill(connected > 0 ? .green : .gray.opacity(0.5))
+                .frame(width: 8, height: 8)
+            Text("\(connected)/\(total)")
+                .foregroundStyle(.secondary)
         }
     }
     

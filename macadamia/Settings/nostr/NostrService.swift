@@ -58,6 +58,7 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
     @Published var connectionStates = [URL: Relay.State]()
     @Published var receivedEcashMessages: [ReceivedEcashMessage] = []
     @Published var isListeningForMessages = false
+    @Published private(set) var relayURLs: [URL] = []
     
     var aggregateConnectionState: ConnectionState {
         let connected = connectionStates.filter({ $0.value == .connected }).count
@@ -74,6 +75,7 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
     private var relayPool: RelayPool?
     private var messageSubscriptionId: String?
     private var cancellables = Set<AnyCancellable>()
+    private var relayCancellables = [URL: AnyCancellable]()
     
     @AppStorage("savedURLs") private var savedURLsData: Data = {
         return try! JSONEncoder().encode(defaultRelayURLs)
@@ -85,7 +87,13 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
         }
         set {
             savedURLsData = (try? JSONEncoder().encode(newValue)) ?? Data()
+            relayURLs = newValue
         }
+    }
+    
+    init() {
+        // Initialize relayURLs from persisted data
+        relayURLs = savedURLs
     }
     
     func connect() {
@@ -96,29 +104,93 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
             return
         }
         
-        relayPool = try? RelayPool(relayURLs: Set(defaultRelayURLs))
-        nostrLogger.info("Created RelayPool with \(defaultRelayURLs.count) relay URLs")
+        let urlsToConnect = savedURLs
+        relayURLs = urlsToConnect
         
-        // subscribe to relay states
-        relayPool?.relays.forEach { relay in
-            nostrLogger.info("Setting up state observer for relay: \(relay.url)")
-            relay.$state
-                .sink { [weak self] newState in
-                    nostrLogger.info("Relay \(relay.url) state changed to: \(String(describing: newState))")
-                    self?.connectionStates[relay.url] = newState
-                    
-                    // Check if we should start listening (when most relays are connected)
-                    if newState == .connected,
-                       self?.isListeningForMessages == false,
-                       NostrKeychain.hasNsec() {
-                        self?.checkAndStartListening()
-                    }
-                }
-                .store(in: &cancellables)
-        }
+        relayPool = try? RelayPool(relayURLs: Set(urlsToConnect))
+        nostrLogger.info("Created RelayPool with \(urlsToConnect.count) relay URLs")
+        
+        // Subscribe to relay states
+        subscribeToRelayStates()
         
         nostrLogger.info("Calling relayPool.connect()")
         relayPool?.connect()
+    }
+    
+    /// Subscribes to state changes for all relays in the pool
+    private func subscribeToRelayStates() {
+        relayPool?.relays.forEach { relay in
+            subscribeToRelayState(relay)
+        }
+    }
+    
+    /// Subscribes to state changes for a single relay
+    private func subscribeToRelayState(_ relay: Relay) {
+        nostrLogger.info("Setting up state observer for relay: \(relay.url)")
+        
+        let cancellable = relay.$state
+            .sink { [weak self] newState in
+                nostrLogger.info("Relay \(relay.url) state changed to: \(String(describing: newState))")
+                self?.connectionStates[relay.url] = newState
+                
+                // Check if we should start listening (when most relays are connected)
+                if newState == .connected,
+                   self?.isListeningForMessages == false,
+                   NostrKeychain.hasNsec() {
+                    self?.checkAndStartListening()
+                }
+            }
+        
+        relayCancellables[relay.url] = cancellable
+        cancellable.store(in: &cancellables)
+    }
+    
+    // MARK: - Dynamic Relay Management
+    
+    /// Adds a relay URL to the pool and persists the change
+    @MainActor
+    func addRelay(_ url: URL) {
+        guard !savedURLs.contains(url) else {
+            nostrLogger.info("Relay \(url) already exists, skipping")
+            return
+        }
+        
+        // Update persisted list
+        var urls = savedURLs
+        urls.append(url)
+        savedURLs = urls
+        
+        nostrLogger.info("Added relay \(url) to saved list")
+        
+        // Reconnect to apply changes if pool exists
+        if relayPool != nil {
+            reconnect()
+        }
+    }
+    
+    /// Removes a relay URL from the pool and persists the change
+    @MainActor
+    func removeRelay(_ url: URL) {
+        // Update persisted list
+        var urls = savedURLs
+        urls.removeAll { $0 == url }
+        savedURLs = urls
+        
+        // Clean up connection state for removed relay
+        connectionStates.removeValue(forKey: url)
+        relayCancellables.removeValue(forKey: url)
+        
+        nostrLogger.info("Removed relay \(url) from saved list")
+        
+        // Reconnect to apply changes if pool exists
+        if relayPool != nil {
+            reconnect()
+        }
+    }
+    
+    /// Returns the connection state for a specific relay URL
+    func connectionState(for url: URL) -> Relay.State? {
+        connectionStates[url]
     }
     
     /// Checks if enough relays are connected and starts listening
@@ -173,9 +245,18 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
     @MainActor func disconnect() {
         stopListeningForEcashMessages()
         relayPool?.disconnect()
+        relayPool = nil
         cancellables.removeAll()
+        relayCancellables.removeAll()
         connectionStates.removeAll()
         nostrLogger.info("Disconnected from relays")
+    }
+    
+    /// Reconnects with the current relay list (useful after modifying relays while disconnected)
+    @MainActor
+    func reconnect() {
+        disconnect()
+        connect()
     }
     
     /// Sends a NIP-17 direct message
