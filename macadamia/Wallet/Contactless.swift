@@ -17,7 +17,7 @@ enum NFCPaymentError: LocalizedError {
     case invalidPaymentRequest(String)
     case noAmountSpecified
     case unsupportedUnit(String)
-    case noMatchingMint
+    case noMatchingMint(requestedMints: [String])
     case insufficientBalance(required: Int, available: Int)
     case proofSelectionFailed
     case tokenCreationFailed(String)
@@ -35,8 +35,14 @@ enum NFCPaymentError: LocalizedError {
             return "Payment request does not specify an amount"
         case .unsupportedUnit(let unit):
             return "Unsupported unit: \(unit)"
-        case .noMatchingMint:
-            return "No matching mint found for this request"
+        case .noMatchingMint(let requestedMints):
+            if requestedMints.count == 1 {
+                let mint = formatMintURL(requestedMints[0])
+                return "This payment requires funds from \(mint), but you don't have any balance there. Add this mint to your wallet and receive some ecash first."
+            } else {
+                let mintList = requestedMints.map { formatMintURL($0) }.joined(separator: ", ")
+                return "This payment requires funds from one of these mints: \(mintList). You don't have any balance with these mints. Add one of them to your wallet and receive some ecash first."
+            }
         case .insufficientBalance(let required, let available):
             return "Insufficient balance: need \(required), have \(available)"
         case .proofSelectionFailed:
@@ -50,6 +56,14 @@ enum NFCPaymentError: LocalizedError {
         case .tagConnectionFailed:
             return "Failed to connect to NFC tag"
         }
+    }
+    
+    /// Formats a mint URL for display (extracts host name)
+    private func formatMintURL(_ urlString: String) -> String {
+        if let url = URL(string: urlString), let host = url.host {
+            return host
+        }
+        return urlString
     }
 }
 
@@ -150,7 +164,7 @@ struct Contactless: View {
     
     private func startContactlessPayment() {
         guard isNFCAvailable else {
-            errorMessage = String(describing: NFCPaymentError.nfcUnavailable)
+            errorMessage = NFCPaymentError.nfcUnavailable.localizedDescription
             return
         }
         
@@ -215,11 +229,11 @@ struct Contactless: View {
             dismiss()
             
         } catch let error as NFCPaymentError {
-            errorMessage = String(describing: error)
-            session.invalidate(errorMessage: String(describing: error))
+            errorMessage = error.localizedDescription
+            session.invalidate(errorMessage: error.localizedDescription)
         } catch {
-            errorMessage = String(describing: error)
-            session.invalidate(errorMessage: String(describing: error))
+            errorMessage = error.localizedDescription
+            session.invalidate(errorMessage: error.localizedDescription)
         }
     }
     
@@ -240,7 +254,7 @@ struct Contactless: View {
         do {
             return try CashuSwift.PaymentRequest(encodedRequest: input)
         } catch {
-            throw NFCPaymentError.invalidPaymentRequest(String(describing: error))
+            throw NFCPaymentError.invalidPaymentRequest(error.localizedDescription)
         }
     }
     
@@ -269,7 +283,7 @@ struct Contactless: View {
         }
         
         guard !matchingMints.isEmpty else {
-            throw NFCPaymentError.noMatchingMint
+            throw NFCPaymentError.noMatchingMint(requestedMints: requestedMints)
         }
         
         // 4. Find a mint with sufficient balance
@@ -420,7 +434,7 @@ private final class NFCReaderDelegate: NSObject, NFCNDEFReaderSessionDelegate, @
         Task { @MainActor in
             if nfcError?.code != .readerSessionInvalidationErrorUserCanceled &&
                nfcError?.code != .readerSessionInvalidationErrorFirstNDEFTagRead {
-                self.onError(String(describing: error))
+                self.onError(error.localizedDescription)
             }
             self.onSessionEnd()
         }
