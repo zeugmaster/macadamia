@@ -1,6 +1,7 @@
 import CashuSwift
 import SwiftData
 import SwiftUI
+import secp256k1
 
 struct SendView: View {
     @Environment(\.modelContext) private var modelContext
@@ -146,6 +147,18 @@ struct SendView: View {
             return
         }
         
+        let pubkey = lockingKey.isEmpty ? nil : lockingKey
+        
+        if let pubkey {
+            guard let bytes = try? pubkey.bytes,
+                  let _ = try? secp256k1.Signing.PublicKey(dataRepresentation: bytes,
+                                                               format: .compressed) else {
+                displayAlert(alert: AlertDetail(title: "Invalid public key 🔑", description: "The public key you entered does not seem to be valid."))
+                return
+            }
+        }
+        
+        
         buttonState = .loading()
         
         Task {
@@ -155,7 +168,7 @@ struct SendView: View {
                                                           amount: amount,
                                                           memo: tokenMemo,
                                                           modelContext: modelContext,
-                                                          lockingKey: lockingKey)
+                                                          lockingKey: pubkey)
                 buttonState = .success()
             } catch {
                 logger.error("error when preparing send \(error)")
