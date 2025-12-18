@@ -58,7 +58,7 @@ struct RedeemView<AdditionalControls: View>: View {
                 Section {
                     if let token {
                         TokenText(text: tokenString)
-                            .frame(idealHeight: 70)
+                            .frame(idealHeight: 60)
                         HStack {
                             Text("Total Amount: ")
                             Spacer()
@@ -192,16 +192,17 @@ struct RedeemView<AdditionalControls: View>: View {
                             Image(systemName: selection == .swap ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(selection == .swap ? .accentColor : .secondary)
                             Text("Swap to")
-                            Text("BETA")
-                                .font(.caption)
-                                .padding(2)
-                                .foregroundStyle(.black)
-                                .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(.white.opacity(0.7)))
+//                            Text("BETA")
+//                                .font(.caption)
+//                                .padding(2)
+//                                .foregroundStyle(.black)
+//                                .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(.white.opacity(0.7)))
                             Spacer()
                             MintPicker(label: "", selectedMint: $swapTargetMint, allowsNoneState: false)
                             .pickerStyle(MenuPickerStyle())
                             .labelsHidden()
                             .tint(.secondary)
+                            .fixedSize(horizontal: true, vertical: false)
                         }
                         .contentShape(Rectangle())
                         .onTapGesture {

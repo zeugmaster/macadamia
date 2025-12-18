@@ -281,6 +281,8 @@ struct MintView: View {
                 try modelContext.save()
                 buttonState = .success()
                 
+                pendingMintEvent?.visible = false
+                
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     dismiss()
                 }
