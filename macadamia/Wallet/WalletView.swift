@@ -21,6 +21,7 @@ struct WalletView: View {
     @State private var processedMessageIds = Set<String>()
 
     @Binding var urlState: URLState?
+    @Binding var pendingNavigation: Destination?
     
     enum Destination: Identifiable, Hashable {
         case mint
@@ -55,8 +56,9 @@ struct WalletView: View {
     
     static let buttonPadding: CGFloat = 1
     
-    init(urlState: Binding<URLState?>) {
+    init(urlState: Binding<URLState?>, pendingNavigation: Binding<Destination?>) {
         self._urlState = urlState
+        self._pendingNavigation = pendingNavigation
     }
     
     var activeWallet:Wallet? {
@@ -225,13 +227,19 @@ struct WalletView: View {
                     Contactless()
                 }
             }
-            .onChange(of: urlState, { oldValue, newValue in
+            .onChange(of: urlState) { oldValue, newValue in
                 print("url state var did change to \(newValue?.url ?? "nil")")
                 if let newValue {
                     navigationDestination = .receive(urlString: newValue.url)
                     urlState = nil
                 }
-            })
+            }
+            .onChange(of: pendingNavigation) { _, newValue in
+                if let destination = newValue {
+                    navigationDestination = destination
+                    pendingNavigation = nil
+                }
+            }
             .onChange(of: nostrService.receivedEcashMessages) { _, newMessages in
                 processNewEcashMessages(newMessages)
             }

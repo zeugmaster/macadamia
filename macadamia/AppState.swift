@@ -7,8 +7,16 @@
 
 import Foundation
 
+enum DeepLink: Equatable {
+    case contactless
+}
+
 @MainActor
 class AppState: ObservableObject {
+    
+    static let shared = AppState()
+    
+    @Published var pendingDeepLink: DeepLink?
     
     private static let conversionUnitKey = "PreferredCurrencyConversionUnit"
     private static let lastRNackHashKey = "LastReleaseNotesAcknoledgedHash"

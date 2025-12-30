@@ -7,7 +7,7 @@ let logger = Logger(subsystem: "macadamia Wallet", category: "Interface & Databa
 @main
 struct macadamiaApp: App {
     
-    @StateObject private var appState = AppState()
+    @StateObject private var appState = AppState.shared
     @StateObject private var nostrService = NostrService()
 
     var body: some Scene {

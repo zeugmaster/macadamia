@@ -37,12 +37,15 @@ struct ContentView: View {
         set {}
     }
 
+    @EnvironmentObject private var appState: AppState
+    
     @State private var releaseNotesPopoverShowing = false
     @State private var onboardingState: OnboardingUIState = .hidden
     
     @State private var selectedTab: Tab = .wallet
     
     @State private var urlState: URLState?
+    @State private var pendingNavigation: WalletView.Destination?
     
     @State private var showAlert = false
     @State private var currentAlert: AlertDetail?
@@ -59,7 +62,7 @@ struct ContentView: View {
             // FIXME: FOR SOME REASON TRACKING TAB SELECTION LEADS TO FUNNY BEHAVIOUR
             TabView(selection: $selectedTab) {
                 // First tab content
-                WalletView(urlState: $urlState)
+                WalletView(urlState: $urlState, pendingNavigation: $pendingNavigation)
                     .tabItem {
                         Label("Wallet", systemImage: "bitcoinsign.circle")
                     }
@@ -142,6 +145,11 @@ struct ContentView: View {
         .onOpenURL { url in
             handleUrl(url)
         }
+        .onChange(of: appState.pendingDeepLink) { _, newValue in
+            guard let deepLink = newValue else { return }
+            handleDeepLink(deepLink)
+            appState.pendingDeepLink = nil
+        }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
 
@@ -189,6 +197,16 @@ struct ContentView: View {
          } else {
              displayAlert(alert: AlertDetail(title: "Unsupported URL Scheme", description: "The system passed an unexpected URL \(url)"))
          }
+    }
+    
+    func handleDeepLink(_ deepLink: DeepLink) {
+        logger.info("Handling deep link: \(String(describing: deepLink))")
+        selectedTab = .wallet
+        
+        switch deepLink {
+        case .contactless:
+            pendingNavigation = .contactless
+        }
     }
 
     private func displayAlert(alert: AlertDetail) {
