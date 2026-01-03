@@ -67,7 +67,7 @@ struct SettingsView: View {
                         }
                     } label: {
                         HStack {
-                            Text("View source on Github")
+                            Text("View source on GitHub")
                             Spacer()
                             Image(systemName: "rectangle.portrait.and.arrow.right")
                                 .foregroundStyle(.secondary)

@@ -284,36 +284,3 @@ struct RequestView: View {
 //#Preview {
 //    RequestView()
 //}
-
-struct CopyButton: View {
-    @Binding var content: String
-    
-    @State private var copied = false
-    
-    var body: some View {
-        Button {
-            if copied { return }
-            UIPasteboard.general.string = content
-            withAnimation {
-                copied = true
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                withAnimation {
-                    copied = false
-                }
-            }
-        } label: {
-            HStack {
-                Text("Copy")
-                Spacer()
-                Image(systemName: copied ? "list.clipboard.fill" : "clipboard")
-            }
-        }
-    }
-}
-
-#Preview {
-    List {
-        CopyButton(content: .constant("this goes to the clipboard"))
-    }
-}
