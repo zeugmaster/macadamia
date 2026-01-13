@@ -26,6 +26,10 @@ struct InputValidator {
             type = .bolt12Offer
         case _ where input.lowercased().hasPrefix("creq"):
             type = .creq
+        case _ where input.lowercased().hasPrefix("lnurl"):
+            type = .lnurlPay
+        case _ where isLightningAddress(input):
+            type = .lightningAddress
         default:
             if let pubkeyData = try? input.bytes,
                let _ = try? secp256k1.Signing.PublicKey(dataRepresentation: pubkeyData,
@@ -40,6 +44,15 @@ struct InputValidator {
         }
         return .valid(InputView.Result(payload: input, type: type))
     }
+    
+    private static func isLightningAddress(_ string: String) -> Bool {
+        let components = string.split(separator: "@")
+        guard components.count == 2 else { return false }
+        let username = components[0]
+        let domain = components[1]
+        guard !username.isEmpty, !domain.isEmpty else { return false }
+        return domain.contains(".")
+    }
 }
 
 struct InputView: View {
@@ -49,7 +62,7 @@ struct InputView: View {
     }
     
     enum InputType {
-        case bolt11Invoice, bolt12Offer, token, creq, publicKey
+        case bolt11Invoice, bolt12Offer, token, creq, publicKey, lnurlPay, lightningAddress
     }
     
     private let invalidScanRetryDelay = 3.0
@@ -175,7 +188,7 @@ struct InputView: View {
 }
 
 struct SupportedTypeIndicator: View {
-    let allTypes: [InputView.InputType] = [.bolt11Invoice, .bolt12Offer, .creq, .publicKey, .token]
+    let allTypes: [InputView.InputType] = [.bolt11Invoice, .bolt12Offer, .creq, .publicKey, .token, .lnurlPay, .lightningAddress]
     let supportedTypes: [InputView.InputType]
     
     var prioritized: [InputView.InputType] {
@@ -187,11 +200,13 @@ struct SupportedTypeIndicator: View {
     func labelForType(_ type: InputView.InputType) -> String {
         var label: String
         switch type {
-            case .bolt11Invoice: label = "Invoice"
-            case .bolt12Offer:   label = "Offer"
-            case .creq:          label = "Request"
-            case .publicKey:     label = "Public Key"
-            case .token:         label = "Token"
+            case .bolt11Invoice:     label = "Invoice"
+            case .bolt12Offer:       label = "Offer"
+            case .creq:              label = "Request"
+            case .publicKey:         label = "Public Key"
+            case .token:             label = "Token"
+            case .lnurlPay:          label = "LNURL-pay"
+            case .lightningAddress:  label = "Lightning Address"
         }
         return label
     }
