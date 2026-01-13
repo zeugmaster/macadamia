@@ -19,6 +19,29 @@ extension URL {
     }
 }
 
+struct DismissToRootAction: Sendable {
+    private let action: @MainActor @Sendable () -> Void
+    
+    init(_ action: @escaping @MainActor @Sendable () -> Void = { @MainActor in }) {
+        self.action = action
+    }
+    
+    @MainActor
+    func callAsFunction() {
+        action()
+    }
+}
+private struct DismissToRootKey: EnvironmentKey {
+    static let defaultValue = DismissToRootAction()
+}
+
+extension EnvironmentValues {
+    var dismissToRoot: DismissToRootAction {
+        get { self[DismissToRootKey.self] }
+        set { self[DismissToRootKey.self] = newValue }
+    }
+}
+
 struct AdaptiveDynamicTypeModifier: ViewModifier {
     @Environment(\.sizeCategory) var sizeCategory
     let text: String
