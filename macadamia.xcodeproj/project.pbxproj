@@ -10,6 +10,7 @@
 		370A2B332EBFD23800C4A6A5 /* Bolt11 in Frameworks */ = {isa = PBXBuildFile; productRef = 370A2B322EBFD23800C4A6A5 /* Bolt11 */; };
 		370A83FF2CB94CCD0039A413 /* .swiftformat in Resources */ = {isa = PBXBuildFile; fileRef = 370A83FE2CB94CCD0039A413 /* .swiftformat */; };
 		370A84072CC18AEE0039A413 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 370A84062CC18AEE0039A413 /* Flow */; };
+		370F7F552F16AC6400C625C0 /* LNURL-Swift in Frameworks */ = {isa = PBXBuildFile; productRef = 370F7F542F16AC6400C625C0 /* LNURL-Swift */; };
 		371AA9132E33EB61006D487F /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 371AA9122E33EB61006D487F /* CashuSwift */; };
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
 		3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3725D4D72CD5001A0037DD08 /* AVKit.framework */; };
@@ -157,6 +158,7 @@
 				377D26262E1FDE7800CFB880 /* URUI in Frameworks */,
 				37A988492EBF9A7C0065FCE6 /* NostrSDK in Frameworks */,
 				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
+				370F7F552F16AC6400C625C0 /* LNURL-Swift in Frameworks */,
 				371AA9132E33EB61006D487F /* CashuSwift in Frameworks */,
 				370A2B332EBFD23800C4A6A5 /* Bolt11 in Frameworks */,
 				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
@@ -288,6 +290,7 @@
 				371AA9122E33EB61006D487F /* CashuSwift */,
 				37A988482EBF9A7C0065FCE6 /* NostrSDK */,
 				370A2B322EBFD23800C4A6A5 /* Bolt11 */,
+				370F7F542F16AC6400C625C0 /* LNURL-Swift */,
 			);
 			productName = macadamia;
 			productReference = 372034B62B29E1BC00C4F955 /* macadamia.app */;
@@ -384,6 +387,7 @@
 				371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */,
 				37A988472EBF9A7C0065FCE6 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */,
 				370A2B312EBFD23800C4A6A5 /* XCRemoteSwiftPackageReference "Bolt11" */,
+				370F7F532F16AC6400C625C0 /* XCRemoteSwiftPackageReference "LNURL-Swift" */,
 			);
 			productRefGroup = 372034B72B29E1BC00C4F955 /* Products */;
 			projectDirPath = "";
@@ -846,6 +850,14 @@
 				minimumVersion = 3.0.0;
 			};
 		};
+		370F7F532F16AC6400C625C0 /* XCRemoteSwiftPackageReference "LNURL-Swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/zeugmaster/LNURL-Swift";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.1.0;
+			};
+		};
 		371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/zeugmaster/cashu-swift.git";
@@ -914,6 +926,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
 			productName = Flow;
+		};
+		370F7F542F16AC6400C625C0 /* LNURL-Swift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 370F7F532F16AC6400C625C0 /* XCRemoteSwiftPackageReference "LNURL-Swift" */;
+			productName = "LNURL-Swift";
 		};
 		371AA9122E33EB61006D487F /* CashuSwift */ = {
 			isa = XCSwiftPackageProductDependency;

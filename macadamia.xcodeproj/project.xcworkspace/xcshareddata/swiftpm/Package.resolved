@@ -1,5 +1,5 @@
 {
-  "originHash" : "be9d253f6c2a82f6b1cd6b4854255e6c7abf65583a48c23989c4ad497ac66b55",
+  "originHash" : "d722d24772482d94828da0c82fb16a54eb93e0f5224e225919393f91bcdfd636",
   "pins" : [
     {
       "identity" : "base58",
@@ -107,6 +107,15 @@
       "state" : {
         "revision" : "e45a26384239e028ec87fbcc788f513b67e10d8f",
         "version" : "1.9.0"
+      }
+    },
+    {
+      "identity" : "lnurl-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/zeugmaster/LNURL-Swift",
+      "state" : {
+        "revision" : "f62180e2d76f910a30a2a0b39d26f9ad4e70abaa",
+        "version" : "0.1.0"
       }
     },
     {

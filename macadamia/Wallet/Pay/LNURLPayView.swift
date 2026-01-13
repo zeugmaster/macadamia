@@ -8,8 +8,11 @@
 import SwiftUI
 
 struct LNURLPayView: View {
+    
+    @State private var actionButtonState = ActionButtonState.idle("...")
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        
     }
 }
 
