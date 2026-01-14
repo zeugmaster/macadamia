@@ -33,6 +33,7 @@ struct WalletView: View {
         case reqPay(req: CashuSwift.PaymentRequest)
         case reqView
         case contactless
+        case lnurl(userInput: String)
 
         var id: String {
             switch self {
@@ -50,6 +51,8 @@ struct WalletView: View {
                 return "reqView"
             case .contactless:
                 return "contactless"
+            case .lnurl(_):
+                return "lnurl"
             }
         }
     }
@@ -134,7 +137,7 @@ struct WalletView: View {
                     }
                     
                     // MARK: - SCANNER
-                    InputViewModalButton(inputTypes: [.bolt11Invoice, .token, .creq]) {
+                    InputViewModalButton(inputTypes: [.bolt11Invoice, .token, .creq, .lightningAddress, .lnurlPay]) {
                         Image(systemName: "qrcode")
                             .font(.largeTitle)
                             .fontWeight(.semibold)
@@ -165,7 +168,10 @@ struct WalletView: View {
                             } catch {
                                 displayAlert(alert: AlertDetail(with: error))
                             }
+                        case .lightningAddress, .lnurlPay:
+                            navigationDestination = .lnurl(userInput: result.payload)
                         default:
+                            // TODO: ADD LOGGING
                             break
                         }
                     }
@@ -227,6 +233,8 @@ struct WalletView: View {
                     RequestView()
                 case .contactless:
                     Contactless()
+                case .lnurl(userInput: let userInput):
+                    LNURLPayView(userInput: userInput)
                 }
             }
             .onChange(of: urlState) { oldValue, newValue in
