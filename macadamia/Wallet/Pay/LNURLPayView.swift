@@ -101,9 +101,26 @@ struct LNURLPayView: View {
     }
     
     private func requestInvoice() {
-        print("requestInvoice called")
+        guard let payResponse else {
+            return
+        }
         
+        actionButtonState = .loading()
         
+        Task {
+            do {
+                let paymentRequest = try await LNURL.shared.pay.requestInvoice(from: payResponse,
+                                                                               amountMsat: Int64(amount * 1000))
+                
+                
+            } catch {
+                actionButtonState = .fail()
+                displayAlert(alert: AlertDetail(with: error))
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    actionButtonState = .idle("Next", action: { requestInvoice() })
+                }
+            }
+        }
     }
     
     private func displayAlert(alert: AlertDetail) {
