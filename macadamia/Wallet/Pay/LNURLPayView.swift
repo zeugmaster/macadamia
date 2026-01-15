@@ -17,6 +17,7 @@ struct LNURLPayView: View {
     @State private var actionButtonState = ActionButtonState.idle("...")
     
     @State private var payResponse: LNURLPayResponse?
+    @State private var invoiceString: String?
     
     @State private var showAlert = false
     @State private var currentAlert: AlertDetail?
@@ -76,6 +77,9 @@ struct LNURLPayView: View {
                     .actionDisabled(!inputWithinfLimits)
             }
         }
+        .navigationDestination(item: $invoiceString) { invoice in
+            MeltView(invoice: invoice)
+        }
         .onAppear {
             actionButtonState = .idle("Next", action: {
                 requestInvoice()
@@ -112,7 +116,7 @@ struct LNURLPayView: View {
                 let paymentRequest = try await LNURL.shared.pay.requestInvoice(from: payResponse,
                                                                                amountMsat: Int64(amount * 1000))
                 
-                
+                invoiceString = paymentRequest.pr
             } catch {
                 actionButtonState = .fail()
                 displayAlert(alert: AlertDetail(with: error))

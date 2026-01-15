@@ -23,6 +23,7 @@ struct MeltView: View {
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismissToRoot) private var dismissToRoot
     
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
@@ -650,7 +651,7 @@ struct MeltView: View {
         buttonState = .success("Paid!")
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            dismiss()
+            dismissToRoot()
         }
     }
     
@@ -659,7 +660,7 @@ struct MeltView: View {
             e.proofs?.setState(.valid)
             e.visible = false
         }
-        dismiss()
+        dismissToRoot()
     }
     
     private func displayAlert(alert: AlertDetail) {

@@ -23,8 +23,6 @@ struct WalletView: View {
     @Binding var urlState: URLState?
     @Binding var pendingNavigation: Destination?
     
-    @State private var navigationPath = NavigationPath()
-    
     enum Destination: Identifiable, Hashable {
         case mint
         case send
@@ -71,7 +69,7 @@ struct WalletView: View {
     }
 
     var body: some View {
-        NavigationStack(path: $navigationPath) {
+        NavigationStack {
             VStack {
                 Spacer(minLength: 40)
                 ZStack(alignment: .top) {
@@ -259,7 +257,7 @@ struct WalletView: View {
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
         .environment(\.dismissToRoot, DismissToRootAction({ @MainActor in
-            navigationPath = NavigationPath()
+            navigationDestination = nil
         }))
     }
     
