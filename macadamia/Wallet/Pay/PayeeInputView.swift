@@ -16,6 +16,9 @@ struct PayeeInputView: View {
     
     @State private var input: InputView.Result?
     
+    @State private var showAlert = false
+    @State private var currentAlert: AlertDetail?
+    
     private var hideScanner: Bool {
         textFieldInFocus || !textFieldInput.isEmpty
     }
@@ -31,7 +34,7 @@ struct PayeeInputView: View {
                     HStack {
                         TextField("", text: $textFieldInput)
                             .onSubmit {
-                                print("user hit submit via keyboard")
+                                onTextInputSubmit()
                             }
                             .keyboardType(.emailAddress)
                             .textInputAutocapitalization(.never)
@@ -54,7 +57,7 @@ struct PayeeInputView: View {
                 
                 Button {
                     if textFieldInput.isEmpty { return }
-                    print("submit button pressed.")
+                    onTextInputSubmit()
                 } label: {
                     Image(systemName: "arrow.right")
                         .font(.title2)
@@ -80,12 +83,36 @@ struct PayeeInputView: View {
         .navigationDestination(item: $input) { input in
             switch input.type {
             case .bolt11Invoice:
-                EmptyView()
+                // go directly to melt view
+                MeltView(invoice: input.payload)
+            case .lightningAddress, .lnurlPay:
+                LNURLPayView(userInput: input.payload)
             default:
                 Text("Unsupported Input")
             }
         }
         .navigationTitle("Pay")
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+    }
+    
+    private func onTextInputSubmit() {
+        guard !textFieldInput.isEmpty else {
+            return
+        }
+        
+        let inputValidationResult = InputValidator.validate(textFieldInput, supportedTypes: [.bolt11Invoice, .lightningAddress, .lnurlPay])
+        
+        switch inputValidationResult {
+        case .valid(let result):
+            input = result
+        case .invalid(let errorMessage):
+            displayAlert(alert: AlertDetail(title: "Invalid input", description: errorMessage))
+        }
+    }
+    
+    private func displayAlert(alert: AlertDetail) {
+        currentAlert = alert
+        showAlert = true
     }
 }
 
