@@ -32,6 +32,7 @@ struct WalletView: View {
         case reqView
         case contactless
         case lnurl(userInput: String)
+        case payeeInput
 
         var id: String {
             switch self {
@@ -51,6 +52,8 @@ struct WalletView: View {
                 return "contactless"
             case .lnurl(_):
                 return "lnurl"
+            case .payeeInput:
+                return "payeeInput"
             }
         }
     }
@@ -201,7 +204,7 @@ struct WalletView: View {
                         }
                         .background(Color.black)
                         Templates.MenuItem {
-                            navigationDestination = .melt(invoice: nil)
+                            navigationDestination = .payeeInput
                         } label: { fade in
                             menuButtonLabel(title: "Lightning",
                                             subtitle: "Pay invoice",
@@ -233,6 +236,8 @@ struct WalletView: View {
                     Contactless()
                 case .lnurl(userInput: let userInput):
                     LNURLPayView(userInput: userInput)
+                case .payeeInput:
+                    PayeeInputView()
                 }
             }
             .onChange(of: urlState) { oldValue, newValue in

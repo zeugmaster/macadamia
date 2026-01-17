@@ -56,12 +56,12 @@ struct InputValidator {
 }
 
 struct InputView: View {
-    struct Result {
+    struct Result: Hashable {
         let payload: String
         let type: InputType
     }
     
-    enum InputType {
+    enum InputType: Hashable {
         case bolt11Invoice, bolt12Offer, token, creq, publicKey, lnurlPay, lightningAddress
     }
     
