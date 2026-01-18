@@ -39,8 +39,9 @@ struct LNURLPayView: View {
         ZStack {
             List {
                 // show lnurl pay response and optional amount selection
-                if let payResponse {
-                    Section {
+                
+                Section {
+                    if let payResponse {
                         NumericalInputView(output: $amount,
                                            baseUnit: .sat,
                                            exchangeRates: appState.exchangeRates,
@@ -58,14 +59,17 @@ struct LNURLPayView: View {
                             .animation(.linear(duration: 0.2), value: inputWithinfLimits)
                             .font(.caption)
                         }
+                    } else {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
+                        }
+                        .listRowBackground(EmptyView())
                     }
-                }
-                
-                Section {
+                } header: {
                     Text(userInput)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .listRowBackground(Color.clear)
+                        .lineLimit(1)
                 }
                 
                 Spacer(minLength: 60)
@@ -94,7 +98,9 @@ struct LNURLPayView: View {
         Task {
             do {
                 let response = try await LNURL.shared.fetchPayRequest(userInput)
-                payResponse = response
+                withAnimation {
+                    payResponse = response
+                }
                 if response.minSendable == response.maxSendable {
                     amount = Int(response.minSendableSat)
                 }
