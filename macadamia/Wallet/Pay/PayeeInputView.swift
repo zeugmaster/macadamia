@@ -71,7 +71,7 @@ struct PayeeInputView: View {
             
             Spacer().frame(height: 20)
             
-            InputView(supportedTypes: [.bolt11Invoice, .lightningAddress, .lnurlPay]) { result in
+            InputView(supportedTypes: [.bolt11Invoice, .lightningAddress, .lnurlPay, .merchantCode]) { result in
                 input = result
             }
             .opacity(hideScanner ? 0 : 1)
@@ -85,7 +85,8 @@ struct PayeeInputView: View {
             case .bolt11Invoice:
                 // go directly to melt view
                 MeltView(invoice: input.payload)
-            case .lightningAddress, .lnurlPay:
+            case .lightningAddress, .lnurlPay, .merchantCode:
+                // merchantCode payload is already converted to a lightning address
                 LNURLPayView(userInput: input.payload)
             default:
                 Text("Unsupported Input")

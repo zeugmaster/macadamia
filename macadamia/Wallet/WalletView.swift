@@ -138,7 +138,7 @@ struct WalletView: View {
                     }
                     
                     // MARK: - SCANNER
-                    InputViewModalButton(inputTypes: [.bolt11Invoice, .token, .creq, .lightningAddress, .lnurlPay]) {
+                    InputViewModalButton(inputTypes: [.bolt11Invoice, .token, .creq, .lightningAddress, .lnurlPay, .merchantCode]) {
                         Image(systemName: "qrcode")
                             .font(.largeTitle)
                             .fontWeight(.semibold)
@@ -169,7 +169,8 @@ struct WalletView: View {
                             } catch {
                                 displayAlert(alert: AlertDetail(with: error))
                             }
-                        case .lightningAddress, .lnurlPay:
+                        case .lightningAddress, .lnurlPay, .merchantCode:
+                            // merchantCode payload is already converted to a lightning address
                             navigationDestination = .lnurl(userInput: result.payload)
                         default:
                             // TODO: ADD LOGGING

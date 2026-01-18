@@ -2,6 +2,7 @@ import SwiftUI
 import AVFoundation
 import secp256k1
 import Flow
+import LNURL_Swift
 
 struct InputValidator {
     enum ValidationResult {
@@ -30,6 +31,8 @@ struct InputValidator {
             type = .lnurlPay
         case _ where isLightningAddress(input):
             type = .lightningAddress
+        case _ where MerchantParser.isMerchantQRCode(input):
+            type = .merchantCode
         default:
             if let pubkeyData = try? input.bytes,
                let _ = try? secp256k1.Signing.PublicKey(dataRepresentation: pubkeyData,
@@ -41,6 +44,13 @@ struct InputValidator {
         }
         guard supportedTypes.contains(type) else {
             return .invalid("Invalid input: \(type)")
+        }
+        // For merchant codes, convert to lightning address before returning
+        if type == .merchantCode {
+            guard let lightningAddress = MerchantParser.convertMerchantQRToLightningAddress(qrContent: input, network: .mainnet) else {
+                return .invalid("Could not parse merchant code")
+            }
+            return .valid(InputView.Result(payload: lightningAddress, type: .merchantCode))
         }
         return .valid(InputView.Result(payload: input, type: type))
     }
@@ -62,7 +72,7 @@ struct InputView: View {
     }
     
     enum InputType: Hashable {
-        case bolt11Invoice, bolt12Offer, token, creq, publicKey, lnurlPay, lightningAddress
+        case bolt11Invoice, bolt12Offer, token, creq, publicKey, lnurlPay, lightningAddress, merchantCode
     }
     
     private let invalidScanRetryDelay = 3.0
@@ -188,7 +198,7 @@ struct InputView: View {
 }
 
 struct SupportedTypeIndicator: View {
-    let allTypes: [InputView.InputType] = [.bolt11Invoice, .bolt12Offer, .creq, .publicKey, .token, .lnurlPay, .lightningAddress]
+    let allTypes: [InputView.InputType] = [.bolt11Invoice, .bolt12Offer, .creq, .publicKey, .token, .lnurlPay, .lightningAddress, .merchantCode]
     let supportedTypes: [InputView.InputType]
     
     var prioritized: [InputView.InputType] {
@@ -207,6 +217,7 @@ struct SupportedTypeIndicator: View {
             case .token:             label = "Token"
             case .lnurlPay:          label = "LNURL-pay"
             case .lightningAddress:  label = "Lightning Address"
+            case .merchantCode:      label = "Merchant QR"
         }
         return label
     }
