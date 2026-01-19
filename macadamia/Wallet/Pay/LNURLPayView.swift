@@ -45,7 +45,10 @@ struct LNURLPayView: View {
                         NumericalInputView(output: $amount,
                                            baseUnit: .sat,
                                            exchangeRates: appState.exchangeRates,
-                                           onReturn: {})
+                                           onReturn: {
+                            guard !invalidUserInput else { return }
+                            requestInvoice() 
+                        })
                         .disabled(payResponse.maxSendable == payResponse.minSendable)
                         if payResponse.minSendable != payResponse.maxSendable {
                             HStack {
@@ -63,6 +66,7 @@ struct LNURLPayView: View {
                         HStack {
                             Spacer()
                             ProgressView()
+                                .controlSize(.large)
                             Spacer()
                         }
                         .listRowBackground(EmptyView())
