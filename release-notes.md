@@ -1,17 +1,11 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Payment Requests 🫴**
+** LNURL & Lightning Address 📨 **
 
-You can now settle or create a Cashu payment request! This feature also includes sending and receiving ecash via Nostr DM (NIP-17). 
+This update adds the ability to pay to LNURL and Lightning Addresses!
 
-**Contactless Payments 📡**
-
-Settle a payment request from a terminal using NFC!
-
-**Under the hood 🔧**
-
-This version of *macadamia Wallet* now has support for V2 keysets together with a host of other improvements and bug fixes.
+As part of the upgrade users are also able to resolve merchant QR codes from terminals that support ScanToPay codes (popular with retailers in South Africa). 
 
 ------
 
