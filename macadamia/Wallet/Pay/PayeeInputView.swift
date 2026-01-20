@@ -28,7 +28,7 @@ struct PayeeInputView: View {
             HStack {
                 ZStack(alignment: .leading) {
                     if textFieldInput.isEmpty {
-                        Text("satoshin@gmx.net")
+                        Text("satoshin@gmx.com")
                             .opacity(0.4)
                     }
                     HStack {

@@ -1,7 +1,7 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-** LNURL & Lightning Address 📨 **
+**LNURL & Lightning Address 📨**
 
 This update adds the ability to pay to LNURL and Lightning Addresses!
 
