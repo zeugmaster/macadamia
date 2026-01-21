@@ -114,8 +114,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/LNURL-Swift",
       "state" : {
-        "revision" : "b841c42aa724b756ace3725c7d5378af99e89fd1",
-        "version" : "0.1.2"
+        "revision" : "e091ae07139731ac8259900ee436dff2b5eb5f15",
+        "version" : "0.1.3"
       }
     },
     {
