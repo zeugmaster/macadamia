@@ -15,8 +15,6 @@
 		372034BE2B29E1BD00C4F955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 372034BD2B29E1BD00C4F955 /* Assets.xcassets */; };
 		3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3725D4D72CD5001A0037DD08 /* AVKit.framework */; };
 		373CE6582EAE6D66000AC589 /* pull_request_template.md in Resources */ = {isa = PBXBuildFile; fileRef = 373CE6572EAE6D54000AC589 /* pull_request_template.md */; };
-		374287032EFEE89E00AE0CBD /* ContactlessPaymentIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374287012EFEE89E00AE0CBD /* ContactlessPaymentIntent.swift */; };
-		374287042EFEE89E00AE0CBD /* AppShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374287002EFEE89E00AE0CBD /* AppShortcuts.swift */; };
 		376E88432BE5468B0026FF8D /* Popovers in Frameworks */ = {isa = PBXBuildFile; productRef = 376E88422BE5468B0026FF8D /* Popovers */; };
 		376F43B22B4FEC0D00E55B0F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 376F43B12B4FEC0D00E55B0F /* README.md */; };
 		377A1BC82E6D9E3B00BC1BC1 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
@@ -88,8 +86,6 @@
 		372034BD2B29E1BD00C4F955 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3725D4D72CD5001A0037DD08 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		373CE6572EAE6D54000AC589 /* pull_request_template.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = pull_request_template.md; sourceTree = "<group>"; };
-		374287002EFEE89E00AE0CBD /* AppShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShortcuts.swift; sourceTree = "<group>"; };
-		374287012EFEE89E00AE0CBD /* ContactlessPaymentIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactlessPaymentIntent.swift; sourceTree = "<group>"; };
 		376F43B12B4FEC0D00E55B0F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		377FFF012BC451AB00DD2635 /* release-notes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "release-notes.md"; sourceTree = "<group>"; };
 		378B20472D09F3FD003FEEBD /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
@@ -141,6 +137,7 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		377A1BAA2E6CF53F00BC1BC1 /* macadamiaTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = macadamiaTests; sourceTree = "<group>"; };
 		377A1BAD2E6CF54900BC1BC1 /* Preview Content */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "Preview Content"; sourceTree = "<group>"; };
+		379112AF2F2CAF0300513DA5 /* Intents */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Intents; sourceTree = "<group>"; };
 		3793B9A12D0047140077F755 /* Wallet */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (377A1BC62E6D9E1000BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Wallet; sourceTree = "<group>"; };
 		3793B9A22D0049AD0077F755 /* Mints */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Mints; sourceTree = "<group>"; };
 		3793B9A42D0049F60077F755 /* PersistentModelV1 */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (377A1BCA2E6D9ED900BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = PersistentModelV1; sourceTree = "<group>"; };
@@ -216,7 +213,7 @@
 		372034B82B29E1BC00C4F955 /* macadamia */ = {
 			isa = PBXGroup;
 			children = (
-				374287022EFEE89E00AE0CBD /* Intents 2 */,
+				379112AF2F2CAF0300513DA5 /* Intents */,
 				379A27EE2E3029A800827CC1 /* macadamia.entitlements */,
 				37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */,
 				372034B92B29E1BC00C4F955 /* macadamiaApp.swift */,
@@ -245,15 +242,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		374287022EFEE89E00AE0CBD /* Intents 2 */ = {
-			isa = PBXGroup;
-			children = (
-				374287002EFEE89E00AE0CBD /* AppShortcuts.swift */,
-				374287012EFEE89E00AE0CBD /* ContactlessPaymentIntent.swift */,
-			);
-			path = "Intents 2";
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -273,6 +261,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				377A1BAD2E6CF54900BC1BC1 /* Preview Content */,
+				379112AF2F2CAF0300513DA5 /* Intents */,
 				3793B9A12D0047140077F755 /* Wallet */,
 				3793B9A22D0049AD0077F755 /* Mints */,
 				3793B9A42D0049F60077F755 /* PersistentModelV1 */,
@@ -439,8 +428,6 @@
 				37C4CC902E5CB1A90028E4FE /* Error.swift in Sources */,
 				37C4CC912E5CB1A90028E4FE /* AppState.swift in Sources */,
 				37C4CC922E5CB1A90028E4FE /* macadamiaApp.swift in Sources */,
-				374287032EFEE89E00AE0CBD /* ContactlessPaymentIntent.swift in Sources */,
-				374287042EFEE89E00AE0CBD /* AppShortcuts.swift in Sources */,
 				37C4CC932E5CB1A90028E4FE /* TOS.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

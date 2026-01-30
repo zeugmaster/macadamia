@@ -19,4 +19,3 @@ struct ContactlessPaymentIntent: AppIntent {
     }
 }
 
-

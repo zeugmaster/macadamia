@@ -23,4 +23,3 @@ struct AppShortcuts: AppShortcutsProvider {
     }
 }
 
-
