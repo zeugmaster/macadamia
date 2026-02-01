@@ -89,7 +89,7 @@ struct LNURLPayView: View {
             MeltView(invoice: invoice)
         }
         .onAppear {
-            actionButtonState = .idle("Next", action: {
+            actionButtonState = .idle(String(localized: "Next"), action: {
                 requestInvoice()
             })
             
@@ -131,7 +131,7 @@ struct LNURLPayView: View {
                 actionButtonState = .fail()
                 displayAlert(alert: AlertDetail(with: error))
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    actionButtonState = .idle("Next", action: { requestInvoice() })
+                    actionButtonState = .idle(String(localized: "Next"), action: { requestInvoice() })
                 }
             }
         }

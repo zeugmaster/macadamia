@@ -32,7 +32,7 @@ struct RedeemLaterView: View {
                 HStack {
                     Text("Mint:")
                     Spacer()
-                    Text(mint?.displayName ?? "nil")
+                    Text(mint?.displayName ?? String(localized: "nil"))
                 }
                 .lineLimit(1)
                 HStack {
@@ -50,7 +50,7 @@ struct RedeemLaterView: View {
                 Text("cashu Token")
             }
             .onAppear {
-                buttonState = .idle("Redeem", action: {
+                buttonState = .idle(String(localized: "Redeem"), action: {
                     redeem()
                 })
             }
@@ -88,8 +88,8 @@ struct RedeemLaterView: View {
         }
         
         guard let keyData = wallet.privateKeyData else {
-            displayAlert(alert: AlertDetail(title: "Error",
-                                            description: "Unable to read private key from database."))
+            displayAlert(alert: AlertDetail(title: String(localized: "Error"),
+                                            description: String(localized: "Unable to read private key from database.")))
             return
         }
         

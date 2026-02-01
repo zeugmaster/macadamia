@@ -66,11 +66,11 @@ struct SwapView: View {
         var title: String {
             switch self {
             case .fullSendWarning:
-                return "Transfer amount approaching the total balance risks payment failure due to fees."
+                return String(localized: "Transfer amount approaching the total balance risks payment failure due to fees.")
             case .insufficientFunds: 
-                return "Insufficient balance."
+                return String(localized: "Insufficient balance.")
             case .defaultRemark:
-                return "A transfers incurs fees with the selected mints."
+                return String(localized: "A transfers incurs fees with the selected mints.")
             }
         }
         
@@ -102,7 +102,7 @@ struct SwapView: View {
         List {
             Section {
                 VStack(alignment: .leading) {
-                    MintPicker(label: "From: ", selectedMint: $fromMint, allowsNoneState: false, hide: $toMint)
+                    MintPicker(label: String(localized: "From: "), selectedMint: $fromMint, allowsNoneState: false, hide: $toMint)
                     HStack {
                         Text("Balance:")
                         Spacer()
@@ -114,7 +114,7 @@ struct SwapView: View {
                     .animation(.linear(duration: 0.2), value: amount ?? 0 > selectedMintBalance)
                 }
                 
-                MintPicker(label: "To: ", selectedMint: $toMint, allowsNoneState: true, hide: $fromMint)
+                MintPicker(label: String(localized: "To: "), selectedMint: $toMint, allowsNoneState: true, hide: $fromMint)
             }
 
             Section {
@@ -139,9 +139,9 @@ struct SwapView: View {
 
             Section {
                 VStack(alignment: .leading, spacing: 12) {
-                    progressRow(title: "Getting mint quote...", isActive: state == .setup, showCheckmark: shouldShowSetupCheckmark)
-                    progressRow(title: "Melting ecash...", isActive: state == .melting, showCheckmark: shouldShowMeltingCheckmark)
-                    progressRow(title: "Minting ecash...", isActive: state == .minting, showCheckmark: state == .success)
+                    progressRow(title: String(localized: "Getting mint quote..."), isActive: state == .setup, showCheckmark: shouldShowSetupCheckmark)
+                    progressRow(title: String(localized: "Melting ecash..."), isActive: state == .melting, showCheckmark: shouldShowMeltingCheckmark)
+                    progressRow(title: String(localized: "Minting ecash..."), isActive: state == .minting, showCheckmark: state == .success)
                 }
                 .opacity(isProgressSectionVisible ? 1.0 : 0)
                 .animation(.easeInOut(duration: 0.2), value: state)
@@ -190,7 +190,7 @@ struct SwapView: View {
             }
         }
         .onAppear {
-            buttonState = .idle("Transfer", action: { swap() })
+            buttonState = .idle(String(localized: "Transfer"), action: { swap() })
         }
         .onChange(of: swapManager.singleTransactionState) { _, newState in
             handleStateChange(newState)

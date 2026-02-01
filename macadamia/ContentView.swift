@@ -195,7 +195,7 @@ struct ContentView: View {
              
              urlState = URLState(url: noURLPrefix)
          } else {
-             displayAlert(alert: AlertDetail(title: "Unsupported URL Scheme", description: "The system passed an unexpected URL \(url)"))
+             displayAlert(alert: AlertDetail(title: String(localized: "Unsupported URL Scheme"), description: String(localized: "The system passed an unexpected URL \(url.absoluteString)")))
          }
     }
     

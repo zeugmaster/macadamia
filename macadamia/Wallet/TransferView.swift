@@ -103,7 +103,7 @@ struct TransferView: View {
             }
         }
         .onAppear {
-            buttonState = .idle("Complete Transfer", action: { complete() })
+            buttonState = .idle(String(localized: "Complete Transfer"), action: { complete() })
         }
     }
     
@@ -116,9 +116,9 @@ struct TransferView: View {
             case .loading:
                 buttonState = .loading()
             case .melting:
-                buttonState = .loading("Paying...")
+                buttonState = .loading(String(localized: "Paying..."))
             case .minting:
-                buttonState = .loading("Issuing Ecash")
+                buttonState = .loading(String(localized: "Issuing Ecash"))
             case .success:
                 buttonState = .success()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
@@ -130,21 +130,21 @@ struct TransferView: View {
                 switch error {
                 case let .meltFailure(meltError) as InlineSwapManager.TransferError:
                     
-                    let primary = AlertButton(title: "Remove Payment",
+                    let primary = AlertButton(title: String(localized: "Remove Payment"),
                                                 role: .destructive,
                                                 action: { removeEvent() })
                     
-                    displayAlert(alert: AlertDetail(title: "Unpaid ⚠",
-                                                    description: "This payment did not go through and one or more parts are marked \"unpaid\". The Ecash reserved for this operation is still valid and can be made available by removing the pending transfer event.",
+                    displayAlert(alert: AlertDetail(title: String(localized: "Unpaid ⚠"),
+                                                    description: String(localized: "This payment did not go through and one or more parts are marked \"unpaid\". The Ecash reserved for this operation is still valid and can be made available by removing the pending transfer event."),
                                                     primaryButton: primary))
                     
                 
                 case let .missingData(string) as InlineSwapManager.TransferError:
-                    displayAlert(alert: AlertDetail(title: "Missing Data", description: string))
+                    displayAlert(alert: AlertDetail(title: String(localized: "Missing Data"), description: string))
                 case let error?:
-                    displayAlert(alert: AlertDetail(title: "Error", description: error.localizedDescription))
+                    displayAlert(alert: AlertDetail(title: String(localized: "Error"), description: error.localizedDescription))
                 case nil:
-                    displayAlert(alert: AlertDetail(title: "Something went wrong...", description: "No error provided."))
+                    displayAlert(alert: AlertDetail(title: String(localized: "Something went wrong..."), description: String(localized: "No error provided.")))
                 }
             }
         })

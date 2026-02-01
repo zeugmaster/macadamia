@@ -86,7 +86,7 @@ struct RedeemView<AdditionalControls: View>: View {
                         Section {
                             Text(knownMintFromToken.displayName)
                                 .onAppear {
-                                    buttonState = .idle("Redeem", action: { redeem() })
+                                    buttonState = .idle(String(localized: "Redeem"), action: { redeem() })
                                 }
                                 .foregroundStyle(.secondary)
                         } header: {
@@ -99,10 +99,16 @@ struct RedeemView<AdditionalControls: View>: View {
                                     redeemLater()
                                 } label: {
                                     Spacer()
-                                    Text(didAddLockedToken ? "\(Image(systemName: "checkmark")) Added" : "\(Image(systemName: "hourglass")) Redeem Later")
-                                        .padding(2)
+                                    if didAddLockedToken {
+                                        Image(systemName: "checkmark")
+                                        Text(String(localized: "Added"))
+                                    } else {
+                                        Image(systemName: "hourglass")
+                                        Text(String(localized: "Redeem Later"))
+                                    }
                                     Spacer()
                                 }
+                                .padding(2)
                             }
                             .listRowBackground(EmptyView())
                         case .notLocked:
@@ -120,12 +126,12 @@ struct RedeemView<AdditionalControls: View>: View {
                             #if APP_EXTENSION
                             selector(hideSwapOption: true)
                                 .onAppear {
-                                    buttonState = .idle("Select")
+                                    buttonState = .idle(String(localized: "Select"))
                                 }
                             #else
                             selector(hideSwapOption: false)
                                 .onAppear {
-                                    buttonState = .idle("Select")
+                                    buttonState = .idle(String(localized: "Select"))
                                 }
                             #endif
                         }
@@ -164,7 +170,7 @@ struct RedeemView<AdditionalControls: View>: View {
                         selection = .add
                         
                         if let mintURLString = token.proofsByMint.first?.key {
-                            buttonState = .idle("Add & Redeem", action: {
+                            buttonState = .idle(String(localized: "Add & Redeem"), action: {
                                 addAndRedeem(mintURLstring: mintURLString)
                             })
                         }
@@ -174,7 +180,7 @@ struct RedeemView<AdditionalControls: View>: View {
                             selection = .add
                             
                             if let mintURLString = token.proofsByMint.first?.key {
-                                buttonState = .idle("Add & Redeem", action: {
+                                buttonState = .idle(String(localized: "Add & Redeem"), action: {
                                     addAndRedeem(mintURLstring: mintURLString)
                                 })
                             }
@@ -209,7 +215,7 @@ struct RedeemView<AdditionalControls: View>: View {
                             selection = .swap
                             
                             if let swapTargetMint {
-                                buttonState = .idle("Swap", action: { swap(to: swapTargetMint) })
+                                buttonState = .idle(String(localized: "Swap"), action: { swap(to: swapTargetMint) })
                             }
                         }
                     } footer: {
@@ -247,7 +253,7 @@ struct RedeemView<AdditionalControls: View>: View {
             } catch {
                 buttonState = .fail()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    buttonState = .idle("Add and Redeem", action: redeem)
+                    buttonState = .idle(String(localized: "Add and Redeem"), action: redeem)
                 }
                 redeemLogger.error("could not add mint \(mintURLstring) due to error \(error)")
                 displayAlert(alert: AlertDetail(with: error))
@@ -343,11 +349,11 @@ struct RedeemView<AdditionalControls: View>: View {
             case .ready:
                 break
             case .loading:
-                buttonState = .loading("Preparing...")
+                buttonState = .loading(String(localized: "Preparing..."))
             case .melting:
-                buttonState = .loading("Melting...")
+                buttonState = .loading(String(localized: "Melting..."))
             case .minting:
-                buttonState = .loading("Minting...")
+                buttonState = .loading(String(localized: "Minting..."))
             case .success:
                 buttonState = .success()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -363,7 +369,7 @@ struct RedeemView<AdditionalControls: View>: View {
                     displayAlert(alert: AlertDetail(with: error))
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    buttonState = .idle("Swap", action: { swap(to: mint) })
+                    buttonState = .idle(String(localized: "Swap"), action: { swap(to: mint) })
                 }
             }
         }
@@ -371,7 +377,7 @@ struct RedeemView<AdditionalControls: View>: View {
         if let seed = activeWallet?.seed {
             swapManager.swap(token: token, toMint: mint, seed: seed)
         } else {
-            displayAlert(alert: AlertDetail(title: "This wallet does not appear to have a seed."))
+            displayAlert(alert: AlertDetail(title: String(localized: "This wallet does not appear to have a seed.")))
         }
     }
     

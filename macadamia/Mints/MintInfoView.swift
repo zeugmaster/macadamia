@@ -46,7 +46,7 @@ struct MintInfoView: View {
                 MOTDCell(message: motd, onDismiss: dismissMOTD)
             }
             Section {
-                TextDescriptionCell(description: "URL", text: mint.url.absoluteString)
+                TextDescriptionCell(description: String(localized: "URL"), text: mint.url.absoluteString)
                 VStack(alignment: .leading) {
                     Text("Nickname")
                         .foregroundStyle(.secondary)
@@ -67,33 +67,33 @@ struct MintInfoView: View {
             if let info {
                 Section {
                     if let version = info.version {
-                        TextDescriptionCell(description: "Version", text: version)
+                        TextDescriptionCell(description: String(localized: "Version"), text: version)
                     }
                     if let name = info.name {
-                        TextDescriptionCell(description: "Name", text: name)
+                        TextDescriptionCell(description: String(localized: "Name"), text: name)
                     }
                     if let description = info.description {
-                        TextDescriptionCell(description: "Description", text: description)
+                        TextDescriptionCell(description: String(localized: "Description"), text: description)
                     }
                 }
                 if let nuts = info.nuts {
                     Section {
                         HFlow {
-                            Tag(text: "Mint", enabled: !(nuts.nut04?.disabled ?? true))
-                            Tag(text: "Melt", enabled: !(nuts.nut05?.disabled ?? true))
-                            Tag(text: "Restore", enabled: {
+                            Tag(text: String(localized: "Mint"), enabled: !(nuts.nut04?.disabled ?? true))
+                            Tag(text: String(localized: "Melt"), enabled: !(nuts.nut05?.disabled ?? true))
+                            Tag(text: String(localized: "Restore"), enabled: {
                                 if case .bool(true) = nuts.nut09?.supported {
                                     return true
                                 }
                                 return false
                             }())
-                            Tag(text: "P2PK", enabled: {
+                            Tag(text: String(localized: "P2PK"), enabled: {
                                 if case .bool(true) = nuts.nut11?.supported {
                                     return true
                                 }
                                 return false
                             }())
-                            Tag(text: "MPP", enabled: nuts.nut15 != nil)
+                            Tag(text: String(localized: "MPP"), enabled: nuts.nut15 != nil)
                         }
                         .padding(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                     }

@@ -60,55 +60,55 @@ enum ConversionUnit: String, Codable, CaseIterable {
     
     var displayName: String {
         switch self {
-        case .none: return "None"
-        case .usd: return "US Dollar"
-        case .eur: return "Euro"
-        case .jpy: return "Japanese Yen"
-        case .gbp: return "British Pound"
-        case .aud: return "Australian Dollar"
-        case .cad: return "Canadian Dollar"
-        case .chf: return "Swiss Franc"
-        case .cny: return "Chinese Yuan"
-        case .hkd: return "Hong Kong Dollar"
-        case .nzd: return "New Zealand Dollar"
-        case .sek: return "Swedish Krona"
-        case .krw: return "South Korean Won"
-        case .sgd: return "Singapore Dollar"
-        case .nok: return "Norwegian Krone"
-        case .mxn: return "Mexican Peso"
-        case .inr: return "Indian Rupee"
-        case .brl: return "Brazilian Real"
-        case .rub: return "Russian Ruble"
-        case .try_: return "Turkish Lira"
-        case .zar: return "South African Rand"
-        case .php: return "Philippine Peso"
-        case .thb: return "Thai Baht"
-        case .idr: return "Indonesian Rupiah"
-        case .myr: return "Malaysian Ringgit"
-        case .pln: return "Polish Złoty"
-        case .dkk: return "Danish Krone"
-        case .czk: return "Czech Koruna"
-        case .huf: return "Hungarian Forint"
-        case .ils: return "Israeli Shekel"
-        case .clp: return "Chilean Peso"
-        case .ars: return "Argentine Peso"
-        case .sar: return "Saudi Riyal"
-        case .aed: return "UAE Dirham"
-        case .twd: return "Taiwan Dollar"
-        case .vnd: return "Vietnamese Dong"
-        case .pkr: return "Pakistani Rupee"
-        case .egp: return "Egyptian Pound"
-        case .ngn: return "Nigerian Naira"
-        case .bdt: return "Bangladeshi Taka"
-        case .uah: return "Ukrainian Hryvnia"
-        case .ron: return "Romanian Leu"
-        case .pen: return "Peruvian Sol"
-        case .kwd: return "Kuwaiti Dinar"
-        case .cop: return "Colombian Peso"
-        case .isk: return "Icelandic Króna"
-        case .mad: return "Moroccan Dirham"
-        case .lkr: return "Sri Lankan Rupee"
-        case .mmk: return "Myanmar Kyat"
+        case .none: return String(localized: "None")
+        case .usd: return String(localized: "US Dollar")
+        case .eur: return String(localized: "Euro")
+        case .jpy: return String(localized: "Japanese Yen")
+        case .gbp: return String(localized: "British Pound")
+        case .aud: return String(localized: "Australian Dollar")
+        case .cad: return String(localized: "Canadian Dollar")
+        case .chf: return String(localized: "Swiss Franc")
+        case .cny: return String(localized: "Chinese Yuan")
+        case .hkd: return String(localized: "Hong Kong Dollar")
+        case .nzd: return String(localized: "New Zealand Dollar")
+        case .sek: return String(localized: "Swedish Krona")
+        case .krw: return String(localized: "South Korean Won")
+        case .sgd: return String(localized: "Singapore Dollar")
+        case .nok: return String(localized: "Norwegian Krone")
+        case .mxn: return String(localized: "Mexican Peso")
+        case .inr: return String(localized: "Indian Rupee")
+        case .brl: return String(localized: "Brazilian Real")
+        case .rub: return String(localized: "Russian Ruble")
+        case .try_: return String(localized: "Turkish Lira")
+        case .zar: return String(localized: "South African Rand")
+        case .php: return String(localized: "Philippine Peso")
+        case .thb: return String(localized: "Thai Baht")
+        case .idr: return String(localized: "Indonesian Rupiah")
+        case .myr: return String(localized: "Malaysian Ringgit")
+        case .pln: return String(localized: "Polish Złoty")
+        case .dkk: return String(localized: "Danish Krone")
+        case .czk: return String(localized: "Czech Koruna")
+        case .huf: return String(localized: "Hungarian Forint")
+        case .ils: return String(localized: "Israeli Shekel")
+        case .clp: return String(localized: "Chilean Peso")
+        case .ars: return String(localized: "Argentine Peso")
+        case .sar: return String(localized: "Saudi Riyal")
+        case .aed: return String(localized: "UAE Dirham")
+        case .twd: return String(localized: "Taiwan Dollar")
+        case .vnd: return String(localized: "Vietnamese Dong")
+        case .pkr: return String(localized: "Pakistani Rupee")
+        case .egp: return String(localized: "Egyptian Pound")
+        case .ngn: return String(localized: "Nigerian Naira")
+        case .bdt: return String(localized: "Bangladeshi Taka")
+        case .uah: return String(localized: "Ukrainian Hryvnia")
+        case .ron: return String(localized: "Romanian Leu")
+        case .pen: return String(localized: "Peruvian Sol")
+        case .kwd: return String(localized: "Kuwaiti Dinar")
+        case .cop: return String(localized: "Colombian Peso")
+        case .isk: return String(localized: "Icelandic Króna")
+        case .mad: return String(localized: "Moroccan Dirham")
+        case .lkr: return String(localized: "Sri Lankan Rupee")
+        case .mmk: return String(localized: "Myanmar Kyat")
         }
     }
     

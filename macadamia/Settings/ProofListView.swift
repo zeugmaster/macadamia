@@ -112,7 +112,7 @@ struct ProofListView: View {
                                     .monospaced()
                             }
                             HStack {
-                                Text(keyset.active ? "ACTIVE" : "inactive")
+                                Text(keyset.active ? String(localized: "ACTIVE") : String(localized: "inactive"))
                                 Spacer()
                                 Text("\(keyset.inputFeePPK) ppk")
                             }
@@ -201,7 +201,7 @@ struct ProofListView: View {
                         }
                     }
                 }, header: {
-                    Text("\(sortedProofs.count) objects")
+                    Text(String(localized: "\(sortedProofs.count) objects"))
                 })
             }
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)

@@ -39,16 +39,16 @@ struct InputValidator {
                                                              format: .compressed) {
                 type = .publicKey
             } else {
-                return .invalid("Unsupported Input")
+                return .invalid(String(localized: "Unsupported Input"))
             }
         }
         guard supportedTypes.contains(type) else {
-            return .invalid("Invalid input: \(type)")
+            return .invalid(String(localized: "Invalid input: \(String(describing: type))"))
         }
         // For merchant codes, convert to lightning address before returning
         if type == .merchantCode {
             guard let lightningAddress = MerchantParser.convertMerchantQRToLightningAddress(qrContent: input, network: .mainnet) else {
-                return .invalid("Could not parse merchant code")
+                return .invalid(String(localized: "Could not parse merchant code"))
             }
             return .valid(InputView.Result(payload: lightningAddress, type: .merchantCode))
         }
@@ -210,14 +210,14 @@ struct SupportedTypeIndicator: View {
     func labelForType(_ type: InputView.InputType) -> String {
         var label: String
         switch type {
-            case .bolt11Invoice:     label = "Invoice"
-            case .bolt12Offer:       label = "Offer"
-            case .creq:              label = "Request"
-            case .publicKey:         label = "Public Key"
-            case .token:             label = "Token"
-            case .lnurlPay:          label = "LNURL-pay"
-            case .lightningAddress:  label = "Lightning Address"
-            case .merchantCode:      label = "Merchant QR"
+            case .bolt11Invoice:     label = String(localized: "Invoice")
+            case .bolt12Offer:       label = String(localized: "Offer")
+            case .creq:              label = String(localized: "Request")
+            case .publicKey:         label = String(localized: "Public Key")
+            case .token:             label = String(localized: "Token")
+            case .lnurlPay:          label = String(localized: "LNURL-pay")
+            case .lightningAddress:  label = String(localized: "Lightning Address")
+            case .merchantCode:      label = String(localized: "Merchant QR")
         }
         return label
     }

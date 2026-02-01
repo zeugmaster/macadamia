@@ -153,7 +153,7 @@ struct SendView: View {
             guard let bytes = try? pubkey.bytes,
                   let _ = try? secp256k1.Signing.PublicKey(dataRepresentation: bytes,
                                                                format: .compressed) else {
-                displayAlert(alert: AlertDetail(title: "Invalid public key 🔑", description: "The public key you entered does not seem to be valid."))
+                displayAlert(alert: AlertDetail(title: String(localized: "Invalid public key 🔑"), description: String(localized: "The public key you entered does not seem to be valid.")))
                 return
             }
         }

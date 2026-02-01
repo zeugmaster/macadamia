@@ -156,9 +156,9 @@ struct MeltView: View {
     
     private var dynamicButtonState: ActionButtonState {
         switch (pendingMeltEvents.isEmpty, selected.isEmpty) {
-        case (true, true): return .idle("Pay")
-        case (true, false): return .idle("Pay", action: { prepareMelt() })
-        case (false, _): return .idle("Check Payment State",
+        case (true, true): return .idle(String(localized: "Pay"))
+        case (true, false): return .idle(String(localized: "Pay"), action: { prepareMelt() })
+        case (false, _): return .idle(String(localized: "Check Payment State"),
                                       action: { checkMeltState(for: pendingMeltEvents) })
         }
     }
@@ -170,7 +170,7 @@ struct MeltView: View {
             if invoices.count == 1 {
                 _invoiceString = State(initialValue: invoices.first!)
             } else {
-                _invoiceString = State(initialValue: "Initialization Error") // FIXME: suboptimal and potentially leading to wonky behaviour
+                _invoiceString = State(initialValue: String(localized: "Initialization Error")) // FIXME: suboptimal and potentially leading to wonky behaviour
                 logger.error("unable to initialize melt view, because none or too many invoice strings where gathered from pending events")
             }
             _autoSelect = State(initialValue: false)
@@ -290,7 +290,12 @@ struct MeltView: View {
                             }
                             .foregroundStyle(disableRow ? .secondary : .primary)
                             HStack {
-                                Text(mint.supportsMPP ? "MPP \(Image(systemName: "checkmark"))" : "Full payment")
+                                if mint.supportsMPP {
+                                    Text(String(localized: "MPP"))
+                                    Image(systemName: "checkmark")
+                                } else {
+                                    Text(String(localized: "Full payment"))
+                                }
                                 Spacer()
                                 if let quoteEntry = quoteEntries[mint] {
                                     switch quoteEntry {
@@ -368,13 +373,13 @@ struct MeltView: View {
                                                     isMPP: allocationsSendable.count > 1)
                     results.append((mint, QuoteState.quote(quote)))
                 } catch CashuError.networkError {
-                    results.append((mint, QuoteState.error("Network error")))
+                    results.append((mint, QuoteState.error(String(localized: "Network error"))))
                 } catch CashuError.unknownError(let message) where message.contains("internal mpp not allowed") {
                     logger.warning("user tried to perform self-pay")
-                    results.append((mint, QuoteState.error("Self-pay not possible")))
+                    results.append((mint, QuoteState.error(String(localized: "Self-pay not possible"))))
                 } catch {
                     logger.warning("Error when fetching quote: \(error)")
-                    results.append((mint, QuoteState.error("Unknown error")))
+                    results.append((mint, QuoteState.error(String(localized: "Unknown error"))))
                 }
             }
             await MainActor.run {
@@ -438,13 +443,13 @@ struct MeltView: View {
         
         //pick proofs,  create pending events (optional grouping id)
         let groupingID = quotes.count > 1 ? UUID() : nil
-        let disc = quotes.count > 1 ? "Pending Payment Part" : "Pending Payment"
+        let disc = quotes.count > 1 ? String(localized: "Pending Payment Part") : String(localized: "Pending Payment")
         var events = [Event]()
         for (mint, quote) in quotes {
             guard let proofs = mint.select(amount: quote.amount + quote.feeReserve,
                                            unit: .sat) else {
-                displayAlert(alert: AlertDetail(title: "Proof Selection Error",
-                                                description: "The wallet was not able to pick ecash proofs from mint \(mint.displayName)."))
+                displayAlert(alert: AlertDetail(title: String(localized: "Proof Selection Error"),
+                                                description: String(localized: "The wallet was not able to pick ecash proofs from mint \(mint.displayName).")))
                 return
             }
             
@@ -569,32 +574,32 @@ struct MeltView: View {
                     if results.allSatisfy({ $0.quote.state == .paid }) {
                         handleSuccess(with: results)
                     } else if results.allSatisfy({ $0.quote.state == .pending }) {
-                        displayAlert(alert: AlertDetail(title: "Payment Pending ⏳",
-                                                        description: "This payment is still pending. Please check again later to make sure the lightning payment was successful."))
+                        displayAlert(alert: AlertDetail(title: String(localized: "Payment Pending ⏳"),
+                                                        description: String(localized: "This payment is still pending. Please check again later to make sure the lightning payment was successful.")))
                         buttonState = dynamicButtonState
                     } else if results.allSatisfy({ $0.quote.state == .unpaid }) {
-                        let primary = AlertButton(title: "Retry",
+                        let primary = AlertButton(title: String(localized: "Retry"),
                                                   action: { melt(with: events) })
-                        let secondary = AlertButton(title: "Remove Payment",
+                        let secondary = AlertButton(title: String(localized: "Remove Payment"),
                                                     role: .destructive,
                                                     action: { removePendingPayment(events: events) })
-                        displayAlert(alert: AlertDetail(title: "Unpaid ⚠",
-                                                        description: "This payment did not go through and is marked \"unpaid\" with the mint. Would you like to try again?",
+                        displayAlert(alert: AlertDetail(title: String(localized: "Unpaid ⚠"),
+                                                        description: String(localized: "This payment did not go through and is marked \"unpaid\" with the mint. Would you like to try again?"),
                                                         primaryButton: primary,
                                                         secondaryButton: secondary))
                         buttonState = dynamicButtonState
                     } else if results.contains(where: { $0.quote.state == .pending }) {
-                        displayAlert(alert: AlertDetail(title: "Payment Pending ⏳",
-                                                        description: "One or more parts of this payment are still pending. Please check again later to make sure the lightning payment was successful."))
+                        displayAlert(alert: AlertDetail(title: String(localized: "Payment Pending ⏳"),
+                                                        description: String(localized: "One or more parts of this payment are still pending. Please check again later to make sure the lightning payment was successful.")))
                         buttonState = dynamicButtonState
                     } else if results.contains(where: { $0.quote.state == .unpaid }) {
-                        let primary = AlertButton(title: "Retry",
+                        let primary = AlertButton(title: String(localized: "Retry"),
                                                   action: { melt(with: events) })
-                        let secondary = AlertButton(title: "Remove Payment",
+                        let secondary = AlertButton(title: String(localized: "Remove Payment"),
                                                     role: .destructive,
                                                     action: { removePendingPayment(events: events) })
-                        displayAlert(alert: AlertDetail(title: "Unpaid ⚠",
-                                                        description: "This payment did not go through and one or more parts are marked \"unpaid\". Would you like to try again?",
+                        displayAlert(alert: AlertDetail(title: String(localized: "Unpaid ⚠"),
+                                                        description: String(localized: "This payment did not go through and one or more parts are marked \"unpaid\". Would you like to try again?"),
                                                         primaryButton: primary,
                                                         secondaryButton: secondary))
                         buttonState = dynamicButtonState
@@ -648,7 +653,7 @@ struct MeltView: View {
         
         try? modelContext.save()
         
-        buttonState = .success("Paid!")
+        buttonState = .success(String(localized: "Paid!"))
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             dismissToRoot()

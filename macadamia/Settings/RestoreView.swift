@@ -45,7 +45,7 @@ struct RestoreView: View {
             }
         }
         .onAppear {
-            buttonState = .idle("Restore", action: initiateRestore)
+            buttonState = .idle(String(localized: "Restore"), action: initiateRestore)
         }
         .navigationTitle("Restore")
         .navigationBarTitleDisplayMode(.inline)
@@ -59,29 +59,29 @@ struct RestoreView: View {
      
     private func initiateRestore() {
         guard let activeWallet else {
-            displayAlert(alert: AlertDetail(title: "No Wallet Initialized"))
+            displayAlert(alert: AlertDetail(title: String(localized: "No Wallet Initialized")))
             return
         }
         
         guard !activeWallet.mints.isEmpty else {
-            displayAlert(alert: AlertDetail(title: "No Mints",
-                                            description:"""
+            displayAlert(alert: AlertDetail(title: String(localized: "No Mints"),
+                                            description:String(localized: """
                                                         You need to add all the mints you want to restore ecash from. \
                                                         You can do so in the 'Mints' tab of the app.
-                                                        """))
+                                                        """)))
             logger.warning("user tried to restore wallet with no known mints. aborted.")
             restoreDidFail()
             return
         }
         
         if activeWallet.proofs.contains(where: { $0.state == .valid }) {
-            displayAlert(alert: AlertDetail(title: "Wallet not empty!",
-                                            description: """
+            displayAlert(alert: AlertDetail(title: String(localized: "Wallet not empty!"),
+                                            description: String(localized: """
                                                          This wallet still contains valid ecash \
                                                          that will become inaccessible if you restore now. \
                                                          Are you sure? 
-                                                         """,
-                                            primaryButton: AlertButton(title: "Restore", role: .destructive, action: {
+                                                         """),
+                                            primaryButton: AlertButton(title: String(localized: "Restore"), role: .destructive, action: {
                 restore()
                 return
             })))
@@ -99,7 +99,7 @@ struct RestoreView: View {
         
         guard words.count == 12 else {
             logger.error("The entered test does not appear to be a properly formmatted seed phrase.")
-            displayAlert(alert: AlertDetail(title: "Restore Error", description: "The entered text does not appear to be a properly formmatted seed phrase. Make sure its twelve words, separated by spaces or line breaks."))
+            displayAlert(alert: AlertDetail(title: String(localized: "Restore Error"), description: String(localized: "The entered text does not appear to be a properly formmatted seed phrase. Make sure its twelve words, separated by spaces or line breaks.")))
             restoreDidFail()
             return
         }
@@ -130,7 +130,7 @@ struct RestoreView: View {
     private func restoreDidFail() {
         buttonState = .fail()
         DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
-            buttonState = .idle("Restore", action: initiateRestore)
+            buttonState = .idle(String(localized: "Restore"), action: initiateRestore)
         })
     }
     

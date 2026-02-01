@@ -107,11 +107,11 @@ struct PayeeInputView: View {
         case .valid(let result):
             input = result
         case .invalid(_):
-            let desc = """
+            let desc = String(localized: """
                 This field supports BOLT11 invoices, LNURL strings (LNURL1...) or \
                 Lightning Addresses (e.g. user@host.com).
-                """
-            displayAlert(alert: AlertDetail(title: "Invalid Input", description: desc))
+                """)
+            displayAlert(alert: AlertDetail(title: String(localized: "Invalid Input"), description: desc))
         }
     }
     

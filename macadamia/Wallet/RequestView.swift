@@ -80,7 +80,7 @@ struct RequestView: View {
                         }
                     } label: {
                         HStack {
-                            Text(copied ? "Copied!" : "Copy to clipboad")
+                            Text(copied ? String(localized: "Copied!") : String(localized: "Copy to clipboad"))
                             Spacer()
                             Image(systemName: copied ? "clipboard.fill" : "clipboard")
                         }
@@ -233,7 +233,8 @@ struct RequestView: View {
                 let nostrTransport = CashuSwift.Transport(type: CashuSwift.Transport.TransportType.nostr, target: nprofile)
                 transports = [nostrTransport]
             } catch {
-                displayAlert(alert: AlertDetail(title: "⚠️ Nostr Key Error", description: "Failed to get your Nostr public key: \(error.localizedDescription)"))
+                displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Nostr Key Error"),
+                                                description: String(localized: "Failed to get your Nostr public key: \(error.localizedDescription)")))
                 return
             }
         }

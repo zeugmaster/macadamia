@@ -109,8 +109,8 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .reqView
                         } label: { fade in
-                            menuButtonLabel(title: "Request",
-                                            subtitle: "Create Payment Request",
+                            menuButtonLabel(title: String(localized: "Request"),
+                                            subtitle: String(localized: "Create Payment Request"),
                                             imageSystemName: "wallet.pass",
                                             fade: fade)
                         }
@@ -118,8 +118,8 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .receive(urlString: nil)
                         } label: { fade in
-                            menuButtonLabel(title: "Ecash",
-                                            subtitle: "Scan or paste a token",
+                            menuButtonLabel(title: String(localized: "Ecash"),
+                                            subtitle: String(localized: "Scan or paste a token"),
                                             imageSystemName: "qrcode",
                                             fade: fade)
                         }
@@ -127,14 +127,14 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .mint
                         } label: { fade in
-                            menuButtonLabel(title: "Lightning",
-                                            subtitle: "Create invoice to add funds",
+                            menuButtonLabel(title: String(localized: "Lightning"),
+                                            subtitle: String(localized: "Create invoice to add funds"),
                                             imageSystemName: "bolt.fill",
                                             fade: fade)
                         }
                         .background(Color.black)
                     } label: { fade in
-                        menuLabel(imageName: "arrow.down", text: "Receive", fade: fade)
+                        menuLabel(imageName: "arrow.down", text: String(localized: "Receive"), fade: fade)
                     }
                     
                     // MARK: - SCANNER
@@ -189,8 +189,8 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .contactless
                         } label: { fade in
-                            menuButtonLabel(title: "Contactless",
-                                            subtitle: "Pay a terminal using NFC",
+                            menuButtonLabel(title: String(localized: "Contactless"),
+                                            subtitle: String(localized: "Pay a terminal using NFC"),
                                             imageSystemName: "wave.3.right",
                                             fade: fade)
                         }
@@ -198,8 +198,8 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .send
                         } label: { fade in
-                            menuButtonLabel(title: "Ecash",
-                                            subtitle: "Create Token to Share",
+                            menuButtonLabel(title: String(localized: "Ecash"),
+                                            subtitle: String(localized: "Create Token to Share"),
                                             imageSystemName: "banknote",
                                             fade: fade)
                         }
@@ -207,14 +207,14 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .payeeInput
                         } label: { fade in
-                            menuButtonLabel(title: "Lightning",
-                                            subtitle: "Pay invoice",
+                            menuButtonLabel(title: String(localized: "Lightning"),
+                                            subtitle: String(localized: "Pay invoice"),
                                             imageSystemName: "bolt.fill",
                                             fade: fade)
                         }
                         .background(Color.black)
                     } label: { fade in
-                        menuLabel(imageName: "arrow.up", text: "Send", fade: fade)
+                        menuLabel(imageName: "arrow.up", text: String(localized: "Send"), fade: fade)
                     }
                 }
                 .padding(EdgeInsets(top: 20, leading: 16, bottom: 40, trailing: 16))
@@ -310,8 +310,8 @@ struct WalletView: View {
         // Find the mint in our wallet
         guard let mint = activeWallet.mints.first(where: { $0.url.absoluteString == mintURLString && !$0.hidden }) else {
             walletLogger.warning("Received ecash from unknown mint: \(mintURLString)")
-            displayAlert(alert: AlertDetail(title: "⚡ Incoming Ecash",
-                                            description: "Received ecash from an unknown mint (\(mintURLString)). Add this mint to receive."))
+            displayAlert(alert: AlertDetail(title: String(localized: "⚡ Incoming Ecash"),
+                                            description: String(localized: "Received ecash from an unknown mint (\(mintURLString)). Add this mint to receive.")))
             return
         }
         
@@ -358,7 +358,7 @@ struct WalletView: View {
                 try modelContext.save()
                 
             } catch {
-                displayAlert(alert: AlertDetail(title: "Something went wrong", description: "An error occured while trying to redeem a token received via Nostr DMs. \(String(describing: error))"))
+                displayAlert(alert: AlertDetail(title: String(localized: "Something went wrong"), description: String(localized: "An error occured while trying to redeem a token received via Nostr DMs. \(String(describing: error))")))
                 walletLogger.error("error while trying to auto-redeem token from nostr dm: \(error)")
             }
         }

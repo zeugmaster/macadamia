@@ -38,7 +38,7 @@ struct MintView: View {
         
         _quote = State(initialValue: pendingMintEvent?.bolt11MintQuote)
         _pendingMintEvent = State(initialValue: pendingMintEvent)
-        _buttonState = State(initialValue: .idle("No Action"))
+        _buttonState = State(initialValue: .idle(String(localized: "No Action")))
         
         if let mint = pendingMintEvent?.mints?.first {
             _selectedMint = State(initialValue: mint)
@@ -60,7 +60,7 @@ struct MintView: View {
                                        onReturn: {
                         getQuote()
                     })
-                    MintPicker(label: "Mint", selectedMint: $selectedMint)
+                    MintPicker(label: String(localized: "Mint"), selectedMint: $selectedMint)
                 }
                 .disabled(pendingMintEvent != nil)
                 if let quote {
@@ -103,7 +103,7 @@ struct MintView: View {
                             }
                         } label: {
                             HStack {
-                                Text("\(showDetails ? "Hide" : "Show") details")
+                                Text(showDetails ? String(localized: "Hide details") : String(localized: "Show details"))
                                     .opacity(0.8)
                                 Spacer()
                                 Image(systemName: "chevron.right")
@@ -114,7 +114,7 @@ struct MintView: View {
                         }
                         
                         if showDetails {
-                            CopyableRow(label: "Quote ID", value: quote.quote)
+                            CopyableRow(label: String(localized: "Quote ID"), value: quote.quote)
                         }
                     }
                 }
@@ -125,9 +125,9 @@ struct MintView: View {
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
             .onAppear {
                 if quote != nil {
-                    buttonState = .idle("Issue", action: requestMint)
+                    buttonState = .idle(String(localized: "Issue"), action: requestMint)
                 } else {
-                    buttonState = .idle("Get Invoice", action: getQuote)
+                    buttonState = .idle(String(localized: "Get Invoice"), action: getQuote)
                 }
             }
             .onDisappear {
@@ -183,7 +183,7 @@ struct MintView: View {
                 pendingMintEvent = event
                 AppSchemaV1.insert([event], into: modelContext)
                 
-                buttonState = .idle("Issue Ecash", action: {
+                buttonState = .idle(String(localized: "Issue Ecash"), action: {
                     requestMint()
                 })
             case .failure(let error):
@@ -194,7 +194,7 @@ struct MintView: View {
                              """)
                 buttonState = .fail()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    buttonState = .idle("Get Invoice", action: getQuote)
+                    buttonState = .idle(String(localized: "Get Invoice"), action: getQuote)
                 }
             }
         }
@@ -228,12 +228,12 @@ struct MintView: View {
                         requestMint()
                     }
                 } else {
-                    buttonState = .idle("Issue Ecash", action: { requestMint() })
+                    buttonState = .idle(String(localized: "Issue Ecash"), action: { requestMint() })
                     isCheckingInvoiceState = false
                 }
             } catch {
                 print("")  // New line after error
-                buttonState = .idle("Issue Ecash", action: { requestMint() })
+                buttonState = .idle(String(localized: "Issue Ecash"), action: { requestMint() })
                 // stop trying automatically if the operation fails
                 pollingTimer?.invalidate()
                 isCheckingInvoiceState = false

@@ -20,7 +20,7 @@ struct BalancerView: View {
     
     @State private var collapseSelector = false
     
-    @State private var buttonState = ActionButtonState.idle("Select")
+    @State private var buttonState = ActionButtonState.idle(String(localized: "Select"))
     @State private var allocations: Dictionary<Mint, Double> = [:]
     
     private var activeWallet: Wallet? {
@@ -96,7 +96,7 @@ struct BalancerView: View {
                 Section {
                     if collapseSelector {
                         VStack(alignment: .leading) {
-                            Text("\(allocations.count) Mints selected")
+                            Text(String(localized: "\(allocations.count) Mints selected"))
                         }
                         .foregroundStyle(.secondary)
                     } else {
@@ -148,7 +148,7 @@ struct BalancerView: View {
                                 stateIcon(for: states[index].state)
                                 VStack(alignment: .leading, spacing: 4) {
                                     HStack {
-                                        Text("Transfer \(index + 1)")
+                                        Text(String(localized: "Transfer \(index + 1)"))
                                         Spacer()
                                         stateText(for: states[index].state)
                                     }
@@ -179,7 +179,7 @@ struct BalancerView: View {
             }
         }
         .onAppear {
-            buttonState = .idle("Distribute", action: {distribute()})
+            buttonState = .idle(String(localized: "Distribute"), action: {distribute()})
         }
         .onChange(of: swapManager.multiTransactionState) { _, states in
             handleSwapStateChange(states)
@@ -378,8 +378,8 @@ struct BalancerView: View {
         
         if hasInvalidTransfer {
             displayAlert(alert: AlertDetail(
-                title: "Transfer Limit Exceeded",
-                description: "One or more transfers would exceed safe limits. Please adjust your allocation to leave more balance for fees."
+                title: String(localized: "Transfer Limit Exceeded"),
+                description: String(localized: "One or more transfers would exceed safe limits. Please adjust your allocation to leave more balance for fees.")
             ))
             return
         }
@@ -407,15 +407,6 @@ struct BalancerView: View {
         currentAlert = alert
         showAlert = true
     }
-    
-//    private func transactionsDidFinish() {
-//        currentSwapManager = nil
-//        swapStatus = nil
-//        buttonState = .success()
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-//            dismiss()
-//        }
-//    }
 }
 
 struct SmallKnobSlider: UIViewRepresentable {

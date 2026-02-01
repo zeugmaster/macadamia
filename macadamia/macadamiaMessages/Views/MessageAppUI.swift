@@ -320,7 +320,7 @@ struct MessageSendView: View {
             }
         }
         .onAppear {
-            buttonState = .idle("Send", action: createToken)
+            buttonState = .idle(String(localized: "Send"), action: createToken)
             amountFieldInFocus = true
         }
         .navigationTitle("Send")
@@ -329,7 +329,7 @@ struct MessageSendView: View {
     
     private func createToken() {
         guard let activeWallet else {
-            buttonState = .fail("No active wallet")
+            buttonState = .fail(String(localized: "No active wallet"))
             return
         }
         
@@ -363,7 +363,7 @@ struct MessageSendView: View {
                 dismiss()
             }
         } catch {
-            buttonState = .fail("Token Error")
+            buttonState = .fail(String(localized: "Token Error"))
             print("error when generating message: \(error)")
         }
     }
@@ -435,7 +435,7 @@ struct TokenDisplayView: View {
                     }
                 } label: {
                     HStack {
-                        Text(copied ? "Copied!" : "Copy")
+                        Text(copied ? String(localized: "Copied!") : String(localized: "Copy"))
                         Spacer()
                         Image(systemName: "clipboard")
                     }

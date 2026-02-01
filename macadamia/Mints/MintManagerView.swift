@@ -178,11 +178,11 @@ struct MintManagerView: View {
         
         guard let url = URL(string: finalURLString), url.host != nil else {
             logger.warning("user tried to add an invalid URL: \(finalURLString)")
-            displayAlert(alert: AlertDetail(title: "Invalid URL",
-                                            description: """
+            displayAlert(alert: AlertDetail(title: String(localized: "Invalid URL"),
+                                            description: String(localized: """
                                                          Please enter a valid URL. \
                                                          If no protocol is specified, https:// will be used.
-                                                         """))
+                                                         """)))
             return
         }
         
@@ -190,11 +190,11 @@ struct MintManagerView: View {
         
         guard !activeWallet.mints.contains(where: { normalizeURL($0.url) == normalizedURL && $0.hidden == false }) else {
             logger.warning("user tried to add a mint with a url that is already in the list of mints.")
-            displayAlert(alert: AlertDetail(title: "Duplicate Mint",
-                                            description: """
+            displayAlert(alert: AlertDetail(title: String(localized: "Duplicate Mint"),
+                                            description: String(localized: """
                                                          The mint you are trying to add is already \
                                                          known to the wallet. Please add each mint only once.
-                                                         """))
+                                                         """)))
             return
         }
 
@@ -325,7 +325,7 @@ struct MintInfoRowView: View {
                 Text(mint.nickName ?? mint.url.host(percentEncoded: false) ?? mint.url.absoluteString)
                     .bold()
                     .dynamicTypeSize(.xLarge)
-                Text(amountDisplayString ?? "No Balance")
+                Text(amountDisplayString ?? String(localized: "No Balance"))
                     .foregroundStyle(.gray)
             }
         }
