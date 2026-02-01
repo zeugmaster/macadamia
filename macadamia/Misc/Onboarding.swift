@@ -109,7 +109,7 @@ struct OnboardingPageLayout<Content: View>: View {
 struct WelcomePage: View {
     var body: some View {
         OnboardingPageLayout(title: "Hi there!") {
-            Markdown("""
+            Markdown(String(localized: """
                      You are using **macadamia**, the first fully native \
                      ecash wallet for the Cashu protocol on iOS. \n
                      Digital payments should be as natural as handing over cash in person. \
@@ -120,7 +120,7 @@ struct WelcomePage: View {
                      This app does not collect any usage data or analytics. \n
                      Thank you for trying the future of payments! \n\n\n
                      # 🥜🌰
-                     """)
+                     """))
             .markdownTextStyle(\.link, textStyle: {
                     UnderlineStyle(.single)
             })
@@ -131,7 +131,7 @@ struct WelcomePage: View {
 struct DisclaimerPage: View {
     var body: some View {
         OnboardingPageLayout(title: "⚠️ Warning") {
-            Markdown("""
+            Markdown(String(localized: """
                      This wallet and the Cashu protocol are in active development. \
                      Be cautious when using this software and follow best practices:
                      
@@ -144,7 +144,7 @@ struct DisclaimerPage: View {
                      If you experience any issues, don't hesitate to send a request for \
                      support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) \
                      or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues).
-                     """)
+                     """))
             .markdownTextStyle(\.link, textStyle: {
                 UnderlineStyle(.single)
             })
@@ -160,11 +160,11 @@ struct SeedPhrasePage: View {
     var body: some View {
         OnboardingPageLayout(title: "Wallet Backup") {
             VStack {
-                Markdown("""
+                Markdown(String(localized: """
                          This is your newly generated **seed phrase** backup. \
                          Write these twelve words down or save them in a password \ 
                          manager and use them to restore ecash from the mints known to this wallet (write those down, too). \n 
-                         """)
+                         """))
                 Spacer()
                 if phrase.count == 12 {
                     HStack {
