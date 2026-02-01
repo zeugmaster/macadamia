@@ -91,30 +91,30 @@ struct AlertViewModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .alert(currentAlert?.title ?? "Error", isPresented: $isPresented) {
+            .alert(LocalizedStringKey(currentAlert?.title ?? "Error"), isPresented: $isPresented) {
                 if let primaryButton = currentAlert?.primaryButton {
                     Button(role: primaryButton.role) {
                         primaryButton.action()
                     } label: {
-                        Text(primaryButton.title)
+                        Text(LocalizedStringKey(primaryButton.title))
                     }
                 } 
                 if let secondaryButton = currentAlert?.secondaryButton {
                     Button(role: secondaryButton.role) {
                         secondaryButton.action()
                     } label: {
-                        Text(secondaryButton.title)
+                        Text(LocalizedStringKey(secondaryButton.title))
                     }
                 }
                 if let tertiaryButton = currentAlert?.tertiaryButton {
                     Button(role: tertiaryButton.role) {
                         tertiaryButton.action()
                     } label: {
-                        Text(tertiaryButton.title)
+                        Text(LocalizedStringKey(tertiaryButton.title))
                     }
                 }
             } message: {
-                Text(currentAlert?.alertDescription ?? "")
+                Text(LocalizedStringKey(currentAlert?.alertDescription ?? ""))
             }
     }
 }

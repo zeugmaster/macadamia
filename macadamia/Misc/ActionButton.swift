@@ -105,7 +105,7 @@ struct ActionButton: View {
                     if state.type == .loading {
                         ProgressView()
                     }
-                    Text(state.title)
+                    Text(LocalizedStringKey(state.title))
                 }
                 .font(.title3)
                 .bold()

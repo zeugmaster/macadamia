@@ -95,7 +95,7 @@ struct OnboardingPageLayout<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading) {
             Spacer().frame(maxHeight: 50)
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .fontWeight(.semibold)
                 .font(.largeTitle)
             Spacer().frame(maxHeight: 30)

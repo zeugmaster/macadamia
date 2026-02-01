@@ -265,7 +265,7 @@ struct TagView: View {
     var backgroundColor:Color = .secondary.opacity(0.3)
     
     var body: some View {
-        Text(text)
+        Text(LocalizedStringKey(text))
             .padding(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
             .background(backgroundColor)
             .cornerRadius(4)

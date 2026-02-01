@@ -164,7 +164,7 @@ struct Tag: View {
     var enabled: Bool
     
     var body: some View {
-        Text(text)
+        Text(LocalizedStringKey(text))
             .foregroundStyle(enabled ? .black : .white.opacity(0.6))
             .strikethrough(!enabled)
             .padding(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))

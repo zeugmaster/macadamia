@@ -103,7 +103,7 @@ struct MintView: View {
                             }
                         } label: {
                             HStack {
-                                Text("\(showDetails ? "Hide" : "Show") details")
+                                Text(showDetails ? "Hide details" : "Show details")
                                     .opacity(0.8)
                                 Spacer()
                                 Image(systemName: "chevron.right")

@@ -367,7 +367,7 @@ struct WalletView: View {
     private func menuLabel(imageName: String,
                            text: String,
                            fade: Bool) -> some View {
-        Text("\(Image(systemName: imageName))  \(text)")
+        (Text(Image(systemName: imageName)) + Text("  ") + Text(LocalizedStringKey(text)))
             .opacity(fade ? 0.5 : 1)
             .font(.title3)
             .fontWeight(.semibold)
@@ -396,10 +396,10 @@ struct WalletView: View {
         Color.clear.overlay(
             HStack {
                 VStack(alignment: .leading) {
-                    Text(title)
+                    Text(LocalizedStringKey(title))
                         .foregroundStyle(.white)
                         .font(.title3)
-                    Text(subtitle)
+                    Text(LocalizedStringKey(subtitle))
                         .font(.caption)
                         .foregroundStyle(.gray)
                 }

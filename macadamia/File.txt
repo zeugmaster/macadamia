@@ -1,0 +1,1 @@
+https://forums.swift.org/t/how-can-i-remove-a-localization-from-a-string-catalog-in-a-swift-package/82840

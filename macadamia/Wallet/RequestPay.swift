@@ -372,7 +372,7 @@ struct RequestPay: View {
         do {
             // Get sender's nsec from keychain
             guard let senderNsec = try? NostrKeychain.getNsec() else {
-                displayAlert(alert: AlertDetail(title: "⚠️ Nostr Key Missing", description: "Please configure your Nostr key in Settings to send DMs."))
+                displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Nostr Key Missing"), description: String(localized: "Please configure your Nostr key in Settings to send DMs.")))
                 buttonState = .fail()
                 return
             }
@@ -382,7 +382,7 @@ struct RequestPay: View {
             encoder.outputFormatting = .prettyPrinted
             let jsonData = try encoder.encode(payload)
             guard let jsonString = String(data: jsonData, encoding: .utf8) else {
-                displayAlert(alert: AlertDetail(title: "⚠️ Encoding Error", description: "Failed to encode payment data."))
+                displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Encoding Error"), description: String(localized: "Failed to encode payment data.")))
                 buttonState = .fail()
                 return
             }
@@ -413,7 +413,7 @@ struct RequestPay: View {
                 errorMessage = error.localizedDescription
             }
             
-            displayAlert(alert: AlertDetail(title: "🛰️ Transmission Error", description: errorMessage))
+            displayAlert(alert: AlertDetail(title: String(localized: "🛰️ Transmission Error"), description: errorMessage))
             buttonState = .fail()
         }
     }
@@ -423,7 +423,7 @@ struct RequestPay: View {
         
         guard (string.hasPrefix("http") || string.hasPrefix("https")),
               let url = URL(string: urlString) else {
-            displayAlert(alert: AlertDetail(title: "HTTP transport URL invalid.", description: "The provided string \(urlString) does not seem to be valid. Please send the ecash manually or reclaim it."))
+            displayAlert(alert: AlertDetail(title: String(localized: "HTTP transport URL invalid."), description: String(localized: "The provided string \(urlString) does not seem to be valid. Please send the ecash manually or reclaim it.")))
             token = payload.toToken() // show the token so the user has a fallback
             return
         }
@@ -436,7 +436,7 @@ struct RequestPay: View {
             
             if let httpResponse = response as? HTTPURLResponse {
                 if !(200...299).contains(httpResponse.statusCode) {
-                    displayAlert(alert: AlertDetail(title: "⚠️ Unexpected HTTP Response", description: "The request returned status: \(String(describing: httpResponse))"))
+                    displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Unexpected HTTP Response"), description: String(localized: "The request returned status: \(String(describing: httpResponse))")))
                 }
             }
             
@@ -445,15 +445,15 @@ struct RequestPay: View {
                 dismiss()
             }
         } catch {
-            let alertDetail = AlertDetail(title: "🛰️ Transmission issue",
+            let alertDetail = AlertDetail(title: String(localized: "🛰️ Transmission issue"),
                                           description: String(describing: error),
-                                          primaryButton: AlertButton(title: "Retry", action: {
+                                          primaryButton: AlertButton(title: String(localized: "Retry"), action: {
                                               // TODO: find less convoluted retry logic
                                               Task { @MainActor in
                                                   await sendViaHTTP(payload: payload, urlString: urlString)
                                               }
                                           }),
-                                          secondaryButton: AlertButton(title: "Cancel", role: .cancel, action: {
+                                          secondaryButton: AlertButton(title: String(localized: "Cancel"), role: .cancel, action: {
                                               buttonState = .fail()
                                           }))
             displayAlert(alert: alertDetail)
