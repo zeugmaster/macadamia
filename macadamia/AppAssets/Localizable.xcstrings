@@ -1,0 +1,2580 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "    " : {
+
+    },
+    " %@" : {
+
+    },
+    " sat" : {
+
+    },
+    "-" : {
+
+    },
+    "..." : {
+
+    },
+    "%@ " : {
+
+    },
+    "%@  %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@  %2$@"
+          }
+        }
+      }
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ details" : {
+
+    },
+    "%lld" : {
+
+    },
+    "%lld mint%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld mint%2$@"
+          }
+        }
+      }
+    },
+    "%lld Mints selected" : {
+
+    },
+    "%lld objects" : {
+
+    },
+    "%lld ppk" : {
+
+    },
+    "%lld sat" : {
+
+    },
+    "%lld sats" : {
+
+    },
+    "%lld." : {
+
+    },
+    "%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "%lld%%" : {
+
+    },
+    "⚠️ Encoding Error" : {
+
+    },
+    "⚠️ Nostr Key Error" : {
+
+    },
+    "⚠️ Nostr Key Missing" : {
+
+    },
+    "⚠️ Unexpected HTTP Response" : {
+
+    },
+    "⚡ Incoming Ecash" : {
+
+    },
+    "🛰️ Transmission Error" : {
+
+    },
+    "🛰️ Transmission issue" : {
+
+    },
+    "12 Word backup seed phrase" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12-Wörter-Seed-Backup"
+          }
+        }
+      }
+    },
+    "A transfers incurs fees with the selected mints." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Transfer verursacht Gebühren mit den ausgewählten Mints."
+          }
+        }
+      }
+    },
+    "A wallet-specific Nostr key has been generated for you. You can replace it with your own key below if desired." : {
+
+    },
+    "A wallet-specific Nostr key will be generated when you set it up." : {
+
+    },
+    "About this Release" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über diese Version"
+          }
+        }
+      }
+    },
+    "ACTIVE" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AKTIV"
+          }
+        }
+      }
+    },
+    "Active: %@" : {
+
+    },
+    "Add" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinzufügen"
+          }
+        }
+      }
+    },
+    "Add & Redeem" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinzufügen & Einlösen"
+          }
+        }
+      }
+    },
+    "Add a mint in the main wallet app to start sending ecash tokens." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füge eine Mint in der App hinzu um Ecash zu versenden."
+          }
+        }
+      }
+    },
+    "Add a note to the recipient..." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füge eine Bemerkung für den Empfänger hinzu…"
+          }
+        }
+      }
+    },
+    "Add and Redeem" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinzufügen und einlösen"
+          }
+        }
+      }
+    },
+    "Add Mint " : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mint hinzufügen"
+          }
+        }
+      }
+    },
+    "Add new Mint URL..." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Mint-URL hinzufügen…"
+          }
+        }
+      }
+    },
+    "Add Relay" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay hinzufügen"
+          }
+        }
+      }
+    },
+    "Added" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinzugefügt"
+          }
+        }
+      }
+    },
+    "Already Spent 💸" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereits ausgegeben 💸"
+          }
+        }
+      }
+    },
+    "Amount" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betrag"
+          }
+        }
+      }
+    },
+    "Amount: " : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betrag:"
+          }
+        }
+      }
+    },
+    "Amount..." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betrag…"
+          }
+        }
+      }
+    },
+    "An error occured while trying to redeem a token received via Nostr DMs. %@" : {
+
+    },
+    "An inter-mint transfer allows you to move an amount of ecash from one trusted mint to another via the Lightning Network." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Transfer ermöglicht dir Ecash von einem bekannten Mint zu einer anderen durch das Lightning Netzwerk zu übertragen."
+          }
+        }
+      }
+    },
+    "Animated QR code scanner is unavailable when running on macOS." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Scanner für animierte QR-Codes ist auf macOS nicht verfügbar."
+          }
+        }
+      }
+    },
+    "Any mint" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beliebige Mint"
+          }
+        }
+      }
+    },
+    "Are you sure you want to remove this mint?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bist Du sicher, dass Du diese Mint entfernen möchtest?"
+          }
+        }
+      }
+    },
+    "Argentine Peso" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Argentinischer Peso"
+          }
+        }
+      }
+    },
+    "Attempting payment..." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versuche zu bezahlen…"
+          }
+        }
+      }
+    },
+    "Australian Dollar" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Australische Dollar"
+          }
+        }
+      }
+    },
+    "Authenticity unknown" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authentizität unbekannt"
+          }
+        }
+      }
+    },
+    "Auto-connect to Relays" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch mit Relays verbinden"
+          }
+        }
+      }
+    },
+    "Back" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zurück"
+          }
+        }
+      }
+    },
+    "Balance:" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guthaben:"
+          }
+        }
+      }
+    },
+    "Balance: " : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guthaben:"
+          }
+        }
+      }
+    },
+    "Bangladeshi Taka" : {
+
+    },
+    "Basic Information" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grundinformation"
+          }
+        }
+      }
+    },
+    "BETA" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BETA"
+          }
+        }
+      }
+    },
+    "Blinded Message Already Signed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Blindnachricht” bereits signiert"
+          }
+        }
+      }
+    },
+    "BOLT11 INVOICE" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BOLT11 INVOICE"
+          }
+        }
+      }
+    },
+    "Brazilian Real" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brasilianische Real"
+          }
+        }
+      }
+    },
+    "British Pound" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Britischer Pfund"
+          }
+        }
+      }
+    },
+    "Camera access has been denied. Please enable it in the Settings app to scan QR codes." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamera-Zugriff wurde verweigert. Bitte erteile Zugriff in den Einstellungen um QR-Codes zu scannen."
+          }
+        }
+      }
+    },
+    "Camera access is restricted. This might be due to parental controls or other restrictions." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamera-Zugriff ist eingeschränkt. Dies kann an Eltern-Freigabe oder anderen Einschränkungen liegen."
+          }
+        }
+      }
+    },
+    "Camera Access Required" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamera-Zugriff wird benötigt."
+          }
+        }
+      }
+    },
+    "Canadian Dollar" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanadische Dollar"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abbrechen"
+          }
+        }
+      }
+    },
+    "Cashu" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cashu"
+          }
+        }
+      }
+    },
+    "cashu Token" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cashu Token"
+          }
+        }
+      }
+    },
+    "Change created" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wechselgeld erstellt"
+          }
+        }
+      }
+    },
+    "Check Payment State" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahlungsstatus prüfen"
+          }
+        }
+      }
+    },
+    "Check token state?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token-Status prüfen"
+          }
+        }
+      }
+    },
+    "Checking camera permissions..." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamera-Zugriff prüfen…"
+          }
+        }
+      }
+    },
+    "Chilean Peso" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chilenischer Peso"
+          }
+        }
+      }
+    },
+    "Chinese Yuan" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chinesischer Yuan"
+          }
+        }
+      }
+    },
+    "Colombian Peso" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kolumbischer Peso"
+          }
+        }
+      }
+    },
+    "Complete" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgeschlossen"
+          }
+        }
+      }
+    },
+    "Complete Transfer" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transfer abschließen"
+          }
+        }
+      }
+    },
+    "Connected to %lld of %lld relay%@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connected to %1$lld of %2$lld relay%3$@."
+          }
+        }
+      }
+    },
+    "Connected to all %lld relay%@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connected to all %1$lld relay%2$@."
+          }
+        }
+      }
+    },
+    "Contact the developer" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entwickler kontaktieren"
+          }
+        }
+      }
+    },
+    "Contactless" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontaktlos"
+          }
+        }
+      }
+    },
+    "Contactless Pay" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontaktlose Bezahlung"
+          }
+        }
+      }
+    },
+    "Contactless Payment" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontaktlose Bezahlung"
+          }
+        }
+      }
+    },
+    "Copied" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiert"
+          }
+        }
+      }
+    },
+    "Copied %@" : {
+
+    },
+    "Copied!" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiert!"
+          }
+        }
+      }
+    },
+    "Copy" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieren"
+          }
+        }
+      }
+    },
+    "Copy %@" : {
+
+    },
+    "Copy to clipboad" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In die Zwischenablage kopieren"
+          }
+        }
+      }
+    },
+    "Copy to clipboard" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In die Zwischenablage kopieren"
+          }
+        }
+      }
+    },
+    "Could not parse merchant code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Händler-Code konnte nicht übertragen werden"
+          }
+        }
+      }
+    },
+    "Create invoice to add funds" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstelle eine Invoice um einen Betrag hinzuzufügen"
+          }
+        }
+      }
+    },
+    "Create Payment Request" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstelle eine Bezahlanfrage"
+          }
+        }
+      }
+    },
+    "Create Token to Share" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstelle ein Token zum Teilen"
+          }
+        }
+      }
+    },
+    "Created at: " : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstellt am:"
+          }
+        }
+      }
+    },
+    "Cryptographic Data" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kryptographische Daten"
+          }
+        }
+      }
+    },
+    "Czech Koruna" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tschechische Kronen"
+          }
+        }
+      }
+    },
+    "Danish Krone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dänische Kronen"
+          }
+        }
+      }
+    },
+    "Database Error 📂" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datenbank-Fehler"
+          }
+        }
+      }
+    },
+    "Debugging" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debugging"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschen"
+          }
+        }
+      }
+    },
+    "Delete Key" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key löschen"
+          }
+        }
+      }
+    },
+    "Description" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beschreibung"
+          }
+        }
+      }
+    },
+    "Deselect" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auswahl aufheben"
+          }
+        }
+      }
+    },
+    "Detail: %@" : {
+
+    },
+    "Display" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anzeige"
+          }
+        }
+      }
+    },
+    "Distribute" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verteilen"
+          }
+        }
+      }
+    },
+    "DLEQ Proof" : {
+      "shouldTranslate" : false
+    },
+    "Done" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fertig"
+          }
+        }
+      }
+    },
+    "Duplicate Mint" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duplizierte Mint"
+          }
+        }
+      }
+    },
+    "Ecash" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash"
+          }
+        }
+      }
+    },
+    "Ecash Created" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash erstellt"
+          }
+        }
+      }
+    },
+    "Ecash Quote" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash  Quote"
+          }
+        }
+      }
+    },
+    "Ecash selected" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash ausgewählt"
+          }
+        }
+      }
+    },
+    "Ecash Token" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash Token"
+          }
+        }
+      }
+    },
+    "Egyptian Pound" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ägyptischer Pfund"
+          }
+        }
+      }
+    },
+    "Enter a nickname..." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spitznamen eingeben..."
+          }
+        }
+      }
+    },
+    "Enter a Number" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahl eingeben"
+          }
+        }
+      }
+    },
+    "Enter a URL to add a new mint to the wallet, hit Return to save. \nmacadamia Wallet is not affiliated with any mint and does not custody user funds. \nYou can find a list of mints on [bitcoinmints.com](https://bitcoinmints.com)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib eine URL ein um dem Wallet eine neue Mint hinzuzufügen, dann Enter um zu speichern. macadamia Wallet hat keine Zugehörigkeit zu einer Mint und betreut keine Geldmittel der Nutzer. Du kannst eine Liste von Mints finden auf [bitcoinmints.com](https://bitcoinmints.com)"
+          }
+        }
+      }
+    },
+    "enter amount" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betrag eingeben "
+          }
+        }
+      }
+    },
+    "Enter amount..." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betrag eingeben..."
+          }
+        }
+      }
+    },
+    "Enter nsec1... or 64-char hex key" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nsec1 oder 64-Buchstaben-Hex-Key eingeben"
+          }
+        }
+      }
+    },
+    "Enter seed phrase" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seed-Phrase eingeben"
+          }
+        }
+      }
+    },
+    "Enter your 12 word seed phrase, separated by spaces or line breaks. Please also make sure that your mint list contains all the mints you want to try restoring from." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib deine 12-Wörter Seed-Phrase ein, getrennt durch Leerzeichen oder Zeilenumbrüche"
+          }
+        }
+      }
+    },
+    "Error" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler"
+          }
+        }
+      }
+    },
+    "Error while determining token lock state." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler beim Feststellen des Token-Status"
+          }
+        }
+      }
+    },
+    "Euro" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Euro"
+          }
+        }
+      }
+    },
+    "Expires at: " : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verfällt am:"
+          }
+        }
+      }
+    },
+    "Failed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gescheitert"
+          }
+        }
+      }
+    },
+    "Failed to encode payment data." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kodierung der Zahlungsdaten gescheitert."
+          }
+        }
+      }
+    },
+    "Failed to generate QR Code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generieren des QR-Codes gescheitert."
+          }
+        }
+      }
+    },
+    "Failed to get your Nostr public key: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laden des Nostr-Public-Key gescheitert: %@."
+          }
+        }
+      }
+    },
+    "Fee Information" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebühren-Information"
+          }
+        }
+      }
+    },
+    "Fee: %lld • Allocation: %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebühr: %1$lld • Zuweisung: %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fee: %1$lld • Allocation: %2$lld"
+          }
+        }
+      }
+    },
+    "Fiat Currency" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fiat-Währung"
+          }
+        }
+      }
+    },
+    "Fix derivation counters" : {
+      "shouldTranslate" : false
+    },
+    "From" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von:"
+          }
+        }
+      }
+    },
+    "From: " : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von:"
+          }
+        }
+      }
+    },
+    "Full payment" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesamte Zahlung"
+          }
+        }
+      }
+    },
+    "Generated Key" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key generieren"
+          }
+        }
+      }
+    },
+    "Get Invoice" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invoice erhalten"
+          }
+        }
+      }
+    },
+    "Getting mint quote..." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mint-Quote erhalten..."
+          }
+        }
+      }
+    },
+    "Here goes the slider for %@" : {
+
+    },
+    "Hide details" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details verbergen"
+          }
+        }
+      }
+    },
+    "Hold and drag to change the order. The first mint will be the default selected across the application." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halten und bewegen um die Reihenfolge zu ändern. Die erste Mint wird als Standard in der App verwendet."
+          }
+        }
+      }
+    },
+    "Hong Kong Dollar" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hong Kong Dollar"
+          }
+        }
+      }
+    },
+    "HTTP" : {
+      "shouldTranslate" : false
+    },
+    "HTTP transport URL invalid." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HTTP-URL für den Transport ungültig."
+          }
+        }
+      }
+    },
+    "Hungarian Forint" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungarischer Forint"
+          }
+        }
+      }
+    },
+    "I agree to the terms." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ich stimme zu."
+          }
+        }
+      }
+    },
+    "I am a button." : {
+      "shouldTranslate" : false
+    },
+    "I have written down the seed phrase" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ich habe die Seed-Phrase aufgeschrieben."
+          }
+        }
+      }
+    },
+    "Icelandic Króna" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isländische Kronen"
+          }
+        }
+      }
+    },
+    "ID: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID"
+          }
+        }
+      }
+    },
+    "Identity" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identität"
+          }
+        }
+      }
+    },
+    "If you do not trust the mint of this token, you can swap its value to one of your trusted mints via Lightning (will incur fees)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn Du der Mint dieses Tokens nicht vertraust, kannst Du dessen Wert zu einer deiner vertrauten Mints via Lightning transferieren."
+          }
+        }
+      }
+    },
+    "If you trust this mint selecting this option will add it to the list of known mints and redeem the token." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn Du der Mint vertraust, kannst du sie mit dieser Auswahl zur Liste vertrauenswürdiger Mints hinzufügen und das Token einlösen."
+          }
+        }
+      }
+    },
+    "inactive" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inaktiv"
+          }
+        }
+      }
+    },
+    "Indian Rupee" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indischer Rupee"
+          }
+        }
+      }
+    },
+    "Indonesian Rupiah" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indonesischer Rupiah"
+          }
+        }
+      }
+    },
+    "Information" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
+          }
+        }
+      }
+    },
+    "Initialization Error" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Initialisierungs-Fehler"
+          }
+        }
+      }
+    },
+    "Input Error" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eingabefehler"
+          }
+        }
+      }
+    },
+    "Insufficient balance" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unzureichendes Guthaben"
+          }
+        }
+      }
+    },
+    "Insufficient balance (including fees)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unzureichendes Guthaben (Inklusive Gebühren)"
+          }
+        }
+      }
+    },
+    "Insufficient balance." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unzureichendes Guthaben."
+          }
+        }
+      }
+    },
+    "Insufficient Funds 💰" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unzureichendes Guthaben 💰"
+          }
+        }
+      }
+    },
+    "Invalid Input" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültige Eingabe"
+          }
+        }
+      }
+    },
+    "Invalid input: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültige Eingabe: %@"
+          }
+        }
+      }
+    },
+    "Invalid public key 🔑" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger Public-Key 🔑"
+          }
+        }
+      }
+    },
+    "Invalid URL" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültige URL"
+          }
+        }
+      }
+    },
+    "Invoice" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invoice"
+          }
+        }
+      }
+    },
+    "Israeli Shekel" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Israelische Schekel"
+          }
+        }
+      }
+    },
+    "Issue" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausstellen"
+          }
+        }
+      }
+    },
+    "Issue Ecash" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash ausstellen"
+          }
+        }
+      }
+    },
+    "Issuing Ecash" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stelle Ecash aus"
+          }
+        }
+      }
+    },
+    "Issuing ecash..." : {
+
+    },
+    "Japanese Yen" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Japanischer Yen"
+          }
+        }
+      }
+    },
+    "Keyset Error" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keyset-Fehler"
+          }
+        }
+      }
+    },
+    "Keysets and derivation counters" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keysets und Derivations-Zähler"
+          }
+        }
+      }
+    },
+    "Kuwaiti Dinar" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kuwait-Dinar"
+          }
+        }
+      }
+    },
+    "Lightning" : {
+      "shouldTranslate" : false
+    },
+    "Lightning Address" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lightning-Adresse"
+          }
+        }
+      }
+    },
+    "LNURL-pay" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LNURL-pay"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
+    "Load States" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status laden"
+          }
+        }
+      }
+    },
+    "Lock to public key" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu Public-Key sperren"
+          }
+        }
+      }
+    },
+    "Lock to Public Key" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu Public-Key sperren"
+          }
+        }
+      }
+    },
+    "Lock to wallet key" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu Wallet-Key sperren"
+          }
+        }
+      }
+    },
+    "Locked to unknown key" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu unbekanntem Key gesperrt"
+          }
+        }
+      }
+    },
+    "Locked to your key" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu deinem Key gesperrt"
+          }
+        }
+      }
+    },
+    "Locked Token 🔒" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesperrtes Token 🔒"
+          }
+        }
+      }
+    },
+    "macadamia can not yet redeem locked tokens. This feature is coming soon™." : {
+      "shouldTranslate" : false
+    },
+    "macadamia can only redeem tokens denominated in Satoshis. Multi unit support is coming soon™." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macadamia kann nur Tokens in Satoshis einlösen. Unterstützung für mehr Einheiten kommt bald."
+          }
+        }
+      }
+    },
+    "macadamia can only restore ecash from the mints it knows about. Make sure to include their URLs in the backup of your seed phrase." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macadamia kann nur von Mints wiederherstellen, die es kennt. Stelle sicher, dass du eine Liste ihrer URLs in das Backup mit Seed-Phrase einbeziehst."
+          }
+        }
+      }
+    },
+    "macadamia no longer supports tokens that contain ecash from multiple mints. Please use separate tokens and the seed phrase for restoring ecash." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macadamia unterstützt keine Tokens von mehreren Mints mehr. Bitte verwende separate Tokens und die Seed-Phrase zur Wiederherstellung."
+          }
+        }
+      }
+    },
+    "macadamia, %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macadamia, %@"
+          }
+        }
+      }
+    },
+    "Make transfer" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transferieren"
+          }
+        }
+      }
+    },
+    "Malaysian Ringgit" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Malaysia-Ringpit"
+          }
+        }
+      }
+    },
+    "Max:" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maximal:"
+          }
+        }
+      }
+    },
+    "Melting..." : {
+
+    },
+    "Memo" : {
+
+    },
+    "Memo: " : {
+
+    },
+    "Memo: %@" : {
+
+    },
+    "Merchant QR" : {
+
+    },
+    "Message Banner" : {
+
+    },
+    "Mexican Peso" : {
+
+    },
+    "Min:" : {
+
+    },
+    "Mint" : {
+
+    },
+    "Mint could not be found" : {
+
+    },
+    "Mint Information" : {
+
+    },
+    "Mint Verification Error" : {
+
+    },
+    "Mint:" : {
+
+    },
+    "Mint: " : {
+
+    },
+    "Minted at: " : {
+
+    },
+    "Minting..." : {
+
+    },
+    "Mints" : {
+
+    },
+    "Mints (including hidden): %lld" : {
+
+    },
+    "Mints automatically selected for optimal payment" : {
+
+    },
+    "Missing Data" : {
+
+    },
+    "Mnemonic: %@" : {
+
+    },
+    "Moroccan Dirham" : {
+
+    },
+    "MPP" : {
+
+    },
+    "Multi Mint Token 📑" : {
+
+    },
+    "Multi-Path Payment" : {
+
+    },
+    "Multiple..." : {
+
+    },
+    "Myanmar Kyat" : {
+
+    },
+    "Name" : {
+
+    },
+    "Name: %@" : {
+
+    },
+    "Network" : {
+
+    },
+    "Network error" : {
+
+    },
+    "Network error 📡" : {
+
+    },
+    "New Zealand Dollar" : {
+
+    },
+    "Next" : {
+
+    },
+    "NFC not available on this device" : {
+
+    },
+    "Nickname" : {
+
+    },
+    "Nigerian Naira" : {
+
+    },
+    "nil" : {
+
+    },
+    "No Action" : {
+
+    },
+    "No active wallet" : {
+
+    },
+    "No Balance" : {
+
+    },
+    "No data." : {
+
+    },
+    "No error provided." : {
+
+    },
+    "No mint event provided." : {
+
+    },
+    "No mint selected" : {
+
+    },
+    "No Mints" : {
+
+    },
+    "No Mints Available" : {
+
+    },
+    "No mints yet." : {
+
+    },
+    "No pending receive event provided." : {
+
+    },
+    "No pending transfer event provided." : {
+
+    },
+    "No receive event provided." : {
+
+    },
+    "No relays configured. Add a relay to connect to Nostr." : {
+
+    },
+    "No restore event provided." : {
+
+    },
+    "No send event provided." : {
+
+    },
+    "No transactions yet" : {
+
+    },
+    "No transfer event provided." : {
+
+    },
+    "No Wallet Initialized" : {
+
+    },
+    "No wallet initialized yet." : {
+
+    },
+    "None" : {
+
+    },
+    "Norwegian Krone" : {
+
+    },
+    "Nostr" : {
+
+    },
+    "Nostr DM" : {
+
+    },
+    "Nostr Key" : {
+
+    },
+    "Not a valid mnemonic." : {
+
+    },
+    "Not authentic" : {
+
+    },
+    "Not connected to any relays." : {
+
+    },
+    "Offer" : {
+
+    },
+    "OK" : {
+
+    },
+    "One or both mints for this transfer could not be found." : {
+
+    },
+    "One or more parts of this payment are still pending. Please check again later to make sure the lightning payment was successful." : {
+
+    },
+    "One or more transfers would exceed safe limits. Please adjust your allocation to leave more balance for fees." : {
+
+    },
+    "Open FAQ" : {
+
+    },
+    "Open in Wallet" : {
+
+    },
+    "Open the NFC contactless payment screen to pay a terminal" : {
+
+    },
+    "Optional description..." : {
+
+    },
+    "Optional memo..." : {
+
+    },
+    "Overwrite ⚠" : {
+
+    },
+    "P2PK" : {
+
+    },
+    "Paid!" : {
+
+    },
+    "Pakistani Rupee" : {
+
+    },
+    "Partially locked (not yet supported)" : {
+
+    },
+    "Pay" : {
+
+    },
+    "Pay a terminal using NFC" : {
+
+    },
+    "Pay Again" : {
+
+    },
+    "Pay from %lld mints" : {
+
+    },
+    "Pay from: %@" : {
+
+    },
+    "Pay invoice" : {
+
+    },
+    "Pay with NFC" : {
+
+    },
+    "Paying ecash..." : {
+
+    },
+    "Paying..." : {
+
+    },
+    "Payment" : {
+
+    },
+    "Payment amount approaching the total balance risks payment failure due to fees." : {
+
+    },
+    "Payment Date" : {
+
+    },
+    "Payment is requested from a mint you don't have any ecash with." : {
+
+    },
+    "Payment Parts" : {
+
+    },
+    "Payment Pending ⏳" : {
+
+    },
+    "Payment Quote" : {
+
+    },
+    "Payment Request" : {
+
+    },
+    "Payment sent!" : {
+
+    },
+    "Payment successful!" : {
+
+    },
+    "Payment Summary" : {
+
+    },
+    "Payment Type" : {
+
+    },
+    "Pending Payment" : {
+
+    },
+    "Pending Payment Part" : {
+
+    },
+    "Peruvian Sol" : {
+
+    },
+    "Philippine Peso" : {
+
+    },
+    "Please configure your Nostr key in Settings to send DMs." : {
+
+    },
+    "Please enter a valid URL. If no protocol is specified, https:// will be used." : {
+
+    },
+    "Polish Złoty" : {
+
+    },
+    "Preparing..." : {
+
+    },
+    "Privacy is a human right." : {
+
+    },
+    "Private key is stored" : {
+
+    },
+    "Progress: %lld%%" : {
+
+    },
+    "Proof Database" : {
+
+    },
+    "Proof Details" : {
+
+    },
+    "Proof Selection Error" : {
+
+    },
+    "Proofs: %lld" : {
+
+    },
+    "Public Key" : {
+
+    },
+    "Public key copied to clipboard" : {
+
+    },
+    "Quote ID" : {
+
+    },
+    "Quote Not Paid 🚫💰" : {
+
+    },
+    "Random" : {
+
+    },
+    "Receive" : {
+
+    },
+    "Receive via" : {
+
+    },
+    "Received at: " : {
+
+    },
+    "Received ecash from an unknown mint (%@). Add this mint to receive." : {
+
+    },
+    "Redeem" : {
+
+    },
+    "Redeem Later" : {
+
+    },
+    "Relays" : {
+
+    },
+    "Remove Mint" : {
+
+    },
+    "Remove Payment" : {
+
+    },
+    "Remove this mint" : {
+
+    },
+    "Replace Key" : {
+
+    },
+    "Replace with Custom Key" : {
+
+    },
+    "Request" : {
+
+    },
+    "Request from" : {
+
+    },
+    "Restore" : {
+
+    },
+    "Restore Error" : {
+
+    },
+    "Restored at: " : {
+
+    },
+    "Retry" : {
+
+    },
+    "Romanian Leu" : {
+
+    },
+    "Russian Ruble" : {
+
+    },
+    "sat" : {
+
+    },
+    "satoshin@gmx.com" : {
+
+    },
+    "sats" : {
+
+    },
+    "Saudi Riyal" : {
+
+    },
+    "Save Key" : {
+
+    },
+    "Scan or paste a token" : {
+
+    },
+    "Select" : {
+
+    },
+    "Select a mint" : {
+
+    },
+    "Select All" : {
+
+    },
+    "Select Banner" : {
+
+    },
+    "Select..." : {
+
+    },
+    "Self-pay not possible" : {
+
+    },
+    "Send" : {
+
+    },
+    "Send from" : {
+
+    },
+    "Send via" : {
+
+    },
+    "Set up Nostr Key" : {
+
+    },
+    "Settings" : {
+
+    },
+    "Share" : {
+
+    },
+    "Share via QR code" : {
+
+    },
+    "Show all" : {
+
+    },
+    "Show details" : {
+
+    },
+    "Show Locking Key" : {
+
+    },
+    "Show Seed Phrase" : {
+
+    },
+    "Singapore Dollar" : {
+
+    },
+    "Single Payment" : {
+
+    },
+    "Something went wrong" : {
+
+    },
+    "Something went wrong..." : {
+
+    },
+    "South African Rand" : {
+
+    },
+    "South Korean Won" : {
+
+    },
+    "Sri Lankan Rupee" : {
+
+    },
+    "Swap" : {
+
+    },
+    "Swap to" : {
+
+    },
+    "Swedish Krona" : {
+
+    },
+    "Swiss Franc" : {
+
+    },
+    "Taiwan Dollar" : {
+
+    },
+    "Tap to select a mint from the list" : {
+
+    },
+    "Thai Baht" : {
+
+    },
+    "The ecash has already been spent with the mint." : {
+
+    },
+    "The entered text does not appear to be a properly formmatted seed phrase. Make sure its twelve words, separated by spaces or line breaks." : {
+
+    },
+    "The mint could not be reached due to a network issue. Are you both online?" : {
+
+    },
+    "The mint you are trying to add is already known to the wallet. Please add each mint only once." : {
+
+    },
+    "The operation could not be completed due to an unexpected database inconsistency. %@" : {
+
+    },
+    "The provided string %@ does not seem to be valid. Please send the ecash manually or reclaim it." : {
+
+    },
+    "The public key you entered does not seem to be valid." : {
+
+    },
+    "The quote has not been paid. Try again after paying the displayed quote to the mint." : {
+
+    },
+    "The request returned status: %@" : {
+
+    },
+    "The system passed an unexpected URL %@" : {
+
+    },
+    "The transaction is unbalanced." : {
+
+    },
+    "The wallet was not able to pick ecash proofs from mint %@." : {
+
+    },
+    "The wallet was unable to collect enough ecash for this transaction." : {
+
+    },
+    "This blinded message has already been signed, indicating an issue during deterministic secret generation." : {
+
+    },
+    "This field supports BOLT11 invoices, LNURL strings (LNURL1...) or Lightning Addresses (e.g. user@host.com)." : {
+
+    },
+    "This is your newly generated **seed phrase** backup. Write these twelve words down or save them in a password manager and use them to restore ecash from the mints known to this wallet (write those down, too). \n " : {
+
+    },
+    "This mint did not pass verification before being added. Detail: %@" : {
+
+    },
+    "This payment did not go through and is marked \"unpaid\" with the mint. Would you like to try again?" : {
+
+    },
+    "This payment did not go through and one or more parts are marked \"unpaid\". The Ecash reserved for this operation is still valid and can be made available by removing the pending transfer event." : {
+
+    },
+    "This payment did not go through and one or more parts are marked \"unpaid\". Would you like to try again?" : {
+
+    },
+    "This payment is still pending. Please check again later to make sure the lightning payment was successful." : {
+
+    },
+    "This wallet and the Cashu protocol are in active development. Be cautious when using this software and follow best practices:\n\n- Mint only as much as you are ready to lose\n\n- Only use mints you trust\n\n- Back up your wallet\n\nIf you experience any issues, don't hesitate to send a request for support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues)." : {
+
+    },
+    "This wallet does not appear to have a seed." : {
+
+    },
+    "This wallet still contains valid ecash that will become inaccessible if you restore now. Are you sure? " : {
+
+    },
+    "This wallet-specific key is used for Nostr functionality." : {
+
+    },
+    "To" : {
+
+    },
+    "To save a nickname press Return." : {
+
+    },
+    "To: " : {
+
+    },
+    "Token" : {
+
+    },
+    "Token Error" : {
+
+    },
+    "Token is authentic" : {
+
+    },
+    "Token is pending." : {
+
+    },
+    "Token was redeemed." : {
+
+    },
+    "Total Amount" : {
+
+    },
+    "Total Amount: " : {
+
+    },
+    "Total Lightning Fees: %lld" : {
+
+    },
+    "Transaction Unbalanced" : {
+
+    },
+    "Transfer" : {
+
+    },
+    "Transfer %lld" : {
+
+    },
+    "Transfer amount approaching the total balance risks payment failure due to fees." : {
+
+    },
+    "Transfer Limit Exceeded" : {
+
+    },
+    "Transfer Progress" : {
+
+    },
+    "Turkish Lira" : {
+
+    },
+    "Type, paste or scan..." : {
+
+    },
+    "UAE Dirham" : {
+
+    },
+    "Ukrainian Hryvnia" : {
+
+    },
+    "Unable to decode token." : {
+
+    },
+    "Unable to read private key from database." : {
+
+    },
+    "Unhandled Error" : {
+
+    },
+    "Unit Error 💵" : {
+
+    },
+    "Unit: " : {
+
+    },
+    "Unknown error" : {
+
+    },
+    "Unknown Error" : {
+
+    },
+    "Unknown event kind." : {
+
+    },
+    "Unknown Mint" : {
+
+    },
+    "Unknown Mint 🥷" : {
+
+    },
+    "Unpaid ⚠" : {
+
+    },
+    "Unsupported Input" : {
+
+    },
+    "Unsupported URL Scheme" : {
+
+    },
+    "URL" : {
+
+    },
+    "US Dollar" : {
+
+    },
+    "V3" : {
+
+    },
+    "V4" : {
+
+    },
+    "Version" : {
+
+    },
+    "Version %@ (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Version %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "Version: " : {
+
+    },
+    "Vietnamese Dong" : {
+
+    },
+    "View source on GitHub" : {
+
+    },
+    "Waiting..." : {
+
+    },
+    "Wallet" : {
+
+    },
+    "Wallet Info" : {
+
+    },
+    "Wallet Information" : {
+
+    },
+    "Wallet Key & Relays" : {
+
+    },
+    "Wallet not empty!" : {
+
+    },
+    "Wallet Public Key" : {
+
+    },
+    "WARNING: This reduces your privacy with this mint!" : {
+
+    },
+    "When enabled, the app automatically connects to relays to receive ecash payments via Nostr." : {
+
+    },
+    "wss://relay..." : {
+
+    },
+    "You are trying to redeem from a mint that is not known to the wallet. Please add it first." : {
+
+    },
+    "You are using **macadamia**, the first fully native ecash wallet for the Cashu protocol on iOS. \n\nDigital payments should be as natural as handing over cash in person. Cashu brings simplicity back to online and real-life payments. Tap [here](https://cashu.space) to learn more. \n\nThe code for this project is **open-source** allowing anyone to view it or contribute. You can find it on [Github](https://github.com/zeugmaster/macadamia). \n\nThis app does not collect any usage data or analytics. \n\nThank you for trying the future of payments! \n\n\n\n# 🥜🌰" : {
+
+    },
+    "You need to add all the mints you want to restore ecash from. You can do so in the 'Mints' tab of the app." : {
+
+    },
+    "Your wallet public key (npub)" : {
+
+    }
+  },
+  "version" : "1.1"
+}

@@ -351,9 +351,9 @@ struct RedeemView<AdditionalControls: View>: View {
             case .loading:
                 buttonState = .loading(String(localized: "Preparing..."))
             case .melting:
-                buttonState = .loading(String(localized: "Melting..."))
+                buttonState = .loading(String(localized: "Paying..."))
             case .minting:
-                buttonState = .loading(String(localized: "Minting..."))
+                buttonState = .loading(String(localized: "Issuing..."))
             case .success:
                 buttonState = .success()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {

@@ -79,8 +79,8 @@ struct MintInfoView: View {
                 if let nuts = info.nuts {
                     Section {
                         HFlow {
-                            Tag(text: String(localized: "Mint"), enabled: !(nuts.nut04?.disabled ?? true))
-                            Tag(text: String(localized: "Melt"), enabled: !(nuts.nut05?.disabled ?? true))
+                            Tag(text: String(localized: "Issue"), enabled: !(nuts.nut04?.disabled ?? true))
+                            Tag(text: String(localized: "Pay"), enabled: !(nuts.nut05?.disabled ?? true))
                             Tag(text: String(localized: "Restore"), enabled: {
                                 if case .bool(true) = nuts.nut09?.supported {
                                     return true

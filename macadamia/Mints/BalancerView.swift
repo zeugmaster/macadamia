@@ -185,7 +185,7 @@ struct BalancerView: View {
             handleSwapStateChange(states)
         }
         .navigationBarBackButtonHidden(buttonState.type == .loading)
-        .navigationTitle("Distribute Funds")
+        .navigationTitle("Distribute")
         .navigationBarTitleDisplayMode(.inline)
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
@@ -303,9 +303,9 @@ struct BalancerView: View {
         case .preparing:
             Text("Preparing...")
         case .melting:
-            Text("Melting...")
+            Text("Paying...")
         case .minting:
-            Text("Minting...")
+            Text("Issuing...")
         case .success:
             Text("Complete")
                 .foregroundColor(.green)

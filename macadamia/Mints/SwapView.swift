@@ -140,8 +140,8 @@ struct SwapView: View {
             Section {
                 VStack(alignment: .leading, spacing: 12) {
                     progressRow(title: String(localized: "Getting mint quote..."), isActive: state == .setup, showCheckmark: shouldShowSetupCheckmark)
-                    progressRow(title: String(localized: "Melting ecash..."), isActive: state == .melting, showCheckmark: shouldShowMeltingCheckmark)
-                    progressRow(title: String(localized: "Minting ecash..."), isActive: state == .minting, showCheckmark: state == .success)
+                    progressRow(title: String(localized: "Paying ecash..."), isActive: state == .melting, showCheckmark: shouldShowMeltingCheckmark)
+                    progressRow(title: String(localized: "Issuing ecash..."), isActive: state == .minting, showCheckmark: state == .success)
                 }
                 .opacity(isProgressSectionVisible ? 1.0 : 0)
                 .animation(.easeInOut(duration: 0.2), value: state)
