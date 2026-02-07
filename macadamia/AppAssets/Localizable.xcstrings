@@ -157,7 +157,14 @@
       }
     },
     "Active: %@" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiv: %@"
+          }
+        }
+      }
     },
     "Add" : {
       "localizations" : {
@@ -706,7 +713,14 @@
       }
     },
     "Copied %@" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied %@"
+          }
+        }
+      }
     },
     "Copied!" : {
       "localizations" : {
@@ -729,7 +743,14 @@
       }
     },
     "Copy %@" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy %@"
+          }
+        }
+      }
     },
     "Copy to clipboad" : {
       "localizations" : {
@@ -892,7 +913,14 @@
       }
     },
     "Detail: %@" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detail: %@"
+          }
+        }
+      }
     },
     "Display" : {
       "localizations" : {
@@ -1565,6 +1593,9 @@
         }
       }
     },
+    "Issued at: " : {
+
+    },
     "Issuing Ecash" : {
       "localizations" : {
         "de" : {
@@ -1576,6 +1607,9 @@
       }
     },
     "Issuing ecash..." : {
+
+    },
+    "Issuing..." : {
 
     },
     "Japanese Yen" : {
@@ -1780,385 +1814,1193 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Maximal:"
+            "value" : "Maximum:"
           }
         }
       }
     },
-    "Melting..." : {
-
-    },
     "Memo" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beschreibung"
+          }
+        }
+      }
     },
     "Memo: " : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beschreibung:"
+          }
+        }
+      }
     },
     "Memo: %@" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beschreibung: %@"
+          }
+        }
+      }
     },
     "Merchant QR" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Händler-QR"
+          }
+        }
+      }
     },
     "Message Banner" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachrichten-Banner"
+          }
+        }
+      }
     },
     "Mexican Peso" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mexikanischer Peso"
+          }
+        }
+      }
     },
     "Min:" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimum:"
+          }
+        }
+      }
     },
     "Mint" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mint"
+          }
+        }
+      }
     },
     "Mint could not be found" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mint konnte nicht gefunden werden"
+          }
+        }
+      }
     },
     "Mint Information" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mint-Information"
+          }
+        }
+      }
     },
     "Mint Verification Error" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mint-Verifizierungs-Fehler"
+          }
+        }
+      }
     },
     "Mint:" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mint:"
+          }
+        }
+      }
     },
     "Mint: " : {
-
-    },
-    "Minted at: " : {
-
-    },
-    "Minting..." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mint:"
+          }
+        }
+      }
     },
     "Mints" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mints"
+          }
+        }
+      }
     },
     "Mints (including hidden): %lld" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mints (inklusive versteckten): %lld"
+          }
+        }
+      }
     },
     "Mints automatically selected for optimal payment" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mints automatisch ausgewählt für optimierte Zahlung"
+          }
+        }
+      }
     },
     "Missing Data" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlende Daten"
+          }
+        }
+      }
     },
     "Mnemonic: %@" : {
-
+      "shouldTranslate" : false
     },
     "Moroccan Dirham" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marokkanische Dirham"
+          }
+        }
+      }
     },
     "MPP" : {
-
+      "shouldTranslate" : false
     },
     "Multi Mint Token 📑" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multi-Mint-Token "
+          }
+        }
+      }
     },
     "Multi-Path Payment" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multi-Path-Zahlung"
+          }
+        }
+      }
     },
     "Multiple..." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mehrere..."
+          }
+        }
+      }
     },
     "Myanmar Kyat" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Myanmar-Kat"
+          }
+        }
+      }
     },
     "Name" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        }
+      }
     },
     "Name: %@" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name: %@"
+          }
+        }
+      }
     },
     "Network" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzwerk"
+          }
+        }
+      }
     },
     "Network error" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzwerk-Fehler"
+          }
+        }
+      }
     },
     "Network error 📡" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzwerk-Fehler 📡"
+          }
+        }
+      }
     },
     "New Zealand Dollar" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuseeland-Dollar"
+          }
+        }
+      }
     },
     "Next" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weiter"
+          }
+        }
+      }
     },
     "NFC not available on this device" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC ist auf diesem Gerät nicht verfügbar"
+          }
+        }
+      }
     },
     "Nickname" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spitzname"
+          }
+        }
+      }
     },
     "Nigerian Naira" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nigerianische Naira"
+          }
+        }
+      }
     },
     "nil" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "keine"
+          }
+        }
+      }
     },
     "No Action" : {
-
+      "shouldTranslate" : false
     },
     "No active wallet" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein aktives Wallet"
+          }
+        }
+      }
     },
     "No Balance" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Guthaben"
+          }
+        }
+      }
     },
     "No data." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Daten."
+          }
+        }
+      }
     },
     "No error provided." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Fehler bereitgestellt."
+          }
+        }
+      }
     },
     "No mint event provided." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Mint bereitgestellt."
+          }
+        }
+      }
     },
     "No mint selected" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Mint ausgewählt"
+          }
+        }
+      }
     },
     "No Mints" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Mints"
+          }
+        }
+      }
     },
     "No Mints Available" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Mints verfügbar"
+          }
+        }
+      }
     },
     "No mints yet." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch keine Mints"
+          }
+        }
+      }
     },
     "No pending receive event provided." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein ausstehendes Empfangsereignis bereitgestellt."
+          }
+        }
+      }
     },
     "No pending transfer event provided." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein ausstehendes Transferereignis bereitgestellt."
+          }
+        }
+      }
     },
     "No receive event provided." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Empfangsereignis bereitgestellt."
+          }
+        }
+      }
     },
     "No relays configured. Add a relay to connect to Nostr." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Relays konfiguriert. Füge ein Relay hinzu um dich mit Nostr zu verbinden."
+          }
+        }
+      }
     },
     "No restore event provided." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Wiederherstellungsereignis bereitgestellt."
+          }
+        }
+      }
     },
     "No send event provided." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Sendeereignis bereitgestellt."
+          }
+        }
+      }
     },
     "No transactions yet" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch keine Transaktionen"
+          }
+        }
+      }
     },
     "No transfer event provided." : {
-
-    },
-    "No Wallet Initialized" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Transferereignis bereitgestellt."
+          }
+        }
+      }
     },
     "No wallet initialized yet." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch kein Wallet initialisiert."
+          }
+        }
+      }
     },
     "None" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine"
+          }
+        }
+      }
     },
     "Norwegian Krone" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Norwegische Kronen"
+          }
+        }
+      }
     },
     "Nostr" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostr"
+          }
+        }
+      }
     },
     "Nostr DM" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostr DM"
+          }
+        }
+      }
     },
     "Nostr Key" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostr-Key"
+          }
+        }
+      }
     },
     "Not a valid mnemonic." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine gültige Seed-Phrase"
+          }
+        }
+      }
     },
     "Not authentic" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht authentisch"
+          }
+        }
+      }
     },
     "Not connected to any relays." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit keinem Relay verbunden."
+          }
+        }
+      }
     },
     "Offer" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offer"
+          }
+        }
+      }
     },
     "OK" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
     },
     "One or both mints for this transfer could not be found." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einer oder beide Mints für diesen Transfer konnten nicht gefunden werden."
+          }
+        }
+      }
     },
     "One or more parts of this payment are still pending. Please check again later to make sure the lightning payment was successful." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mindestens ein Teil dieser Zahlung ist noch ausstehend. Bitte probiere es später noch einmal um sicherzustellen, dass die Lightning-Zahlung erfolgreich war."
+          }
+        }
+      }
     },
     "One or more transfers would exceed safe limits. Please adjust your allocation to leave more balance for fees." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mindestens ein Teil der Zahlung würde das anteilige Guthaben übersteigen. Bitte passe die Aufteilung an um mehr Platz für Gebühren zu lassen."
+          }
+        }
+      }
     },
     "Open FAQ" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FAQ öffnen"
+          }
+        }
+      }
     },
     "Open in Wallet" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Wallet öffnen"
+          }
+        }
+      }
     },
     "Open the NFC contactless payment screen to pay a terminal" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffne den NFC Bildschirm um an einem Terminal kontaktlos zu bezahlen"
+          }
+        }
+      }
     },
     "Optional description..." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optionale Beschreibung..."
+          }
+        }
+      }
     },
     "Optional memo..." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optionale Beschreibung…"
+          }
+        }
+      }
     },
     "Overwrite ⚠" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überschreiben ⚠"
+          }
+        }
+      }
     },
     "P2PK" : {
-
+      "shouldTranslate" : false
     },
     "Paid!" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezahlt!"
+          }
+        }
+      }
     },
     "Pakistani Rupee" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pakistanische Rupee"
+          }
+        }
+      }
     },
     "Partially locked (not yet supported)" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teilweise gesperrt (noch nicht unterstützt)"
+          }
+        }
+      }
     },
     "Pay" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezahlen"
+          }
+        }
+      }
     },
     "Pay a terminal using NFC" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontaktloses Bezahlen"
+          }
+        }
+      }
     },
     "Pay Again" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitere Zahlung"
+          }
+        }
+      }
     },
     "Pay from %lld mints" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezahlen von %lld Mints"
+          }
+        }
+      }
     },
     "Pay from: %@" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezahlen von: %@"
+          }
+        }
+      }
     },
     "Pay invoice" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invoice bezahlen"
+          }
+        }
+      }
     },
     "Pay with NFC" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit NFC bezahlen"
+          }
+        }
+      }
     },
     "Paying ecash..." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezahle Ecash..."
+          }
+        }
+      }
     },
     "Paying..." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezahle…"
+          }
+        }
+      }
     },
     "Payment" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahlung"
+          }
+        }
+      }
     },
     "Payment amount approaching the total balance risks payment failure due to fees." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beträge nahe des Gesamt-Guthabens riskieren Fehler aufgrund von Gebühren."
+          }
+        }
+      }
     },
     "Payment Date" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datum der Zahlung"
+          }
+        }
+      }
     },
     "Payment is requested from a mint you don't have any ecash with." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Zahlung wurde angefragt von einer Mint bei der du kein Ecash hältst."
+          }
+        }
+      }
     },
     "Payment Parts" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teile der Zahlung"
+          }
+        }
+      }
     },
     "Payment Pending ⏳" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausstehende Zahlung ⏳"
+          }
+        }
+      }
     },
     "Payment Quote" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahlungs-Quote"
+          }
+        }
+      }
     },
     "Payment Request" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahlungsanfrage"
+          }
+        }
+      }
     },
     "Payment sent!" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahlung gesendet!"
+          }
+        }
+      }
     },
     "Payment successful!" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahlung erfolgreich!"
+          }
+        }
+      }
     },
     "Payment Summary" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahlungsübersicht"
+          }
+        }
+      }
     },
     "Payment Type" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahlungsart"
+          }
+        }
+      }
     },
     "Pending Payment" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausstehende Zahlung"
+          }
+        }
+      }
     },
     "Pending Payment Part" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausstehender Zahlungsteil"
+          }
+        }
+      }
     },
     "Peruvian Sol" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peruanischer Sol"
+          }
+        }
+      }
     },
     "Philippine Peso" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Philippinischer Peso"
+          }
+        }
+      }
     },
     "Please configure your Nostr key in Settings to send DMs." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte konfiguriere deinen Nostr-Key in den Einstellungen um DMs zu versenden."
+          }
+        }
+      }
     },
     "Please enter a valid URL. If no protocol is specified, https:// will be used." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte gib eine gültige URL ein. Wenn kein Protokoll genannt ist, wird HTTPS:// angenommen."
+          }
+        }
+      }
     },
     "Polish Złoty" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polnische Złoty"
+          }
+        }
+      }
     },
     "Preparing..." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorbereiten..."
+          }
+        }
+      }
     },
     "Privacy is a human right." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privatsphäre ist ein Menschenrecht."
+          }
+        }
+      }
     },
     "Private key is stored" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private-Key ist gespeichert"
+          }
+        }
+      }
     },
     "Progress: %lld%%" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fortschritt: %lld"
+          }
+        }
+      }
     },
     "Proof Database" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proof Datenbank"
+          }
+        }
+      }
     },
     "Proof Details" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proof Details"
+          }
+        }
+      }
     },
     "Proof Selection Error" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash-Auswahl-Fehler"
+          }
+        }
+      }
     },
     "Proofs: %lld" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proofs"
+          }
+        }
+      },
+      "shouldTranslate" : false
     },
     "Public Key" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public-Key"
+          }
+        }
+      }
     },
     "Public key copied to clipboard" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public-Key in die Zwischenablage kopiert "
+          }
+        }
+      }
     },
     "Quote ID" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quote-ID"
+          }
+        }
+      }
     },
     "Quote Not Paid 🚫💰" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quote noch nicht bezahlt 🚫💰"
+          }
+        }
+      }
     },
     "Random" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zufällig"
+          }
+        }
+      }
     },
     "Receive" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfangen"
+          }
+        }
+      }
     },
     "Receive via" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfangen via"
+          }
+        }
+      }
     },
     "Received at: " : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfangen am:"
+          }
+        }
+      }
     },
     "Received ecash from an unknown mint (%@). Add this mint to receive." : {
 

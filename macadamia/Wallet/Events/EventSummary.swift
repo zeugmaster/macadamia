@@ -17,7 +17,7 @@ struct MintEventSummary: View {
         List {
             Section {
                 HStack {
-                    Text("Minted at: ")
+                    Text("Issued at: ")
                     Spacer()
                     Text(event.date.formatted())
                 }

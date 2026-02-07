@@ -59,7 +59,7 @@ struct RestoreView: View {
      
     private func initiateRestore() {
         guard let activeWallet else {
-            displayAlert(alert: AlertDetail(title: String(localized: "No Wallet Initialized")))
+            displayAlert(alert: AlertDetail(title: String(localized: "No wallet initialized yet.")))
             return
         }
         
