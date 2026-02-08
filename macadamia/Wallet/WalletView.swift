@@ -311,7 +311,7 @@ struct WalletView: View {
         guard let mint = activeWallet.mints.first(where: { $0.url.absoluteString == mintURLString && !$0.hidden }) else {
             walletLogger.warning("Received ecash from unknown mint: \(mintURLString)")
             displayAlert(alert: AlertDetail(title: String(localized: "⚡ Incoming Ecash"),
-                                            description: String(localized: "Received ecash from an unknown mint (\(mintURLString)). Add this mint to receive.")))
+                                            description: String(localized: "Received ecash from an unknown mint (\(mintURLString)). Add this mint to redeem.")))
             return
         }
         

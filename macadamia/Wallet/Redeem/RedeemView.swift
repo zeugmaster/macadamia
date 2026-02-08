@@ -197,12 +197,7 @@ struct RedeemView<AdditionalControls: View>: View {
                         HStack {
                             Image(systemName: selection == .swap ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(selection == .swap ? .accentColor : .secondary)
-                            Text("Swap to")
-//                            Text("BETA")
-//                                .font(.caption)
-//                                .padding(2)
-//                                .foregroundStyle(.black)
-//                                .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(.white.opacity(0.7)))
+                            Text("Transfer to")
                             Spacer()
                             MintPicker(label: "", selectedMint: $swapTargetMint, allowsNoneState: false)
                             .pickerStyle(MenuPickerStyle())
@@ -215,7 +210,7 @@ struct RedeemView<AdditionalControls: View>: View {
                             selection = .swap
                             
                             if let swapTargetMint {
-                                buttonState = .idle(String(localized: "Swap"), action: { swap(to: swapTargetMint) })
+                                buttonState = .idle(String(localized: "Transfer"), action: { swap(to: swapTargetMint) })
                             }
                         }
                     } footer: {
@@ -369,7 +364,7 @@ struct RedeemView<AdditionalControls: View>: View {
                     displayAlert(alert: AlertDetail(with: error))
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    buttonState = .idle(String(localized: "Swap"), action: { swap(to: mint) })
+                    buttonState = .idle(String(localized: "Transfer"), action: { swap(to: mint) })
                 }
             }
         }
