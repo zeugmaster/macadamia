@@ -2,25 +2,54 @@
   "sourceLanguage" : "en",
   "strings" : {
     "" : {
-
+      "shouldTranslate" : false
     },
     "    " : {
-
+      "shouldTranslate" : false
     },
     " %@" : {
-
+      "shouldTranslate" : false
     },
     " sat" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sat"
+          }
+        }
+      },
+      "shouldTranslate" : false
     },
     "-" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "-"
+          }
+        }
+      }
     },
     "..." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "…"
+          }
+        }
+      }
     },
     "%@ " : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        }
+      }
     },
     "%@  %@" : {
       "localizations" : {
@@ -30,7 +59,8 @@
             "value" : "%1$@  %2$@"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "%@ %@" : {
       "localizations" : {
@@ -40,16 +70,20 @@
             "value" : "%1$@ %2$@"
           }
         }
-      }
-    },
-    "%@ details" : {
-
+      },
+      "shouldTranslate" : false
     },
     "%lld" : {
-
+      "shouldTranslate" : false
     },
     "%lld mint%@" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld Mint%2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -58,57 +92,159 @@
         }
       }
     },
-    "%lld Mints selected" : {
-
+    "%lld Mint%@ selected" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld Mint%2$@ ausgewählt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld Mint%2$@ selected"
+          }
+        }
+      }
     },
     "%lld objects" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Objekte"
+          }
+        }
+      }
     },
     "%lld ppk" : {
-
+      "shouldTranslate" : false
     },
     "%lld sat" : {
-
+      "shouldTranslate" : false
     },
     "%lld sats" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld sats"
+          }
+        }
+      },
+      "shouldTranslate" : false
     },
     "%lld." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld."
+          }
+        }
+      },
+      "shouldTranslate" : false
     },
     "%lld/%lld" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld/%2$lld"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "%lld%%" : {
-
+      "shouldTranslate" : false
     },
     "⚠️ Encoding Error" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Kodierungsfehler"
+          }
+        }
+      }
     },
     "⚠️ Nostr Key Error" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Nostr-Key Fehler"
+          }
+        }
+      }
     },
     "⚠️ Nostr Key Missing" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Nostr-Key fehlt"
+          }
+        }
+      }
     },
     "⚠️ Unexpected HTTP Response" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Unerwartete HTTP-Response"
+          }
+        }
+      }
+    },
+    "⚠️ Warning" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Achtung"
+          }
+        }
+      }
     },
     "⚡ Incoming Ecash" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚡Eingehendes Ecash"
+          }
+        }
+      }
     },
     "🛰️ Transmission Error" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🛰️ Übertragungsfehler"
+          }
+        }
+      }
     },
     "🛰️ Transmission issue" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🛰️ Übertragungsproblem"
+          }
+        }
+      }
     },
     "12 Word backup seed phrase" : {
       "localizations" : {
@@ -131,10 +267,24 @@
       }
     },
     "A wallet-specific Nostr key has been generated for you. You can replace it with your own key below if desired." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Wallet-spezifischer Nostr-Key wurde für dich generiert. Du kannst ihn mit deinem eigenen ersetzen falls gewünscht."
+          }
+        }
+      }
     },
     "A wallet-specific Nostr key will be generated when you set it up." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Wallet-spezifischer Nostr-Key wird erstellt wenn du es einstellst."
+          }
+        }
+      }
     },
     "About this Release" : {
       "localizations" : {
@@ -311,7 +461,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ein Transfer ermöglicht dir Ecash von einem bekannten Mint zu einer anderen durch das Lightning Netzwerk zu übertragen."
+            "value" : "Ein Transfer ermöglicht dir Ecash von einer bekannten Mint zu einer anderen durch das Lightning Netzwerk zu übertragen."
           }
         }
       }
@@ -658,6 +808,12 @@
     },
     "Connected to %lld of %lld relay%@." : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden mit %1$lld von %2$lld Relay%3$@."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -668,6 +824,12 @@
     },
     "Connected to all %lld relay%@." : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit allen %1$lld Relay%2$@ verbinden."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -1300,6 +1462,16 @@
     },
     "Here goes the slider for %@" : {
       "shouldTranslate" : false
+    },
+    "Hi there!" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hallo!"
+          }
+        }
+      }
     },
     "Hide details" : {
       "localizations" : {
@@ -2611,7 +2783,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kontaktloses Bezahlen"
+            "value" : "Via NFC bezahlen"
           }
         }
       }
@@ -3012,7 +3184,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Empfangen"
+            "value" : "Erhalten"
           }
         }
       }
@@ -3395,7 +3567,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " Alle zeigen "
+            "value" : "Alle zeigen "
           }
         }
       }
@@ -3415,7 +3587,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sperr-Schlüssel anzeigen"
+            "value" : "Key anzeigen"
           }
         }
       }
@@ -3536,6 +3708,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tippen um eine Mint aus der Liste auszuwählen"
+          }
+        }
+      }
+    },
+    "Terms" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nutzung"
           }
         }
       }
@@ -3761,7 +3943,14 @@
       }
     },
     "This wallet and the Cashu protocol are in active development. Be cautious when using this software and follow best practices:\n\n- Mint only as much as you are ready to lose\n\n- Only use mints you trust\n\n- Back up your wallet\n\nIf you experience any issues, don't hesitate to send a request for support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues)." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Wallet sowie das Cashu-Protokoll werden aktiv weiterentwickelt. Sei achtsam wenn du diese Software verwendest und folge diesen Empfehlungen:\n\n- Erstelle nur so viel Ecash wie du bereit bist zu verlieren\n\n- Verwende nur Mints, denen du vertraust\n\n- Erstelle ein Backup deines Wallets\n\nFalls du Probleme haben solltest, sende gerne eine Supportanfrage oder Feedback an [support@macadamia.cash](mailto:support@macadamia.cash) oder melde das Probem auf [GitHub](https://github.com/zeugmaster/macadamia/issues)."
+          }
+        }
+      }
     },
     "This wallet does not appear to have a seed." : {
       "localizations" : {
@@ -4259,6 +4448,16 @@
         }
       }
     },
+    "Wallet Backup" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallet-Backup"
+          }
+        }
+      }
+    },
     "Wallet Info" : {
       "localizations" : {
         "de" : {
@@ -4336,13 +4535,34 @@
       }
     },
     "You are using **macadamia**, the first fully native ecash wallet for the Cashu protocol on iOS. \n\nDigital payments should be as natural as handing over cash in person. Cashu brings simplicity back to online and real-life payments. Tap [here](https://cashu.space) to learn more. \n\nThe code for this project is **open-source** allowing anyone to view it or contribute. You can find it on [Github](https://github.com/zeugmaster/macadamia). \n\nThis app does not collect any usage data or analytics. \n\nThank you for trying the future of payments! \n\n\n\n# 🥜🌰" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du verwendest **macadamia**, das erste vollständig native Ecash-Wallet für iOS.\n\nDigitales Bezahlen sollte so einfach sein wie Bargeld zu überreichen. Cashu macht Zahlungen online und im Alltag wieder einfach. Tippe [hier](https://cashu.space) um mehr zu erfahren.\n\nDer Quellcode für dieses Projekt ist Open-Source damit ihn alle einsehen  und an der Entwicklung teilhaben können. Du findest ihn auf [Github](https://github.com/zeugmaster/macadamia).\n\nDanke, dass Du die Zukunft des Bezahlens ausprobierst!\n\n\n# 🥜🌰"
+          }
+        }
+      }
     },
     "You need to add all the mints you want to restore ecash from. You can do so in the 'Mints' tab of the app." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du musst alle Mints hinzufügen von denen du Ecash wiederherstellen willst. Das kannst du im Tab “Mints” tun."
+          }
+        }
+      }
     },
     "Your wallet public key (npub)" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Wallet-Public-Key"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

@@ -19,7 +19,6 @@
 		377A1BC82E6D9E3B00BC1BC1 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
 		377D26262E1FDE7800CFB880 /* URUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377D26252E1FDE7800CFB880 /* URUI */; };
 		377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377FFEFF2BC43B6900DD2635 /* MarkdownUI */; };
-		377FFF022BC451AB00DD2635 /* release-notes.md in Resources */ = {isa = PBXBuildFile; fileRef = 377FFF012BC451AB00DD2635 /* release-notes.md */; };
 		3792122E2B29E7520081F161 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 3792122D2B29E7520081F161 /* BigNumber */; };
 		379212342B29E7B30081F161 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212332B29E7B30081F161 /* BIP39 */; };
 		37965DDE2E6CBAD600681744 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 37965DDD2E6CBAD600681744 /* BigNumber */; };
@@ -85,7 +84,6 @@
 		3725D4D72CD5001A0037DD08 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		373CE6572EAE6D54000AC589 /* pull_request_template.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = pull_request_template.md; sourceTree = "<group>"; };
 		376F43B12B4FEC0D00E55B0F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		377FFF012BC451AB00DD2635 /* release-notes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "release-notes.md"; sourceTree = "<group>"; };
 		378B20472D09F3FD003FEEBD /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
 		3793B99D2CFCC8F80077F755 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		379A27EE2E3029A800827CC1 /* macadamia.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macadamia.entitlements; sourceTree = "<group>"; };
@@ -142,6 +140,7 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3713384D2F2FDD3400F8C0AB /* Intents */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Intents; sourceTree = "<group>"; };
 		371338502F2FDFE400F8C0AB /* AppAssets */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (371338542F2FE02800F8C0AB /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = AppAssets; sourceTree = "<group>"; };
+		3722E9452F39DA7D00F79F2B /* Release Notes */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "Release Notes"; sourceTree = "<group>"; };
 		377A1BAA2E6CF53F00BC1BC1 /* macadamiaTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = macadamiaTests; sourceTree = "<group>"; };
 		377A1BAD2E6CF54900BC1BC1 /* Preview Content */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "Preview Content"; sourceTree = "<group>"; };
 		3793B9A12D0047140077F755 /* Wallet */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (377A1BC62E6D9E1000BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Wallet; sourceTree = "<group>"; };
@@ -198,7 +197,7 @@
 				376F43B12B4FEC0D00E55B0F /* README.md */,
 				370A83FE2CB94CCD0039A413 /* .swiftformat */,
 				373CE6572EAE6D54000AC589 /* pull_request_template.md */,
-				377FFF012BC451AB00DD2635 /* release-notes.md */,
+				3722E9452F39DA7D00F79F2B /* Release Notes */,
 				372034B82B29E1BC00C4F955 /* macadamia */,
 				377A1BAA2E6CF53F00BC1BC1 /* macadamiaTests */,
 				3725D4D62CD5001A0037DD08 /* Frameworks */,
@@ -268,6 +267,7 @@
 			fileSystemSynchronizedGroups = (
 				3713384D2F2FDD3400F8C0AB /* Intents */,
 				371338502F2FDFE400F8C0AB /* AppAssets */,
+				3722E9452F39DA7D00F79F2B /* Release Notes */,
 				377A1BAD2E6CF54900BC1BC1 /* Preview Content */,
 				3793B9A12D0047140077F755 /* Wallet */,
 				3793B9A22D0049AD0077F755 /* Mints */,
@@ -406,7 +406,6 @@
 				373CE6582EAE6D66000AC589 /* pull_request_template.md in Resources */,
 				370A83FF2CB94CCD0039A413 /* .swiftformat in Resources */,
 				376F43B22B4FEC0D00E55B0F /* README.md in Resources */,
-				377FFF022BC451AB00DD2635 /* release-notes.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

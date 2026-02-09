@@ -96,7 +96,7 @@ struct BalancerView: View {
                 Section {
                     if collapseSelector {
                         VStack(alignment: .leading) {
-                            Text(String(localized: "\(allocations.count) Mints selected"))
+                            Text(String(localized: "\(allocations.count) Mint\(allocations.count == 1 ? "" : "s") selected"))
                         }
                         .foregroundStyle(.secondary)
                     } else {

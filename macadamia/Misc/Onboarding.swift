@@ -108,7 +108,7 @@ struct OnboardingPageLayout<Content: View>: View {
 
 struct WelcomePage: View {
     var body: some View {
-        OnboardingPageLayout(title: "Hi there!") {
+        OnboardingPageLayout(title: String(localized: "Hi there!")) {
             Markdown(String(localized: """
                      You are using **macadamia**, the first fully native \
                      ecash wallet for the Cashu protocol on iOS. \n
@@ -130,7 +130,7 @@ struct WelcomePage: View {
 
 struct DisclaimerPage: View {
     var body: some View {
-        OnboardingPageLayout(title: "⚠️ Warning") {
+        OnboardingPageLayout(title: String(localized: "⚠️ Warning")) {
             Markdown(String(localized: """
                      This wallet and the Cashu protocol are in active development. \
                      Be cautious when using this software and follow best practices:
@@ -158,7 +158,7 @@ struct SeedPhrasePage: View {
     let phrase: [String]
     
     var body: some View {
-        OnboardingPageLayout(title: "Wallet Backup") {
+        OnboardingPageLayout(title: String(localized: "Wallet Backup")) {
             VStack {
                 Markdown(String(localized: """
                          This is your newly generated **seed phrase** backup. \
@@ -223,7 +223,7 @@ struct TOSPage: View {
     @Binding var tosAcknoledged: Bool
     
     var body: some View {
-        OnboardingPageLayout(title: "Terms") {
+        OnboardingPageLayout(title: String(localized: "Terms")) {
             VStack {
                 ScrollView {
                     Text(tos_rev1)

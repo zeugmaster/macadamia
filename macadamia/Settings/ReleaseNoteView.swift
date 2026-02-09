@@ -4,22 +4,32 @@ import SwiftUI
 import WebKit
 
 enum ReleaseNote {
-    /// Loads the release notes from file
+    /// Loads the localized release notes, falling back to the base (English) version
     static func stringFromFile() -> String {
+        let preferredLanguage = Bundle.main.preferredLocalizations.first ?? "en"
+        if preferredLanguage != "en",
+           let localizedPath = Bundle.main.path(forResource: "release-notes-\(preferredLanguage)", ofType: "md"),
+           let contents = try? String(contentsOfFile: localizedPath, encoding: .utf8) {
+            return contents
+        }
+        return baseStringFromFile()
+    }
+
+    /// Loads the base (English) release notes — used for display fallback and hash computation
+    private static func baseStringFromFile() -> String {
         guard let filePath = Bundle.main.path(forResource: "release-notes", ofType: "md") else {
             return "Markdown file not found."
         }
         do {
-            let contents = try String(contentsOfFile: filePath, encoding: .utf8)
-            return contents
+            return try String(contentsOfFile: filePath, encoding: .utf8)
         } catch {
             return "Error reading markdown file: \(error)"
         }
     }
 
-    /// Provides the first 16 characters of a hash over the bundle's release notes
+    /// Provides the first 16 characters of a hash over the base release notes (language-independent)
     static func hashString() -> String? {
-        guard let input = stringFromFile().data(using: .utf8) else {
+        guard let input = baseStringFromFile().data(using: .utf8) else {
             return nil
         }
         return String(String(bytes: SHA256.hash(data: input).bytes).prefix(16))

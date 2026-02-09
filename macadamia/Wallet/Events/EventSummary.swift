@@ -44,14 +44,18 @@ struct MintEventSummary: View {
                     }
                 } label: {
                     HStack {
-                        Text("\(showDetails ? "Hide" : "Show") details")
-                            .opacity(0.8)
+                        if showDetails {
+                            Text("Hide details")
+                        } else {
+                            Text("Show details")
+                        }
                         Spacer()
                         Image(systemName: "chevron.right")
                             .foregroundColor(.secondary)
                             .font(.footnote)
                             .rotationEffect(.degrees(showDetails ? 90 : 0))
                     }
+                    .opacity(0.8)
                 }
                 
                 if showDetails {
@@ -138,14 +142,18 @@ struct MeltEventSummary: View {
                     }
                 } label: {
                     HStack {
-                        Text("\(showDetails ? "Hide" : "Show") details")
-                            .opacity(0.8)
+                        if showDetails {
+                            Text("Hide details")
+                        } else {
+                            Text("Show details")
+                        }
                         Spacer()
                         Image(systemName: "chevron.right")
                             .foregroundColor(.secondary)
                             .font(.footnote)
                             .rotationEffect(.degrees(showDetails ? 90 : 0))
                     }
+                    .opacity(0.8)
                 }
                 
                 if showDetails {
@@ -332,14 +340,18 @@ struct TransferEventSummary: View {
                     }
                 } label: {
                     HStack {
-                        Text("\(showDetails ? "Hide" : "Show") details")
-                            .opacity(0.8)
+                        if showDetails {
+                            Text("Hide details")
+                        } else {
+                            Text("Show details")
+                        }
                         Spacer()
                         Image(systemName: "chevron.right")
                             .foregroundColor(.secondary)
                             .font(.footnote)
                             .rotationEffect(.degrees(showDetails ? 90 : 0))
                     }
+                    .opacity(0.8)
                 }
             }
             

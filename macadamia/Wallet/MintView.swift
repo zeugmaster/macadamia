@@ -103,14 +103,18 @@ struct MintView: View {
                             }
                         } label: {
                             HStack {
-                                Text(showDetails ? String(localized: "Hide details") : String(localized: "Show details"))
-                                    .opacity(0.8)
+                                if showDetails {
+                                    Text("Hide details")
+                                } else {
+                                    Text("Show details")
+                                }
                                 Spacer()
                                 Image(systemName: "chevron.right")
                                     .foregroundColor(.secondary)
                                     .font(.footnote)
                                     .rotationEffect(.degrees(showDetails ? 90 : 0))
                             }
+                            .opacity(0.8)
                         }
                         
                         if showDetails {
