@@ -64,7 +64,7 @@ struct ContentView: View {
                 // First tab content
                 WalletView(urlState: $urlState, pendingNavigation: $pendingNavigation)
                     .tabItem {
-                        Label("Wallet", systemImage: "bitcoinsign.circle")
+                        Label("Wallet", systemImage: "wallet.bifold")
                     }
                     .tag(Tab.wallet)
 
