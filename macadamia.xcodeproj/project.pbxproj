@@ -197,7 +197,6 @@
 				376F43B12B4FEC0D00E55B0F /* README.md */,
 				370A83FE2CB94CCD0039A413 /* .swiftformat */,
 				373CE6572EAE6D54000AC589 /* pull_request_template.md */,
-				3722E9452F39DA7D00F79F2B /* Release Notes */,
 				372034B82B29E1BC00C4F955 /* macadamia */,
 				377A1BAA2E6CF53F00BC1BC1 /* macadamiaTests */,
 				3725D4D62CD5001A0037DD08 /* Frameworks */,
@@ -218,6 +217,7 @@
 		372034B82B29E1BC00C4F955 /* macadamia */ = {
 			isa = PBXGroup;
 			children = (
+				3722E9452F39DA7D00F79F2B /* Release Notes */,
 				3713384D2F2FDD3400F8C0AB /* Intents */,
 				379A27EE2E3029A800827CC1 /* macadamia.entitlements */,
 				37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */,

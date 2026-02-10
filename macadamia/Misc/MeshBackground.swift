@@ -1,10 +1,3 @@
-//
-//  MeshBackground.swift
-//  macadamia
-//
-//  Created by zm on 09.02.26.
-//
-
 import SwiftUI
 
 struct MeshBackground: View {
