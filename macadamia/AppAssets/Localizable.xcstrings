@@ -1131,6 +1131,16 @@
         }
       }
     },
+    "Drain" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leerung"
+          }
+        }
+      }
+    },
     "Duplicate Mint" : {
       "localizations" : {
         "de" : {
@@ -1147,6 +1157,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ecash"
+          }
+        }
+      }
+    },
+    "Ecash created" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash erstellt"
           }
         }
       }
@@ -1197,6 +1217,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ägyptischer Pfund"
+          }
+        }
+      }
+    },
+    "Empty" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leer"
           }
         }
       }
@@ -2978,6 +3008,16 @@
         }
       }
     },
+    "Pending Ecash" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausstehendes Ecash"
+          }
+        }
+      }
+    },
     "Pending Payment" : {
       "localizations" : {
         "de" : {
@@ -2994,6 +3034,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ausstehender Zahlungsteil"
+          }
+        }
+      }
+    },
+    "Pending Receive" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausstehendes Empfangen"
+          }
+        }
+      }
+    },
+    "Pending Transfer" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausstehender Transfer"
           }
         }
       }

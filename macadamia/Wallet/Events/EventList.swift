@@ -282,20 +282,20 @@ struct EventList: View {
     private static func description(for eventGroup: EventGroup) -> (main: String,
                                                                    secondary: String?) {
         guard let primaryEvent = eventGroup.events.first else {
-            return ("Empty", nil)
+            return (String(localized: "Empty"), nil)
         }
         switch primaryEvent.kind {
-        case .pendingMint:      return ("Pending Ecash", nil)
-        case .mint:             return ("Ecash created", nil)
-        case .send:             return ("Send", primaryEvent.memo.nilWhenEmtpy)
-        case .receive:          return ("Receive", primaryEvent.memo.nilWhenEmtpy)
-        case .pendingReceive:   return ("Pending Receive", nil)
-        case .pendingMelt:      return ("Pending Payment", nil)
-        case .melt:             return ("Payment", nil)
-        case .restore:          return ("Restore", nil)
-        case .drain:            return ("Drain", nil)
-        case .pendingTransfer:  return ("Pending Transfer", nil)
-        case .transfer:         return ("Transfer", nil)
+        case .pendingMint:      return (String(localized: "Pending Ecash"), nil)
+        case .mint:             return (String(localized: "Ecash created"), nil)
+        case .send:             return (String(localized: "Send"), primaryEvent.memo.nilWhenEmtpy)
+        case .receive:          return (String(localized: "Receive"), primaryEvent.memo.nilWhenEmtpy)
+        case .pendingReceive:   return (String(localized: "Pending Receive"), nil)
+        case .pendingMelt:      return (String(localized: "Pending Payment"), nil)
+        case .melt:             return (String(localized: "Payment"), nil)
+        case .restore:          return (String(localized: "Restore"), nil)
+        case .drain:            return (String(localized: "Drain"), nil)
+        case .pendingTransfer:  return (String(localized: "Pending Transfer"), nil)
+        case .transfer:         return (String(localized: "Transfer"), nil)
         }
     }
     
