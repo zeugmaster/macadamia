@@ -34,26 +34,51 @@ struct QRView: View {
 /// A view that displays a static QR code
 struct StaticQRView: View {
     let string: String
-    
-    @State private var image: UIImage? = nil
-    
+
+    enum QRState {
+        case loading
+        case success(UIImage)
+        case failed
+    }
+
+    @State private var state: QRState = .loading
+
     private let qrGenerator = QRCodeGenerator()
-    
+
     var body: some View {
         Group {
-            if let image {
+            switch state {
+            case .loading:
+                HStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                }
+            case .success(let image):
                 Image(uiImage: image)
                     .interpolation(.none)
                     .resizable()
                     .scaledToFit()
                     .clipShape(RoundedRectangle(cornerRadius: 6.0))
-            } else {
+                    .transition(.opacity)
+            case .failed:
                 Text("Failed to generate QR Code")
+                    .transition(.opacity)
             }
         }
+        .animation(.easeInOut(duration: 0.3), value: isLoaded)
         .task {
-            self.image = await qrGenerator.generateQRCode(from: string)
+            if let image = await qrGenerator.generateQRCode(from: string) {
+                self.state = .success(image)
+            } else {
+                self.state = .failed
+            }
         }
+    }
+
+    private var isLoaded: Bool {
+        if case .loading = state { return false }
+        return true
     }
 }
 

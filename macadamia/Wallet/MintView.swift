@@ -92,7 +92,9 @@ struct MintView: View {
                     }
                     .onAppear { // start the polling timer only when a quote is shown
                         pollingTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: { _ in
-                            checkInvoiceState()
+                            Task { @MainActor in
+                                checkInvoiceState()
+                            }
                         })
                     }
                     
