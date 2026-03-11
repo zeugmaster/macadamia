@@ -21,12 +21,19 @@ extension AppSchemaV1 {
         
         selection.selected.setState(.pending)
         
-        let sendResult = try await CashuSwift.send(inputs: selection.selected.sendable(),
-                                                   mint: CashuSwift.Mint(mint),
-                                                   amount: amount,
-                                                   seed: activeWallet.seed,
-                                                   memo: memo,
-                                                   lockToPublicKey: lockingKey)
+        let sendResult: CashuSwift.SendResult
+        
+        do {
+            sendResult = try await CashuSwift.send(inputs: selection.selected.sendable(),
+                                                       mint: CashuSwift.Mint(mint),
+                                                       amount: amount,
+                                                       seed: activeWallet.seed,
+                                                       memo: memo,
+                                                       lockToPublicKey: lockingKey)
+        } catch {
+            selection.selected.setState(.valid)
+            throw error
+        }
         
         selection.selected.setState(.spent)
         

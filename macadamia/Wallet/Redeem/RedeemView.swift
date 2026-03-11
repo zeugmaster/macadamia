@@ -213,6 +213,8 @@ struct RedeemView<AdditionalControls: View>: View {
                                 buttonState = .idle(String(localized: "Transfer"), action: { swap(to: swapTargetMint) })
                             }
                         }
+                        .disabled(swapMintsEmpty)
+                        .opacity(swapMintsEmpty ? 0.6 : 1.0)
                     } footer: {
                         Text("If you do not trust the mint of this token, you can swap its value to one of your trusted mints via Lightning (will incur fees).")
                     }
@@ -223,6 +225,10 @@ struct RedeemView<AdditionalControls: View>: View {
         }
         .listStyle(InsetGroupedListStyle())
         .disabled(buttonState.type == .loading)
+    }
+    
+    private var swapMintsEmpty: Bool {
+        activeWallet?.mints.filter(not: \.hidden).isEmpty ?? true
     }
     
     // MARK: - ADD
@@ -460,3 +466,10 @@ extension Optional where Wrapped == String {
         return url.strippingHTTPPrefix()
     }
 }
+
+extension Sequence {
+    func filter(not keyPath: KeyPath<Element, Bool>) -> [Element] {
+        filter { !$0[keyPath: keyPath] }
+    }
+}
+
