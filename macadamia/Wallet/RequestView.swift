@@ -65,7 +65,7 @@ struct RequestView: View {
                                    .disabled(paymentRequest != nil)
             }
             
-            if let paymentRequest, let string = try? paymentRequest.serialize() {
+            if let paymentRequest, let string = try? NUT26.encode(paymentRequest) {
                 Section {
                     StaticQRView(string: string)
                     Button {

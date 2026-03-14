@@ -521,4 +521,119 @@ final class macadamiaTests: XCTestCase {
         let transactions = BalanceCalculator<String>.calculateTransactions(for: deltas)
         XCTAssertEqual(transactions.count, 0, "Empty input should produce no transactions")
     }
+
+    // MARK: - NUT-26 Codec Tests
+
+    func testNUT26EncodeDecodeRoundtrip() throws {
+        let original = CashuSwift.PaymentRequest(
+            paymentId: "demo123",
+            amount: 1000,
+            unit: "sat",
+            singleUse: true,
+            mints: ["https://mint.example.com"],
+            description: "Coffee payment",
+            transports: nil,
+            lockingCondition: nil
+        )
+
+        let encoded = try NUT26.encode(original)
+        XCTAssertTrue(encoded.hasPrefix("CREQB1"), "NUT-26 output must start with CREQB1")
+
+        let decoded = try NUT26.decode(encoded)
+        XCTAssertEqual(decoded.paymentId, original.paymentId)
+        XCTAssertEqual(decoded.amount, original.amount)
+        XCTAssertEqual(decoded.unit, original.unit)
+        XCTAssertEqual(decoded.singleUse, original.singleUse)
+        XCTAssertEqual(decoded.mints, original.mints)
+        XCTAssertEqual(decoded.description, original.description)
+    }
+
+    func testNUT26DecodeSpecVector() throws {
+        // Example vector from the NUT-26 specification
+        let specVector = "CREQB1QYQQWER9D4HNZV3NQGQQSQQQQQQQQQQRAQPSQQGQQSQQZQG9QQVXSAR5WPEN5TE0D45KUAPWV4UXZMTSD3JJUCM0D5RQQRJRDANXVET9YPCXZ7TDV4H8GXHR3TQ"
+        let decoded = try NUT26.decode(specVector)
+        XCTAssertEqual(decoded.paymentId, "demo123")
+        XCTAssertEqual(decoded.amount, 1000)
+        XCTAssertEqual(decoded.unit, "sat")
+        XCTAssertEqual(decoded.singleUse, true)
+        XCTAssertEqual(decoded.mints, ["https://mint.example.com"])
+        XCTAssertEqual(decoded.description, "Coffee payment")
+    }
+
+    func testNUT26DecodeIsCaseInsensitive() throws {
+        let upper = "CREQB1QYQQWER9D4HNZV3NQGQQSQQQQQQQQQQRAQPSQQGQQSQQZQG9QQVXSAR5WPEN5TE0D45KUAPWV4UXZMTSD3JJUCM0D5RQQRJRDANXVET9YPCXZ7TDV4H8GXHR3TQ"
+        let lower = upper.lowercased()
+        let fromUpper = try NUT26.decode(upper)
+        let fromLower = try NUT26.decode(lower)
+        XCTAssertEqual(fromUpper.paymentId, fromLower.paymentId)
+        XCTAssertEqual(fromUpper.amount, fromLower.amount)
+    }
+
+    func testNUT26RoundtripAllFields() throws {
+        let original = CashuSwift.PaymentRequest(
+            paymentId: "test-id-42",
+            amount: 21000,
+            unit: "msat",
+            singleUse: false,
+            mints: ["https://mint.a.com", "https://mint.b.com"],
+            description: "Multi-mint request",
+            transports: [CashuSwift.Transport(type: "post", target: "https://callback.example.com/pay")],
+            lockingCondition: nil
+        )
+
+        let encoded = try NUT26.encode(original)
+        let decoded = try NUT26.decode(encoded)
+
+        XCTAssertEqual(decoded.paymentId, original.paymentId)
+        XCTAssertEqual(decoded.amount, original.amount)
+        XCTAssertEqual(decoded.unit, original.unit)
+        XCTAssertEqual(decoded.singleUse, original.singleUse)
+        XCTAssertEqual(decoded.mints, original.mints)
+        XCTAssertEqual(decoded.description, original.description)
+        XCTAssertEqual(decoded.transports?.count, 1)
+        XCTAssertEqual(decoded.transports?.first?.type, "post")
+        XCTAssertEqual(decoded.transports?.first?.target, "https://callback.example.com/pay")
+    }
+
+    func testInputValidatorDetectsCreqb() {
+        let creqbVector = "CREQB1QYQQWER9D4HNZV3NQGQQSQQQQQQQQQQRAQPSQQGQQSQQZQG9QQVXSAR5WPEN5TE0D45KUAPWV4UXZMTSD3JJUCM0D5RQQRJRDANXVET9YPCXZ7TDV4H8GXHR3TQ"
+        let result = InputValidator.validate(creqbVector, supportedTypes: [.creq])
+        if case .valid(let r) = result {
+            XCTAssertEqual(r.type, .creq)
+        } else {
+            XCTFail("creqb string should be detected as .creq")
+        }
+    }
+
+    func testParsePaymentRequestDispatch() throws {
+        // NUT-18 format
+        let nut18 = try CashuSwift.PaymentRequest(
+            paymentId: "abc",
+            amount: 500,
+            unit: "sat",
+            singleUse: nil,
+            mints: nil,
+            description: nil,
+            transports: nil,
+            lockingCondition: nil
+        ).serialize()
+        XCTAssertTrue(nut18.hasPrefix("creqA"))
+        let fromNUT18 = try parsePaymentRequest(nut18)
+        XCTAssertEqual(fromNUT18.paymentId, "abc")
+
+        // NUT-26 format
+        let nut26 = try NUT26.encode(CashuSwift.PaymentRequest(
+            paymentId: "xyz",
+            amount: 100,
+            unit: "sat",
+            singleUse: nil,
+            mints: nil,
+            description: nil,
+            transports: nil,
+            lockingCondition: nil
+        ))
+        XCTAssertTrue(nut26.hasPrefix("CREQB1"))
+        let fromNUT26 = try parsePaymentRequest(nut26)
+        XCTAssertEqual(fromNUT26.paymentId, "xyz")
+    }
 }

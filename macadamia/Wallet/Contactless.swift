@@ -252,7 +252,7 @@ struct Contactless: View {
         input = input.replacingOccurrences(of: "cashu:", with: "")
         
         do {
-            return try CashuSwift.PaymentRequest(encodedRequest: input)
+            return try parsePaymentRequest(input)
         } catch {
             throw NFCPaymentError.invalidPaymentRequest(error.localizedDescription)
         }

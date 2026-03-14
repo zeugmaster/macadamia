@@ -164,7 +164,7 @@ struct WalletView: View {
                             navigationDestination = .receive(urlString: result.payload)
                         case .creq:
                             do {
-                                let req = try CashuSwift.PaymentRequest(encodedRequest: result.payload)
+                                let req = try parsePaymentRequest(result.payload)
                                 navigationDestination = .reqPay(req: req)
                             } catch {
                                 displayAlert(alert: AlertDetail(with: error))
