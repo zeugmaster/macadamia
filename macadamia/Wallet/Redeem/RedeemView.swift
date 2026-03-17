@@ -9,6 +9,7 @@ struct RedeemView<AdditionalControls: View>: View {
         
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     
     @Query(filter: #Predicate<AppSchemaV1.Wallet> { wallet in
         wallet.active == true
@@ -267,11 +268,29 @@ struct RedeemView<AdditionalControls: View>: View {
     @MainActor
     private func redeem() {
         
-        guard let activeWallet, let token else {
+        guard let activeWallet else {
             redeemLogger.error("""
                          "could not redeem, one or more of the following variables are nil:
                          activeWallet: \(activeWallet.debugDescription)
                          """)
+            let alertDetail: AlertDetail
+            #if APP_EXTENSION
+            alertDetail = AlertDetail(title: "Set Up Wallet",
+                                      description: "If you are using macadamia for the first time, please complete the onboarding in the main app.",
+                                      primaryButton: AlertButton(title: String(localized: "Open macadamia"),
+                                                                 action: {
+                                                                     if let url = URL(string: "cashu:") {
+                                                                         openURL(url)
+                                                                     }
+                                                                 }))
+            #else
+            alertDetail = AlertDetail(title: "Wallet not initialized.", description: "No active wallet could be found for this operation. Aborting.")
+            #endif
+            displayAlert(alert: alertDetail)
+            return
+        }
+        
+        guard let token else {
             return
         }
         
