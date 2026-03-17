@@ -4,6 +4,98 @@ import secp256k1
 import Flow
 import LNURL_Swift
 
+// MARK: - BIP-321 URI Parser
+
+/// Parses BIP-321 `bitcoin:` URIs and extracts payment instructions.
+/// Prioritizes: cashu payment request (creq) > BOLT11 invoice (lightning) > unsupported.
+struct BIP321 {
+    
+    /// Represents the result of parsing a BIP-321 URI.
+    struct ParsedURI {
+        let address: String?         // on-chain bitcoin address (may be empty)
+        let amount: String?          // BTC amount
+        let label: String?
+        let message: String?
+        let lightning: String?       // BOLT11 invoice
+        let lno: String?             // BOLT12 offer
+        let creq: String?            // cashu payment request
+        let otherParams: [String: String]
+    }
+    
+    /// Checks whether a string is a BIP-321 bitcoin: URI.
+    static func isBitcoinURI(_ string: String) -> Bool {
+        string.lowercased().hasPrefix("bitcoin:")
+    }
+    
+    /// Parses a BIP-321 URI string into its components.
+    /// Returns nil if the string is not a valid bitcoin: URI.
+    static func parse(_ string: String) -> ParsedURI? {
+        let lowered = string.lowercased()
+        guard lowered.hasPrefix("bitcoin:") else { return nil }
+        
+        // Remove scheme prefix (case-insensitive)
+        let withoutScheme = String(string.dropFirst("bitcoin:".count))
+        
+        // Split on '?' to separate address from query params
+        let parts = withoutScheme.split(separator: "?", maxSplits: 1, omittingEmptySubsequences: false)
+        let address: String? = parts.first.map { String($0) }.flatMap { $0.isEmpty ? nil : $0 }
+        
+        var params: [String: String] = [:]
+        if parts.count > 1 {
+            let queryString = String(parts[1])
+            for pair in queryString.split(separator: "&") {
+                let kv = pair.split(separator: "=", maxSplits: 1)
+                let key = String(kv[0]).lowercased()
+                let value = kv.count > 1 ? String(kv[1]).removingPercentEncoding ?? String(kv[1]) : ""
+                params[key] = value
+            }
+        }
+        
+        return ParsedURI(
+            address: address,
+            amount: params["amount"],
+            label: params["label"],
+            message: params["message"],
+            lightning: params["lightning"],
+            lno: params["lno"],
+            creq: params["creq"],
+            otherParams: params
+        )
+    }
+    
+    /// Resolves a BIP-321 URI to the best supported payment method.
+    /// Priority: creq > lightning (BOLT11) > unsupported.
+    static func resolve(_ string: String, supportedTypes: [InputView.InputType]) -> InputValidator.ValidationResult {
+        guard let parsed = parse(string) else {
+            return .invalid(String(localized: "Unsupported Input"))
+        }
+        
+        // Priority 1: cashu payment request
+        if let creq = parsed.creq, !creq.isEmpty, supportedTypes.contains(.creq) {
+            return .valid(InputView.Result(payload: creq, type: .creq))
+        }
+        
+        // Priority 2: BOLT11 lightning invoice
+        if let lightning = parsed.lightning, !lightning.isEmpty, supportedTypes.contains(.bolt11Invoice) {
+            return .valid(InputView.Result(payload: lightning, type: .bolt11Invoice))
+        }
+        
+        // BOLT12 offers are not yet supported
+        if let lno = parsed.lno, !lno.isEmpty {
+            return .invalid(String(localized: "BOLT12 is not yet supported"))
+        }
+        
+        // On-chain bitcoin addresses are not supported in this wallet
+        if parsed.address != nil {
+            return .invalid(String(localized: "On-chain Bitcoin payments are not supported"))
+        }
+        
+        return .invalid(String(localized: "No supported payment method found in bitcoin URI"))
+    }
+}
+
+// MARK: - Input Validator
+
 struct InputValidator {
     enum ValidationResult {
         case valid(InputView.Result)
@@ -14,6 +106,12 @@ struct InputValidator {
         var input = string.removePrefixes(["cashu://", "cashu:", "lightning://", "lightning:"]) // make sure to sort equal prefixes by lenght
         input = input.replacingOccurrences(of: "+", with: "")
         input = input.replacingOccurrences(of: " ", with: "")
+        
+        // Check for BIP-321 bitcoin: URI before other type detection
+        if BIP321.isBitcoinURI(input) {
+            return BIP321.resolve(input, supportedTypes: supportedTypes)
+        }
+        
         let type: InputView.InputType
         switch input {
         case _ where input.lowercased().hasPrefix("cashu"):

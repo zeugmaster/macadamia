@@ -332,7 +332,6 @@ final class macadamiaTests: XCTestCase {
         let unsupportedTests = [
             "randomstring",
             "http://example.com",
-            "bitcoin:1234567890",
             "",
         ]
         
@@ -344,6 +343,15 @@ final class macadamiaTests: XCTestCase {
             default:
                 XCTFail("Expected invalid result for \(input)")
             }
+        }
+        
+        // bitcoin: URI with only an address is invalid (on-chain not supported) but gives a specific message
+        let bitcoinOnchain = InputValidator.validate("bitcoin:1234567890", supportedTypes: [.bolt11Invoice, .token, .bolt12Offer, .creq, .publicKey])
+        switch bitcoinOnchain {
+        case .invalid:
+            break // Expected - returns a BIP-321 specific error message
+        default:
+            XCTFail("Expected invalid result for bitcoin:1234567890")
         }
         
         // Test supported types filtering
@@ -635,5 +643,146 @@ final class macadamiaTests: XCTestCase {
         XCTAssertTrue(nut26.hasPrefix("CREQB1"))
         let fromNUT26 = try parsePaymentRequest(nut26)
         XCTAssertEqual(fromNUT26.paymentId, "xyz")
+    }
+    
+    // MARK: - BIP-321 Tests
+    
+    func testBIP321Detection() {
+        XCTAssertTrue(BIP321.isBitcoinURI("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"))
+        XCTAssertTrue(BIP321.isBitcoinURI("BITCOIN:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"))
+        XCTAssertTrue(BIP321.isBitcoinURI("Bitcoin:?lightning=lnbc1234"))
+        XCTAssertFalse(BIP321.isBitcoinURI("lnbc1234"))
+        XCTAssertFalse(BIP321.isBitcoinURI("cashu://token"))
+    }
+    
+    func testBIP321Parsing() {
+        // Basic address only
+        let basic = BIP321.parse("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W")
+        XCTAssertNotNil(basic)
+        XCTAssertEqual(basic?.address, "175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W")
+        XCTAssertNil(basic?.lightning)
+        
+        // Empty address with lightning param
+        let lightningOnly = BIP321.parse("bitcoin:?lightning=lnbc420bogusinvoice")
+        XCTAssertNotNil(lightningOnly)
+        XCTAssertNil(lightningOnly?.address)
+        XCTAssertEqual(lightningOnly?.lightning, "lnbc420bogusinvoice")
+        
+        // Address with lightning param
+        let withLightning = BIP321.parse("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?lightning=lnbc1234&amount=0.001")
+        XCTAssertNotNil(withLightning)
+        XCTAssertEqual(withLightning?.address, "175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W")
+        XCTAssertEqual(withLightning?.lightning, "lnbc1234")
+        XCTAssertEqual(withLightning?.amount, "0.001")
+        
+        // With label and message
+        let labeled = BIP321.parse("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?label=Luke-Jr&message=Donation")
+        XCTAssertNotNil(labeled)
+        XCTAssertEqual(labeled?.label, "Luke-Jr")
+        XCTAssertEqual(labeled?.message, "Donation")
+        
+        // With creq parameter
+        let withCreq = BIP321.parse("bitcoin:?creq=creq1234567890&lightning=lnbc1234")
+        XCTAssertNotNil(withCreq)
+        XCTAssertEqual(withCreq?.creq, "creq1234567890")
+        XCTAssertEqual(withCreq?.lightning, "lnbc1234")
+        
+        // Case-insensitive scheme
+        let upperCase = BIP321.parse("BITCOIN:?LIGHTNING=lnbc999")
+        XCTAssertNotNil(upperCase)
+        XCTAssertEqual(upperCase?.lightning, "lnbc999")
+        
+        // With BOLT12 offer
+        let withBolt12 = BIP321.parse("bitcoin:?lno=lno1someboltoffer")
+        XCTAssertNotNil(withBolt12)
+        XCTAssertEqual(withBolt12?.lno, "lno1someboltoffer")
+        
+        // Invalid - not a bitcoin URI
+        XCTAssertNil(BIP321.parse("lnbc1234"))
+    }
+    
+    func testBIP321Resolution() {
+        let allTypes: [InputView.InputType] = [.bolt11Invoice, .creq]
+        
+        // Lightning-only URI resolves to bolt11Invoice
+        let lightningResult = BIP321.resolve("bitcoin:?lightning=lnbc420bogusinvoice", supportedTypes: allTypes)
+        switch lightningResult {
+        case .valid(let result):
+            XCTAssertEqual(result.type, .bolt11Invoice)
+            XCTAssertEqual(result.payload, "lnbc420bogusinvoice")
+        case .invalid(let msg):
+            XCTFail("Expected valid result, got: \(msg)")
+        }
+        
+        // Creq takes priority over lightning
+        let creqPriority = BIP321.resolve("bitcoin:?creq=creq1234567890&lightning=lnbc420bogusinvoice", supportedTypes: allTypes)
+        switch creqPriority {
+        case .valid(let result):
+            XCTAssertEqual(result.type, .creq)
+            XCTAssertEqual(result.payload, "creq1234567890")
+        case .invalid(let msg):
+            XCTFail("Expected valid creq result, got: \(msg)")
+        }
+        
+        // On-chain only gives error
+        let onchainOnly = BIP321.resolve("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W", supportedTypes: allTypes)
+        switch onchainOnly {
+        case .valid:
+            XCTFail("Expected invalid result for on-chain only")
+        case .invalid:
+            break // Expected
+        }
+        
+        // BOLT12-only gives error
+        let bolt12Only = BIP321.resolve("bitcoin:?lno=lno1someboltoffer", supportedTypes: allTypes)
+        switch bolt12Only {
+        case .valid:
+            XCTFail("Expected invalid result for BOLT12-only")
+        case .invalid:
+            break // Expected
+        }
+        
+        // Lightning with on-chain fallback resolves to lightning
+        let withFallback = BIP321.resolve("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?lightning=lnbc420bogusinvoice", supportedTypes: allTypes)
+        switch withFallback {
+        case .valid(let result):
+            XCTAssertEqual(result.type, .bolt11Invoice)
+            XCTAssertEqual(result.payload, "lnbc420bogusinvoice")
+        case .invalid(let msg):
+            XCTFail("Expected valid result, got: \(msg)")
+        }
+    }
+    
+    func testBIP321ThroughInputValidator() {
+        let supportedTypes: [InputView.InputType] = [.bolt11Invoice, .token, .creq, .lightningAddress, .lnurlPay, .merchantCode]
+        
+        // bitcoin: URI with lightning param should resolve
+        let result = InputValidator.validate("bitcoin:?lightning=lnbc420bogusinvoice", supportedTypes: supportedTypes)
+        switch result {
+        case .valid(let res):
+            XCTAssertEqual(res.type, .bolt11Invoice)
+            XCTAssertEqual(res.payload, "lnbc420bogusinvoice")
+        case .invalid(let msg):
+            XCTFail("Expected valid result, got: \(msg)")
+        }
+        
+        // bitcoin: URI with creq should resolve to creq (priority)
+        let creqResult = InputValidator.validate("bitcoin:?creq=creq1234567890&lightning=lnbc1234", supportedTypes: supportedTypes)
+        switch creqResult {
+        case .valid(let res):
+            XCTAssertEqual(res.type, .creq)
+            XCTAssertEqual(res.payload, "creq1234567890")
+        case .invalid(let msg):
+            XCTFail("Expected valid result, got: \(msg)")
+        }
+        
+        // bitcoin: URI should no longer be considered "Unsupported Input"
+        let onchainResult = InputValidator.validate("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W", supportedTypes: supportedTypes)
+        switch onchainResult {
+        case .valid:
+            XCTFail("On-chain only should be invalid for this wallet")
+        case .invalid:
+            break // Expected - but now it gives a specific message rather than "Unsupported Input"
+        }
     }
 }

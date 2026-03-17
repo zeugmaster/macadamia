@@ -194,9 +194,37 @@ struct ContentView: View {
              selectedTab = .wallet
              
              urlState = URLState(url: noURLPrefix)
+         } else if url.scheme == "bitcoin" {
+             selectedTab = .wallet
+             handleBitcoinURI(url.absoluteString)
          } else {
              displayAlert(alert: AlertDetail(title: String(localized: "Unsupported URL Scheme"), description: String(localized: "The system passed an unexpected URL \(url.absoluteString)")))
          }
+    }
+    
+    private func handleBitcoinURI(_ uriString: String) {
+        let supportedTypes: [InputView.InputType] = [.bolt11Invoice, .creq]
+        let result = BIP321.resolve(uriString, supportedTypes: supportedTypes)
+        switch result {
+        case .valid(let inputResult):
+            switch inputResult.type {
+            case .bolt11Invoice:
+                pendingNavigation = .melt(invoice: inputResult.payload)
+            case .creq:
+                do {
+                    let req = try parsePaymentRequest(inputResult.payload)
+                    pendingNavigation = .reqPay(req: req)
+                } catch {
+                    displayAlert(alert: AlertDetail(with: error))
+                }
+            default:
+                displayAlert(alert: AlertDetail(title: String(localized: "Unsupported"),
+                                                description: String(localized: "This payment method is not supported.")))
+            }
+        case .invalid(let message):
+            displayAlert(alert: AlertDetail(title: String(localized: "Unsupported"),
+                                            description: message))
+        }
     }
     
     func handleDeepLink(_ deepLink: DeepLink) {
