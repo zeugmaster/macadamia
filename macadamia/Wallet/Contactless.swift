@@ -91,6 +91,7 @@ struct Contactless: View {
     @State private var paymentComplete = false
     @State private var errorMessage: String?
     @State private var lastPaymentAmount: Int?
+    @State private var bolt11NavigationInvoice: String?
     
     private var isNFCAvailable: Bool {
         NFCNDEFReaderSession.readingAvailable
@@ -134,6 +135,9 @@ struct Contactless: View {
         }
         .onAppear {
             startContactlessPayment()
+        }
+        .navigationDestination(item: $bolt11NavigationInvoice) { invoice in
+            MeltView(invoice: invoice)
         }
     }
     
@@ -206,27 +210,34 @@ struct Contactless: View {
                 throw NFCPaymentError.nfcReadFailed("No readable data on tag")
             }
             
-            // 3. Decode the payment request
-            let request = try decodePaymentRequest(paymentRequestString)
+            // 3. Decode the NFC input
+            let nfcInput = try decodeNFCInput(paymentRequestString)
             
-            // 4. Prepare the token
-            session.alertMessage = "Preparing payment..."
-            let tokenString = try await prepareToken(for: request)
-            
-            // 5. Write the token back to the tag
-            session.alertMessage = "Sending payment..."
-            let responseMessage = createNDEFMessage(with: tokenString)
-            try await tag.writeNDEF(responseMessage)
-            
-            // 6. Success!
-            lastPaymentAmount = request.amount
-            paymentComplete = true
-            session.alertMessage = "Payment sent!"
-            session.invalidate()
-            
-            // Dismiss view after delay
-            try? await Task.sleep(for: .seconds(1.5))
-            dismiss()
+            switch nfcInput {
+            case .creq(let request):
+                // Cashu payment request: prepare token and write back to tag
+                session.alertMessage = "Preparing payment..."
+                let tokenString = try await prepareToken(for: request)
+                
+                session.alertMessage = "Sending payment..."
+                let responseMessage = createNDEFMessage(with: tokenString)
+                try await tag.writeNDEF(responseMessage)
+                
+                lastPaymentAmount = request.amount
+                paymentComplete = true
+                session.alertMessage = "Payment sent!"
+                session.invalidate()
+                
+                try? await Task.sleep(for: .seconds(1.5))
+                dismiss()
+                
+            case .bolt11(let invoice):
+                // BOLT11 invoice: close NFC session and navigate to MeltView
+                session.alertMessage = "Lightning invoice found"
+                session.invalidate()
+                isProcessing = false
+                bolt11NavigationInvoice = invoice
+            }
             
         } catch let error as NFCPaymentError {
             errorMessage = error.localizedDescription
@@ -246,13 +257,51 @@ struct Contactless: View {
     
     // MARK: - Payment Request Handling
     
-    private func decodePaymentRequest(_ string: String) throws -> CashuSwift.PaymentRequest {
+    /// Represents what was read from the NFC tag.
+    private enum NFCInput {
+        case creq(CashuSwift.PaymentRequest)
+        case bolt11(String)
+    }
+    
+    private func decodeNFCInput(_ string: String) throws -> NFCInput {
         var input = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Handle BIP-321 bitcoin: URIs
+        if BIP321.isBitcoinURI(input) {
+            guard let parsed = BIP321.parse(input) else {
+                throw NFCPaymentError.invalidPaymentRequest("Could not parse bitcoin URI")
+            }
+            
+            // Prioritize creq over lightning
+            if let creq = parsed.creq, !creq.isEmpty {
+                do {
+                    return .creq(try parsePaymentRequest(creq))
+                } catch {
+                    throw NFCPaymentError.invalidPaymentRequest(error.localizedDescription)
+                }
+            }
+            
+            if let lightning = parsed.lightning, !lightning.isEmpty {
+                return .bolt11(lightning)
+            }
+            
+            throw NFCPaymentError.invalidPaymentRequest("No supported payment method in bitcoin URI")
+        }
+        
+        // Strip cashu URI prefixes for raw creq input
         input = input.replacingOccurrences(of: "cashu://", with: "")
         input = input.replacingOccurrences(of: "cashu:", with: "")
         
+        // Check for raw BOLT11 invoice (strip lightning: prefix if present)
+        var bolt11Check = input.replacingOccurrences(of: "lightning://", with: "")
+        bolt11Check = bolt11Check.replacingOccurrences(of: "lightning:", with: "")
+        let bolt11Prefixes = ["lnbc", "lntbs", "lntb", "lnbcrt"]
+        if bolt11Prefixes.contains(where: { bolt11Check.lowercased().hasPrefix($0) }) {
+            return .bolt11(bolt11Check)
+        }
+        
         do {
-            return try parsePaymentRequest(input)
+            return .creq(try parsePaymentRequest(input))
         } catch {
             throw NFCPaymentError.invalidPaymentRequest(error.localizedDescription)
         }

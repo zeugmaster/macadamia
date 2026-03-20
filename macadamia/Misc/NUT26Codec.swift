@@ -1,6 +1,6 @@
 import Foundation
 import CashuSwift
-import NostrSDK
+import Bech32Swift
 
 // MARK: - NUT-26 Payment Request Bech32m Codec
 // https://github.com/cashubtc/nuts/blob/main/26.md
@@ -9,6 +9,7 @@ enum NUT26 {
 
     enum CodecError: Error {
         case invalidPrefix
+        case invalidFormat
         case invalidBech32m
         case invalidTLV(String)
         case nostrPubkeyDecoding(String)
@@ -185,31 +186,111 @@ enum NUT26 {
         return tuple
     }
 
+    // MARK: - Bech32 helpers (using Bech32Swift raw API + our own convertBits)
+    // NOTE: Bech32Swift's high-level Bech32.encode/decode has a bug where
+    // convertBits(fromBits: 8, ...) always fails due to UInt8 overflow in
+    // the guard check (1 << 8 overflows UInt8 to 0). We work around this by
+    // using encodeRaw/decodeRaw with our own convertBits for 8↔5 conversion.
+
+    private static func bech32Encode(hrp: String, payload: Data) throws -> String {
+        guard let fiveBit = convertBits(data: Array(payload), fromBits: 8, toBits: 5, pad: true) else {
+            throw CodecError.nostrPubkeyEncoding("Failed to convert payload to 5-bit groups")
+        }
+        return try Bech32.encodeRaw(hrp: hrp, data: fiveBit)
+    }
+
+    private static func bech32Decode(_ string: String) throws -> (hrp: String, data: Data) {
+        let decoded = try Bech32.decodeRaw(string)
+        guard let eightBit = convertBits(data: decoded.data, fromBits: 5, toBits: 8, pad: false) else {
+            throw CodecError.nostrPubkeyDecoding("Failed to convert 5-bit data to bytes")
+        }
+        return (decoded.hrp, Data(eightBit))
+    }
+
     // MARK: - Nostr Target Encoding/Decoding
 
     private static func nostrTargetToBytesAndRelays(_ target: String) throws -> (pubkeyBytes: Data, relays: [String]) {
-        if target.lowercased().hasPrefix("nprofile") {
-            struct Coder: MetadataCoding {}
-            let metadata = try Coder().decodedMetadata(from: target)
-            guard let pubkeyHex = metadata.pubkey, let pubkey = PublicKey(hex: pubkeyHex) else {
-                throw CodecError.nostrPubkeyDecoding("Could not decode pubkey from nprofile")
+        let lower = target.lowercased()
+        if lower.hasPrefix("nprofile") {
+            return try decodeNprofile(target)
+        } else if lower.hasPrefix("npub") {
+            let (hrp, data) = try bech32Decode(target)
+            guard hrp == "npub" else {
+                throw CodecError.nostrPubkeyDecoding("Expected npub HRP, got: \(hrp)")
             }
-            return (pubkey.dataRepresentation, metadata.relays ?? [])
+            return (data, [])
         } else {
-            guard let pubkey = PublicKey(npub: target) else {
-                throw CodecError.nostrPubkeyDecoding("Could not decode npub: \(target)")
-            }
-            return (pubkey.dataRepresentation, [])
+            throw CodecError.nostrPubkeyDecoding("Expected npub or nprofile, got: \(target.prefix(10))")
         }
     }
 
     private static func bytesToNostrTarget(_ bytes: Data, relays: [String]) throws -> String {
-        guard let pubkey = PublicKey(dataRepresentation: bytes) else {
-            throw CodecError.nostrPubkeyEncoding("Could not create public key from \(bytes.count) bytes")
+        guard bytes.count == 32 else {
+            throw CodecError.nostrPubkeyEncoding("Expected 32-byte pubkey, got \(bytes.count) bytes")
         }
-        guard !relays.isEmpty else { return pubkey.npub }
-        struct Coder: MetadataCoding {}
-        return try Coder().encodedIdentifier(with: Metadata(pubkey: pubkey.hex, relays: relays), identifierType: .profile)
+        guard !relays.isEmpty else {
+            return try bech32Encode(hrp: "npub", payload: bytes)
+        }
+        return try encodeNprofile(pubkeyBytes: bytes, relays: relays)
+    }
+    
+    // MARK: - NIP-19 nprofile TLV encoding/decoding
+    // nprofile uses standard Bech32 (BIP-173) with TLV payload:
+    //   type 0x00 (special) + length + 32-byte pubkey
+    //   type 0x01 (relay)   + length + ascii relay URL (repeatable)
+    
+    private static func decodeNprofile(_ string: String) throws -> (pubkeyBytes: Data, relays: [String]) {
+        let (hrp, data) = try bech32Decode(string)
+        guard hrp == "nprofile" else {
+            throw CodecError.nostrPubkeyDecoding("Expected nprofile HRP, got: \(hrp)")
+        }
+        
+        var pubkeyBytes: Data?
+        var relays: [String] = []
+        var i = data.startIndex
+        
+        while i < data.endIndex {
+            guard data.distance(from: i, to: data.endIndex) >= 2 else { break }
+            let type = data[i]
+            let length = Int(data[data.index(after: i)])
+            i = data.index(i, offsetBy: 2)
+            
+            guard data.distance(from: i, to: data.endIndex) >= length else { break }
+            let value = data[i..<data.index(i, offsetBy: length)]
+            
+            switch type {
+            case 0x00: // special: pubkey (32 bytes)
+                pubkeyBytes = Data(value)
+            case 0x01: // relay: ascii URL
+                if let relay = String(bytes: value, encoding: .utf8) {
+                    relays.append(relay)
+                }
+            default:
+                break // ignore unknown types per NIP-19
+            }
+            i = data.index(i, offsetBy: length)
+        }
+        
+        guard let pubkey = pubkeyBytes, pubkey.count == 32 else {
+            throw CodecError.nostrPubkeyDecoding("No valid 32-byte pubkey found in nprofile")
+        }
+        return (pubkey, relays)
+    }
+    
+    private static func encodeNprofile(pubkeyBytes: Data, relays: [String]) throws -> String {
+        var tlv = Data()
+        // type 0x00 (special) + length + pubkey
+        tlv.append(0x00)
+        tlv.append(UInt8(pubkeyBytes.count))
+        tlv.append(pubkeyBytes)
+        // type 0x01 (relay) for each relay
+        for relay in relays {
+            guard let relayData = relay.data(using: .ascii) else { continue }
+            tlv.append(0x01)
+            tlv.append(UInt8(relayData.count))
+            tlv.append(relayData)
+        }
+        return try bech32Encode(hrp: "nprofile", payload: tlv)
     }
 
     // MARK: - Transport Sub-TLV (Tag 0x07)
@@ -424,8 +505,33 @@ enum NUT26 {
 
 // MARK: - Dual-format parser
 
+/// Validates that a string looks like a valid payment request before passing it to decoders
+/// that may crash on malformed input (e.g. NostrSDK's bech32 base5 conversion).
+private func validatePaymentRequestFormat(_ string: String) throws {
+    let lower = string.lowercased()
+    guard lower.hasPrefix("creq") else {
+        throw NUT26.CodecError.invalidFormat
+    }
+    // creqb (NUT-26): must have a "1" separator and only valid bech32 characters after it
+    if lower.hasPrefix("creqb") {
+        let bech32Charset = CharacterSet(charactersIn: "qpzry9x8gf2tvdw0s3jn54khce6mua7l")
+        guard let sepIndex = lower.lastIndex(of: "1") else {
+            throw NUT26.CodecError.invalidBech32m
+        }
+        let dataPart = String(lower[lower.index(after: sepIndex)...])
+        guard !dataPart.isEmpty,
+              dataPart.unicodeScalars.allSatisfy({ bech32Charset.contains($0) }) else {
+            throw NUT26.CodecError.invalidBech32m
+        }
+    }
+    // creqA (NUT-18): base64url encoded, just needs to start with creqA and be non-trivially long
+    // CashuSwift handles the actual base64 decoding and will throw on invalid content
+}
+
 /// Parses a payment request string in either NUT-18 (creqA) or NUT-26 (creqb) format.
+/// Pre-validates format to prevent crashes in downstream bech32 decoders.
 func parsePaymentRequest(_ string: String) throws -> CashuSwift.PaymentRequest {
+    try validatePaymentRequestFormat(string)
     if string.lowercased().hasPrefix("creqb") {
         return try NUT26.decode(string)
     }

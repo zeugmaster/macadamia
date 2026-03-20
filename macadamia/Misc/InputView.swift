@@ -3,6 +3,7 @@ import AVFoundation
 import secp256k1
 import Flow
 import LNURL_Swift
+import OSLog
 
 // MARK: - BIP-321 URI Parser
 
@@ -103,13 +104,23 @@ struct InputValidator {
     }
     
     static func validate(_ string: String, supportedTypes: [InputView.InputType]) -> ValidationResult {
+        let inputLogger = Logger(subsystem: "macadamia", category: "InputValidator")
+        inputLogger.info("Validating input (\(string.count) chars): \(string.prefix(120))\(string.count > 120 ? "..." : "")")
+        
         var input = string.removePrefixes(["cashu://", "cashu:", "lightning://", "lightning:"]) // make sure to sort equal prefixes by lenght
         input = input.replacingOccurrences(of: "+", with: "")
         input = input.replacingOccurrences(of: " ", with: "")
         
         // Check for BIP-321 bitcoin: URI before other type detection
         if BIP321.isBitcoinURI(input) {
-            return BIP321.resolve(input, supportedTypes: supportedTypes)
+            let result = BIP321.resolve(input, supportedTypes: supportedTypes)
+            switch result {
+            case .valid(let r):
+                inputLogger.info("BIP-321 resolved to type: \(String(describing: r.type)), payload: \(r.payload.prefix(80))\(r.payload.count > 80 ? "..." : "")")
+            case .invalid(let msg):
+                inputLogger.warning("BIP-321 resolution failed: \(msg)")
+            }
+            return result
         }
         
         let type: InputView.InputType

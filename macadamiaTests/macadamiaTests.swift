@@ -603,6 +603,29 @@ final class macadamiaTests: XCTestCase {
         XCTAssertEqual(decoded.transports?.first?.target, "https://callback.example.com/pay")
     }
 
+    func testNUT26NostrTransportRoundtrip() throws {
+        // Test with nostr transport (npub, no relays)
+        let npubOriginal = CashuSwift.PaymentRequest(
+            paymentId: "nostr-test",
+            amount: 500,
+            unit: "sat",
+            singleUse: nil,
+            mints: nil,
+            description: nil,
+            transports: [CashuSwift.Transport(
+                type: CashuSwift.Transport.TransportType.nostr,
+                target: "npub1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs8j9gdm"
+            )],
+            lockingCondition: nil
+        )
+        let npubEncoded = try NUT26.encode(npubOriginal)
+        let npubDecoded = try NUT26.decode(npubEncoded)
+        XCTAssertEqual(npubDecoded.transports?.count, 1)
+        XCTAssertEqual(npubDecoded.transports?.first?.type, CashuSwift.Transport.TransportType.nostr)
+        // The target should start with "npub"
+        XCTAssertTrue(npubDecoded.transports?.first?.target.hasPrefix("npub") == true)
+    }
+
     func testInputValidatorDetectsCreqb() {
         let creqbVector = "CREQB1QYQQWER9D4HNZV3NQGQQSQQQQQQQQQQRAQPSQQGQQSQQZQG9QQVXSAR5WPEN5TE0D45KUAPWV4UXZMTSD3JJUCM0D5RQQRJRDANXVET9YPCXZ7TDV4H8GXHR3TQ"
         let result = InputValidator.validate(creqbVector, supportedTypes: [.creq])
