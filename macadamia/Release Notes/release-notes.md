@@ -1,12 +1,9 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**LNURL & Lightning Address 📨**
-
-This update adds the ability to pay to LNURL and Lightning Addresses!
-
-As part of the upgrade users are also able to resolve merchant QR codes from terminals that support ScanToPay codes (popular with retailers in South Africa). 
-
+**BIP-321**
+This version of *macadamia Wallet* adds support for BIP-321 encoded payment requests via QR codes or NFC transactions with a compatible terminal.
+It also includes many minor bug fixes and small improvements.
 
 ------
 
