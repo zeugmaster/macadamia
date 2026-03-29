@@ -88,18 +88,19 @@ struct ContentView: View {
             switch onboardingState {
             case .hidden:
                 EmptyView()
-            case .shown(let words):
-                Onboarding(seedPhrase: words) {
+            case .shown:
+                Onboarding {
                     AppState.showOnboarding = false
                     withAnimation {
                         onboardingState = .hidden
                     }
                 }
+//                OnboardingCanvas()
                 .transition(.opacity.animation(.easeInOut(duration: 0.3)))
                 .zIndex(1) // uuuuhhmmm ???
             }
         }
-        .ignoresSafeArea()
+//        .ignoresSafeArea()
         .onAppear(perform: {
             if wallets.isEmpty {
                 initializeWallet()
@@ -124,9 +125,6 @@ struct ContentView: View {
                     try modelContext.save()
                 }
             }
-        }
-        .task {
-            
         }
         .popover(isPresented: $releaseNotesPopoverShowing, content: {
             ZStack(alignment: .topTrailing) {

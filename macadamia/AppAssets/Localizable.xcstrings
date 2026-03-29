@@ -807,6 +807,7 @@
       }
     },
     "⚠️ Warning" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1435,6 +1436,9 @@
           }
         }
       }
+    },
+    "Accept Terms" : {
+
     },
     "ACTIVE" : {
       "localizations" : {
@@ -5076,6 +5080,9 @@
         }
       }
     },
+    "Confirmed — you may proceed" : {
+
+    },
     "Connected to %lld of %lld relay%@." : {
       "localizations" : {
         "ar" : {
@@ -5579,6 +5586,7 @@
       }
     },
     "Copied %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -8521,6 +8529,9 @@
         }
       }
     },
+    "Enter your seed phrase" : {
+
+    },
     "Error" : {
       "localizations" : {
         "ar" : {
@@ -9724,6 +9735,7 @@
       "shouldTranslate" : false
     },
     "Hi there!" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -10003,6 +10015,9 @@
         }
       }
     },
+    "How would you like to set up?" : {
+
+    },
     "HTTP" : {
       "shouldTranslate" : false
     },
@@ -10147,6 +10162,7 @@
       }
     },
     "I agree to the terms." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -10220,6 +10236,7 @@
       "shouldTranslate" : false
     },
     "I have written down the seed phrase" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -17597,6 +17614,7 @@
       }
     },
     "Not a valid mnemonic." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -23140,6 +23158,9 @@
         }
       }
     },
+    "Restoring…" : {
+
+    },
     "Retry" : {
       "localizations" : {
         "ar" : {
@@ -23702,6 +23723,9 @@
           }
         }
       }
+    },
+    "Seed phrase..." : {
+
     },
     "Select" : {
       "localizations" : {
@@ -25383,6 +25407,9 @@
         }
       }
     },
+    "Store this somewhere safe. It is the only way to recover your wallet." : {
+
+    },
     "Swedish Krona" : {
       "localizations" : {
         "ar" : {
@@ -25593,6 +25620,9 @@
         }
       }
     },
+    "Tap Finish to start using the app." : {
+
+    },
     "Tap to select a mint from the list" : {
       "localizations" : {
         "ar" : {
@@ -25664,6 +25694,7 @@
       }
     },
     "Terms" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -26854,6 +26885,7 @@
       }
     },
     "This is your newly generated **seed phrase** backup. Write these twelve words down or save them in a password manager and use them to restore ecash from the mints known to this wallet (write those down, too). \n " : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -27343,7 +27375,11 @@
         }
       }
     },
+    "This short setup will get your wallet ready in a few steps. You'll review some important safety information, accept the terms, and configure your wallet." : {
+
+    },
     "This wallet and the Cashu protocol are in active development. Be cautious when using this software and follow best practices:\n\n- Mint only as much as you are ready to lose\n\n- Only use mints you trust\n\n- Back up your wallet\n\nIf you experience any issues, don't hesitate to send a request for support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -30920,6 +30956,7 @@
       }
     },
     "Wallet Backup" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -31339,6 +31376,9 @@
         }
       }
     },
+    "Wallet restored successfully" : {
+
+    },
     "WARNING: This reduces your privacy with this mint!" : {
       "shouldTranslate" : false
     },
@@ -31411,6 +31451,9 @@
           }
         }
       }
+    },
+    "Write down your seed phrase" : {
+
     },
     "wss://relay..." : {
       "shouldTranslate" : false
@@ -31486,6 +31529,7 @@
       }
     },
     "You are using **macadamia**, the first fully native ecash wallet for the Cashu protocol on iOS. \n\nDigital payments should be as natural as handing over cash in person. Cashu brings simplicity back to online and real-life payments. Tap [here](https://cashu.space) to learn more. \n\nThe code for this project is **open-source** allowing anyone to view it or contribute. You can find it on [Github](https://github.com/zeugmaster/macadamia). \n\nThis app does not collect any usage data or analytics. \n\nThank you for trying the future of payments! \n\n\n\n# 🥜🌰" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -31624,6 +31668,12 @@
           }
         }
       }
+    },
+    "Your seed phrase is the only way to recover your wallet. Never share it. Never store it digitally. Write it down and keep it somewhere safe." : {
+
+    },
+    "Your wallet is ready" : {
+
     },
     "Your wallet public key (npub)" : {
       "localizations" : {
