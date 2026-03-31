@@ -883,93 +883,99 @@ struct SetupSelectionPage: View {
     private let outerCornerRadius = 20.0
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack {
-                Image(systemName: "plus")
-                Text("Create new")
-                Spacer()
-                if state == .createNew {
-                    Image(systemName: "checkmark")
-                        .contentTransition(.symbolEffect(.replace))
-                }
-            }
-            .padding()
-            .background(RoundedRectangle(cornerRadius: outerCornerRadius).fill(state == .createNew ? .white.opacity(0.1) : .white.opacity(0.05)))
-            .onTapGesture {
-                state = .createNew
-            }
+        ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
-                    Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
-                    Text("Restore from seed phrase")
+                    Image(systemName: "plus")
+                    Text("Create new")
                     Spacer()
-                    Group {
-                        switch state {
-                        case .invalidInput: Image(systemName: "questionmark")
-                        case .validSeedPhrase(_): Image(systemName: "checkmark")
-                        default: EmptyView()
-                        }
+                    if state == .createNew {
+                        Image(systemName: "checkmark")
+                            .contentTransition(.symbolEffect(.replace))
                     }
-                    .contentTransition(.symbolEffect(.replace))
                 }
+                .padding()
+                .background(RoundedRectangle(cornerRadius: outerCornerRadius).fill(state == .createNew ? .white.opacity(0.1) : .white.opacity(0.05)))
+                .onTapGesture {
+                    state = .createNew
+                }
+                VStack(alignment: .leading, spacing: 20) {
+                    HStack {
+                        Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                        Text("Restore from seed phrase")
+                        Spacer()
+                        Group {
+                            switch state {
+                            case .invalidInput: Image(systemName: "questionmark")
+                            case .validSeedPhrase(_): Image(systemName: "checkmark")
+                            default: EmptyView()
+                            }
+                        }
+                        .contentTransition(.symbolEffect(.replace))
+                    }
 
-                if state.isRestoreFlow {
-                    VStack {
-                        TextField("Enter seed phrase", text: $input, axis: .vertical)
-                            .textFieldStyle(.plain)
-                            .padding(12)
-                            .lineLimit(3...5)
-                            .background(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(.white.opacity(0.1))
-                            )
-                        Button {
-                            if let string = UIPasteboard.general.string, !string.isEmpty {
-                                input = string
-                            } else {
-                                withAnimation {
-                                    showEmptyPasteboardWarning = true
-                                }
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    if state.isRestoreFlow {
+                        VStack {
+                            TextField("Enter seed phrase", text: $input, axis: .vertical)
+                                .textFieldStyle(.plain)
+                                .padding(12)
+                                .lineLimit(3...5)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .fill(.white.opacity(0.1))
+                                )
+                            Button {
+                                if let string = UIPasteboard.general.string, !string.isEmpty {
+                                    input = string
+                                } else {
                                     withAnimation {
-                                        showEmptyPasteboardWarning = false
+                                        showEmptyPasteboardWarning = true
+                                    }
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                        withAnimation {
+                                            showEmptyPasteboardWarning = false
+                                        }
                                     }
                                 }
+                            } label: {
+                                HStack {
+                                    Spacer()
+                                    Image(systemName: "clipboard")
+                                    Text(showEmptyPasteboardWarning ? "Pasteboard empty" : "Paste")
+                                    Spacer()
+                                }
+                                .font(.body)
                             }
-                        } label: {
-                            HStack {
-                                Spacer()
-                                Image(systemName: "clipboard")
-                                Text(showEmptyPasteboardWarning ? "Pasteboard empty" : "Paste")
-                                Spacer()
-                            }
+                            .buttonStyle(.bordered)
                         }
-                        .buttonStyle(.bordered)
+                        .transition(.opacity.combined(with: .move(edge: .top)).combined(with: .scale(scale: 0.95, anchor: .top)))
                     }
-                    .transition(.opacity.combined(with: .move(edge: .top)).combined(with: .scale(scale: 0.95, anchor: .top)))
+                }
+                .padding()
+                .background(RoundedRectangle(cornerRadius: outerCornerRadius).fill(restoreInputBackgroundColor))
+                .onTapGesture {
+                    switch state {
+                    case .none, .createNew: state = .pendingInput
+                    default: break
+                    }
+                }
+                Spacer()
+            }
+            .font(.title3)
+            .fontWeight(.medium)
+            .onChange(of: input) { _, newValue in
+                let words = newValue.split(omittingEmptySubsequences: true, whereSeparator: \.isWhitespace).map(String.init)
+                if !words.isEmpty, (try? Mnemonic(phrase: words)) != nil {
+                    state = .validSeedPhrase(words)
+                } else if newValue.isEmpty {
+                    state = .pendingInput
+                } else {
+                    state = .invalidInput
                 }
             }
+            .animation(.spring(duration: 0.3, bounce: 0.15), value: state)
             .padding()
-            .background(RoundedRectangle(cornerRadius: outerCornerRadius).fill(restoreInputBackgroundColor))
-            .onTapGesture {
-                switch state {
-                case .none, .createNew: state = .pendingInput
-                default: break
-                }
-            }
-            Spacer()
         }
-        .font(.title3)
-        .fontWeight(.medium)
-        .onChange(of: input, { oldValue, newValue in
-            if isSeedPhraseValid {
-                state = .validSeedPhrase(splitInput)
-            } else {
-                state = .invalidInput
-            }
-        })
-        .animation(.spring(duration: 0.3, bounce: 0.15), value: state)
-        .padding()
     }
     
     private var restoreInputBackgroundColor: Color {
@@ -980,7 +986,8 @@ struct SetupSelectionPage: View {
     }
     
     private var splitInput: [String] {
-        input.split(omittingEmptySubsequences: true, whereSeparator: \.isWhitespace)
+        input.lowercased()
+             .split(omittingEmptySubsequences: true, whereSeparator: \.isWhitespace)
              .map(String.init)
     }
     
