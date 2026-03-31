@@ -478,13 +478,6 @@ struct Onboarding: View {
 
 import SwiftUI
 
-// MARK: - Data Types
-
-enum WalletChoice: String, CaseIterable {
-    case createNew = "Create New Wallet"
-    case restoreFromSeed = "Restore from Seed Phrase"
-}
-
 // MARK: - Master View
 
 enum OnboardingPage: Equatable {
@@ -506,11 +499,10 @@ struct OnboardingCanvas: View {
     @State private var termsAccepted = false
 
     // -- phase 2 state --
-    @State private var walletChoice: WalletChoice? = nil
+    @State private var setupSelection: SetupSelectionState = .none
     @State private var seedPhraseConfirmed = false
     @State private var restoreInProgress = false
     @State private var restoreSucceeded = false
-    @State private var seedPhraseInput = ""
 
     // -- stub --
     @State private var generatedSeed = "abandon ability able about above absent absorb abstract absurd abuse access accident"
@@ -529,7 +521,7 @@ struct OnboardingCanvas: View {
         case 1: .warning
         case 2: .terms
         case 3: .setup
-        case 4 where walletChoice == .restoreFromSeed: .restore
+        case 4 where setupSelection.isRestoreFlow: .restore
         case 4: .seed
         case 5: .success
         default: .welcome
@@ -541,15 +533,36 @@ struct OnboardingCanvas: View {
         case 0: "Hi there!"
         case 1: "Warning"
         case 2: "Terms"
-        case 3: "Wallet"
-        case 4 where walletChoice == .restoreFromSeed: "Restore Wallet"
+        case 3: "Setup"
+        case 4 where setupSelection.isRestoreFlow: "Restore Wallet"
         case 4: "Your Seed Phrase"
         case 5: "You're All Set"
         default: ""
         }
     }
 
-    /// Whether `seedPhraseInput` is a valid BIP-39 mnemonic (12 or 24 words).
+    private var nextEnabled: Bool {
+        switch currentPage {
+        case .terms: termsAccepted
+        case .setup:
+            // Must have made a selection (and for restore, seed must be valid)
+            switch setupSelection {
+            case .none, .pendingInput, .invalidInput: false
+            case .createNew, .validSeedPhrase: true
+            }
+        case .seed: seedPhraseConfirmed
+        case .restore: !restoreInProgress && restoreSucceeded
+        default: true
+        }
+    }
+
+    private var previousEnabled: Bool {
+        switch currentPage {
+        case .welcome, .setup: false
+        case .restore: !restoreInProgress
+        default: true
+        }
+    }
     
 
     // MARK: Body
@@ -594,14 +607,13 @@ struct OnboardingCanvas: View {
                             scrollEnabled: false,
                             pageCount: 3
                         ) {
-                            WalletChoicePage(choice: $walletChoice)
+                            SetupSelectionPage(state: $setupSelection)
                                 .containerRelativeFrame(.horizontal)
                                 .id(0)
                             WalletSetupPage(
-                                choice: walletChoice ?? .createNew,
+                                setupSelection: setupSelection,
                                 generatedSeed: generatedSeed,
                                 seedPhraseConfirmed: $seedPhraseConfirmed,
-                                seedPhraseInput: $seedPhraseInput,
                                 restoreInProgress: $restoreInProgress,
                                 restoreSucceeded: $restoreSucceeded
                             )
@@ -622,6 +634,8 @@ struct OnboardingCanvas: View {
                     Spacer()
                     ButtonBar(
                         currentPage: currentPage,
+                        nextEnabled: nextEnabled,
+                        previousEnabled: previousEnabled,
                         termsAccepted: $termsAccepted,
                         seedConfirmed: $seedPhraseConfirmed,
                         onPrevious: { goBack() },
@@ -844,50 +858,6 @@ struct TermsPage: View {
 
 // MARK: - Phase 2 Pages
 
-struct WalletChoicePage: View {
-    @Binding var choice: WalletChoice?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("How would you like to set up?")
-                .font(.title2.bold())
-
-            ForEach(WalletChoice.allCases, id: \.self) { option in
-                optionButton(for: option)
-            }
-        }
-        .padding()
-        .frame(maxHeight: .infinity, alignment: .top)
-    }
-
-    private func optionButton(for option: WalletChoice) -> some View {
-        let isSelected = choice == option
-        return Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                choice = option
-            }
-        } label: {
-            HStack {
-                Text(option.rawValue)
-                    .foregroundStyle(isSelected ? .primary : .secondary)
-                Spacer()
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Color.accentColor)
-                }
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected
-                          ? Color.accentColor.opacity(0.1)
-                          : Color.secondary.opacity(0.08))
-            )
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 enum SetupSelectionState: Equatable {
     case none
     case createNew
@@ -924,7 +894,7 @@ struct SetupSelectionPage: View {
                 }
             }
             .padding()
-            .background(RoundedRectangle(cornerRadius: outerCornerRadius).fill(state == .createNew ? .white.opacity(0.2) : .white.opacity(0.1)))
+            .background(RoundedRectangle(cornerRadius: outerCornerRadius).fill(state == .createNew ? .white.opacity(0.1) : .white.opacity(0.05)))
             .onTapGesture {
                 state = .createNew
             }
@@ -987,6 +957,7 @@ struct SetupSelectionPage: View {
                 default: break
                 }
             }
+            Spacer()
         }
         .font(.title3)
         .fontWeight(.medium)
@@ -998,12 +969,13 @@ struct SetupSelectionPage: View {
             }
         })
         .animation(.spring(duration: 0.3, bounce: 0.15), value: state)
+        .padding()
     }
     
     private var restoreInputBackgroundColor: Color {
         switch state {
-        case .none, .createNew: .white.opacity(0.1)
-        default: .white.opacity(0.2)
+        case .none, .createNew: .white.opacity(0.05)
+        default: .white.opacity(0.1)
         }
     }
     
@@ -1024,20 +996,18 @@ struct SetupSelectionPage: View {
 }
 
 struct WalletSetupPage: View {
-    let choice: WalletChoice
+    let setupSelection: SetupSelectionState
     let generatedSeed: String
     @Binding var seedPhraseConfirmed: Bool
-    @Binding var seedPhraseInput: String
     @Binding var restoreInProgress: Bool
     @Binding var restoreSucceeded: Bool
 
     var body: some View {
         Group {
-            switch choice {
-            case .createNew:
-                seedDisplayContent
-            case .restoreFromSeed:
+            if setupSelection.isRestoreFlow {
                 restoreContent
+            } else {
+                seedDisplayContent
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
@@ -1073,19 +1043,13 @@ struct WalletSetupPage: View {
 
     private var restoreContent: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Enter your seed phrase")
+            Text("Restoring wallet…")
                 .font(.title2.bold())
-
-            TextField("Seed phrase...", text: $seedPhraseInput, axis: .vertical)
-                .lineLimit(3...6)
-                .textFieldStyle(.roundedBorder)
-                .font(.system(.body, design: .monospaced))
-                .disabled(restoreInProgress || restoreSucceeded)
 
             if restoreInProgress {
                 HStack(spacing: 8) {
                     ProgressView()
-                    Text("Restoring…")
+                    Text("Checking mints for ecash…")
                         .foregroundStyle(.secondary)
                 }
                 .transition(.opacity)

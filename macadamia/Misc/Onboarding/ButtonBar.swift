@@ -10,6 +10,8 @@ import SwiftUI
 @available(iOS 26.0, *)
 struct ButtonBar: View {
     let currentPage: OnboardingPage
+    let nextEnabled: Bool
+    let previousEnabled: Bool
     
     @Binding var termsAccepted: Bool
     @Binding var seedConfirmed: Bool
@@ -21,21 +23,6 @@ struct ButtonBar: View {
         switch currentPage {
         case .terms, .seed: true
         default: false
-        }
-    }
-
-    private var nextEnabled: Bool {
-        switch currentPage {
-        case .terms: termsAccepted
-        case .seed: seedConfirmed
-        default: true
-        }
-    }
-
-    private var previousEnabled: Bool {
-        switch currentPage {
-        case .welcome, .setup: false
-        default: true
         }
     }
 

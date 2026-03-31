@@ -97,8 +97,8 @@ struct ContentView: View {
 //                }
                 Group {
                     if #available(iOS 18.0, *) {
-//                        OnboardingCanvas(onComplete: {})
-                        ButtonBarPreview()
+                        OnboardingCanvas(onComplete: {})
+//                        ButtonBarPreview()
                     } else {
                         EmptyView()
                     }

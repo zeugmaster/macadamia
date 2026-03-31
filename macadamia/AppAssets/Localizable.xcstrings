@@ -1437,9 +1437,6 @@
         }
       }
     },
-    "Accept Terms" : {
-
-    },
     "ACTIVE" : {
       "localizations" : {
         "ar" : {
@@ -2209,9 +2206,6 @@
           }
         }
       }
-    },
-    "Akzeptieren" : {
-
     },
     "Already Spent 💸" : {
       "localizations" : {
@@ -4733,6 +4727,9 @@
         }
       }
     },
+    "Checking mints for ecash…" : {
+
+    },
     "Chilean Peso" : {
       "localizations" : {
         "ar" : {
@@ -6148,6 +6145,9 @@
           }
         }
       }
+    },
+    "Create new" : {
+
     },
     "Create Payment Request" : {
       "localizations" : {
@@ -8532,9 +8532,6 @@
         }
       }
     },
-    "Enter your seed phrase" : {
-
-    },
     "Error" : {
       "localizations" : {
         "ar" : {
@@ -10018,9 +10015,6 @@
         }
       }
     },
-    "How would you like to set up?" : {
-
-    },
     "HTTP" : {
       "shouldTranslate" : false
     },
@@ -10163,6 +10157,9 @@
           }
         }
       }
+    },
+    "I Agree" : {
+
     },
     "I agree to the terms." : {
       "extractionState" : "stale",
@@ -10308,6 +10305,9 @@
           }
         }
       }
+    },
+    "I wrote it down" : {
+
     },
     "Icelandic Króna" : {
       "localizations" : {
@@ -18950,6 +18950,12 @@
         }
       }
     },
+    "Paste" : {
+
+    },
+    "Pasteboard empty" : {
+
+    },
     "Pay" : {
       "localizations" : {
         "ar" : {
@@ -23091,6 +23097,9 @@
         }
       }
     },
+    "Restore from seed phrase" : {
+
+    },
     "Restored at: " : {
       "localizations" : {
         "ar" : {
@@ -23161,7 +23170,7 @@
         }
       }
     },
-    "Restoring…" : {
+    "Restoring wallet…" : {
 
     },
     "Retry" : {
@@ -23726,9 +23735,6 @@
           }
         }
       }
-    },
-    "Seed phrase..." : {
-
     },
     "Select" : {
       "localizations" : {
@@ -27382,7 +27388,6 @@
 
     },
     "This wallet and the Cashu protocol are in active development. Be cautious when using this software and follow best practices:\n\n- Mint only as much as you are ready to lose\n\n- Only use mints you trust\n\n- Back up your wallet\n\nIf you experience any issues, don't hesitate to send a request for support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues)." : {
-      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -31677,9 +31682,6 @@
           }
         }
       }
-    },
-    "Your seed phrase is the only way to recover your wallet. Never share it. Never store it digitally. Write it down and keep it somewhere safe." : {
-
     },
     "Your wallet is ready" : {
 
