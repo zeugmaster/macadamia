@@ -8,6 +8,7 @@
 import SwiftUI
 import MarkdownUI
 import SwiftData
+import BIP39
 
 // placeholder for previews
 let dummySeed = "coil indicate path field habit ladder concert disease gate robot industry prison".components(separatedBy: " ")
@@ -484,16 +485,11 @@ enum WalletChoice: String, CaseIterable {
     case restoreFromSeed = "Restore from Seed Phrase"
 }
 
-struct CenterButtonConfig: Equatable {
-    let label: String
-    let enabled: Bool
-
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.label == rhs.label && lhs.enabled == rhs.enabled
-    }
-}
-
 // MARK: - Master View
+
+enum OnboardingPage: Equatable {
+    case welcome, warning, terms, setup, seed, restore, success
+}
 
 @available(iOS 18.0, *)
 struct OnboardingCanvas: View {
@@ -526,6 +522,19 @@ struct OnboardingCanvas: View {
         if phase == 1 { return phase1Page ?? 0 }
         return (phase2Page ?? 0) + 3
     }
+    
+    private var currentPage: OnboardingPage {
+        switch page {
+        case 0: .welcome
+        case 1: .warning
+        case 2: .terms
+        case 3: .setup
+        case 4 where walletChoice == .restoreFromSeed: .restore
+        case 4: .seed
+        case 5: .success
+        default: .welcome
+        }
+    }
 
     private var headerTitle: String {
         switch page {
@@ -540,38 +549,8 @@ struct OnboardingCanvas: View {
         }
     }
 
-    private var previousEnabled: Bool {
-        switch page {
-        case 0: false
-        case 3: false
-        default: true
-        }
-    }
-
-    private var nextEnabled: Bool {
-        switch page {
-        case 0, 1: true
-        case 2: termsAccepted
-        case 3: walletChoice != nil
-        case 4 where walletChoice == .createNew: seedPhraseConfirmed
-        case 4 where walletChoice == .restoreFromSeed: restoreSucceeded
-        case 5: true
-        default: false
-        }
-    }
-
-    private var isLastPage: Bool { page == 5 }
-
-    private var centerButton: CenterButtonConfig? {
-        switch page {
-        case 4 where walletChoice == .createNew && !seedPhraseConfirmed:
-            CenterButtonConfig(label: "I Saved My Phrase", enabled: true)
-        case 4 where walletChoice == .restoreFromSeed && !restoreSucceeded:
-            CenterButtonConfig(label: "Initiate Restore", enabled: !seedPhraseInput.isEmpty && !restoreInProgress)
-        default:
-            nil
-        }
-    }
+    /// Whether `seedPhraseInput` is a valid BIP-39 mnemonic (12 or 24 words).
+    
 
     // MARK: Body
 
@@ -636,23 +615,25 @@ struct OnboardingCanvas: View {
                     }
                     .offset(x: phase == 1 ? 0 : -geo.size.width)
                 }
+            }
 
-                OnboardingBottomBar(
-                    previousEnabled: previousEnabled,
-                    nextEnabled: nextEnabled,
-                    isLastPage: isLastPage,
-                    currentPage: page,
-                    termsAccepted: $termsAccepted,
-                    centerButton: centerButton,
-                    onPrevious: { goBack() },
-                    onNext: {
-                        if page == 5 { finish() }
-                        else { goForward() }
-                    },
-                    onCenter: { handleCenterTap() }
-                )
+            if #available(iOS 26.0, *) {
+                VStack {
+                    Spacer()
+                    ButtonBar(
+                        currentPage: currentPage,
+                        termsAccepted: $termsAccepted,
+                        seedConfirmed: $seedPhraseConfirmed,
+                        onPrevious: { goBack() },
+                        onNext: {
+                            if page == 5 { finish() }
+                            else { goForward() }
+                        }
+                    )
+                }
             }
         }
+        .ignoresSafeArea(.container, edges: .bottom)
     }
 
     // MARK: Actions
@@ -690,26 +671,6 @@ struct OnboardingCanvas: View {
             if p1 > 0 {
                 withAnimation(anim) { phase1Page = p1 - 1 }
             }
-        }
-    }
-
-    private func handleCenterTap() {
-        switch page {
-        case 4 where walletChoice == .createNew:
-            seedPhraseConfirmed = true
-        case 4 where walletChoice == .restoreFromSeed:
-            beginRestore()
-        default:
-            break
-        }
-    }
-
-    private func beginRestore() {
-        restoreInProgress = true
-        Task {
-            try? await Task.sleep(for: .seconds(2))
-            restoreInProgress = false
-            restoreSucceeded = true
         }
     }
 
@@ -769,162 +730,7 @@ struct OnboardingPageContainer<Content: View>: View {
     }
 }
 
-// MARK: - Bottom Bar
-
-struct OnboardingBottomBar: View {
-    let previousEnabled: Bool
-    let nextEnabled: Bool
-    let isLastPage: Bool
-    let currentPage: Int
-    @Binding var termsAccepted: Bool
-    let centerButton: CenterButtonConfig?
-    let onPrevious: () -> Void
-    let onNext: () -> Void
-    let onCenter: () -> Void
-
-    @Namespace private var glassNS
-
-    private var showCenterAction: Bool {
-        currentPage == 2 || centerButton != nil
-    }
-
-    var body: some View {
-        barContent
-            .padding()
-            .animation(.easeInOut(duration: 0.3), value: centerButton)
-            .animation(.easeInOut(duration: 0.3), value: isLastPage)
-            .animation(.easeInOut(duration: 0.3), value: currentPage)
-    }
-
-    @ViewBuilder
-    private var barContent: some View {
-        if #available(iOS 26.0, *) {
-            GlassEffectContainer(spacing: 160) {
-                barLayout
-            }
-        } else {
-            barLayout
-        }
-    }
-
-    private var barLayout: some View {
-        ZStack {
-            // Arrows pinned to edges
-            HStack {
-                previousButton
-                Spacer()
-                nextButton
-            }
-
-            // Center button overlaid in the middle.
-            // It morphs out of / into the next arrow via glassEffectID
-            // because it appears within the container's spacing range.
-            if currentPage == 2 {
-                termsToggle
-            } else if let center = centerButton {
-                centerButtonView(center)
-            }
-        }
-    }
-
-    // MARK: - Buttons
-
-    private var previousButton: some View {
-        Button(action: onPrevious) {
-            Image(systemName: "chevron.left")
-                .fontWeight(.semibold)
-                .font(.body)
-                .frame(width: 44, height: 44)
-                .contentTransition(.symbolEffect(.replace))
-        }
-        .modifier(GlassStyleModifier())
-        .disabled(!previousEnabled)
-        .opacity(previousEnabled ? 1 : 0.35)
-    }
-
-    private var nextButton: some View {
-        Button(action: onNext) {
-            Image(systemName: isLastPage ? "checkmark" : "chevron.right")
-                .fontWeight(.semibold)
-                .font(.body)
-                .frame(width: 44, height: 44)
-                .contentTransition(.symbolEffect(.replace))
-        }
-        .modifier(GlassStyleModifier())
-        .modifier(GlassIDModifier(id: "next", namespace: glassNS))
-        .disabled(!nextEnabled)
-        .opacity(nextEnabled ? 1 : 0.35)
-    }
-
-    private var termsToggle: some View {
-        Button {
-            withAnimation(.snappy(duration: 0.3)) {
-                termsAccepted.toggle()
-            }
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: termsAccepted ? "checkmark.square" : "square")
-                    .contentTransition(.symbolEffect(.replace))
-                    .font(.title3)
-                Text("Accept Terms")
-            }
-        }
-        .modifier(GlassStyleModifier())
-        .modifier(GlassMorphModifier(id: "center", namespace: glassNS))
-    }
-
-    private func centerButtonView(_ config: CenterButtonConfig) -> some View {
-        Button(config.label, action: onCenter)
-            .disabled(!config.enabled)
-            .modifier(GlassStyleModifier())
-            .modifier(GlassMorphModifier(id: "center", namespace: glassNS))
-    }
-}
-
-// MARK: - Glass Morphing Helpers
-
-/// Assigns a glassEffectID on iOS 26+; no-op otherwise.
-private struct GlassIDModifier: ViewModifier {
-    let id: String
-    let namespace: Namespace.ID
-
-    func body(content: Content) -> some View {
-        if #available(iOS 26.0, *) {
-            content.glassEffectID(id, in: namespace)
-        } else {
-            content
-        }
-    }
-}
-
-/// Assigns a glassEffectID + matchedGeometry transition on iOS 26+; falls back to scale+opacity otherwise.
-private struct GlassMorphModifier: ViewModifier {
-    let id: String
-    let namespace: Namespace.ID
-
-    func body(content: Content) -> some View {
-        if #available(iOS 26.0, *) {
-            content
-                .glassEffectID(id, in: namespace)
-                .glassEffectTransition(.matchedGeometry)
-        } else {
-            content.transition(.scale.combined(with: .opacity))
-        }
-    }
-}
-
 // MARK: - Background
-
-/// Applies `.buttonStyle(.glass)` on iOS 26+; falls back to `.bordered` otherwise.
-private struct GlassStyleModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        if #available(iOS 26.0, *) {
-            content.buttonStyle(.glass)
-        } else {
-            content.buttonStyle(.bordered)
-        }
-    }
-}
 
 struct OnboardingBackground: View {
     let scrollOffset: CGFloat
@@ -975,7 +781,20 @@ struct CautionPage: View {
         VStack(alignment: .leading, spacing: 16) {
 //            Text("Important Safety Information")
 //                .font(.title2.bold())
-            Text("Your seed phrase is the only way to recover your wallet. Never share it. Never store it digitally. Write it down and keep it somewhere safe.")
+            Text(String(localized: """
+                                   This wallet and the Cashu protocol are in active development. \
+                                   Be cautious when using this software and follow best practices:
+                                   
+                                   - Mint only as much as you are ready to lose
+                                   
+                                   - Only use mints you trust
+                                   
+                                   - Back up your wallet
+                                   
+                                   If you experience any issues, don't hesitate to send a request for \
+                                   support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) \
+                                   or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues).
+                                   """))
                 .foregroundStyle(.secondary)
         }
         .padding()
@@ -997,7 +816,7 @@ struct TermsPage: View {
             .font(.footnote)
             .foregroundStyle(.secondary)
             .contentMargins(.top, 20)
-            .contentMargins(.bottom, 60)
+            .contentMargins(.bottom, 100)
             .mask {
                 VStack(spacing: 0) {
                     LinearGradient(
@@ -1014,7 +833,7 @@ struct TermsPage: View {
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    .frame(height: 80)
+                    .frame(height: 100)
                 }
             }
         }
@@ -1067,6 +886,141 @@ struct WalletChoicePage: View {
         }
         .buttonStyle(.plain)
     }
+}
+
+enum SetupSelectionState: Equatable {
+    case none
+    case createNew
+    case pendingInput
+    case invalidInput
+    case validSeedPhrase([String])
+    
+    var isRestoreFlow: Bool {
+        switch self {
+        case .invalidInput, .pendingInput, .validSeedPhrase(_): return true
+        default: return false
+        }
+    }
+}
+
+struct SetupSelectionPage: View {
+    @Binding var state: SetupSelectionState
+    
+    @State private var input: String = ""
+    
+    @State private var showEmptyPasteboardWarning = false
+    
+    private let outerCornerRadius = 20.0
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            HStack {
+                Image(systemName: "plus")
+                Text("Create new")
+                Spacer()
+                if state == .createNew {
+                    Image(systemName: "checkmark")
+                        .contentTransition(.symbolEffect(.replace))
+                }
+            }
+            .padding()
+            .background(RoundedRectangle(cornerRadius: outerCornerRadius).fill(state == .createNew ? .white.opacity(0.2) : .white.opacity(0.1)))
+            .onTapGesture {
+                state = .createNew
+            }
+            VStack(alignment: .leading, spacing: 20) {
+                HStack {
+                    Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                    Text("Restore from seed phrase")
+                    Spacer()
+                    Group {
+                        switch state {
+                        case .invalidInput: Image(systemName: "questionmark")
+                        case .validSeedPhrase(_): Image(systemName: "checkmark")
+                        default: EmptyView()
+                        }
+                    }
+                    .contentTransition(.symbolEffect(.replace))
+                }
+
+                if state.isRestoreFlow {
+                    VStack {
+                        TextField("Enter seed phrase", text: $input, axis: .vertical)
+                            .textFieldStyle(.plain)
+                            .padding(12)
+                            .lineLimit(3...5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(.white.opacity(0.1))
+                            )
+                        Button {
+                            if let string = UIPasteboard.general.string, !string.isEmpty {
+                                input = string
+                            } else {
+                                withAnimation {
+                                    showEmptyPasteboardWarning = true
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    withAnimation {
+                                        showEmptyPasteboardWarning = false
+                                    }
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                Spacer()
+                                Image(systemName: "clipboard")
+                                Text(showEmptyPasteboardWarning ? "Pasteboard empty" : "Paste")
+                                Spacer()
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)).combined(with: .scale(scale: 0.95, anchor: .top)))
+                }
+            }
+            .padding()
+            .background(RoundedRectangle(cornerRadius: outerCornerRadius).fill(restoreInputBackgroundColor))
+            .onTapGesture {
+                switch state {
+                case .none, .createNew: state = .pendingInput
+                default: break
+                }
+            }
+        }
+        .font(.title3)
+        .fontWeight(.medium)
+        .onChange(of: input, { oldValue, newValue in
+            if isSeedPhraseValid {
+                state = .validSeedPhrase(splitInput)
+            } else {
+                state = .invalidInput
+            }
+        })
+        .animation(.spring(duration: 0.3, bounce: 0.15), value: state)
+    }
+    
+    private var restoreInputBackgroundColor: Color {
+        switch state {
+        case .none, .createNew: .white.opacity(0.1)
+        default: .white.opacity(0.2)
+        }
+    }
+    
+    private var splitInput: [String] {
+        input.split(omittingEmptySubsequences: true, whereSeparator: \.isWhitespace)
+             .map(String.init)
+    }
+    
+    private var isSeedPhraseValid: Bool {
+        if splitInput.isEmpty { return false }
+        return (try? Mnemonic(phrase: splitInput)) != nil
+    }
+}
+
+#Preview {
+    @Previewable @State var selection: SetupSelectionState = .none
+    SetupSelectionPage(state: $selection)
 }
 
 struct WalletSetupPage: View {
@@ -1155,7 +1109,7 @@ struct SuccessPage: View {
         VStack(spacing: 16) {
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 64))
-                .foregroundStyle(.green)
+                .foregroundStyle(.white.opacity(0.5))
 
             Text("Your wallet is ready")
                 .font(.title2.bold())
