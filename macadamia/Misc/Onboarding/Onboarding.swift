@@ -782,36 +782,78 @@ struct OnboardingBottomBar: View {
     let onNext: () -> Void
     let onCenter: () -> Void
 
+    @Namespace private var glassNS
+
+    private var showCenterAction: Bool {
+        currentPage == 2 || centerButton != nil
+    }
+
     var body: some View {
-        HStack {
-            arrowButton(
-                systemName: "chevron.left",
-                enabled: previousEnabled,
-                action: onPrevious
-            )
+        barContent
+            .padding()
+            .animation(.easeInOut(duration: 0.3), value: centerButton)
+            .animation(.easeInOut(duration: 0.3), value: isLastPage)
+            .animation(.easeInOut(duration: 0.3), value: currentPage)
+    }
 
-            Spacer()
+    @ViewBuilder
+    private var barContent: some View {
+        if #available(iOS 26.0, *) {
+            GlassEffectContainer(spacing: 160) {
+                barLayout
+            }
+        } else {
+            barLayout
+        }
+    }
 
-            if currentPage == 2 {
-                termsToggle
-                    .transition(.scale.combined(with: .opacity))
-            } else if let center = centerButton {
-                centerButtonView(center)
-                    .transition(.scale.combined(with: .opacity))
+    private var barLayout: some View {
+        ZStack {
+            // Arrows pinned to edges
+            HStack {
+                previousButton
+                Spacer()
+                nextButton
             }
 
-            Spacer()
-
-            arrowButton(
-                systemName: isLastPage ? "checkmark" : "chevron.right",
-                enabled: nextEnabled,
-                action: onNext
-            )
+            // Center button overlaid in the middle.
+            // It morphs out of / into the next arrow via glassEffectID
+            // because it appears within the container's spacing range.
+            if currentPage == 2 {
+                termsToggle
+            } else if let center = centerButton {
+                centerButtonView(center)
+            }
         }
-        .padding()
-        .animation(.easeInOut(duration: 0.3), value: centerButton)
-        .animation(.easeInOut(duration: 0.3), value: isLastPage)
-        .animation(.easeInOut(duration: 0.3), value: currentPage)
+    }
+
+    // MARK: - Buttons
+
+    private var previousButton: some View {
+        Button(action: onPrevious) {
+            Image(systemName: "chevron.left")
+                .fontWeight(.semibold)
+                .font(.body)
+                .frame(width: 44, height: 44)
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .modifier(GlassStyleModifier())
+        .disabled(!previousEnabled)
+        .opacity(previousEnabled ? 1 : 0.35)
+    }
+
+    private var nextButton: some View {
+        Button(action: onNext) {
+            Image(systemName: isLastPage ? "checkmark" : "chevron.right")
+                .fontWeight(.semibold)
+                .font(.body)
+                .frame(width: 44, height: 44)
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .modifier(GlassStyleModifier())
+        .modifier(GlassIDModifier(id: "next", namespace: glassNS))
+        .disabled(!nextEnabled)
+        .opacity(nextEnabled ? 1 : 0.35)
     }
 
     private var termsToggle: some View {
@@ -827,47 +869,57 @@ struct OnboardingBottomBar: View {
                 Text("Accept Terms")
             }
         }
-        .modifier(GlassButtonModifier())
-    }
-
-    private func arrowButton(systemName: String, enabled: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemName)
-                .fontWeight(.semibold)
-                .font(.body)
-                .frame(width: 44, height: 44)
-                .contentTransition(.symbolEffect(.replace))
-        }
-        .modifier(GlassButtonModifier(shape: .circle))
-        .disabled(!enabled)
-        .opacity(enabled ? 1 : 0.35)
+        .modifier(GlassStyleModifier())
+        .modifier(GlassMorphModifier(id: "center", namespace: glassNS))
     }
 
     private func centerButtonView(_ config: CenterButtonConfig) -> some View {
         Button(config.label, action: onCenter)
             .disabled(!config.enabled)
-            .modifier(GlassButtonModifier())
+            .modifier(GlassStyleModifier())
+            .modifier(GlassMorphModifier(id: "center", namespace: glassNS))
+    }
+}
+
+// MARK: - Glass Morphing Helpers
+
+/// Assigns a glassEffectID on iOS 26+; no-op otherwise.
+private struct GlassIDModifier: ViewModifier {
+    let id: String
+    let namespace: Namespace.ID
+
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.glassEffectID(id, in: namespace)
+        } else {
+            content
+        }
+    }
+}
+
+/// Assigns a glassEffectID + matchedGeometry transition on iOS 26+; falls back to scale+opacity otherwise.
+private struct GlassMorphModifier: ViewModifier {
+    let id: String
+    let namespace: Namespace.ID
+
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content
+                .glassEffectID(id, in: namespace)
+                .glassEffectTransition(.matchedGeometry)
+        } else {
+            content.transition(.scale.combined(with: .opacity))
+        }
     }
 }
 
 // MARK: - Background
 
-private struct GlassButtonModifier<S: Shape>: ViewModifier {
-    var shape: S
-
-    init(shape: S = Capsule()) where S == Capsule {
-        self.shape = shape
-    }
-
-    init(shape: S) {
-        self.shape = shape
-    }
-
+/// Applies `.buttonStyle(.glass)` on iOS 26+; falls back to `.bordered` otherwise.
+private struct GlassStyleModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 26.0, *) {
-            content
-                .buttonStyle(.plain)
-                .glassEffect(.regular.interactive(), in: shape)
+            content.buttonStyle(.glass)
         } else {
             content.buttonStyle(.bordered)
         }
@@ -944,7 +996,8 @@ struct TermsPage: View {
             }
             .font(.footnote)
             .foregroundStyle(.secondary)
-            .contentMargins(.vertical, 20, for: .scrollContent)
+            .contentMargins(.top, 20)
+            .contentMargins(.bottom, 60)
             .mask {
                 VStack(spacing: 0) {
                     LinearGradient(
@@ -961,7 +1014,7 @@ struct TermsPage: View {
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    .frame(height: 20)
+                    .frame(height: 80)
                 }
             }
         }

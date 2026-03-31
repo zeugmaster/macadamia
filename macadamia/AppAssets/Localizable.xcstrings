@@ -2210,6 +2210,9 @@
         }
       }
     },
+    "Akzeptieren" : {
+
+    },
     "Already Spent 💸" : {
       "localizations" : {
         "ar" : {
@@ -27869,6 +27872,9 @@
         }
       }
     },
+    "Toggle" : {
+
+    },
     "Token" : {
       "localizations" : {
         "ar" : {
@@ -29338,6 +29344,9 @@
           }
         }
       }
+    },
+    "unavailable" : {
+
     },
     "Unhandled Error" : {
       "localizations" : {

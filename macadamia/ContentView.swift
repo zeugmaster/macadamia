@@ -89,13 +89,20 @@ struct ContentView: View {
             case .hidden:
                 EmptyView()
             case .shown:
-                Onboarding {
-                    AppState.showOnboarding = false
-                    withAnimation {
-                        onboardingState = .hidden
+//                Onboarding {
+//                    AppState.showOnboarding = false
+//                    withAnimation {
+//                        onboardingState = .hidden
+//                    }
+//                }
+                Group {
+                    if #available(iOS 18.0, *) {
+//                        OnboardingCanvas(onComplete: {})
+                        ButtonBarPreview()
+                    } else {
+                        EmptyView()
                     }
                 }
-//                OnboardingCanvas()
                 .transition(.opacity.animation(.easeInOut(duration: 0.3)))
                 .zIndex(1) // uuuuhhmmm ???
             }
