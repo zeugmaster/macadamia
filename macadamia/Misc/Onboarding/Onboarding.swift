@@ -963,12 +963,11 @@ struct SetupSelectionPage: View {
             }
             .font(.title3)
             .fontWeight(.medium)
-            .onChange(of: input) { _, newValue in
-                let words = newValue.split(omittingEmptySubsequences: true, whereSeparator: \.isWhitespace).map(String.init)
-                if !words.isEmpty, (try? Mnemonic(phrase: words)) != nil {
-                    state = .validSeedPhrase(words)
-                } else if newValue.isEmpty {
+            .onChange(of: input) {
+                if input.isEmpty {
                     state = .pendingInput
+                } else if isSeedPhraseValid {
+                    state = .validSeedPhrase(splitInput)
                 } else {
                     state = .invalidInput
                 }
