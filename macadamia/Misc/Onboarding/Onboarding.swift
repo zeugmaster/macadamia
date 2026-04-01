@@ -476,8 +476,6 @@ struct Onboarding: View {
 //    OnboardingCanvas()
 //}
 
-import SwiftUI
-
 // MARK: - Master View
 
 enum OnboardingPage: Equatable {
