@@ -10,15 +10,41 @@ import SwiftUI
 struct SeedView: View {
     let seed: [String]
     
-    var body: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 12) {
-            ForEach(Array(seed.enumerated()), id: \.offset) { o, s in
-                HStack {
-                    Text(String(o+1))
-                        .font(.callout)
-                    Text(s)
+    private func seedEntry(index: Int, word: String) -> some View {
+        HStack {
+            // hidden text sets minimum width for consistent sizing
+            Text("00")
+                .font(.caption.monospacedDigit())
+                .bold()
+                .hidden()
+                .overlay {
+                    Text(String(index))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.background)
+                        .bold()
                 }
+                .padding(2)
+                .background {
+                    Color.primary
+                        .aspectRatio(1, contentMode: .fill)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                }
+            Text(word)
                 .fontWeight(.semibold)
+        }
+    }
+    
+    var body: some View {
+        Grid(alignment: .leading, horizontalSpacing: 30, verticalSpacing: 12) {
+            ForEach(Array(seed.enumerated()), id: \.offset) { o, s in
+                if o % 2 == 0 {
+                    GridRow {
+                        seedEntry(index: o + 1, word: s)
+                        if o + 1 < seed.count {
+                            seedEntry(index: o + 2, word: seed[o + 1])
+                        }
+                    }
+                }
             }
         }
         .padding()
@@ -28,5 +54,4 @@ struct SeedView: View {
 
 #Preview {
     SeedView(seed: dummySeed)
-        .padding(30)
 }
