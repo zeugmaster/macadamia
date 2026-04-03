@@ -13,25 +13,6 @@ import BIP39
 // placeholder for previews
 let dummySeed = "coil indicate path field habit ladder concert disease gate robot industry prison".components(separatedBy: " ")
 
-struct Onboarding: View {
-    var onComplete: () -> Void
-    
-    // navigation
-    @State private var currentPage = 0
-    @State private var scrollOffset: CGFloat = 0
-    
-    // phase 1 state
-    @State private var termsAccepted = false
-    
-    var body: some View {
-        
-    }
-}
-
-#Preview {
-    Onboarding(onComplete: {print("Onboarding complete.")})
-}
-
 //struct Onboarding: View {
 //    @State private var seedPhraseWrittenDown = false
 //    @State private var tosAcknowledged = false
@@ -1011,36 +992,26 @@ struct WalletSetupPage: View {
             if setupSelection.isRestoreFlow {
                 restoreContent
             } else {
-                seedDisplayContent
+                SeedPage(seed: dummySeed)
+                    .padding()
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
     }
 
     private var seedDisplayContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Write down your seed phrase")
-                .font(.title2.bold())
+        VStack {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Write down your seed phrase")
+                    .font(.title2.bold())
 
-            Text("Store this somewhere safe. It is the only way to recover your wallet.")
-                .foregroundStyle(.secondary)
+                Text("Store this somewhere safe. It is the only way to recover your wallet.")
+                    .foregroundStyle(.secondary)
 
-            Text(generatedSeed)
-                .font(.system(.body, design: .monospaced))
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.secondary.opacity(0.1))
-                )
-                .textSelection(.enabled)
-
-            if seedPhraseConfirmed {
-                Label("Confirmed — you may proceed",
-                      systemImage: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-                .transition(.scale.combined(with: .opacity))
             }
+            Spacer(minLength: 10)
+                .frame(maxHeight: 50)
+            SeedView(seed: dummySeed)
         }
         .padding()
     }
