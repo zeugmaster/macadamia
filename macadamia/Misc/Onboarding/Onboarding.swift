@@ -905,7 +905,7 @@ struct SetupSelectionPage: View {
                                 .lineLimit(3...5)
                                 .background(
                                     RoundedRectangle(cornerRadius: innerCornerRadius)
-                                        .fill(.primary.opacity(0.1))
+                                        .fill(.primary.opacity(0.08))
                                 )
                             Button {
                                 if let string = UIPasteboard.general.string, !string.isEmpty {
@@ -929,7 +929,7 @@ struct SetupSelectionPage: View {
                                 }
                                 .padding(8)
                                 .background(RoundedRectangle(cornerRadius: innerCornerRadius)
-                                    .fill(.primary.opacity(0.1)))
+                                    .fill(.primary.opacity(0.08)))
                                 .font(.body)
                             }
                         }
@@ -1027,28 +1027,10 @@ struct WalletSetupPage: View {
 
     private var restoreContent: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Restoring wallet…")
+            Text("Restore from Seed Phrase")
                 .font(.title2.bold())
-
-            if restoreInProgress {
-                HStack(spacing: 8) {
-                    ProgressView()
-                    Text("Checking mints for ecash…")
-                        .foregroundStyle(.secondary)
-                }
-                .transition(.opacity)
-            }
-
-            if restoreSucceeded {
-                Label("Wallet restored successfully",
-                      systemImage: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-                .transition(.scale.combined(with: .opacity))
-            }
         }
         .padding()
-        .animation(.easeInOut(duration: 0.3), value: restoreInProgress)
-        .animation(.easeInOut(duration: 0.3), value: restoreSucceeded)
     }
 }
 
