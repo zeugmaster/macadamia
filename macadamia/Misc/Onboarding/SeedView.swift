@@ -19,8 +19,9 @@ struct SeedPage: View {
 
             Text("Store this somewhere safe. It is the only way to recover your wallet.")
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
                 
-            Spacer().frame(maxHeight: 40)
+            Spacer(minLength: 0)
             VStack(spacing: 14) {
                 SeedView(seed: seed)
                 Button {
@@ -49,6 +50,9 @@ struct SeedPage: View {
             }
             .fixedSize(horizontal: true, vertical: false)
             .frame(maxWidth: .infinity)
+            Spacer()
+            Spacer()
+            Spacer() // dirty hack to save alignment on different type size settings
         }
         .frame(maxWidth: .infinity)
     }

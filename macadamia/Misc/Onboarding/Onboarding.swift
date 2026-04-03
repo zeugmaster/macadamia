@@ -859,7 +859,8 @@ struct SetupSelectionPage: View {
     
     @State private var showEmptyPasteboardWarning = false
     
-    private let outerCornerRadius = 20.0
+    private let outerCornerRadius = 18.0
+    private let innerCornerRadius = 10.0
     
     var body: some View {
         ScrollView {
@@ -874,7 +875,10 @@ struct SetupSelectionPage: View {
                     }
                 }
                 .padding()
-                .background(RoundedRectangle(cornerRadius: outerCornerRadius).fill(state == .createNew ? .white.opacity(0.1) : .white.opacity(0.05)))
+                .background(RoundedRectangle(cornerRadius: outerCornerRadius)
+                    .fill(Color.primary.gradient.opacity(0.8))
+                    .stroke(.primary, style: StrokeStyle())
+                    .opacity(state == .createNew ? 0.15 : 0.08))
                 .onTapGesture {
                     state = .createNew
                 }
@@ -900,8 +904,8 @@ struct SetupSelectionPage: View {
                                 .padding(12)
                                 .lineLimit(3...5)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .fill(.white.opacity(0.1))
+                                    RoundedRectangle(cornerRadius: innerCornerRadius)
+                                        .fill(.primary.opacity(0.1))
                                 )
                             Button {
                                 if let string = UIPasteboard.general.string, !string.isEmpty {
@@ -923,15 +927,20 @@ struct SetupSelectionPage: View {
                                     Text(showEmptyPasteboardWarning ? "Pasteboard empty" : "Paste")
                                     Spacer()
                                 }
+                                .padding(8)
+                                .background(RoundedRectangle(cornerRadius: innerCornerRadius)
+                                    .fill(.primary.opacity(0.1)))
                                 .font(.body)
                             }
-                            .buttonStyle(.bordered)
                         }
                         .transition(.opacity.combined(with: .move(edge: .top)).combined(with: .scale(scale: 0.95, anchor: .top)))
                     }
                 }
                 .padding()
-                .background(RoundedRectangle(cornerRadius: outerCornerRadius).fill(restoreInputBackgroundColor))
+                .background(RoundedRectangle(cornerRadius: outerCornerRadius)
+                    .fill(Color.primary.gradient.opacity(0.8))
+                    .stroke(.primary, style: StrokeStyle())
+                    .opacity(restoreInputBackgroundOpacity))
                 .onTapGesture {
                     switch state {
                     case .none, .createNew: state = .pendingInput
@@ -956,10 +965,10 @@ struct SetupSelectionPage: View {
         }
     }
     
-    private var restoreInputBackgroundColor: Color {
+    private var restoreInputBackgroundOpacity: Double {
         switch state {
-        case .none, .createNew: .white.opacity(0.05)
-        default: .white.opacity(0.1)
+        case .none, .createNew: 0.08
+        default: 0.15
         }
     }
     
