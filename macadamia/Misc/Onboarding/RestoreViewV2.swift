@@ -22,15 +22,16 @@ struct RestoreViewV2: View {
     
     var body: some View {
         Group {
-            if mintUrls.isEmpty {
-                VStack {
-                    Text("No mints yet...")
-                    ProgressView()
-                    Spacer()
-                }
-                .padding()
-            } else {
-                List {
+            List {
+                if mintUrls.isEmpty {
+                    HStack {
+                        Text("Loading...")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        ProgressView()
+                    }
+                    .listRowBackground(Color.primary.opacity(0.08))
+                } else {
                     ForEach(mintUrls, id: \.absoluteString) { url in
                         Button {
                             toggle(url)
@@ -42,15 +43,15 @@ struct RestoreViewV2: View {
                         }
                         .listRowBackground(Color.primary.opacity(0.08))
                     }
-                    HStack {
-                        Image(systemName: "plus")
-                        TextField("", text: $mintUrlInput, prompt: Text("mint.example.com"))
-                            .keyboardType(.URL)
-                    }
-                    .listRowBackground(Color.primary.opacity(0.08))
                 }
-                .scrollContentBackground(.hidden)
+                HStack {
+                    Image(systemName: "plus")
+                    TextField("", text: $mintUrlInput, prompt: Text("mint.example.com"))
+                        .keyboardType(.URL)
+                }
+                .listRowBackground(Color.primary.opacity(0.08))
             }
+            .scrollContentBackground(.hidden)
         }
         .task {
             try? await loadMintUrls()
@@ -67,8 +68,10 @@ struct RestoreViewV2: View {
     
     private func loadMintUrls() async throws {
         try await Task.sleep(for: .seconds(2))
-        self.mintUrls = dummyMintUrls
-        self.selectedMintUrls = Set(mintUrls)
+        withAnimation {
+            self.mintUrls = dummyMintUrls
+            self.selectedMintUrls = Set(mintUrls)
+        }
     }
 }
 
