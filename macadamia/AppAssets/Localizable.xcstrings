@@ -1087,6 +1087,9 @@
         }
       }
     },
+    "00" : {
+
+    },
     "12 Word backup seed phrase" : {
       "localizations" : {
         "ar" : {
@@ -4727,9 +4730,6 @@
         }
       }
     },
-    "Checking mints for ecash…" : {
-
-    },
     "Chilean Peso" : {
       "localizations" : {
         "ar" : {
@@ -5079,9 +5079,6 @@
           }
         }
       }
-    },
-    "Confirmed — you may proceed" : {
-
     },
     "Connected to %lld of %lld relay%@." : {
       "localizations" : {
@@ -7058,6 +7055,9 @@
           }
         }
       }
+    },
+    "Discovering mints..." : {
+
     },
     "Display" : {
       "localizations" : {
@@ -14526,6 +14526,9 @@
           }
         }
       }
+    },
+    "mint.example.com" : {
+
     },
     "Mints" : {
       "localizations" : {
@@ -23100,6 +23103,9 @@
     "Restore from seed phrase" : {
 
     },
+    "Restore from Seed Phrase" : {
+
+    },
     "Restored at: " : {
       "localizations" : {
         "ar" : {
@@ -23169,9 +23175,6 @@
           }
         }
       }
-    },
-    "Restoring wallet…" : {
-
     },
     "Retry" : {
       "localizations" : {
@@ -31389,9 +31392,6 @@
           }
         }
       }
-    },
-    "Wallet restored successfully" : {
-
     },
     "WARNING: This reduces your privacy with this mint!" : {
       "shouldTranslate" : false

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CashuSwift
 
 let dummyMintUrls = [
     URL(string: "https://testmint.macadamia.cash")!,
@@ -13,64 +14,156 @@ let dummyMintUrls = [
     URL(string: "https://success.fake.macadamia.cash")!
 ]
 
+// MARK: - Per-Row Model
+
+@MainActor @Observable
+class MintRow: Identifiable {
+    let id = UUID()
+    let url: URL
+    var isSelected: Bool = true
+    var status: LoadStatus = .idle
+
+    enum LoadStatus {
+        case idle, loading, loaded(CashuSwift.Mint), failed
+    }
+
+    var isLoaded: Bool {
+        if case .loaded = status { return true }
+        return false
+    }
+
+    init(url: URL) {
+        self.url = url
+    }
+}
+
+// MARK: - View Model
+
+@MainActor @Observable
+class RestoreViewModel {
+    var rows = [MintRow]()
+    var isDiscovering = true
+
+    func discover(seed: [String]) async {
+        // TODO: replace with real mint discovery from seed
+        try? await Task.sleep(for: .seconds(2))
+        let urls = dummyMintUrls
+        let newRows = urls.map { MintRow(url: $0) }
+        withAnimation {
+            rows.append(contentsOf: newRows)
+            isDiscovering = false
+        }
+        await loadAll(newRows)
+    }
+
+    func addManually(_ urlString: String) {
+        guard let url = URL(string: "https://\(urlString)") else { return }
+        let row = MintRow(url: url)
+        withAnimation { rows.append(row) }
+        Task { await load(row) }
+    }
+
+    func loadAll(_ rows: [MintRow]) async {
+        await withTaskGroup(of: Void.self) { group in
+            for row in rows {
+                group.addTask { await self.load(row) }
+            }
+        }
+    }
+
+    private func load(_ row: MintRow) async {
+        row.status = .loading
+        do {
+            let url = row.url
+            let mint = try await CashuSwift.loadMint(url: url)
+            withAnimation { row.status = .loaded(mint) }
+        } catch {
+            withAnimation { row.status = .failed }
+        }
+    }
+}
+
+// MARK: - Restore View
+
 struct RestoreViewV2: View {
     let seed: [String]
-    
-    @State private var mintUrls = [URL]()
-    @State private var selectedMintUrls = Set<URL>()
+    @State private var vm = RestoreViewModel()
     @State private var mintUrlInput = ""
-    
+
     var body: some View {
-        Group {
-            List {
-                if mintUrls.isEmpty {
-                    HStack {
-                        Text("Loading...")
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        ProgressView()
-                    }
-                    .listRowBackground(Color.primary.opacity(0.08))
-                } else {
-                    ForEach(mintUrls, id: \.absoluteString) { url in
-                        Button {
-                            toggle(url)
-                        } label: {
-                            HStack {
-                                Image(systemName: selectedMintUrls.contains(url) ? "checkmark.circle.fill" : "circle")
-                                Text(url.host() ?? url.absoluteString)
-                            }
-                        }
-                        .listRowBackground(Color.primary.opacity(0.08))
-                    }
-                }
+        List {
+            if vm.isDiscovering {
                 HStack {
-                    Image(systemName: "plus")
-                    TextField("", text: $mintUrlInput, prompt: Text("mint.example.com"))
-                        .keyboardType(.URL)
+                    Text("Discovering mints...")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    ProgressView()
                 }
                 .listRowBackground(Color.primary.opacity(0.08))
             }
-            .scrollContentBackground(.hidden)
+
+            ForEach(vm.rows) { row in
+                MintRowView(row: row)
+                    .listRowBackground(Color.primary.opacity(0.08))
+            }
+
+            HStack {
+                Image(systemName: "plus")
+                TextField("", text: $mintUrlInput, prompt: Text("mint.example.com"))
+                    .keyboardType(.URL)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                    .onSubmit {
+                        let input = mintUrlInput.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !input.isEmpty else { return }
+                        vm.addManually(input)
+                        mintUrlInput = ""
+                    }
+            }
+            .listRowBackground(Color.primary.opacity(0.08))
         }
+        .scrollContentBackground(.hidden)
         .task {
-            try? await loadMintUrls()
+            await vm.discover(seed: seed)
         }
     }
-    
-    private func toggle(_ url: URL) {
-        if selectedMintUrls.contains(url) {
-            selectedMintUrls.remove(url)
-        } else {
-            selectedMintUrls.insert(url)
+}
+
+// MARK: - Mint Row View
+
+struct MintRowView: View {
+    @Bindable var row: MintRow
+
+    var body: some View {
+        Button {
+            withAnimation { row.isSelected.toggle() }
+        } label: {
+            HStack {
+                Image(systemName: row.isSelected ? "checkmark.circle.fill" : "circle")
+                Text(row.url.host() ?? row.url.absoluteString)
+                Spacer()
+                statusIndicator
+            }
         }
     }
-    
-    private func loadMintUrls() async throws {
-        try await Task.sleep(for: .seconds(2))
-        withAnimation {
-            self.mintUrls = dummyMintUrls
-            self.selectedMintUrls = Set(mintUrls)
+
+    @ViewBuilder
+    private var statusIndicator: some View {
+        switch row.status {
+        case .idle:
+            EmptyView()
+        case .loading:
+            ProgressView()
+        case .loaded:
+            Circle()
+                .fill(.green)
+                .frame(width: 8, height: 8)
+                .transition(.scale.combined(with: .opacity))
+        case .failed:
+            Circle()
+                .fill(.red)
+                .frame(width: 8, height: 8)
+                .transition(.scale.combined(with: .opacity))
         }
     }
 }
