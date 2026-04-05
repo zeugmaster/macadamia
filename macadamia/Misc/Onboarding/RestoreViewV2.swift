@@ -97,7 +97,8 @@ struct RestoreViewV2: View {
     @State private var vm = RestoreViewModel()
     @State private var mintUrlInput = ""
     
-    @State private var restoreProgress:Double? = nil
+    @State private var restoreProgress: Double = 0.0
+    @State private var showRestoreProgress = false
 
     var body: some View {
         List {
@@ -118,7 +119,8 @@ struct RestoreViewV2: View {
                 }
 
                 HStack {
-                    Image(systemName: "plus")
+                    Image(systemName: "pencil")
+                        .bold()
                     TextField("", text: $mintUrlInput, prompt: Text("mint.example.com"))
                         .keyboardType(.URL)
                         .autocorrectionDisabled()
@@ -140,6 +142,20 @@ struct RestoreViewV2: View {
                     .foregroundStyle(.secondary)
                     .monospaced()
                     .listRowBackground(Color.primary.opacity(0.08))
+                if showRestoreProgress {
+                    GeometryReader { geo in
+                        Capsule()
+                            .fill(.primary.opacity(0.2))
+                            .overlay(alignment: .leading) {
+                                Capsule()
+                                    .fill(.primary)
+                                    .frame(width: geo.size.width * restoreProgress)
+                            }
+                            .clipped()
+                    }
+                    .frame(height: 4)
+                    .animation(.easeInOut, value: restoreProgress)
+                }
             }
             
             // TODO: add wallet reuse warning
@@ -163,6 +179,23 @@ struct RestoreViewV2: View {
     
     private func restore() {
         print("start restore process")
+        
+        if showRestoreProgress {
+            withAnimation {
+                restoreProgress += 0.05
+            }
+        } else {
+            // First, animate the row insertion with progress at 0
+            withAnimation {
+                showRestoreProgress = true
+            }
+            // Then animate the bar filling on the next frame
+            Task { @MainActor in
+                withAnimation {
+                    restoreProgress = 0.5
+                }
+            }
+        }
     }
 }
 
@@ -208,6 +241,7 @@ struct MintRowView: View {
 #Preview {
     ZStack {
         Rectangle().fill(Color.black.gradient)
+            .ignoresSafeArea()
         RestoreViewV2(seed: dummySeed) { wallet in
             print(String(describing: wallet))
         }
