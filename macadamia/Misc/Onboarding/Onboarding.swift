@@ -999,7 +999,9 @@ struct WalletSetupPage: View {
     var body: some View {
         Group {
             if setupSelection.isRestoreFlow {
-                restoreContent
+                RestoreViewV2(seed: dummySeed) { wallet in
+                    
+                }
             } else {
                 SeedPage(seed: dummySeed)
                     .padding()

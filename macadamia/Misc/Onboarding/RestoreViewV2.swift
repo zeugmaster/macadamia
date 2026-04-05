@@ -98,7 +98,7 @@ struct RestoreViewV2: View {
     @State private var mintUrlInput = ""
     
     @State private var restoreProgress: Double = 0.0
-    @State private var showRestoreProgress = false
+    @State private var restoreInProgress = false
 
     var body: some View {
         List {
@@ -142,7 +142,7 @@ struct RestoreViewV2: View {
                     .foregroundStyle(.secondary)
                     .monospaced()
                     .listRowBackground(Color.primary.opacity(0.08))
-                if showRestoreProgress {
+                if restoreInProgress {
                     GeometryReader { geo in
                         Capsule()
                             .fill(.primary.opacity(0.2))
@@ -155,6 +155,7 @@ struct RestoreViewV2: View {
                     }
                     .frame(height: 4)
                     .animation(.easeInOut, value: restoreProgress)
+                    .listRowBackground(Color.primary.opacity(0.08))
                 }
             }
             
@@ -165,10 +166,25 @@ struct RestoreViewV2: View {
                     restore()
                 } label: {
                     HStack {
-                        Text("Restore Wallet")
+                        Spacer()
+                        if restoreInProgress {
+                            ProgressView()
+                        } else {
+                            Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                        }
+                        Text("Restore")
+                        Spacer()
                     }
+                    .padding(12)
+                    .fontWeight(.medium)
+                    .background(RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.primary.gradient.opacity(0.8))
+                        .stroke(.primary, style: StrokeStyle())
+                        .opacity(0.15))
                 }
-                .listRowBackground(Color.primary.opacity(0.08))
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 2, leading: 2, bottom: 2, trailing: 2))
+                .disabled(restoreInProgress || vm.emptySelection)
             }
         }
         .scrollContentBackground(.hidden)
@@ -180,14 +196,14 @@ struct RestoreViewV2: View {
     private func restore() {
         print("start restore process")
         
-        if showRestoreProgress {
+        if restoreInProgress {
             withAnimation {
                 restoreProgress += 0.05
             }
         } else {
             // First, animate the row insertion with progress at 0
             withAnimation {
-                showRestoreProgress = true
+                restoreInProgress = true
             }
             // Then animate the bar filling on the next frame
             Task { @MainActor in
