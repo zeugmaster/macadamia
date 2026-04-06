@@ -12482,6 +12482,9 @@
         }
       }
     },
+    "Let's bring back financial privacy." : {
+
+    },
     "Lightning" : {
       "shouldTranslate" : false
     },
@@ -27387,9 +27390,6 @@
         }
       }
     },
-    "This short setup will get your wallet ready in a few steps. You'll review some important safety information, accept the terms, and configure your wallet." : {
-
-    },
     "This wallet and the Cashu protocol are in active development. Be cautious when using this software and follow best practices:\n\n- Mint only as much as you are ready to lose\n\n- Only use mints you trust\n\n- Back up your wallet\n\nIf you experience any issues, don't hesitate to send a request for support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues)." : {
       "localizations" : {
         "ar" : {
@@ -31541,6 +31541,9 @@
           }
         }
       }
+    },
+    "You are using **macadamia**, the first fully native ecash wallet for the Cashu protocol on iOS. \n\nDigital payments should be as natural as handing over cash in person. Cashu brings simplicity back to online and real-life payments. Tap [here](https://cashu.space) to learn more. \n\nThe code for this project is **open-source** allowing anyone to view it or contribute. You can find it on [Github](https://github.com/zeugmaster/macadamia). \n" : {
+
     },
     "You are using **macadamia**, the first fully native ecash wallet for the Cashu protocol on iOS. \n\nDigital payments should be as natural as handing over cash in person. Cashu brings simplicity back to online and real-life payments. Tap [here](https://cashu.space) to learn more. \n\nThe code for this project is **open-source** allowing anyone to view it or contribute. You can find it on [Github](https://github.com/zeugmaster/macadamia). \n\nThis app does not collect any usage data or analytics. \n\nThank you for trying the future of payments! \n\n\n\n# 🥜🌰" : {
       "extractionState" : "stale",

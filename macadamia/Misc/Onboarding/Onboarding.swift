@@ -783,9 +783,17 @@ struct OnboardingBackground: View {
 struct GreetingPage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-//            Text("Welcome to YourApp")
-//                .font(.title2.bold())
-            Text("This short setup will get your wallet ready in a few steps. You'll review some important safety information, accept the terms, and configure your wallet.")
+            Text("Let's bring back financial privacy.")
+                .font(.title2.bold())
+            Text("""
+                You are using **macadamia**, the first fully native \
+                ecash wallet for the Cashu protocol on iOS. \n
+                Digital payments should be as natural as handing over cash in person. \
+                Cashu brings simplicity back to online and real-life payments. \
+                Tap [here](https://cashu.space) to learn more. \n
+                The code for this project is **open-source** allowing anyone to view it or contribute. \
+                You can find it on [Github](https://github.com/zeugmaster/macadamia). \n
+                """)
                 .foregroundStyle(.secondary)
         }
         .padding()
@@ -798,20 +806,20 @@ struct CautionPage: View {
         VStack(alignment: .leading, spacing: 16) {
 //            Text("Important Safety Information")
 //                .font(.title2.bold())
-            Text(String(localized: """
-                                   This wallet and the Cashu protocol are in active development. \
-                                   Be cautious when using this software and follow best practices:
-                                   
-                                   - Mint only as much as you are ready to lose
-                                   
-                                   - Only use mints you trust
-                                   
-                                   - Back up your wallet
-                                   
-                                   If you experience any issues, don't hesitate to send a request for \
-                                   support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) \
-                                   or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues).
-                                   """))
+            Text("""
+               This wallet and the Cashu protocol are in active development. \
+               Be cautious when using this software and follow best practices:
+               
+               • Mint only as much as you are ready to lose
+               
+               • Only use mints you trust
+               
+               • Back up your wallet
+               
+               If you experience any issues, don't hesitate to send a request for \
+               support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) \
+               or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues).
+               """)
                 .foregroundStyle(.secondary)
         }
         .padding()
@@ -891,7 +899,7 @@ struct SetupSelectionPage: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
                     Image(systemName: "plus")
-                    Text("Create new")
+                    Text("Create new wallet")
                     Spacer()
                     if state == .createNew {
                         Image(systemName: "checkmark")
@@ -1008,7 +1016,7 @@ struct SetupSelectionPage: View {
     }
 }
 
-#Preview {
+#Preview("Setup Selector") {
     @Previewable @State var selection: SetupSelectionState = .none
     SetupSelectionPage(state: $selection)
 }
@@ -1058,7 +1066,7 @@ struct SuccessPage: View {
 // MARK: - Preview
 
 @available(iOS 18.0, *)
-#Preview("Onboarding Test") {
+#Preview("Onboarding") {
     OnboardingCanvas(onComplete: { wallet in
         print("Onboarding complete, wallet ID: \(wallet.walletID)")
     })
