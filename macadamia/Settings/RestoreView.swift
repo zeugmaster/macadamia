@@ -94,36 +94,42 @@ struct RestoreView: View {
         guard let mints = activeWallet?.mints.filter({ $0.hidden == false }) else {
             return
         }
-        
+
         let words = mnemonic.components(separatedBy: CharacterSet.whitespacesAndNewlines)
-        
+
         guard words.count == 12 else {
             logger.error("The entered test does not appear to be a properly formmatted seed phrase.")
             displayAlert(alert: AlertDetail(title: String(localized: "Restore Error"), description: String(localized: "The entered text does not appear to be a properly formmatted seed phrase. Make sure its twelve words, separated by spaces or line breaks.")))
             restoreDidFail()
             return
         }
-        
+
+        guard let mnemo = try? Mnemonic(phrase: words) else {
+            displayAlert(alert: AlertDetail(title: String(localized: "Restore Error"), description: String(localized: "Could not generate seed from text input. Please try again.")))
+            restoreDidFail()
+            return
+        }
+
         buttonState = .loading()
-        
-        macadamiaApp.restore(from: mints,
-                             with: words) { result in
-            switch result {
-            case .success(let (proofs, newWallet, newMints, event)):
-                
-                insert(proofs + newMints + [newWallet, event])
-                
-                wallets.forEach({ $0.active = false })
-                newWallet.active = true
-                try? modelContext.save()
-                
-                buttonState = .success()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: { dismiss() })
-            case .failure(let error):
-                logger.error("restoring failed with error: \(error)")
-                displayAlert(alert: AlertDetail(with: error))
-                restoreDidFail()
+        let seedHex = String(bytes: mnemo.seed)
+        let cashuMints = mints.map { CashuSwift.Mint($0) }
+
+        Task { @MainActor in
+            var results = [MintRestoreResult]()
+            for await result in macadamiaApp.restoreSequence(mints: cashuMints, seed: seedHex) {
+                results.append(result)
             }
+
+            let assembled = macadamiaApp.assembleRestoredWallet(from: results, mnemonic: mnemo)
+
+            insert(assembled.proofs + assembled.mints + [assembled.wallet, assembled.event])
+
+            wallets.forEach({ $0.active = false })
+            assembled.wallet.active = true
+            try? modelContext.save()
+
+            buttonState = .success()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: { dismiss() })
         }
     }
     

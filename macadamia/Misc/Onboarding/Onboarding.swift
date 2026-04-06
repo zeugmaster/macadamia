@@ -465,7 +465,7 @@ enum OnboardingPage: Equatable {
 
 @available(iOS 18.0, *)
 struct OnboardingCanvas: View {
-    var onComplete: () -> Void
+    var onComplete: (Wallet) -> Void
 
     // -- navigation --
     /// Which phase is visible: 1 = intro (pages 0-2), 2 = wallet setup (pages 0-2 mapped to 3-5)
@@ -483,8 +483,9 @@ struct OnboardingCanvas: View {
     @State private var restoreInProgress = false
     @State private var restoreSucceeded = false
 
-    // -- stub --
-    @State private var generatedSeed = "abandon ability able about above absent absorb abstract absurd abuse access accident"
+    // -- wallet --
+    @State private var generatedMnemonic: Mnemonic? = nil
+    @State private var wallet: Wallet? = nil
 
     // MARK: Computed
 
@@ -524,25 +525,32 @@ struct OnboardingCanvas: View {
         switch currentPage {
         case .terms: termsAccepted
         case .setup:
-            // Must have made a selection (and for restore, seed must be valid)
             switch setupSelection {
             case .none, .pendingInput, .invalidInput: false
             case .createNew, .validSeedPhrase: true
             }
         case .seed: seedPhraseConfirmed
         case .restore: !restoreInProgress && restoreSucceeded
+        case .success: wallet != nil
         default: true
         }
     }
 
     private var previousEnabled: Bool {
-        switch currentPage {
+        if wallet != nil { return false }
+        return switch currentPage {
         case .welcome, .setup: false
         case .restore: !restoreInProgress
         default: true
         }
     }
     
+
+    /// Seed words for the restore flow, extracted from the setup selection.
+    private var restoreSeedWords: [String] {
+        if case .validSeedPhrase(let words) = setupSelection { return words }
+        return []
+    }
 
     // MARK: Body
 
@@ -591,10 +599,15 @@ struct OnboardingCanvas: View {
                                 .id(0)
                             WalletSetupPage(
                                 setupSelection: setupSelection,
-                                generatedSeed: generatedSeed,
+                                generatedSeed: generatedMnemonic?.phrase ?? [],
+                                restoreSeed: restoreSeedWords,
                                 seedPhraseConfirmed: $seedPhraseConfirmed,
                                 restoreInProgress: $restoreInProgress,
-                                restoreSucceeded: $restoreSucceeded
+                                restoreSucceeded: $restoreSucceeded,
+                                onRestore: { restoredWallet in
+                                    wallet = restoredWallet
+                                    restoreSucceeded = true
+                                }
                             )
                             .containerRelativeFrame(.horizontal)
                             .id(1)
@@ -636,15 +649,26 @@ struct OnboardingCanvas: View {
         if phase == 1 {
             let p1 = phase1Page ?? 0
             if p1 < 2 {
-                // Navigate within phase 1
                 withAnimation(anim) { phase1Page = p1 + 1 }
             } else {
-                // Transition from phase 1 to phase 2
+                // Transition from phase 1 to phase 2 — generate mnemonic for create-new flow
+                if generatedMnemonic == nil {
+                    generatedMnemonic = Mnemonic()
+                }
                 phase2Page = 0
                 withAnimation(.easeInOut(duration: 0.45)) { phase = 2 }
             }
         } else {
             let p2 = phase2Page ?? 0
+
+            // Create wallet for the create-new flow when advancing from seed page
+            if currentPage == .seed, seedPhraseConfirmed, wallet == nil,
+               let mnemonic = generatedMnemonic {
+                let seed = String(bytes: mnemonic.seed)
+                wallet = Wallet(mnemonic: mnemonic.phrase.joined(separator: " "),
+                                seed: seed)
+            }
+
             if p2 < 2 {
                 withAnimation(anim) { phase2Page = p2 + 1 }
             }
@@ -668,8 +692,8 @@ struct OnboardingCanvas: View {
     }
 
     private func finish() {
-        // TODO: persist wallet to ModelContext
-        onComplete()
+        guard let wallet else { return }
+        onComplete(wallet)
     }
 }
 
@@ -991,48 +1015,25 @@ struct SetupSelectionPage: View {
 
 struct WalletSetupPage: View {
     let setupSelection: SetupSelectionState
-    let generatedSeed: String
+    let generatedSeed: [String]
+    let restoreSeed: [String]
     @Binding var seedPhraseConfirmed: Bool
     @Binding var restoreInProgress: Bool
     @Binding var restoreSucceeded: Bool
+    var onRestore: (Wallet) -> Void
 
     var body: some View {
         Group {
-            if setupSelection.isRestoreFlow {
-                RestoreViewV2(seed: dummySeed) { wallet in
-                    
+            if setupSelection.isRestoreFlow, !restoreSeed.isEmpty {
+                RestoreViewV2(seed: restoreSeed) { wallet in
+                    onRestore(wallet)
                 }
-            } else {
-                SeedPage(seed: dummySeed)
+            } else if !generatedSeed.isEmpty {
+                SeedPage(seed: generatedSeed)
                     .padding()
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
-    }
-
-    private var seedDisplayContent: some View {
-        VStack {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Write down your seed phrase")
-                    .font(.title2.bold())
-
-                Text("Store this somewhere safe. It is the only way to recover your wallet.")
-                    .foregroundStyle(.secondary)
-
-            }
-            Spacer(minLength: 10)
-                .frame(maxHeight: 50)
-            SeedView(seed: dummySeed)
-        }
-        .padding()
-    }
-
-    private var restoreContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Restore from Seed Phrase")
-                .font(.title2.bold())
-        }
-        .padding()
     }
 }
 
@@ -1058,7 +1059,7 @@ struct SuccessPage: View {
 
 @available(iOS 18.0, *)
 #Preview("Onboarding Test") {
-    OnboardingCanvas(onComplete: {
-        print("✅ Onboarding complete")
+    OnboardingCanvas(onComplete: { wallet in
+        print("Onboarding complete, wallet ID: \(wallet.walletID)")
     })
 }

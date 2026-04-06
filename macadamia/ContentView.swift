@@ -1,4 +1,3 @@
-import BIP39
 import SwiftData
 import SwiftUI
 import CashuSwift
@@ -6,11 +5,6 @@ import CashuSwift
 struct URLState: Equatable {
     let url: String
     let timestamp = Date() // prevents .onChange from not firing if you open the same URL twice
-}
-
-enum OnboardingUIState {
-    case hidden
-    case shown([String])
 }
 
 struct ContentView: View {
@@ -40,7 +34,6 @@ struct ContentView: View {
     @EnvironmentObject private var appState: AppState
     
     @State private var releaseNotesPopoverShowing = false
-    @State private var onboardingState: OnboardingUIState = .hidden
     
     @State private var selectedTab: Tab = .wallet
     
@@ -85,34 +78,34 @@ struct ContentView: View {
             }
             .persistentSystemOverlays(.hidden)
             .background(Color.black)
-            switch onboardingState {
-            case .hidden:
-                EmptyView()
-            case .shown:
-//                Onboarding {
-//                    AppState.showOnboarding = false
-//                    withAnimation {
-//                        onboardingState = .hidden
-//                    }
-//                }
-                Group {
-                    if #available(iOS 18.0, *) {
-                        OnboardingCanvas(onComplete: {})
-//                        ButtonBarPreview()
-                    } else {
-                        EmptyView()
+            if wallets.isEmpty, #available(iOS 18.0, *) {
+                OnboardingCanvas(onComplete: { wallet in
+                    modelContext.insert(wallet)
+                    for mint in wallet.mints {
+                        modelContext.insert(mint)
                     }
-                }
+                    for proof in wallet.proofs {
+                        modelContext.insert(proof)
+                    }
+                    for event in wallet.events {
+                        modelContext.insert(event)
+                    }
+                    do {
+                        try modelContext.save()
+                    } catch {
+                        logger.critical("Could not save wallet from onboarding: \(error)")
+                    }
+                    AppState.showOnboarding = false
+                })
                 .transition(.opacity.animation(.easeInOut(duration: 0.3)))
-                .zIndex(1) // uuuuhhmmm ???
+                .zIndex(1)
             }
         }
 //        .ignoresSafeArea()
         .onAppear(perform: {
-            if wallets.isEmpty {
-                initializeWallet()
+            if !wallets.isEmpty {
+                releaseNotesPopoverShowing = AppState.showReleaseNotes()
             }
-            checkReleaseNotesAndOnboarding()
             selectedTab = .wallet
         })
         .onAppear {
@@ -158,36 +151,6 @@ struct ContentView: View {
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
 
-    private func initializeWallet() {
-        let randomMnemonic = Mnemonic()
-        let seed = String(bytes: randomMnemonic.seed)
-        let wallet = Wallet(mnemonic: randomMnemonic.phrase.joined(separator: " "), seed: seed)
-        modelContext.insert(wallet)
-        logger.info("No wallet was found, initializing a new one with ID \(wallet.walletID)...")
-        do {
-            try modelContext.save()
-            logger.debug("Successfully saved new wallet.")
-        } catch {
-            logger.critical("Could not save new wallet with ID \(wallet.walletID). error: \(error)")
-        }
-    }
-
-    func checkReleaseNotesAndOnboarding() {
-        if AppState.showOnboarding {
-            _ = AppState.showReleaseNotes() // marks last release notes as seen if first open
-            if let mnemonic = activeWallet?.mnemonic {
-                let words = mnemonic.components(separatedBy: " ")
-                if words.count == 12 {
-                    print("should show with animation")
-                    withAnimation {
-                        onboardingState = .shown(words)
-                    }
-                }
-            }
-        } else {
-            releaseNotesPopoverShowing = AppState.showReleaseNotes()
-        }
-    }
 
     func handleUrl(_ url: URL) {
         logger.info("""

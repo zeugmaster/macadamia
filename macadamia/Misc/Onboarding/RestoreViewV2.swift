@@ -7,12 +7,10 @@
 
 import SwiftUI
 import CashuSwift
+import BIP39
+import OSLog
 
-let dummyMintUrls = [
-    URL(string: "https://testmint.macadamia.cash")!,
-    URL(string: "https://testnut.cashu.space")!,
-    URL(string: "https://success.fake.macadamia.cash")!
-]
+fileprivate let restoreViewLogger = Logger(subsystem: "macadamia", category: "RestoreView")
 
 // MARK: - Per-Row Model
 
@@ -47,17 +45,33 @@ class RestoreViewModel {
     var emptySelection: Bool {
         !rows.contains(where: \.isSelected)
     }
-    
+
     func discover(seed: [String]) async {
-        // TODO: replace with real mint discovery from seed
-        try? await Task.sleep(for: .seconds(2))
-        let urls = dummyMintUrls
-        let newRows = urls.map { MintRow(url: $0) }
-        withAnimation {
-            rows.append(contentsOf: newRows)
-            isDiscovering = false
+        defer {
+            withAnimation { isDiscovering = false }
         }
-        await loadAll(newRows)
+
+        do {
+            guard let mnemonic = try? Mnemonic(phrase: seed) else {
+                restoreViewLogger.warning("Could not derive mnemonic from seed words for mint discovery.")
+                return
+            }
+            let seedHex = String(bytes: mnemonic.seed)
+            let urls = try await MintListBackup.retrieve(seedHex: seedHex)
+
+            guard !urls.isEmpty else {
+                restoreViewLogger.info("Nostr backup returned empty mint list.")
+                return
+            }
+
+            let newRows = urls.map { MintRow(url: $0) }
+            withAnimation {
+                rows.append(contentsOf: newRows)
+            }
+            await loadAll(newRows)
+        } catch {
+            restoreViewLogger.info("No mint list backup found on Nostr: \(error). User can add mints manually.")
+        }
     }
 
     #warning ("needs proper input sanitation and convenience ")
@@ -93,10 +107,10 @@ class RestoreViewModel {
 struct RestoreViewV2: View {
     let seed: [String]
     let onRestore: (Wallet) -> Void
-    
+
     @State private var vm = RestoreViewModel()
     @State private var mintUrlInput = ""
-    
+
     @State private var restoreProgress: Double = 0.0
     @State private var restoreInProgress = false
 
@@ -135,7 +149,7 @@ struct RestoreViewV2: View {
                 .listRowBackground(Color.primary.opacity(0.08))
             }
             .lineLimit(1)
-            
+
             Section {
                 Text(seed[0] + " " + seed[1] + " ***** **** ******** **** ****** ***** ***** **** **** *******")
                     .font(.callout)
@@ -158,9 +172,9 @@ struct RestoreViewV2: View {
                     .listRowBackground(Color.primary.opacity(0.08))
                 }
             }
-            
+
             // TODO: add wallet reuse warning
-            
+
             Section {
                 Button {
                     restore()
@@ -192,25 +206,45 @@ struct RestoreViewV2: View {
             await vm.discover(seed: seed)
         }
     }
-    
+
     private func restore() {
-        print("start restore process")
-        
-        if restoreInProgress {
-            withAnimation {
-                restoreProgress += 0.05
-            }
-        } else {
-            // First, animate the row insertion with progress at 0
-            withAnimation {
-                restoreInProgress = true
-            }
-            // Then animate the bar filling on the next frame
-            Task { @MainActor in
+        guard !restoreInProgress else { return }
+
+        // Collect selected, loaded CashuSwift mints
+        let selectedMints: [CashuSwift.Mint] = vm.rows.compactMap { row in
+            guard row.isSelected, case .loaded(let mint) = row.status else { return nil }
+            return mint
+        }
+
+        guard !selectedMints.isEmpty else { return }
+
+        guard let mnemonic = try? Mnemonic(phrase: seed) else {
+            restoreViewLogger.error("Could not create mnemonic from seed phrase during restore.")
+            return
+        }
+
+        let seedHex = String(bytes: mnemonic.seed)
+        let totalMints = Double(selectedMints.count)
+
+        withAnimation { restoreInProgress = true }
+
+        Task { @MainActor in
+            var results = [MintRestoreResult]()
+
+            for await result in macadamiaApp.restoreSequence(mints: selectedMints, seed: seedHex) {
+                results.append(result)
                 withAnimation {
-                    restoreProgress = 0.5
+                    restoreProgress = Double(results.count) / totalMints
                 }
             }
+
+            let assembled = macadamiaApp.assembleRestoredWallet(
+                from: results,
+                mnemonic: mnemonic
+            )
+
+            restoreInProgress = false
+            onRestore(assembled.wallet)
         }
     }
 }

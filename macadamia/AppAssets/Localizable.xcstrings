@@ -6003,6 +6003,9 @@
         }
       }
     },
+    "Could not generate seed from text input. Please try again." : {
+
+    },
     "Could not parse merchant code" : {
       "localizations" : {
         "ar" : {
@@ -23101,9 +23104,6 @@
       }
     },
     "Restore from seed phrase" : {
-
-    },
-    "Restore from Seed Phrase" : {
 
     },
     "Restored at: " : {
