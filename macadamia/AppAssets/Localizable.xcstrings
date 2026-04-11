@@ -6146,7 +6146,7 @@
         }
       }
     },
-    "Create new" : {
+    "Create new wallet" : {
 
     },
     "Create Payment Request" : {
@@ -27391,6 +27391,7 @@
       }
     },
     "This wallet and the Cashu protocol are in active development. Be cautious when using this software and follow best practices:\n\n- Mint only as much as you are ready to lose\n\n- Only use mints you trust\n\n- Back up your wallet\n\nIf you experience any issues, don't hesitate to send a request for support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -27459,6 +27460,9 @@
           }
         }
       }
+    },
+    "This wallet and the Cashu protocol are in active development. Be cautious when using this software and follow best practices:\n\n• Mint only as much as you are ready to lose\n\n• Only use mints you trust\n\n• Back up your wallet\n\nIf you experience any issues, don't hesitate to send a request for support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues)." : {
+
     },
     "This wallet does not appear to have a seed." : {
       "localizations" : {

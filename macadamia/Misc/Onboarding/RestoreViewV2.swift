@@ -74,7 +74,7 @@ class RestoreViewModel {
         }
     }
 
-    #warning ("needs proper input sanitation and convenience ")
+    #warning ("needs proper input sanitation and convenience adaptations")
     func addManually(_ urlString: String) {
         guard let url = URL(string: "https://\(urlString)") else { return }
         let row = MintRow(url: url)
@@ -106,13 +106,15 @@ class RestoreViewModel {
 
 struct RestoreViewV2: View {
     let seed: [String]
+    @Binding var restoreInProgress: Bool
     let onRestore: (Wallet) -> Void
 
     @State private var vm = RestoreViewModel()
     @State private var mintUrlInput = ""
 
     @State private var restoreProgress: Double = 0.0
-    @State private var restoreInProgress = false
+    @State private var restoreCompleted = false
+    @State private var restoreStatusText: String = ""
 
     var body: some View {
         List {
@@ -156,7 +158,7 @@ struct RestoreViewV2: View {
                     .foregroundStyle(.secondary)
                     .monospaced()
                     .listRowBackground(Color.primary.opacity(0.08))
-                if restoreInProgress {
+                if restoreInProgress || restoreCompleted {
                     GeometryReader { geo in
                         Capsule()
                             .fill(.primary.opacity(0.2))
@@ -170,6 +172,12 @@ struct RestoreViewV2: View {
                     .frame(height: 4)
                     .animation(.easeInOut, value: restoreProgress)
                     .listRowBackground(Color.primary.opacity(0.08))
+
+                    Text(restoreStatusText)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .listRowBackground(Color.primary.opacity(0.08))
                 }
             }
 
@@ -183,6 +191,9 @@ struct RestoreViewV2: View {
                         Spacer()
                         if restoreInProgress {
                             ProgressView()
+                        } else if restoreCompleted {
+                            Image(systemName: "checkmark")
+                                .contentTransition(.symbolEffect(.replace))
                         } else {
                             Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
                         }
@@ -198,7 +209,7 @@ struct RestoreViewV2: View {
                 }
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 2, leading: 2, bottom: 2, trailing: 2))
-                .disabled(restoreInProgress || vm.emptySelection)
+                .disabled(restoreInProgress || restoreCompleted || vm.emptySelection)
             }
         }
         .scrollContentBackground(.hidden)
@@ -228,13 +239,28 @@ struct RestoreViewV2: View {
 
         withAnimation { restoreInProgress = true }
 
+        // Show the first mint being restored
+        if let firstHost = selectedMints.first?.url.host() {
+            restoreStatusText = "Restoring from \(firstHost)..."
+        }
+
         Task { @MainActor in
             var results = [MintRestoreResult]()
 
             for await result in macadamiaApp.restoreSequence(mints: selectedMints, seed: seedHex) {
                 results.append(result)
+
                 withAnimation {
                     restoreProgress = Double(results.count) / totalMints
+                }
+
+                // Update status text: show next mint or mark complete
+                if results.count < selectedMints.count {
+                    let nextHost = selectedMints[results.count].url.host()
+                        ?? selectedMints[results.count].url.absoluteString
+                    withAnimation {
+                        restoreStatusText = "Restoring from \(nextHost)..."
+                    }
                 }
             }
 
@@ -243,7 +269,16 @@ struct RestoreViewV2: View {
                 mnemonic: mnemonic
             )
 
-            restoreInProgress = false
+            let totalRestored = results.flatMap(\.keysetResults)
+                .flatMap(\.proofs)
+                .reduce(0) { $0 + $1.amount }
+
+            withAnimation {
+                restoreStatusText = "Complete. \(totalRestored) sat restored."
+                restoreInProgress = false
+                restoreCompleted = true
+            }
+
             onRestore(assembled.wallet)
         }
     }
@@ -289,10 +324,11 @@ struct MintRowView: View {
 }
 
 #Preview {
+    @Previewable @State var restoring = false
     ZStack {
         Rectangle().fill(Color.black.gradient)
             .ignoresSafeArea()
-        RestoreViewV2(seed: dummySeed) { wallet in
+        RestoreViewV2(seed: dummySeed, restoreInProgress: $restoring) { wallet in
             print(String(describing: wallet))
         }
     }
