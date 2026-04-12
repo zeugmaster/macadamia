@@ -19,7 +19,6 @@ enum OnboardingPage: Equatable {
     case welcome, warning, terms, setup, seed, restore, success
 }
 
-@available(iOS 18.0, *)
 struct OnboardingCanvas: View {
     var onComplete: (Wallet) -> Void
 
@@ -183,22 +182,20 @@ struct OnboardingCanvas: View {
                 }
             }
 
-            if #available(iOS 26.0, *) {
-                VStack {
-                    Spacer()
-                    ButtonBar(
-                        currentPage: currentPage,
-                        nextEnabled: nextEnabled,
-                        previousEnabled: previousEnabled,
-                        termsAccepted: $termsAccepted,
-                        seedConfirmed: $seedPhraseConfirmed,
-                        onPrevious: { goBack() },
-                        onNext: {
-                            if page == 5 { finish() }
-                            else { goForward() }
-                        }
-                    )
-                }
+            VStack {
+                Spacer()
+                ButtonBar(
+                    currentPage: currentPage,
+                    nextEnabled: nextEnabled,
+                    previousEnabled: previousEnabled,
+                    termsAccepted: $termsAccepted,
+                    seedConfirmed: $seedPhraseConfirmed,
+                    onPrevious: { goBack() },
+                    onNext: {
+                        if page == 5 { finish() }
+                        else { goForward() }
+                    }
+                )
             }
         }
         .ignoresSafeArea(.container, edges: .bottom)
@@ -277,7 +274,6 @@ struct OnboardingHeader: View {
 
 // MARK: - Page Container
 
-@available(iOS 18.0, *)
 struct OnboardingPageContainer<Content: View>: View {
     @Binding var currentPage: Int?
     @Binding var scrollOffset: CGFloat
@@ -286,7 +282,7 @@ struct OnboardingPageContainer<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        ScrollView(.horizontal) {
+        let scrollView = ScrollView(.horizontal) {
             LazyHStack(spacing: 0) {
                 content
             }
@@ -296,14 +292,22 @@ struct OnboardingPageContainer<Content: View>: View {
         .scrollDisabled(!scrollEnabled)
         .scrollIndicators(.hidden)
         .scrollPosition(id: $currentPage)
-        .onScrollGeometryChange(for: CGFloat.self) { geo in
-            geo.contentOffset.x
-        } action: { _, newOffset in
-            var t = Transaction()
-            t.animation = nil
-            withTransaction(t) {
-                scrollOffset = newOffset
+
+        // `onScrollGeometryChange` drives the background parallax and is iOS 18+.
+        // On iOS 17 the background simply stays in its initial position, which
+        // matches the static `MeshBackground` fallback used on that version.
+        if #available(iOS 18.0, *) {
+            scrollView.onScrollGeometryChange(for: CGFloat.self) { geo in
+                geo.contentOffset.x
+            } action: { _, newOffset in
+                var t = Transaction()
+                t.animation = nil
+                withTransaction(t) {
+                    scrollOffset = newOffset
+                }
             }
+        } else {
+            scrollView
         }
     }
 }
@@ -626,7 +630,6 @@ struct SuccessPage: View {
 
 // MARK: - Preview
 
-@available(iOS 18.0, *)
 #Preview("Onboarding") {
     OnboardingCanvas(onComplete: { wallet in
         print("Onboarding complete, wallet ID: \(wallet.walletID)")

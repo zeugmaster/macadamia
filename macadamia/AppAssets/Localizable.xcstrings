@@ -29938,9 +29938,6 @@
         }
       }
     },
-    "unavailable" : {
-      "shouldTranslate" : false
-    },
     "Unhandled Error" : {
       "localizations" : {
         "ar" : {

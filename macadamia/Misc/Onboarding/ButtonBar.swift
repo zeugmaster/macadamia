@@ -7,7 +7,25 @@
 
 import SwiftUI
 
-@available(iOS 26.0, *)
+private struct OnboardingGlassBackground<S: Shape>: ViewModifier {
+    let interactive: Bool
+    let shape: S
+
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.glassEffect(.clear.interactive(interactive), in: shape)
+        } else {
+            content.background(shape.fill(Color.primary.opacity(interactive ? 0.12 : 0.06)))
+        }
+    }
+}
+
+private extension View {
+    func onboardingGlass<S: Shape>(interactive: Bool = true, in shape: S) -> some View {
+        modifier(OnboardingGlassBackground(interactive: interactive, shape: shape))
+    }
+}
+
 struct ButtonBar: View {
     let currentPage: OnboardingPage
     let nextEnabled: Bool
@@ -37,7 +55,7 @@ struct ButtonBar: View {
                 }
                 .disabled(!previousEnabled)
                 .opacity(previousEnabled ? 1 : 0.3)
-                .glassEffect(.clear.interactive(previousEnabled), in: .circle)
+                .onboardingGlass(interactive: previousEnabled, in: Circle())
                 .animation(.default, value: previousEnabled)
             Spacer()
 
@@ -56,7 +74,7 @@ struct ButtonBar: View {
                 }
                 .disabled(!nextEnabled)
                 .opacity(nextEnabled ? 1 : 0.3)
-                .glassEffect(.clear.interactive(nextEnabled), in: .circle)
+                .onboardingGlass(interactive: nextEnabled, in: Circle())
                 .animation(.default, value: nextEnabled)
         }
         .padding(24)
@@ -85,7 +103,7 @@ struct ButtonBar: View {
             }
         }
         .padding()
-        .glassEffect(.clear.interactive())
+        .onboardingGlass(in: Capsule())
         .contentShape(.capsule)  // expands the hit target
         .onTapGesture {
             if currentPage == .terms { termsAccepted.toggle() } else { seedConfirmed.toggle() }
@@ -101,43 +119,35 @@ struct ButtonBarPreview: View {
     @State private var termsAccepted: Bool = false
 
     var body: some View {
-        if #available(iOS 26.0, *) {
-            ZStack {
-                VStack {
-                    Slider(value: $sliderValue, in: 0...50)
-                        .padding(.horizontal)
-                    Toggle(
-                        isOn: Binding(
-                            get: {
-                                toggle
-                            },
-                            set: { newValue in
-                                withAnimation {
-                                    toggle = newValue
-                                }
+        ZStack {
+            VStack {
+                Slider(value: $sliderValue, in: 0...50)
+                    .padding(.horizontal)
+                Toggle(
+                    isOn: Binding(
+                        get: {
+                            toggle
+                        },
+                        set: { newValue in
+                            withAnimation {
+                                toggle = newValue
                             }
-                        )
-                    ) {
-                        Text("Toggle")
-                    }
-                    .padding()
-                    .tint(.secondary)
-                    TermsPage(termsAccepted: $termsAccepted)
+                        }
+                    )
+                ) {
+                    Text("Toggle")
                 }
-
-                VStack {
-                    Spacer()
-                    //                    ButtonBar(previousEnabled: true,
-                    //                              nextEnabled: termsAccepted,
-                    //                              termsAccepted: $termsAccepted,
-                    //                              showCenterButton: toggle)
-                }
+                .padding()
+                .tint(.secondary)
+                TermsPage(termsAccepted: $termsAccepted)
             }
-            .ignoresSafeArea(.container, edges: .bottom)
-            .background(.black.gradient)
-        } else {
-            Text("unavailable")
+
+            VStack {
+                Spacer()
+            }
         }
+        .ignoresSafeArea(.container, edges: .bottom)
+        .background(.black.gradient)
     }
 }
 

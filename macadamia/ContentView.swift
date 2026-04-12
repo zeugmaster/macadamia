@@ -78,7 +78,7 @@ struct ContentView: View {
             }
             .persistentSystemOverlays(.hidden)
             .background(Color.black)
-            if wallets.isEmpty, #available(iOS 18.0, *) {
+            if wallets.isEmpty {
                 OnboardingCanvas(onComplete: { wallet in
                     modelContext.insert(wallet)
                     for mint in wallet.mints {
