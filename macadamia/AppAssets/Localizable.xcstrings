@@ -806,77 +806,6 @@
         }
       }
     },
-    "⚠️ Warning" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ تحذير"
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ সতর্কতা"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Achtung"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Advertencia"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Attention"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ चेतावनी"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ 警告"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ 경고"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Aviso"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Внимание"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Uyarı"
-          }
-        }
-      }
-    },
     "⚡ Incoming Ecash" : {
       "localizations" : {
         "ar" : {
@@ -1088,7 +1017,7 @@
       }
     },
     "00" : {
-
+      "shouldTranslate" : false
     },
     "12 Word backup seed phrase" : {
       "localizations" : {
@@ -5080,6 +5009,76 @@
         }
       }
     },
+    "Complete. %lld sat restored." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اكتمل. تمت استعادة %lld sat."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "সম্পন্ন। %lld sat পুনরুদ্ধার হয়েছে।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fertig. %lld Sat wiederhergestellt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completado. %lld sat restaurados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminé. %lld sat restaurés."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पूर्ण। %lld sat पुनर्स्थापित।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完了。%lld sat を復元しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "완료. %lld sat 복원됨."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concluído. %lld sat restaurados."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово. Восстановлено %lld sat."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamamlandı. %lld sat geri yüklendi."
+          }
+        }
+      }
+    },
     "Connected to %lld of %lld relay%@." : {
       "localizations" : {
         "ar" : {
@@ -5582,77 +5581,6 @@
         }
       }
     },
-    "Copied %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تم نسخ %@"
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "কপি করা হয়েছে %@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copied %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiado %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copié %@"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "कॉपी किया %@"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "コピー済み %@"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "복사됨 %@"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiado %@"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скопировано %@"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopyalandı %@"
-          }
-        }
-      }
-    },
     "Copied!" : {
       "localizations" : {
         "ar" : {
@@ -6004,7 +5932,74 @@
       }
     },
     "Could not generate seed from text input. Please try again." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر إنشاء البذرة من النص المُدخل. يرجى المحاولة مرة أخرى."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "লিখিত ইনপুট থেকে সিড তৈরি করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konnte aus der Texteingabe keine Seed erzeugen. Bitte versuche es erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo generar la semilla a partir del texto. Inténtalo de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de générer la seed depuis le texte saisi. Réessaie."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टेक्स्ट इनपुट से सीड जनरेट नहीं की जा सकी। कृपया पुनः प्रयास करें।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "入力されたテキストからシードを生成できませんでした。もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "입력한 텍스트에서 시드를 생성할 수 없습니다. 다시 시도해 주세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível gerar a semente a partir do texto digitado. Tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось создать сид из введённого текста. Попробуй ещё раз."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Girilen metinden seed oluşturulamadı. Lütfen tekrar dene."
+          }
+        }
+      }
     },
     "Could not parse merchant code" : {
       "localizations" : {
@@ -6147,7 +6142,74 @@
       }
     },
     "Create new wallet" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إنشاء محفظة جديدة"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "নতুন wallet তৈরি করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neues Wallet erstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crear nuevo wallet"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un nouveau wallet"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "नया wallet बनाएं"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいウォレットを作成"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새 지갑 만들기"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Criar novo wallet"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Создать новый кошелёк"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni cüzdan oluştur"
+          }
+        }
+      }
     },
     "Create Payment Request" : {
       "localizations" : {
@@ -7060,7 +7122,74 @@
       }
     },
     "Discovering mints..." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ اكتشاف mints..."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mint খোঁজা হচ্ছে..."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mints werden gesucht..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descubriendo mints..."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherche de mints…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mints खोजे जा रहे हैं..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ミントを検出中..."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "민트 검색 중..."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descobrindo mints..."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поиск минтов..."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mint'ler keşfediliyor..."
+          }
+        }
+      }
     },
     "Display" : {
       "localizations" : {
@@ -9738,7 +9867,6 @@
       "shouldTranslate" : false
     },
     "Hi there!" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -10162,75 +10290,71 @@
       }
     },
     "I Agree" : {
-
-    },
-    "I agree to the terms." : {
-      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "أوافق على الشروط."
+            "value" : "أوافق"
           }
         },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "আমি শর্তাবলীতে সম্মত।"
+            "value" : "আমি সম্মত"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ich stimme zu."
+            "value" : "Ich stimme zu"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Acepto los términos."
+            "value" : "Acepto"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "J'accepte les conditions."
+            "value" : "J'accepte"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "मैं शर्तों से सहमत हूँ।"
+            "value" : "मैं सहमत हूं"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "利用規約に同意します。"
+            "value" : "同意する"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "약관에 동의합니다."
+            "value" : "동의"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eu concordo com os termos."
+            "value" : "Concordo"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Я согласен с условиями."
+            "value" : "Согласен"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Şartları kabul ediyorum."
+            "value" : "Kabul ediyorum"
           }
         }
       }
@@ -10238,79 +10362,75 @@
     "I am a button." : {
       "shouldTranslate" : false
     },
-    "I have written down the seed phrase" : {
-      "extractionState" : "stale",
+    "I wrote it down" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "لقد كتبت عبارة البذرة"
+            "value" : "لقد كتبتها"
           }
         },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "আমি সিড ফ্রেজ লিখে রেখেছি"
+            "value" : "আমি এটি লিখে রেখেছি"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ich habe die Seed-Phrase aufgeschrieben."
+            "value" : "Ich habe sie notiert"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "He anotado la frase semilla"
+            "value" : "La he apuntado"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "J'ai noté la phrase de récupération"
+            "value" : "Je l'ai notée"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "मैंने सीड फ्रेज़ लिख लिया है"
+            "value" : "मैंने इसे लिख लिया"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "シードフレーズを書き留めました"
+            "value" : "書き留めました"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "시드 구문을 적어두었습니다"
+            "value" : "적어 두었습니다"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eu anotei a frase semente"
+            "value" : "Eu anotei"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Я записал сид-фразу"
+            "value" : "Я записал"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Seed ifadesini yazdım"
+            "value" : "Yazdım"
           }
         }
       }
-    },
-    "I wrote it down" : {
-
     },
     "Icelandic Króna" : {
       "localizations" : {
@@ -12483,7 +12603,74 @@
       }
     },
     "Let's bring back financial privacy." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لنستعد الخصوصية المالية."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "চলুন আর্থিক গোপনীয়তা ফিরিয়ে আনি।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holen wir uns die finanzielle Privatsphäre zurück."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recuperemos la privacidad financiera."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retrouvons la confidentialité financière."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "चलिए वित्तीय गोपनीयता वापस लाते हैं।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "金融プライバシーを取り戻そう。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "금융 프라이버시를 되찾읍시다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vamos trazer de volta a privacidade financeira."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернём финансовую приватность."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finansal gizliliği geri getirelim."
+          }
+        }
+      }
     },
     "Lightning" : {
       "shouldTranslate" : false
@@ -12554,77 +12741,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lightning adresi"
-          }
-        }
-      }
-    },
-    "Lightning invoice found" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تم العثور على فاتورة Lightning"
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lightning ইনভয়েস পাওয়া গেছে"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lightning-Rechnung gefunden"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Factura Lightning encontrada"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Facture Lightning trouvée"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lightning इनवॉइस मिला"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lightningインボイスが見つかりました"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lightning 인보이스 발견"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fatura Lightning encontrada"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Найден Lightning-инвойс"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lightning faturası bulundu"
           }
         }
       }
@@ -14534,7 +14650,74 @@
       }
     },
     "mint.example.com" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mint.example.com"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mint.example.com"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mint.example.com"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mint.example.com"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mint.example.com"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mint.example.com"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mint.example.com"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mint.example.com"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mint.example.com"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mint.example.com"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mint.example.com"
+          }
+        }
+      }
     },
     "Mints" : {
       "localizations" : {
@@ -17625,77 +17808,6 @@
         }
       }
     },
-    "Not a valid mnemonic." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ليست عبارة ذاكرية صالحة."
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "বৈধ mnemonic নয়।"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine gültige Seed-Phrase"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No es un mnemónico válido."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce n'est pas un mnémonique valide."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "यह एक वैध mnemonic नहीं है।"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "有効なニーモニックではありません。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "유효한 니모닉이 아닙니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Não é um mnemônico válido."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Недействительная мнемоника."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geçerli bir mnemonic değil."
-          }
-        }
-      }
-    },
     "Not authentic" : {
       "localizations" : {
         "ar" : {
@@ -18960,10 +19072,144 @@
       }
     },
     "Paste" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لصق"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পেস্ট করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einfügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pegar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coller"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पेस्ट करें"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "貼り付け"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "붙여넣기"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставить"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yapıştır"
+          }
+        }
+      }
     },
     "Pasteboard empty" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحافظة فارغة"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পেস্টবোর্ড খালি"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenablage leer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Portapapeles vacío"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Presse-papiers vide"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्लिपबोर्ड खाली है"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クリップボードが空です"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "클립보드가 비어 있습니다"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Área de transferência vazia"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Буфер обмена пуст"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pano boş"
+          }
+        }
+      }
     },
     "Pay" : {
       "localizations" : {
@@ -23107,7 +23353,144 @@
       }
     },
     "Restore from seed phrase" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاستعادة من عبارة البذرة"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "সিড ফ্রেজ থেকে পুনরুদ্ধার করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von Seed-Phrase wiederherstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar desde frase semilla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurer depuis une phrase de récupération"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीड फ्रेज़ से पुनर्स्थापित करें"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シードフレーズから復元"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시드 구문에서 복원"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar a partir da frase semente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстановить из сид-фразы"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seed ifadesinden geri yükle"
+          }
+        }
+      }
+    },
+    "Restore Wallet" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استعادة المحفظة"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallet পুনরুদ্ধার করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallet wiederherstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar wallet"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurer le wallet"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallet पुनर्स्थापित करें"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウォレットを復元"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지갑 복원"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar wallet"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстановить кошелёк"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cüzdanı geri yükle"
+          }
+        }
+      }
     },
     "Restored at: " : {
       "localizations" : {
@@ -23175,6 +23558,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geri yüklenme:"
+          }
+        }
+      }
+    },
+    "Restoring from %@…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ الاستعادة من %@…"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ থেকে পুনরুদ্ধার হচ্ছে…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiederherstellung von %@ …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurando desde %@…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restauration depuis %@…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ से पुनर्स्थापित किया जा रहा है…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ から復元中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@에서 복원 중…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurando de %@…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстановление из %@…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ konumundan geri yükleniyor…"
           }
         }
       }
@@ -24512,6 +24965,76 @@
         }
       }
     },
+    "Setup" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإعداد"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "সেটআপ"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einrichtung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuración"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सेटअप"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "セットアップ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설정"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuração"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройка"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurulum"
+          }
+        }
+      }
+    },
     "Share" : {
       "localizations" : {
         "ar" : {
@@ -25423,7 +25946,74 @@
       }
     },
     "Store this somewhere safe. It is the only way to recover your wallet." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "احتفظ بها في مكان آمن. إنها الطريقة الوحيدة لاستعادة محفظتك."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এটি কোনো নিরাপদ জায়গায় সংরক্ষণ করুন। এটিই আপনার wallet পুনরুদ্ধারের একমাত্র উপায়।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewahre sie an einem sicheren Ort auf. Sie ist der einzige Weg, dein Wallet wiederherzustellen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guárdala en un lugar seguro. Es la única forma de recuperar tu wallet."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conserve-la en lieu sûr. C'est le seul moyen de récupérer ton wallet."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इसे किसी सुरक्षित जगह पर रखें। यह आपके wallet को पुनर्स्थापित करने का एकमात्र तरीका है।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安全な場所に保管してください。これがウォレットを復元する唯一の方法です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "안전한 곳에 보관하세요. 지갑을 복구할 수 있는 유일한 방법입니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarde-a em um lugar seguro. É a única forma de recuperar seu wallet."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Храни её в надёжном месте. Это единственный способ восстановить кошелёк."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Güvenli bir yerde sakla. Bu, cüzdanını geri yüklemenin tek yoludur."
+          }
+        }
+      }
     },
     "Swedish Krona" : {
       "localizations" : {
@@ -25636,7 +26226,74 @@
       }
     },
     "Tap Finish to start using the app." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انقر على إنهاء لبدء استخدام التطبيق."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "অ্যাপটি ব্যবহার শুরু করতে Finish-এ ট্যাপ করুন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe auf Fertig, um die App zu verwenden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca Finalizar para empezar a usar la app."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appuie sur Terminer pour commencer à utiliser l'app."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऐप का उपयोग शुरू करने के लिए Finish पर टैप करें।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「完了」をタップしてアプリの使用を開始してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "완료를 탭하여 앱 사용을 시작하세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque em Concluir para começar a usar o app."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажми Готово, чтобы начать пользоваться приложением."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulamayı kullanmaya başlamak için Bitir'e dokun."
+          }
+        }
+      }
     },
     "Tap to select a mint from the list" : {
       "localizations" : {
@@ -25709,7 +26366,6 @@
       }
     },
     "Terms" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -26899,77 +27555,6 @@
         }
       }
     },
-    "This is your newly generated **seed phrase** backup. Write these twelve words down or save them in a password manager and use them to restore ecash from the mints known to this wallet (write those down, too). \n " : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "هذه هي نسخة احتياطية جديدة من **عبارة البذرة** الخاصة بك. اكتب هذه الكلمات الاثنتي عشرة أو احفظها في مدير كلمات المرور واستخدمها لاستعادة ecash من المنتات المعروفة لهذه المحفظة (اكتبها أيضًا).\n "
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "এটি আপনার নতুন তৈরি করা **সিড ফ্রেজ** ব্যাকআপ। এই বারোটি শব্দ লিখে রাখুন বা পাসওয়ার্ড ম্যানেজারে সংরক্ষণ করুন এবং এই Wallet-এর পরিচিত Mint থেকে ecash পুনরুদ্ধারে ব্যবহার করুন (সেগুলিও লিখে রাখুন)।\n "
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hier ist deine neu generierte Seed-Phrase. Schreibe diese zwölf Wörter auf oder speichere sie in einem Passwort-Manager und verwende sie um Ecash wiederherzustellen bei den Mints, die diesem Wallet bekannt sind (schreibe dir diese auch auf)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esta es tu nueva copia de seguridad de **frase semilla** generada. Escribe estas doce palabras o guárdalas en un gestor de contraseñas y úsalas para restaurar ecash de los mints conocidos por este wallet (anótalos también).\n "
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ceci est ta nouvelle sauvegarde de **phrase de récupération**. Note ces douze mots ou sauvegarde-les dans un gestionnaire de mots de passe et utilise-les pour restaurer l'ecash des mints connus de ce wallet (note-les aussi).\n "
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "यह आपका नया जनरेट किया गया **सीड फ्रेज़** बैकअप है। इन बारह शब्दों को लिख लें या पासवर्ड मैनेजर में सहेजें और इस Wallet को ज्ञात Mints से ecash पुनर्स्थापित करने के लिए उपयोग करें (उन्हें भी लिख लें)।\n "
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "これは新しく生成された**シードフレーズ**のバックアップです。これらの12単語を書き留めるかパスワードマネージャーに保存し、このウォレットに登録されたミントからecashを復元するために使用してください（ミントも書き留めてください）。\n "
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "새로 생성된 **시드 구문** 백업입니다. 이 12개의 단어를 적어두거나 비밀번호 관리자에 저장하고, 이 지갑에 등록된 민트에서 ecash를 복원하는 데 사용하세요(민트도 적어두세요).\n "
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Este é o backup da sua nova **frase semente** gerada. Anote estas doze palavras ou salve-as em um gerenciador de senhas e use-as para restaurar ecash dos mints conhecidos por este wallet (anote-os também).\n "
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Это твоя новая резервная копия **сид-фразы**. Запиши эти двенадцать слов или сохрани их в менеджере паролей и используй для восстановления ecash из минтов, известных этому кошельку (их тоже запиши).\n "
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bu, yeni oluşturulmuş **seed ifadesi** yedeğindir. Bu on iki kelimeyi yaz veya bir şifre yöneticisine kaydet ve bu cüzdanın bildiği Mint'lerden ecash'i geri yüklemek için kullan (onları da yaz).\n "
-          }
-        }
-      }
-    },
     "This mint did not pass verification before being added. Detail: %@" : {
       "localizations" : {
         "ar" : {
@@ -27390,79 +27975,75 @@
         }
       }
     },
-    "This wallet and the Cashu protocol are in active development. Be cautious when using this software and follow best practices:\n\n- Mint only as much as you are ready to lose\n\n- Only use mints you trust\n\n- Back up your wallet\n\nIf you experience any issues, don't hesitate to send a request for support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues)." : {
-      "extractionState" : "stale",
+    "This wallet and the Cashu protocol are in active development. Be cautious when using this software and follow best practices:\n\n• Mint only as much as you are ready to lose\n\n• Only use mints you trust\n\n• Back up your wallet\n\nIf you experience any issues, don't hesitate to send a request for support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues)." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "هذه المحفظة وبروتوكول Cashu قيد التطوير النشط. كن حذرًا عند استخدام هذا البرنامج واتبع أفضل الممارسات:\n\n- لا تنشئ إلا بقدر ما أنت مستعد لخسارته\n\n- استخدم فقط المنتات التي تثق بها\n\n- احفظ نسخة احتياطية من محفظتك\n\nإذا واجهت أي مشاكل، لا تتردد في إرسال طلب دعم أو ملاحظات إلى [support@macadamia.cash](mailto:support@macadamia.cash) أو افتح Issue على [Github](https://github.com/zeugmaster/macadamia/issues)."
+            "value" : "هذه المحفظة وبروتوكول Cashu قيد التطوير النشط. كن حذراً عند استخدام هذا البرنامج واتبع أفضل الممارسات:\n\n• لا تصدر (mint) سوى ما أنت مستعد لخسارته\n\n• استخدم فقط mints التي تثق بها\n\n• قم بعمل نسخة احتياطية لمحفظتك\n\nإذا واجهت أي مشكلات، فلا تتردد في إرسال طلب دعم أو ملاحظات إلى [support@macadamia.cash](mailto:support@macadamia.cash) أو فتح Issue على [Github](https://github.com/zeugmaster/macadamia/issues)."
           }
         },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "এই Wallet এবং Cashu প্রোটোকল সক্রিয় উন্নয়নে আছে। এই সফ্টওয়্যার ব্যবহারে সতর্ক থাকুন এবং সর্বোত্তম অনুশীলন অনুসরণ করুন:\n\n- শুধুমাত্র যতটুকু হারাতে প্রস্তুত ততটুকু Mint করুন\n\n- শুধুমাত্র বিশ্বস্ত Mint ব্যবহার করুন\n\n- আপনার Wallet ব্যাকআপ করুন\n\nকোনো সমস্যা হলে, [support@macadamia.cash](mailto:support@macadamia.cash)-এ সহায়তা অনুরোধ পাঠান বা [Github](https://github.com/zeugmaster/macadamia/issues)-এ Issue খুলুন।"
+            "value" : "এই wallet এবং Cashu প্রোটোকল সক্রিয় উন্নয়নে রয়েছে। এই সফটওয়্যার ব্যবহার করার সময় সতর্ক থাকুন এবং সেরা অনুশীলনগুলি অনুসরণ করুন:\n\n• কেবল তত পরিমাণ mint করুন যতটা হারাতে প্রস্তুত\n\n• কেবল বিশ্বস্ত mint ব্যবহার করুন\n\n• আপনার wallet ব্যাকআপ করুন\n\nকোনো সমস্যা হলে, [support@macadamia.cash](mailto:support@macadamia.cash)-এ সহায়তা বা প্রতিক্রিয়ার জন্য অনুরোধ পাঠাতে বা [Github](https://github.com/zeugmaster/macadamia/issues)-এ একটি Issue খুলতে দ্বিধা করবেন না।"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dieses Wallet sowie das Cashu-Protokoll werden aktiv weiterentwickelt. Sei achtsam wenn du diese Software verwendest und folge diesen Empfehlungen:\n\n- Erstelle nur so viel Ecash wie du bereit bist zu verlieren\n\n- Verwende nur Mints, denen du vertraust\n\n- Erstelle ein Backup deines Wallets\n\nFalls du Probleme haben solltest, sende gerne eine Supportanfrage oder Feedback an [support@macadamia.cash](mailto:support@macadamia.cash) oder melde das Probem auf [GitHub](https://github.com/zeugmaster/macadamia/issues)."
+            "value" : "Dieses Wallet und das Cashu-Protokoll befinden sich in aktiver Entwicklung. Sei vorsichtig beim Verwenden dieser Software und folge den Best Practices:\n\n• Minte nur so viel, wie du bereit bist zu verlieren\n\n• Verwende nur Mints, denen du vertraust\n\n• Sichere dein Wallet\n\nFalls du Probleme hast, zögere nicht, eine Support- oder Feedback-Anfrage an [support@macadamia.cash](mailto:support@macadamia.cash) zu senden oder ein Issue auf [Github](https://github.com/zeugmaster/macadamia/issues) zu öffnen."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Este wallet y el protocolo Cashu están en desarrollo activo. Ten precaución al usar este software y sigue las mejores prácticas:\n\n- Crea solo tanto ecash como estés dispuesto a perder\n\n- Usa solo mints en los que confíes\n\n- Haz una copia de seguridad de tu wallet\n\nSi experimentas algún problema, no dudes en enviar una solicitud de soporte o comentarios a [support@macadamia.cash](mailto:support@macadamia.cash) o abre un Issue en [Github](https://github.com/zeugmaster/macadamia/issues)."
+            "value" : "Este wallet y el protocolo Cashu están en desarrollo activo. Ten cuidado al usar este software y sigue las mejores prácticas:\n\n• Mintea solo lo que estés dispuesto a perder\n\n• Usa solo mints en los que confíes\n\n• Haz copia de seguridad de tu wallet\n\nSi tienes algún problema, no dudes en enviar una solicitud de soporte o comentario a [support@macadamia.cash](mailto:support@macadamia.cash) o abrir una Issue en [Github](https://github.com/zeugmaster/macadamia/issues)."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ce wallet et le protocole Cashu sont en développement actif. Sois prudent en utilisant ce logiciel et suis les bonnes pratiques :\n\n- Ne crée que ce que tu es prêt à perdre\n\n- N'utilise que des mints de confiance\n\n- Sauvegarde ton wallet\n\nSi tu rencontres des problèmes, n'hésite pas à envoyer une demande de support ou tes retours à [support@macadamia.cash](mailto:support@macadamia.cash) ou ouvre une Issue sur [Github](https://github.com/zeugmaster/macadamia/issues)."
+            "value" : "Ce wallet et le protocole Cashu sont en développement actif. Sois prudent lors de l'utilisation de ce logiciel et suis les bonnes pratiques :\n\n• Ne mint que ce que tu es prêt à perdre\n\n• N'utilise que des mints en qui tu as confiance\n\n• Sauvegarde ton wallet\n\nSi tu rencontres un problème, n'hésite pas à envoyer une demande de support ou un retour à [support@macadamia.cash](mailto:support@macadamia.cash) ou à ouvrir une Issue sur [Github](https://github.com/zeugmaster/macadamia/issues)."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "यह Wallet और Cashu प्रोटोकॉल सक्रिय विकास में हैं। इस सॉफ़्टवेयर का उपयोग करते समय सावधान रहें और सर्वोत्तम प्रथाओं का पालन करें:\n\n- केवल उतना ही Mint करें जितना आप खोने को तैयार हैं\n\n- केवल विश्वसनीय Mints का उपयोग करें\n\n- अपने Wallet का बैकअप लें\n\nयदि कोई समस्या हो, तो [support@macadamia.cash](mailto:support@macadamia.cash) पर सहायता अनुरोध भेजें या [Github](https://github.com/zeugmaster/macadamia/issues) पर Issue खोलें।"
+            "value" : "यह wallet और Cashu प्रोटोकॉल सक्रिय विकास में हैं। इस सॉफ्टवेयर का उपयोग करते समय सावधान रहें और सर्वोत्तम प्रथाओं का पालन करें:\n\n• केवल उतना ही mint करें जितना आप खोने के लिए तैयार हैं\n\n• केवल उन mints का उपयोग करें जिन पर आप भरोसा करते हैं\n\n• अपने wallet का बैकअप लें\n\nयदि आपको कोई समस्या आती है, तो समर्थन या प्रतिक्रिया के लिए [support@macadamia.cash](mailto:support@macadamia.cash) पर अनुरोध भेजने या [Github](https://github.com/zeugmaster/macadamia/issues) पर एक Issue खोलने में संकोच न करें।"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "このウォレットとCashuプロトコルは活発に開発中です。このソフトウェアの使用には注意し、ベストプラクティスに従ってください:\n\n- 失っても構わない金額のみミントしてください\n\n- 信頼できるミントのみ使用してください\n\n- ウォレットをバックアップしてください\n\n問題が発生した場合は、[support@macadamia.cash](mailto:support@macadamia.cash)にサポートリクエストを送るか、[Github](https://github.com/zeugmaster/macadamia/issues)でIssueを作成してください。"
+            "value" : "このウォレットとCashuプロトコルは活発に開発中です。このソフトウェアを使用する際は注意し、ベストプラクティスに従ってください：\n\n• 失ってもよい金額だけをミントしてください\n\n• 信頼できるミントのみを使用してください\n\n• ウォレットをバックアップしてください\n\n問題が発生した場合は、[support@macadamia.cash](mailto:support@macadamia.cash)へサポートやフィードバックをお送りいただくか、[Github](https://github.com/zeugmaster/macadamia/issues)でIssueを開いてください。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "이 지갑과 Cashu 프로토콜은 활발히 개발 중입니다. 이 소프트웨어를 사용할 때 주의하고 모범 사례를 따르세요:\n\n- 잃어도 괜찮은 금액만 민트하세요\n\n- 신뢰하는 민트만 사용하세요\n\n- 지갑을 백업하세요\n\n문제가 발생하면 [support@macadamia.cash](mailto:support@macadamia.cash)로 지원 요청을 보내거나 [Github](https://github.com/zeugmaster/macadamia/issues)에서 Issue를 열어주세요."
+            "value" : "이 지갑과 Cashu 프로토콜은 활발하게 개발 중입니다. 이 소프트웨어를 사용할 때 주의하고 모범 사례를 따르세요:\n\n• 잃어도 괜찮은 만큼만 민트하세요\n\n• 신뢰할 수 있는 민트만 사용하세요\n\n• 지갑을 백업하세요\n\n문제가 발생하면 주저하지 말고 [support@macadamia.cash](mailto:support@macadamia.cash)로 지원 또는 피드백 요청을 보내거나 [Github](https://github.com/zeugmaster/macadamia/issues)에서 Issue를 열어 주세요."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Este wallet e o protocolo Cashu estão em desenvolvimento ativo. Tenha cuidado ao usar este software e siga as melhores práticas:\n\n- Crie apenas o que você está disposto a perder\n\n- Use apenas mints em que você confia\n\n- Faça backup do seu wallet\n\nSe tiver problemas, não hesite em enviar uma solicitação de suporte ou feedback para [support@macadamia.cash](mailto:support@macadamia.cash) ou abra uma Issue no [Github](https://github.com/zeugmaster/macadamia/issues)."
+            "value" : "Este wallet e o protocolo Cashu estão em desenvolvimento ativo. Tenha cuidado ao usar este software e siga as melhores práticas:\n\n• Minte apenas o que você está disposto a perder\n\n• Use apenas mints em que você confia\n\n• Faça backup do seu wallet\n\nSe tiver algum problema, não hesite em enviar uma solicitação de suporte ou feedback para [support@macadamia.cash](mailto:support@macadamia.cash) ou abrir uma Issue no [Github](https://github.com/zeugmaster/macadamia/issues)."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Этот кошелёк и протокол Cashu находятся в активной разработке. Будь осторожен при использовании и следуй лучшим практикам:\n\n- Создавай ecash только на сумму, которую готов потерять\n\n- Используй только доверенные минты\n\n- Делай резервную копию кошелька\n\nЕсли возникнут проблемы, отправь запрос в поддержку на [support@macadamia.cash](mailto:support@macadamia.cash) или создай Issue на [Github](https://github.com/zeugmaster/macadamia/issues)."
+            "value" : "Этот кошелёк и протокол Cashu находятся в активной разработке. Будь осторожен при использовании этого ПО и следуй лучшим практикам:\n\n• Минти только ту сумму, которую готов потерять\n\n• Используй только минты, которым доверяешь\n\n• Делай резервную копию кошелька\n\nЕсли возникнут проблемы, не стесняйся отправить запрос поддержки или отзыв на [support@macadamia.cash](mailto:support@macadamia.cash) или открыть Issue на [Github](https://github.com/zeugmaster/macadamia/issues)."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu cüzdan ve Cashu protokolü aktif geliştirme aşamasındadır. Bu yazılımı kullanırken dikkatli ol ve en iyi uygulamaları takip et:\n\n- Yalnızca kaybetmeye hazır olduğun kadar Mint et\n\n- Yalnızca güvendiğin Mint'leri kullan\n\n- Cüzdanını yedekle\n\nHerhangi bir sorun yaşarsan, [support@macadamia.cash](mailto:support@macadamia.cash) adresine destek talebi gönder veya [Github](https://github.com/zeugmaster/macadamia/issues)'da Issue aç."
+            "value" : "Bu cüzdan ve Cashu protokolü aktif olarak geliştirilmektedir. Bu yazılımı kullanırken dikkatli ol ve en iyi uygulamaları takip et:\n\n• Yalnızca kaybetmeye hazır olduğun kadarını mint et\n\n• Yalnızca güvendiğin mint'leri kullan\n\n• Cüzdanını yedekle\n\nHerhangi bir sorun yaşarsan [support@macadamia.cash](mailto:support@macadamia.cash) adresine destek veya geri bildirim göndermekten ya da [Github](https://github.com/zeugmaster/macadamia/issues) üzerinde bir Issue açmaktan çekinme."
           }
         }
       }
-    },
-    "This wallet and the Cashu protocol are in active development. Be cautious when using this software and follow best practices:\n\n• Mint only as much as you are ready to lose\n\n• Only use mints you trust\n\n• Back up your wallet\n\nIf you experience any issues, don't hesitate to send a request for support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues)." : {
-
     },
     "This wallet does not appear to have a seed." : {
       "localizations" : {
@@ -27885,7 +28466,7 @@
       }
     },
     "Toggle" : {
-
+      "shouldTranslate" : false
     },
     "Token" : {
       "localizations" : {
@@ -29358,7 +29939,7 @@
       }
     },
     "unavailable" : {
-
+      "shouldTranslate" : false
     },
     "Unhandled Error" : {
       "localizations" : {
@@ -30976,77 +31557,6 @@
         }
       }
     },
-    "Wallet Backup" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "نسخة احتياطية للمحفظة"
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wallet ব্যাকআপ"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wallet-Backup"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Respaldo de Wallet"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sauvegarde du Wallet"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wallet बैकअप"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ウォレットバックアップ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "지갑 백업"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Backup do Wallet"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Резервная копия кошелька"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cüzdan yedeği"
-          }
-        }
-      }
-    },
     "Wallet Info" : {
       "localizations" : {
         "ar" : {
@@ -31397,6 +31907,76 @@
         }
       }
     },
+    "Warning" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحذير"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "সতর্কতা"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Achtung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advertencia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attention"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "चेतावनी"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "注意"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "경고"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aviso"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предупреждение"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uyarı"
+          }
+        }
+      }
+    },
     "WARNING: This reduces your privacy with this mint!" : {
       "shouldTranslate" : false
     },
@@ -31471,7 +32051,74 @@
       }
     },
     "Write down your seed phrase" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اكتب عبارة البذرة الخاصة بك"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আপনার সিড ফ্রেজ লিখে রাখুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notiere deine Seed-Phrase"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apunta tu frase semilla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note ta phrase de récupération"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपना सीड फ्रेज़ लिख लें"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シードフレーズを書き留めてください"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시드 구문을 적어 두세요"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anote sua frase semente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запиши свою сид-фразу"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seed ifadeni yaz"
+          }
+        }
+      }
     },
     "wss://relay..." : {
       "shouldTranslate" : false
@@ -31547,75 +32194,71 @@
       }
     },
     "You are using **macadamia**, the first fully native ecash wallet for the Cashu protocol on iOS. \n\nDigital payments should be as natural as handing over cash in person. Cashu brings simplicity back to online and real-life payments. Tap [here](https://cashu.space) to learn more. \n\nThe code for this project is **open-source** allowing anyone to view it or contribute. You can find it on [Github](https://github.com/zeugmaster/macadamia). \n" : {
-
-    },
-    "You are using **macadamia**, the first fully native ecash wallet for the Cashu protocol on iOS. \n\nDigital payments should be as natural as handing over cash in person. Cashu brings simplicity back to online and real-life payments. Tap [here](https://cashu.space) to learn more. \n\nThe code for this project is **open-source** allowing anyone to view it or contribute. You can find it on [Github](https://github.com/zeugmaster/macadamia). \n\nThis app does not collect any usage data or analytics. \n\nThank you for trying the future of payments! \n\n\n\n# 🥜🌰" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "أنت تستخدم **macadamia**، أول محفظة ecash أصلية بالكامل لبروتوكول Cashu على iOS.\n\nيجب أن تكون المدفوعات الرقمية طبيعية مثل تسليم النقود شخصيًا. يعيد Cashu البساطة إلى المدفوعات عبر الإنترنت وفي الحياة الواقعية. انقر [هنا](https://cashu.space) لمعرفة المزيد.\n\nكود هذا المشروع **مفتوح المصدر** مما يتيح لأي شخص مشاهدته أو المساهمة. يمكنك العثور عليه على [Github](https://github.com/zeugmaster/macadamia).\n\nهذا التطبيق لا يجمع أي بيانات استخدام أو تحليلات.\n\nشكرًا لتجربة مستقبل المدفوعات!\n\n\n# 🥜🌰"
+            "value" : "أنت تستخدم **macadamia**، أول محفظة ecash أصلية بالكامل لبروتوكول Cashu على iOS. \n\nيجب أن تكون المدفوعات الرقمية طبيعية مثل تسليم النقد شخصياً. يعيد Cashu البساطة إلى المدفوعات عبر الإنترنت وفي الحياة اليومية. اضغط [هنا](https://cashu.space) لمعرفة المزيد. \n\nكود هذا المشروع **مفتوح المصدر** مما يسمح لأي شخص بعرضه أو المساهمة فيه. يمكنك العثور عليه على [Github](https://github.com/zeugmaster/macadamia). \n"
           }
         },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "আপনি **macadamia** ব্যবহার করছেন, iOS-এ Cashu প্রোটোকলের জন্য প্রথম সম্পূর্ণ নেটিভ ecash Wallet।\n\nডিজিটাল পেমেন্ট ব্যক্তিগতভাবে নগদ দেওয়ার মতো স্বাভাবিক হওয়া উচিত। Cashu অনলাইন এবং বাস্তব জীবনে পেমেন্টে সরলতা ফিরিয়ে আনে। আরো জানতে [এখানে](https://cashu.space) ট্যাপ করুন।\n\nএই প্রকল্পের কোড **ওপেন-সোর্স** যেকেউ দেখতে বা অবদান রাখতে পারে। আপনি এটি [Github](https://github.com/zeugmaster/macadamia)-এ পাবেন।\n\nএই অ্যাপ কোনো ব্যবহার ডেটা বা অ্যানালিটিক্স সংগ্রহ করে না।\n\nপেমেন্টের ভবিষ্যৎ পরীক্ষা করার জন্য ধন্যবাদ!\n\n\n# 🥜🌰"
+            "value" : "আপনি **macadamia** ব্যবহার করছেন, iOS-এ Cashu প্রোটোকলের জন্য প্রথম সম্পূর্ণ নেটিভ ecash wallet। \n\nডিজিটাল পেমেন্ট ব্যক্তিগতভাবে নগদ হস্তান্তরের মতোই স্বাভাবিক হওয়া উচিত। Cashu অনলাইন এবং বাস্তব জীবনের পেমেন্টে সরলতা ফিরিয়ে আনে। আরও জানতে [এখানে](https://cashu.space) ট্যাপ করুন। \n\nএই প্রকল্পের কোড **open-source** যা যে কাউকে দেখতে বা অবদান রাখতে দেয়। আপনি এটি [Github](https://github.com/zeugmaster/macadamia)-এ পাবেন। \n"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Du verwendest **macadamia**, das erste vollständig native Ecash-Wallet für iOS.\n\nDigitales Bezahlen sollte so einfach sein wie Bargeld zu überreichen. Cashu macht Zahlungen online und im Alltag wieder einfach. Tippe [hier](https://cashu.space) um mehr zu erfahren.\n\nDer Quellcode für dieses Projekt ist Open-Source damit ihn alle einsehen  und an der Entwicklung teilhaben können. Du findest ihn auf [Github](https://github.com/zeugmaster/macadamia).\n\nDanke, dass Du die Zukunft des Bezahlens ausprobierst!\n\n\n# 🥜🌰"
+            "value" : "Du verwendest **macadamia**, das erste vollständig native Ecash-Wallet für das Cashu-Protokoll auf iOS. \n\nDigitale Zahlungen sollten so natürlich sein wie Bargeld persönlich zu übergeben. Cashu bringt die Einfachheit zurück in Online- und Alltagszahlungen. Tippe [hier](https://cashu.space) um mehr zu erfahren. \n\nDer Code dieses Projekts ist **Open-Source**, sodass jeder ihn einsehen oder beitragen kann. Du findest ihn auf [Github](https://github.com/zeugmaster/macadamia). \n"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Estás usando **macadamia**, la primera wallet nativa de ecash para el protocolo Cashu en iOS.\n\nLos pagos digitales deberían ser tan naturales como entregar efectivo en persona. Cashu devuelve la simplicidad a los pagos en línea y en la vida real. Toca [aquí](https://cashu.space) para saber más.\n\nEl código de este proyecto es **open-source**, permitiendo que cualquiera lo vea o contribuya. Lo puedes encontrar en [Github](https://github.com/zeugmaster/macadamia).\n\nEsta app no recopila datos de uso ni analíticas.\n\n¡Gracias por probar el futuro de los pagos!\n\n\n# 🥜🌰"
+            "value" : "Estás usando **macadamia**, el primer wallet ecash completamente nativo para el protocolo Cashu en iOS. \n\nLos pagos digitales deberían ser tan naturales como entregar efectivo en persona. Cashu devuelve la simplicidad a los pagos en línea y de la vida real. Toca [aquí](https://cashu.space) para saber más. \n\nEl código de este proyecto es **open-source**, permitiendo que cualquiera lo vea o contribuya. Puedes encontrarlo en [Github](https://github.com/zeugmaster/macadamia). \n"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tu utilises **macadamia**, le premier wallet ecash entièrement natif pour le protocole Cashu sur iOS.\n\nLes paiements numériques devraient être aussi naturels que de donner de l'argent liquide en personne. Cashu ramène la simplicité dans les paiements en ligne et dans la vie réelle. Appuie [ici](https://cashu.space) pour en savoir plus.\n\nLe code de ce projet est **open-source**, permettant à quiconque de le consulter ou d'y contribuer. Tu peux le trouver sur [Github](https://github.com/zeugmaster/macadamia).\n\nCette app ne collecte aucune donnée d'utilisation ni d'analyse.\n\nMerci d'essayer le futur des paiements !\n\n\n# 🥜🌰"
+            "value" : "Tu utilises **macadamia**, le premier wallet ecash entièrement natif pour le protocole Cashu sur iOS. \n\nLes paiements numériques devraient être aussi naturels que de tendre de l'argent liquide en personne. Cashu ramène la simplicité aux paiements en ligne et dans la vie réelle. Appuie [ici](https://cashu.space) pour en savoir plus. \n\nLe code de ce projet est **open-source**, permettant à chacun de le consulter ou d'y contribuer. Tu peux le trouver sur [Github](https://github.com/zeugmaster/macadamia). \n"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "आप **macadamia** का उपयोग कर रहे हैं, iOS पर Cashu प्रोटोकॉल के लिए पहला पूर्ण रूप से नेटिव ecash Wallet।\n\nडिजिटल भुगतान व्यक्तिगत रूप से नकद देने जितना स्वाभाविक होना चाहिए। Cashu ऑनलाइन और वास्तविक भुगतानों में सरलता लाता है। अधिक जानने के लिए [यहाँ](https://cashu.space) टैप करें।\n\nइस प्रोजेक्ट का कोड **ओपन-सोर्स** है जिससे कोई भी इसे देख या योगदान कर सकता है। आप इसे [Github](https://github.com/zeugmaster/macadamia) पर पा सकते हैं।\n\nयह ऐप कोई उपयोग डेटा या एनालिटिक्स एकत्र नहीं करता।\n\nभुगतान के भविष्य को आज़माने के लिए धन्यवाद!\n\n\n# 🥜🌰"
+            "value" : "आप **macadamia** का उपयोग कर रहे हैं, iOS पर Cashu प्रोटोकॉल के लिए पहला पूरी तरह से नेटिव ecash wallet। \n\nडिजिटल भुगतान उतने ही स्वाभाविक होने चाहिए जितने किसी को व्यक्तिगत रूप से नकद सौंपना। Cashu ऑनलाइन और वास्तविक जीवन के भुगतान में सरलता वापस लाता है। अधिक जानने के लिए [यहां](https://cashu.space) टैप करें। \n\nइस परियोजना का कोड **open-source** है, जो किसी को भी इसे देखने या योगदान करने की अनुमति देता है। आप इसे [Github](https://github.com/zeugmaster/macadamia) पर पा सकते हैं। \n"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**macadamia**をご利用いただきありがとうございます。iOS上のCashuプロトコル向け初の完全ネイティブecashウォレットです。\n\nデジタル決済は、対面で現金を渡すのと同じくらい自然であるべきです。Cashuはオンラインと実生活の支払いにシンプルさを取り戻します。詳しくは[こちら](https://cashu.space)をタップしてください。\n\nこのプロジェクトのコードは**オープンソース**で、誰でも閲覧・貢献できます。[Github](https://github.com/zeugmaster/macadamia)で見つけることができます。\n\nこのアプリは使用データやアナリティクスを収集しません。\n\n支払いの未来をお試しいただきありがとうございます！\n\n\n# 🥜🌰"
+            "value" : "あなたが使っている **macadamia** は、iOS向けのCashuプロトコルに対応した初の完全ネイティブecashウォレットです。 \n\nデジタル決済は、現金を手渡すのと同じくらい自然であるべきです。Cashuは、オンラインや日常の支払いにシンプルさを取り戻します。詳しくは[こちら](https://cashu.space)をタップしてください。 \n\nこのプロジェクトのコードは**オープンソース**で、誰でも閲覧・貢献できます。[Github](https://github.com/zeugmaster/macadamia)でご覧いただけます。 \n"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**macadamia**를 사용하고 계십니다. iOS의 Cashu 프로토콜을 위한 최초의 완전 네이티브 ecash 지갑입니다.\n\n디지털 결제는 직접 현금을 건네는 것만큼 자연스러워야 합니다. Cashu는 온라인과 실생활 결제에 단순함을 되돌려줍니다. 자세한 내용은 [여기](https://cashu.space)를 탭하세요.\n\n이 프로젝트의 코드는 **오픈소스**로, 누구나 열람하거나 기여할 수 있습니다. [Github](https://github.com/zeugmaster/macadamia)에서 확인하세요.\n\n이 앱은 사용 데이터나 분석을 수집하지 않습니다.\n\n결제의 미래를 경험해 주셔서 감사합니다!\n\n\n# 🥜🌰"
+            "value" : "**macadamia**는 iOS에서 Cashu 프로토콜을 지원하는 최초의 완전한 네이티브 ecash 지갑입니다. \n\n디지털 결제는 직접 현금을 건네는 것만큼 자연스러워야 합니다. Cashu는 온라인과 실생활 결제에 단순함을 되찾아 줍니다. 자세히 알아보려면 [여기](https://cashu.space)를 탭하세요. \n\n이 프로젝트의 코드는 **오픈 소스**로 누구나 확인하고 기여할 수 있습니다. [Github](https://github.com/zeugmaster/macadamia)에서 찾을 수 있습니다. \n"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Você está usando o **macadamia**, a primeira carteira ecash totalmente nativa para o protocolo Cashu no iOS.\n\nPagamentos digitais deveriam ser tão naturais quanto entregar dinheiro pessoalmente. O Cashu traz simplicidade de volta aos pagamentos online e presenciais. Toque [aqui](https://cashu.space) para saber mais.\n\nO código deste projeto é **open-source**, permitindo que qualquer pessoa o visualize ou contribua. Você pode encontrá-lo no [Github](https://github.com/zeugmaster/macadamia).\n\nEste app não coleta dados de uso ou análises.\n\nObrigado por experimentar o futuro dos pagamentos!\n\n\n# 🥜🌰"
+            "value" : "Você está usando o **macadamia**, o primeiro wallet ecash totalmente nativo para o protocolo Cashu no iOS. \n\nPagamentos digitais deveriam ser tão naturais quanto entregar dinheiro em mãos. Cashu traz a simplicidade de volta aos pagamentos online e da vida real. Toque [aqui](https://cashu.space) para saber mais. \n\nO código deste projeto é **open-source**, permitindo que qualquer pessoa o visualize ou contribua. Você pode encontrá-lo no [Github](https://github.com/zeugmaster/macadamia). \n"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ты используешь **macadamia** — первый полностью нативный кошелёк ecash для протокола Cashu на iOS.\n\nЦифровые платежи должны быть такими же естественными, как передача наличных. Cashu возвращает простоту в онлайн и реальные платежи. Нажми [здесь](https://cashu.space), чтобы узнать больше.\n\nКод этого проекта является **открытым**, позволяя любому просматривать его или вносить вклад. Ты можешь найти его на [Github](https://github.com/zeugmaster/macadamia).\n\nЭто приложение не собирает данные об использовании или аналитику.\n\nСпасибо, что пробуешь будущее платежей!\n\n\n# 🥜🌰"
+            "value" : "Ты используешь **macadamia** — первый полностью нативный ecash-кошелёк для протокола Cashu на iOS. \n\nЦифровые платежи должны быть такими же естественными, как передача наличных из рук в руки. Cashu возвращает простоту онлайн- и повседневным платежам. Нажми [здесь](https://cashu.space), чтобы узнать больше. \n\nКод этого проекта **open-source**, так что любой может его посмотреть или внести вклад. Ты найдёшь его на [Github](https://github.com/zeugmaster/macadamia). \n"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**macadamia** kullanıyorsun, iOS'ta Cashu protokolü için ilk tamamen yerli ecash cüzdanı.\n\nDijital ödemeler, yüz yüze nakit vermek kadar doğal olmalıdır. Cashu, çevrimiçi ve gerçek hayat ödemelerine sadeliği geri getiriyor. Daha fazla bilgi için [buraya](https://cashu.space) dokun.\n\nBu projenin kodu **açık kaynak** olup herkes görüntüleyebilir veya katkıda bulunabilir. [Github](https://github.com/zeugmaster/macadamia)'da bulabilirsin.\n\nBu uygulama herhangi bir kullanım verisi veya analiz toplamaz.\n\nÖdemelerin geleceğini denediğin için teşekkürler!\n\n\n# 🥜🌰"
+            "value" : "**macadamia** kullanıyorsun; iOS üzerindeki Cashu protokolü için ilk tamamen yerel ecash cüzdanı. \n\nDijital ödemeler, birine elden nakit vermek kadar doğal olmalı. Cashu, çevrimiçi ve günlük hayattaki ödemelere sadeliği geri getiriyor. Daha fazla bilgi için [buraya](https://cashu.space) dokun. \n\nBu projenin kodu **open-source** olduğundan herkes inceleyebilir veya katkıda bulunabilir. [Github](https://github.com/zeugmaster/macadamia) üzerinde bulabilirsin. \n"
           }
         }
       }
@@ -31690,8 +32333,215 @@
         }
       }
     },
+    "You're All Set" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كل شيء جاهز"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "সব প্রস্তুত"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fertig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todo listo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout est prêt"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सब कुछ तैयार"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "準備完了"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "준비 완료"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tudo pronto"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Всё готово"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her şey hazır"
+          }
+        }
+      }
+    },
+    "Your Seed Phrase" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عبارة البذرة الخاصة بك"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আপনার সিড ফ্রেজ"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Seed-Phrase"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu frase semilla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta phrase de récupération"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपका सीड फ्रेज़"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シードフレーズ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시드 구문"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sua frase semente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Твоя сид-фраза"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seed ifaden"
+          }
+        }
+      }
+    },
     "Your wallet is ready" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "محفظتك جاهزة"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আপনার wallet প্রস্তুত"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Wallet ist bereit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu wallet está listo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton wallet est prêt"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपका wallet तैयार है"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウォレットの準備ができました"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지갑이 준비되었습니다"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seu wallet está pronto"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Твой кошелёк готов"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cüzdanın hazır"
+          }
+        }
+      }
     },
     "Your wallet public key (npub)" : {
       "localizations" : {

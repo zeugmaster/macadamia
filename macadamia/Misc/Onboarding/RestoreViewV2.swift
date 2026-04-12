@@ -114,7 +114,7 @@ struct RestoreViewV2: View {
 
     @State private var restoreProgress: Double = 0.0
     @State private var restoreCompleted = false
-    @State private var restoreStatusText: String = ""
+    @State private var restoreStatusText: LocalizedStringKey = ""
 
     var body: some View {
         List {
@@ -241,7 +241,7 @@ struct RestoreViewV2: View {
 
         // Show the first mint being restored
         if let firstHost = selectedMints.first?.url.host() {
-            restoreStatusText = "Restoring from \(firstHost)..."
+            restoreStatusText = "Restoring from \(firstHost)…"
         }
 
         Task { @MainActor in
@@ -259,7 +259,7 @@ struct RestoreViewV2: View {
                     let nextHost = selectedMints[results.count].url.host()
                         ?? selectedMints[results.count].url.absoluteString
                     withAnimation {
-                        restoreStatusText = "Restoring from \(nextHost)..."
+                        restoreStatusText = "Restoring from \(nextHost)…"
                     }
                 }
             }

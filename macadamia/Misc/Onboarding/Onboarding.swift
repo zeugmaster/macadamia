@@ -29,6 +29,7 @@ struct OnboardingCanvas: View {
     @State private var phase1Page: Int? = 0
     @State private var phase2Page: Int? = 0
     @State private var scrollOffset: CGFloat = 0
+    @State private var displayedHeaderTitle: LocalizedStringKey = "Hi there!"
 
     // -- phase 1 state --
     @State private var termsAccepted = false
@@ -64,7 +65,7 @@ struct OnboardingCanvas: View {
         }
     }
 
-    private var headerTitle: String {
+    private var headerTitle: LocalizedStringKey {
         switch page {
         case 0: "Hi there!"
         case 1: "Warning"
@@ -119,7 +120,12 @@ struct OnboardingCanvas: View {
             )
 
             VStack(spacing: 0) {
-                OnboardingHeader(title: headerTitle)
+                OnboardingHeader(title: displayedHeaderTitle)
+                    .onChange(of: page) {
+                        withAnimation(.easeInOut(duration: 0.35)) {
+                            displayedHeaderTitle = headerTitle
+                        }
+                    }
 
                 // Two-phase content area
                 GeometryReader { geo in
@@ -256,7 +262,7 @@ struct OnboardingCanvas: View {
 // MARK: - Header
 
 struct OnboardingHeader: View {
-    let title: String
+    let title: LocalizedStringKey
 
     var body: some View {
         Text(title)
@@ -266,7 +272,6 @@ struct OnboardingHeader: View {
             .padding(.horizontal)
             .padding(.top)
             .contentTransition(.numericText())
-            .animation(.easeOut(duration: 0.4), value: title)
     }
 }
 

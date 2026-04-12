@@ -1,9 +1,12 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**BIP-321**
-Diese Version von *macadamia Wallet* fügt Unterstützung für BIP-321-kodierte Zahlungsanfragen über QR-Codes oder NFC-Transaktionen mit einem kompatiblen Terminal hinzu.
-Außerdem enthält sie zahlreiche kleinere Fehlerbehebungen und Verbesserungen.
+**Komplett neuer Onboarding-Ablauf 🗒️**
+Der Onboarding-Bildschirm wurde von Grund auf neu gestaltet und unterstützt jetzt auch die Wiederherstellung aus einer Seed-Phrase.
+
+**Backup der Mint-Liste 📡**
+Dank NUT-27-Unterstützung musst du deine Mint-Liste nicht mehr selbst sichern — das Wallet lädt automatisch eine verschlüsselte Version zu Nostr-Relays hoch.
+Das funktioniert über alle Wallets hinweg, die es unterstützen.
 
 ------
 
