@@ -17,6 +17,46 @@ extension URL {
         }
         return modifiedURL
     }
+    
+    func matches(_ url: URL) -> Bool {
+        let schemeMatch = self.scheme?.lowercased() == url.scheme?.lowercased()
+        let hostMatch = self.host()?.lowercased() == url.host()?.lowercased()
+        let portMatch = effectivePort(self) == effectivePort(url)
+        let pathMatch = normalizedPath(self) == normalizedPath(url)
+
+        return schemeMatch && hostMatch && portMatch && pathMatch
+    }
+
+    private func effectivePort(_ url: URL) -> Int? {
+        if let port = url.port {
+            return port
+        }
+
+        switch url.scheme?.lowercased() {
+        case "http":
+            return 80
+        case "https":
+            return 443
+        default:
+            return nil
+        }
+    }
+
+    private func normalizedPath(_ url: URL) -> String {
+        let path = url.path.isEmpty ? "/" : url.path
+
+        guard path.count > 1, path.hasSuffix("/") else {
+            return path
+        }
+
+        return String(path.dropLast())
+    }
+}
+
+extension Array where Element == Mint {
+    func containsMatch(with url: URL) -> Bool {
+        self.contains(where: { $0.url.matches(url)} )
+    }
 }
 
 struct DismissToRootAction: Sendable {

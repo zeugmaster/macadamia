@@ -808,4 +808,15 @@ final class macadamiaTests: XCTestCase {
             break // Expected - but now it gives a specific message rather than "Unsupported Input"
         }
     }
+    
+    func testURLcomparison() {
+        let url1 = URL(string: "https://mint.minibits.cash/bitcoin")!
+        let url2 = URL(string: "https://mint.minibits.cash/Bitcoin")!
+        let url3 = URL(string: "https://Mint.minibits.cash/Bitcoin")!
+        let url4 = URL(string: url1.absoluteString.uppercased())!
+        
+        XCTAssertTrue(url2.matches(url3))
+        XCTAssertFalse(url1.matches(url2))
+        XCTAssertFalse(url3.matches(url4))
+    }
 }

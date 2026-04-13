@@ -85,10 +85,10 @@ struct WalletView: View {
                         .onAppear(perform: {
                             // quick sanity check for uniqueness of C across list of proofs
                             guard let activeWallet else {
-                                logger.warning("""
-                                               wallet view appeared with no activeWallet. \
-                                               this will give undefined behaviour.
-                                               """)
+//                                logger.warning("""
+//                                               wallet view appeared with no activeWallet. \
+//                                               this will give undefined behaviour.
+//                                               """)
                                 return
                             }
                         let uniqueCs = Set(activeWallet.proofs.map( { $0.C }))
