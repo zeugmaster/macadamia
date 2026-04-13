@@ -481,7 +481,11 @@ struct SetupSelectionPage: View {
                 }
                 VStack(alignment: .leading, spacing: 20) {
                     HStack {
-                        Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                        if #available(iOS 18, *) {
+                            Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                        } else {
+                            Image(systemName: "hourglass.bottomhalf.filled")
+                        }
                         Text("Restore from seed phrase")
                         Spacer()
                         Group {

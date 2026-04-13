@@ -57,7 +57,11 @@ struct ContentView: View {
                 // First tab content
                 WalletView(urlState: $urlState, pendingNavigation: $pendingNavigation)
                     .tabItem {
-                        Label("Wallet", systemImage: "wallet.bifold")
+                        if #available(iOS 18, *) {
+                            Label("Wallet", systemImage: "wallet.bifold")
+                        } else {
+                            Label("Wallet", systemImage: "bitcoinsign.circle")
+                        }
                     }
                     .tag(Tab.wallet)
 
