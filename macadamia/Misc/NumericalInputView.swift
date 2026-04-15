@@ -22,8 +22,8 @@ struct NumericalInputView: View {
     @State private var inputIsFiat = false
     @FocusState private var isInputFocused: Bool
     
-    private var conversionUnit: ConversionUnit {
-        ConversionUnit.preferred
+    private var conversionUnit: Currency.Unit {
+        Currency.Unit.preferred
     }
     
     private var placeholder: String {

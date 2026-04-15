@@ -59,19 +59,19 @@ class AppState: ObservableObject {
             self.rates = rates
         }
         
-        func rate(for unit: ConversionUnit) -> Double? {
+        func rate(for unit: Currency.Unit) -> Double? {
             return rates[unit.rawValue.lowercased()]
         }
     }
     
-    @Published var preferredConversionUnit: ConversionUnit {
+    @Published var preferredConversionUnit: Currency.Unit {
         didSet {
             UserDefaults.standard.setValue(preferredConversionUnit.rawValue, forKey: AppState.conversionUnitKey)
         }
     }
     
     init() {
-        if let unit = ConversionUnit(UserDefaults.standard.string(forKey: AppState.conversionUnitKey)) {
+        if let unit = Currency.Unit(UserDefaults.standard.string(forKey: AppState.conversionUnitKey)) {
             preferredConversionUnit = unit
         } else {
             preferredConversionUnit = .usd
@@ -81,7 +81,7 @@ class AppState: ObservableObject {
     }
     
     // Preview/Mock initializer - skips network calls and UserDefaults
-    init(preview: Bool, preferredUnit: ConversionUnit = .none) {
+    init(preview: Bool, preferredUnit: Currency.Unit = .none) {
         self.preferredConversionUnit = preferredUnit
         
         // Provide mock exchange rates for previews
@@ -104,7 +104,7 @@ class AppState: ObservableObject {
     func loadExchangeRates() {
         logger.info("loading exchange rates...")
         
-        let currencies = ConversionUnit.allCases.map { $0.rawValue.lowercased() }.joined(separator: ",")
+        let currencies = Currency.Unit.allCases.map { $0.rawValue.lowercased() }.joined(separator: ",")
         guard let url = URL(string: "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=\(currencies)") else {
             logger.warning("could not fetch exchange rates from API due to an invalid URL.")
             return

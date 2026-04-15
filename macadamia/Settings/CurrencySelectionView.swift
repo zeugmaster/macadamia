@@ -11,7 +11,7 @@ struct CurrencySelectionView: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.dismiss) private var dismiss
     
-    let conversionUnits = ConversionUnit.allCases
+    let conversionUnits = Currency.Unit.allCases
     
     var body: some View {
         List {
