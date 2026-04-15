@@ -166,18 +166,8 @@ struct MintManagerView: View {
             return
         }
         
-        let trimmedURLString = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        // Add https prefix if no protocol is specified, preserve http if explicitly entered
-        let finalURLString: String
-        if trimmedURLString.starts(with: "http://") || trimmedURLString.starts(with: "https://") {
-            finalURLString = trimmedURLString
-        } else {
-            finalURLString = "https://" + trimmedURLString
-        }
-        
-        guard let url = URL(string: finalURLString), url.host != nil else {
-            logger.warning("user tried to add an invalid URL: \(finalURLString)")
+        guard let url = URL.fromUserInput(urlString), url.host != nil else {
+            logger.warning("user tried to add an invalid URL: \(urlString)")
             displayAlert(alert: AlertDetail(title: String(localized: "Invalid URL"),
                                             description: String(localized: """
                                                          Please enter a valid URL. \
@@ -186,9 +176,7 @@ struct MintManagerView: View {
             return
         }
         
-        let normalizedURL = normalizeURL(url)
-        
-        guard !activeWallet.mints.contains(where: { normalizeURL($0.url) == normalizedURL && $0.hidden == false }) else {
+        guard !activeWallet.mints.contains(where: { $0.url.matches(url) && $0.hidden == false }) else {
             logger.warning("user tried to add a mint with a url that is already in the list of mints.")
             displayAlert(alert: AlertDetail(title: String(localized: "Duplicate Mint"),
                                             description: String(localized: """
@@ -271,18 +259,6 @@ struct MintManagerView: View {
         showAlert = true
     }
     
-    private func normalizeURL(_ url: URL) -> URL {
-        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        
-        // Only remove trailing slash from path, but keep "/" if it's the only path
-        // Don't normalize case to avoid connection issues
-        if let path = components?.path, path.count > 1 && path.hasSuffix("/") {
-            components?.path = String(path.dropLast())
-        }
-        
-        // Return normalized URL or original if normalization fails
-        return components?.url ?? url
-    }
 }
 
 struct MintInfoRowView: View {

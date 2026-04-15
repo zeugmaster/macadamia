@@ -74,9 +74,7 @@ class RestoreViewModel {
         }
     }
 
-    #warning ("needs proper input sanitation and convenience adaptations")
-    func addManually(_ urlString: String) {
-        guard let url = URL(string: "https://\(urlString)") else { return }
+    func addManually(_ url: URL) {
         let row = MintRow(url: url)
         withAnimation { rows.append(row) }
         Task { await load(row) }
@@ -115,6 +113,9 @@ struct RestoreViewV2: View {
     @State private var restoreProgress: Double = 0.0
     @State private var restoreCompleted = false
     @State private var restoreStatusText: LocalizedStringKey = ""
+    
+    @State private var showAlert: Bool = false
+    @State private var currentAlert: AlertDetail?
 
     var body: some View {
         List {
@@ -142,9 +143,30 @@ struct RestoreViewV2: View {
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
                         .onSubmit {
-                            let input = mintUrlInput.trimmingCharacters(in: .whitespacesAndNewlines)
-                            guard !input.isEmpty else { return }
-                            vm.addManually(input)
+                            guard !mintUrlInput.isEmpty else { return } // prevent error msg on empty
+                            
+                            // check url valid
+                            guard let url = URL.fromUserInput(mintUrlInput) else {
+                                logger.warning("user tried to add an invalid URL: \(mintUrlInput)")
+                                displayAlert(alert: AlertDetail(title: String(localized: "Invalid URL"),
+                                                                description: String(localized: """
+                                                                             Please enter a valid URL. \
+                                                                             If no protocol is specified, https:// will be used.
+                                                                             """)))
+                                return
+                            }
+                            
+                            // check duplicate using proper url comparison
+                            guard !vm.rows.contains(where: { $0.url.matches(url) }) else {
+                                displayAlert(alert: AlertDetail(title: String(localized: "Duplicate Mint"),
+                                                                description: String(localized: """
+                                                                             Please enter each mint URL only once. \
+                                                                             If no protocol is specified, https:// will be used.
+                                                                             """)))
+                                return
+                            }
+                            
+                            vm.addManually(url)
                             mintUrlInput = ""
                         }
                 }
@@ -282,6 +304,12 @@ struct RestoreViewV2: View {
             onRestore(assembled.wallet)
         }
     }
+    
+    private func displayAlert(alert: AlertDetail) {
+        currentAlert = alert
+        showAlert = true
+    }
+    
 }
 
 // MARK: - Mint Row View

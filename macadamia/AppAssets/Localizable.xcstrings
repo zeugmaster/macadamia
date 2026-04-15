@@ -21311,6 +21311,9 @@
         }
       }
     },
+    "Please enter each mint URL only once. If no protocol is specified, https:// will be used." : {
+
+    },
     "Polish Złoty" : {
       "localizations" : {
         "ar" : {

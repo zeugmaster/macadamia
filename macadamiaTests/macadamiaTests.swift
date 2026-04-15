@@ -818,5 +818,24 @@ final class macadamiaTests: XCTestCase {
         XCTAssertTrue(url2.matches(url3))
         XCTAssertFalse(url1.matches(url2))
         XCTAssertFalse(url3.matches(url4))
+        
+        // checking how Foundation handles url string input without scheme
+        let url5 = URL(string: "macadamia.cash")!
+        print(url5.absoluteString)
+        print(url5.host() ?? "nil")
+        print(url5.scheme ?? "nil")
+        
+        let url6 = URL(string: "")
+        print(url6 ?? "nil")
+        
+        let url7 = URL(string: "https://mint.macadamia.cash")!
+        let url8 = URL(string: "HTTPS://Mint.macadamia.cash:443")!
+        let url9 = URL(string: "https://mint.macadamia.cash:5000")!
+        let url10 = URL(string: "http://mint.macadamia.cash")!
+        let url11 = URL(string: "https://mint.notmacadamia.cash")!
+        XCTAssert(url7.matches(url8))
+        XCTAssertFalse(url8.matches(url9))
+        XCTAssertFalse(url7.matches(url10))
+        XCTAssertFalse(url7.matches(url11))
     }
 }
