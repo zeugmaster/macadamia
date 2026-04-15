@@ -7,8 +7,24 @@
 
 import Foundation
 
+struct Amount: Equatable {
+    let absoluteValue: Double
+    let unit: ConversionUnit
+    let negate: Bool
+    let precision: Int? = nil
+    
+    private var _precision: Int {
+        switch unit {
+            // TODO: add for sat, msat some fiat etc
+        default: 2
+        }
+    }
+}
+
 enum ConversionUnit: String, Codable, CaseIterable {
     case none = "NONE"
+    
+    // MARK: FIAT
     case usd = "USD"
     case eur = "EUR"
     case jpy = "JPY"

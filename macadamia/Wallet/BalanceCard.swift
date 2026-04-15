@@ -163,17 +163,3 @@ struct BalanceCard: View {
         convertedBalance = prefix + amountDisplayString(cents, unit: appState.preferredConversionUnit)
     }
 }
-
-//#Preview {
-//    ZStack(alignment: .top) {
-//        List {
-//            ForEach(0..<10) { _ in
-//                Text("Hello, World!")
-//            }
-//        }
-//        .safeAreaPadding(.top, 100)
-//        BalanceCard(balance: 500, unit: .sat)
-//            .environmentObject(AppState(preview: true, preferredUnit: .usd))
-//            .padding()
-//    }
-//}
