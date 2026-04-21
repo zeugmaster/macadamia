@@ -13,71 +13,110 @@ enum Currency {
         let unit: Unit
         let negate: Bool
         let precision: Int? = nil
-        
+
         private var _precision: Int {
-            switch unit {
-                // TODO: add for sat, msat some fiat etc
-            default: 2
+            switch unit.kind {
+            case .fiat: return 2
+            case .ecash, .other, .none: return 0
             }
         }
     }
 
-    enum Unit: String, Codable, CaseIterable {
-        case none = "NONE"
-        
-        // MARK: FIAT
-        case usd = "USD"
-        case eur = "EUR"
-        case jpy = "JPY"
-        case gbp = "GBP"
-        case aud = "AUD"
-        case cad = "CAD"
-        case chf = "CHF"
-        case cny = "CNY"
-        case hkd = "HKD"
-        case nzd = "NZD"
-        case sek = "SEK"
-        case krw = "KRW"
-        case sgd = "SGD"
-        case nok = "NOK"
-        case mxn = "MXN"
-        case inr = "INR"
-        case brl = "BRL"
-        case rub = "RUB"
-        case try_ = "TRY"
-        case zar = "ZAR"
-        case php = "PHP"
-        case thb = "THB"
-        case idr = "IDR"
-        case myr = "MYR"
-        case pln = "PLN"
-        case dkk = "DKK"
-        case czk = "CZK"
-        case huf = "HUF"
-        case ils = "ILS"
-        case clp = "CLP"
-        case ars = "ARS"
-        case sar = "SAR"
-        case aed = "AED"
-        case twd = "TWD"
-        case vnd = "VND"
-        case pkr = "PKR"
-        case egp = "EGP"
-        case ngn = "NGN"
-        case bdt = "BDT"
-        case uah = "UAH"
-        case ron = "RON"
-        case pen = "PEN"
-        case kwd = "KWD"
-        case cop = "COP"
-        case isk = "ISK"
-        case mad = "MAD"
-        case lkr = "LKR"
-        case mmk = "MMK"
-        
+    enum Unit: Hashable, Codable {
+        case none
+
+        // MARK: Ecash / Bitcoin
+        case sat
+        case msat
+
+        // MARK: Fiat
+        case usd, eur, jpy, gbp, aud, cad, chf, cny, hkd, nzd, sek, krw, sgd
+        case nok, mxn, inr, brl, rub, try_, zar, php, thb, idr, myr, pln, dkk
+        case czk, huf, ils, clp, ars, sar, aed, twd, vnd, pkr, egp, ngn, bdt
+        case uah, ron, pen, kwd, cop, isk, mad, lkr, mmk
+
+        // MARK: Extensible
+        case other(String)
+
+        enum Kind {
+            case fiat
+            case ecash
+            case other
+            case none
+        }
+
+        var kind: Kind {
+            switch self {
+            case .none: return .none
+            case .sat, .msat: return .ecash
+            case .other: return .other
+            default: return .fiat
+            }
+        }
+
+        /// Canonical short code. ISO 4217 uppercase for fiat, lowercase for ecash, original payload for `.other`.
+        var currencyCode: String {
+            switch self {
+            case .none: return ""
+            case .sat: return "sat"
+            case .msat: return "msat"
+            case .usd: return "USD"
+            case .eur: return "EUR"
+            case .jpy: return "JPY"
+            case .gbp: return "GBP"
+            case .aud: return "AUD"
+            case .cad: return "CAD"
+            case .chf: return "CHF"
+            case .cny: return "CNY"
+            case .hkd: return "HKD"
+            case .nzd: return "NZD"
+            case .sek: return "SEK"
+            case .krw: return "KRW"
+            case .sgd: return "SGD"
+            case .nok: return "NOK"
+            case .mxn: return "MXN"
+            case .inr: return "INR"
+            case .brl: return "BRL"
+            case .rub: return "RUB"
+            case .try_: return "TRY"
+            case .zar: return "ZAR"
+            case .php: return "PHP"
+            case .thb: return "THB"
+            case .idr: return "IDR"
+            case .myr: return "MYR"
+            case .pln: return "PLN"
+            case .dkk: return "DKK"
+            case .czk: return "CZK"
+            case .huf: return "HUF"
+            case .ils: return "ILS"
+            case .clp: return "CLP"
+            case .ars: return "ARS"
+            case .sar: return "SAR"
+            case .aed: return "AED"
+            case .twd: return "TWD"
+            case .vnd: return "VND"
+            case .pkr: return "PKR"
+            case .egp: return "EGP"
+            case .ngn: return "NGN"
+            case .bdt: return "BDT"
+            case .uah: return "UAH"
+            case .ron: return "RON"
+            case .pen: return "PEN"
+            case .kwd: return "KWD"
+            case .cop: return "COP"
+            case .isk: return "ISK"
+            case .mad: return "MAD"
+            case .lkr: return "LKR"
+            case .mmk: return "MMK"
+            case .other(let code): return code
+            }
+        }
+
         var displayName: String {
             switch self {
             case .none: return String(localized: "None")
+            case .sat: return String(localized: "Satoshi")
+            case .msat: return String(localized: "Millisatoshi")
             case .usd: return String(localized: "US Dollar")
             case .eur: return String(localized: "Euro")
             case .jpy: return String(localized: "Japanese Yen")
@@ -126,12 +165,15 @@ enum Currency {
             case .mad: return String(localized: "Moroccan Dirham")
             case .lkr: return String(localized: "Sri Lankan Rupee")
             case .mmk: return String(localized: "Myanmar Kyat")
+            case .other(let code): return code
             }
         }
-        
+
         var symbol: String {
             switch self {
             case .none: return ""
+            case .sat: return "sat"
+            case .msat: return "msat"
             case .usd: return "$"
             case .eur: return "€"
             case .jpy: return "¥"
@@ -180,59 +222,87 @@ enum Currency {
             case .mad: return "د.م."
             case .lkr: return "Rs"
             case .mmk: return "K"
+            case .other(let code): return code
             }
         }
-        
-        init?(_ string: String?) {
-            if let match = Unit.allCases.first(where: { $0.rawValue.lowercased() == string?.lowercased() }) {
+
+        /// Parse a code into a `Unit`. Known codes map to predefined cases;
+        /// unknown non-empty codes become `.other(code)`; empty string becomes `.none`.
+        init(code: String) {
+            if code.isEmpty {
+                self = .none
+                return
+            }
+            let lower = code.lowercased()
+            if let match = Self.predefined.first(where: { $0.currencyCode.lowercased() == lower }) {
                 self = match
             } else {
-                return nil
+                self = .other(code)
             }
         }
-        
-        /// Access the preferred conversion unit directly from UserDefaults without initializing AppState
+
+        /// Convenience: returns nil only for nil input. Unknown non-nil strings become `.other(string)`.
+        init?(_ string: String?) {
+            guard let s = string else { return nil }
+            self = Self(code: s)
+        }
+
+        /// All predefined cases (excludes the open-ended `.other`).
+        static let predefined: [Unit] = [
+            .none, .sat, .msat,
+            .usd, .eur, .jpy, .gbp, .aud, .cad, .chf, .cny, .hkd, .nzd, .sek,
+            .krw, .sgd, .nok, .mxn, .inr, .brl, .rub, .try_, .zar, .php, .thb,
+            .idr, .myr, .pln, .dkk, .czk, .huf, .ils, .clp, .ars, .sar, .aed,
+            .twd, .vnd, .pkr, .egp, .ngn, .bdt, .uah, .ron, .pen, .kwd, .cop,
+            .isk, .mad, .lkr, .mmk
+        ]
+
+        /// Fiat cases for pickers and exchange-rate fetches.
+        static let fiatCases: [Unit] = [
+            .usd, .eur, .jpy, .gbp, .aud, .cad, .chf, .cny, .hkd, .nzd, .sek,
+            .krw, .sgd, .nok, .mxn, .inr, .brl, .rub, .try_, .zar, .php, .thb,
+            .idr, .myr, .pln, .dkk, .czk, .huf, .ils, .clp, .ars, .sar, .aed,
+            .twd, .vnd, .pkr, .egp, .ngn, .bdt, .uah, .ron, .pen, .kwd, .cop,
+            .isk, .mad, .lkr, .mmk
+        ]
+
+        // MARK: - Codable
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let code = try container.decode(String.self)
+            self = Self(code: code)
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            try container.encode(currencyCode)
+        }
+
+        /// Access the preferred conversion unit directly from UserDefaults without initializing AppState.
         static var preferred: Unit {
             let key = "PreferredCurrencyConversionUnit"
-            if let unitString = UserDefaults.standard.string(forKey: key),
-               let unit = Unit(unitString) {
-                return unit
-            } else {
-                return .usd // Default fallback
+            if let code = UserDefaults.standard.string(forKey: key) {
+                return Unit(code: code)
             }
+            return .usd
         }
     }
 }
 
 func amountDisplayString(_ amount: Int, unit: Currency.Unit, negative: Bool = false) -> String {
-    guard unit != .none else { return "" }
-    
-    let numberFormatter = NumberFormatter()
-    
     let prefix = (negative && amount != 0) ? "- " : ""
-    
-    numberFormatter.numberStyle = .currency
-    numberFormatter.currencyCode = unit.rawValue // ConversionUnit uses ISO currency codes
-    let fiat = Double(amount) / 100.0
-    return prefix + (numberFormatter.string(from: NSNumber(value: fiat)) ?? "")
-}
 
-func amountDisplayString(_ amount: Int, unit: AppSchemaV1.Unit, negative: Bool = false) -> String {
-    let numberFormatter = NumberFormatter()
-    
-    let prefix = (negative && amount != 0) ? "- " : ""
-    
-    switch unit {
-    case .sat, .other:
-        return prefix + String(amount) + " " + unit.rawValue
-        
-    case .usd, .eur:
-        numberFormatter.numberStyle = .currency
-        numberFormatter.currencyCode = unit.rawValue.uppercased() // corresponds to official currency codes
+    switch unit.kind {
+    case .none:
+        return ""
+    case .ecash, .other:
+        return prefix + String(amount) + " " + unit.currencyCode
+    case .fiat:
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = unit.currencyCode
         let fiat = Double(amount) / 100.0
-        return prefix + (numberFormatter.string(from: NSNumber(value: fiat)) ?? "")
-        
-    default:
-        return String(amount)
+        return prefix + (formatter.string(from: NSNumber(value: fiat)) ?? "")
     }
 }

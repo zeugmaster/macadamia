@@ -14162,6 +14162,9 @@
         }
       }
     },
+    "Millisatoshi" : {
+
+    },
     "Min:" : {
       "localizations" : {
         "ar" : {
@@ -23914,6 +23917,9 @@
           }
         }
       }
+    },
+    "Satoshi" : {
+
     },
     "satoshin@gmx.com" : {
       "shouldTranslate" : false

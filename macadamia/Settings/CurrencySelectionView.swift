@@ -11,8 +11,8 @@ struct CurrencySelectionView: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.dismiss) private var dismiss
     
-    let conversionUnits = Currency.Unit.allCases
-    
+    let conversionUnits: [Currency.Unit] = [.none] + Currency.Unit.fiatCases
+
     var body: some View {
         List {
             ForEach(conversionUnits, id: \.self) { unit in
@@ -25,7 +25,7 @@ struct CurrencySelectionView: View {
                             Text(unit.displayName)
                                 .foregroundColor(.primary)
                             if unit != .none {
-                                Text(unit.rawValue)
+                                Text(unit.currencyCode)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }

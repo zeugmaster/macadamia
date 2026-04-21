@@ -178,7 +178,7 @@ extension AppSchemaV1.Event {
                              wallet: Wallet,
                              longDescription: String) -> Event {
         Event(date: Date(),
-              unit: .other,
+              unit: .none,
               shortDescription: shortDescription,
               visible: visible,
               kind: .restore,

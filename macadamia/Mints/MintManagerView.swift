@@ -150,7 +150,7 @@ struct MintManagerView: View {
                 result[proof.unit, default: 0] += proof.amount
             }
             result[mint.mintID] = sumsByUnit.isEmpty ? nil : sumsByUnit.map { (unit, amount) in
-                "\(amount) \(unit.rawValue)"
+                "\(amount) \(unit.currencyCode)"
             }.joined(separator: " | ")
         }
     }

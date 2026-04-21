@@ -28,7 +28,7 @@ extension AppSchemaV1.Mint {
         switch quote {
         case let quote as CashuSwift.Bolt11.MintQuote:
             
-            event = Event.pendingMintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
+            event = Event.pendingMintEvent(unit: Unit(quote.requestDetail?.unit) ?? .sat,
                                            shortDescription: "Pending Ecash",
                                            wallet: wallet,
                                            quote: quote,
@@ -77,7 +77,7 @@ extension AppSchemaV1.Mint {
                     switch quote {
                     case let quote as CashuSwift.Bolt11.MintQuote:
                         
-                        event = Event.pendingMintEvent(unit: Unit(quote.requestDetail?.unit) ?? .other,
+                        event = Event.pendingMintEvent(unit: Unit(quote.requestDetail?.unit) ?? .sat,
                                                        shortDescription: "Mint Quote",
                                                        wallet: wallet,
                                                        quote: quote,

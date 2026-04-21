@@ -12,7 +12,7 @@ import UIKit
 struct NumericalInputView: View {
     
     @Binding var output: Int
-    let baseUnit: AppSchemaV1.Unit
+    let baseUnit: Currency.Unit
     
     // Optional exchange rates - if nil, conversion features are disabled
     let exchangeRates: AppState.ExchangeRate?
@@ -36,7 +36,7 @@ struct NumericalInputView: View {
     
     private var inputUnit: String {
         if inputIsFiat {
-            return conversionUnit.rawValue
+            return conversionUnit.currencyCode
         } else {
             return "sats"
         }

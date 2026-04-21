@@ -16,7 +16,7 @@ struct ProofDataView: View {
         List {
             Section("Basic Information") {
                 CopyableRow(label: "Proof ID", value: proof.proofID.uuidString)
-                CopyableRow(label: "Amount", value: "\(proof.amount) \(proof.unit.rawValue)")
+                CopyableRow(label: "Amount", value: "\(proof.amount) \(proof.unit.currencyCode)")
                 CopyableRow(label: "State", value: proof.state.description)
                 CopyableRow(label: "Created", value: proof.dateCreated.formatted())
             }

@@ -11,7 +11,7 @@ typealias Wallet = AppSchemaV1.Wallet
 typealias Mint = AppSchemaV1.Mint
 typealias Proof = AppSchemaV1.Proof
 typealias Event = AppSchemaV1.Event
-typealias Unit = AppSchemaV1.Unit
+typealias Unit = Currency.Unit
 typealias BlankOutputSet = AppSchemaV1.BlankOutputSet
 
 class DatabaseManager {
@@ -315,10 +315,16 @@ enum AppSchemaV1: VersionedSchema {
         var amount: Int
         
         var dleq: CashuSwift.DLEQ?
-        
+
         var state: Proof.State
-        var unit: Unit
-        
+
+        private var unitCode: String = "sat"
+
+        var unit: Unit {
+            get { Unit(code: unitCode) }
+            set { unitCode = newValue.currencyCode }
+        }
+
         var inputFeePPK:Int
 
         var dateCreated: Date
@@ -348,7 +354,7 @@ enum AppSchemaV1: VersionedSchema {
             self.mint = mint
             self.wallet = wallet
             self.dateCreated = Date()
-            self.unit = unit
+            self.unitCode = unit.currencyCode
             self.inputFeePPK = inputFeePPK
         }
 
@@ -367,7 +373,7 @@ enum AppSchemaV1: VersionedSchema {
             self.dleq = proofRepresenting.dleq
             self.wallet = wallet
             self.mint = mint
-            self.unit = unit
+            self.unitCode = unit.currencyCode
             self.inputFeePPK = inputFeePPK
             self.state = state
             self.dateCreated = Date()
@@ -386,7 +392,14 @@ enum AppSchemaV1: VersionedSchema {
         var eventID: UUID
         
         var date: Date
-        var unit: Unit
+
+        private var unitCode: String = "sat"
+
+        var unit: Unit {
+            get { Unit(code: unitCode) }
+            set { unitCode = newValue.currencyCode }
+        }
+
         var shortDescription: String
         var visible: Bool
         var kind: Kind
@@ -456,7 +469,7 @@ enum AppSchemaV1: VersionedSchema {
             
             self.eventID = UUID()
             self.date = date
-            self.unit = unit
+            self.unitCode = unit.currencyCode
             self.shortDescription = shortDescription
             self.visible = visible
             self.kind = kind
@@ -528,22 +541,6 @@ enum AppSchemaV1: VersionedSchema {
         }
     }
     
-    enum Unit: String, Codable, CaseIterable {
-        case sat
-        case usd
-        case eur
-        case other // TODO: this should have an associated string as catch all for non standard currency codes
-        case none
-
-        init?(_ string: String?) {
-            if let match = Unit.allCases.first(where: { $0.rawValue.lowercased() == string?.lowercased() }) {
-                self = match
-            } else {
-                return nil
-            }
-        }
-    }
-    
     ///Insert the specified list of SwiftData model objects into the model context and save the new state.
     @MainActor
     static func insert(_ models: [any PersistentModel], into modelContext: ModelContext) {
@@ -602,7 +599,7 @@ enum AppSchemaV1: VersionedSchema {
                 var internalProofs = [Proof]()
                 for p in proofs {
                     if !mintProofs.contains(where: { $0.matches(p) }) { // inefficient duplicate check
-                        internalProofs.append(Proof(p, unit: Unit(keyset.unit) ?? .sat,
+                        internalProofs.append(Proof(p, unit: Unit(code: keyset.unit),
                                                     inputFeePPK: inputFee,
                                                     state: .valid,
                                                     mint: mint,

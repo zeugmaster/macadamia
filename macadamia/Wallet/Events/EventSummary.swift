@@ -29,7 +29,7 @@ struct MintEventSummary: View {
                 HStack {
                     Text("Unit: ")
                     Spacer()
-                    Text(event.unit.rawValue)
+                    Text(event.unit.currencyCode)
                 }
                 if let text = event.bolt11MintQuote?.request {
                     CopyableRow(label: "Bolt11 Invoice", value: text)
@@ -189,7 +189,7 @@ struct SendEventView: View {
            mints.count == 1 {
             
             return CashuSwift.Token(proofs: [mints.first!.url.absoluteString: proofs],
-                                    unit: Unit.sat.rawValue,
+                                    unit: Unit.sat.currencyCode,
                                     memo: event.memo)
         }
         return nil
@@ -292,7 +292,7 @@ struct ReceiveEventSummary: View {
             HStack {
                 Text("Unit: ")
                 Spacer()
-                Text(event.unit.rawValue)
+                Text(event.unit.currencyCode)
             }
         }
     }
@@ -327,7 +327,7 @@ struct TransferEventSummary: View {
             }
             
             Section {
-                Text("\(String(event.amount ?? 0)) \(event.unit.rawValue)")
+                Text("\(String(event.amount ?? 0)) \(event.unit.currencyCode)")
                     .monospaced()
             } header: {
                 Text("Amount")

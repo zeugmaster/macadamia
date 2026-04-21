@@ -75,7 +75,7 @@ struct BalanceCard: View {
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                         Spacer()
-                        Text(unit.rawValue)
+                        Text(unit.currencyCode)
                             .font(.title)
                             .foregroundColor(Color.gray)
                     }

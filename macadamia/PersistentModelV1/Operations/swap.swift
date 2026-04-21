@@ -156,11 +156,11 @@ final class SwapManager: ObservableObject {
         
         Task {
             do {
-                let mintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
+                let mintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: Unit.sat.currencyCode,
                                                                           amount: amount)
                 let mintQuote = try await CashuSwift.getQuote(mint: toMint,
                                                               quoteRequest: mintQuoteRequest) as! CashuSwift.Bolt11.MintQuote
-                let meltQuoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat",
+                let meltQuoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: Unit.sat.currencyCode,
                                                                           request: mintQuote.request,
                                                                           options: nil)
                 let meltQuote = try await CashuSwift.getQuote(mint: fromMint,
@@ -562,14 +562,14 @@ final class SwapService {
                         throw macadamiaError.databaseError("Unable to find active wallet.")
                     }
                     
-                    let mintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
+                    let mintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: Unit.sat.currencyCode,
                                                                               amount: amount)
                     guard let mintQuote = try await CashuSwift.getQuote(mint: CashuSwift.Mint(toMint),
                                                                         quoteRequest: mintQuoteRequest) as? CashuSwift.Bolt11.MintQuote else {
                         fatalError()
                     }
                     
-                    let meltQuoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat",
+                    let meltQuoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: Unit.sat.currencyCode,
                                                                               request: mintQuote.request,
                                                                               options: nil)
                     guard let meltQuote = try await CashuSwift.getQuote(mint: CashuSwift.Mint(fromMint),
@@ -589,7 +589,7 @@ final class SwapService {
                     let blankOutputs = try CashuSwift.generateBlankOutputs(quote: meltQuote,
                                                                            proofs: selection.selected,
                                                                            mint: fromMint,
-                                                                           unit: "sat",
+                                                                           unit: Unit.sat.currencyCode,
                                                                            seed: activeWallet.seed)
                     
                     if let keysetID = blankOutputs.outputs.first?.id, blankOutputs.outputs.count > 0 {
@@ -745,11 +745,11 @@ final class InlineSwapManager: ObservableObject {
         
         Task {
             do {
-                let mintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
+                let mintQuoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: Unit.sat.currencyCode,
                                                                           amount: amount)
                 let mintQuote = try await CashuSwift.getQuote(mint: toMint,
                                                               quoteRequest: mintQuoteRequest) as! CashuSwift.Bolt11.MintQuote
-                let meltQuoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat",
+                let meltQuoteRequest = CashuSwift.Bolt11.RequestMeltQuote(unit: Unit.sat.currencyCode,
                                                                           request: mintQuote.request,
                                                                           options: nil)
                 let meltQuote = try await CashuSwift.getQuote(mint: fromMint,

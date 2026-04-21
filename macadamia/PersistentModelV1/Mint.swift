@@ -184,7 +184,7 @@ extension AppSchemaV1.Mint {
             }
             
             return Proof(p,
-                         unit: AppSchemaV1.Unit(keyset.unit) ?? .sat,
+                         unit: Unit(code: keyset.unit),
                          inputFeePPK: keyset.inputFeePPK,
                          state: state,
                          mint: self,

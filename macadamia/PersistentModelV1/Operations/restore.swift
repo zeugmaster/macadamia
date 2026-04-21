@@ -93,7 +93,7 @@ extension macadamiaApp {
             for keysetResult in result.keysetResults {
                 let internalProofs = keysetResult.proofs.map { p in
                     Proof(p,
-                          unit: Unit(keysetResult.unitString) ?? .sat,
+                          unit: Unit(code: keysetResult.unitString),
                           inputFeePPK: keysetResult.inputFeePPK,
                           state: .valid,
                           mint: newMint,
