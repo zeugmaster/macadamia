@@ -136,8 +136,10 @@ struct ActionButton: View {
         switch type {
         case .success:
             fillAnimation(to: Color("successGreen"))
+            buzz(type)
         case .fail:
             fillAnimation(to: Color("failureRed"))
+            buzz(type)
         default:
             basicAnimation()
         }
@@ -176,11 +178,11 @@ struct ActionButton: View {
         }
     }
     
-    private func buzz(_ type: ActionButtonState) {
+    private func buzz(_ type: ActionButtonState.StateType) {
         switch type {
-        case .success():
+        case .success:
             sensoryFeedback = .success
-        case .fail():
+        case .fail:
             sensoryFeedback = .error
         default:
             return
