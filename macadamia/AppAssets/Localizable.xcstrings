@@ -11133,7 +11133,7 @@
       }
     },
     "input" : {
-
+      "shouldTranslate" : false
     },
     "Input Error" : {
       "localizations" : {
@@ -12749,7 +12749,7 @@
       }
     },
     "Liquid Glass" : {
-
+      "shouldTranslate" : false
     },
     "LNURL-pay" : {
       "localizations" : {
@@ -14166,7 +14166,7 @@
       }
     },
     "Millisatoshi" : {
-
+      "shouldTranslate" : false
     },
     "Min:" : {
       "localizations" : {
@@ -22662,7 +22662,7 @@
       }
     },
     "Refraction" : {
-
+      "shouldTranslate" : false
     },
     "Relays" : {
       "localizations" : {
@@ -23925,7 +23925,7 @@
       }
     },
     "Satoshi" : {
-
+      "shouldTranslate" : false
     },
     "satoshin@gmx.com" : {
       "shouldTranslate" : false
@@ -24211,7 +24211,7 @@
       }
     },
     "Scroll to drag varied content under the\ncheckmark and watch the material respond." : {
-
+      "shouldTranslate" : false
     },
     "Select" : {
       "localizations" : {
