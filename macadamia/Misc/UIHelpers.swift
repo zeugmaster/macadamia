@@ -51,6 +51,20 @@ extension URL {
 
         return String(path.dropLast())
     }
+    
+    static func fromUserInput(_ inputString: String) -> URL? {
+        let trimmedURLString = inputString.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Add https prefix if no protocol is specified, preserve http if explicitly entered
+        let finalURLString: String
+        if trimmedURLString.starts(with: "http://") || trimmedURLString.starts(with: "https://") {
+            finalURLString = trimmedURLString
+        } else {
+            finalURLString = "https://" + trimmedURLString
+        }
+        
+        return URL(string: finalURLString)
+    }
 }
 
 extension Array where Element == Mint {
