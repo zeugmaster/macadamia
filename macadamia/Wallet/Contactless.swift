@@ -320,9 +320,9 @@ struct Contactless: View {
         }
         
         // 2. Validate the unit is supported
-        let unit = request.unit ?? "sat"
-        guard unit == "sat" else {
-            throw NFCPaymentError.unsupportedUnit(unit)
+        let unit = Unit(code: request.unit ?? Unit.sat.currencyCode)
+        guard unit == .sat else {
+            throw NFCPaymentError.unsupportedUnit(unit.currencyCode)
         }
         
         // 3. Find matching mint

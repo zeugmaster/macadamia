@@ -177,7 +177,7 @@ struct MintView: View {
             return
         }
         
-        let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat",
+        let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: Unit.sat.currencyCode,
                                                               amount: self.amount)
         
         buttonState = .loading()

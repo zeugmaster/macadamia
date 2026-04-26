@@ -298,7 +298,7 @@ final class SwapManager: ObservableObject {
         guard let changeOutputs = try? CashuSwift.generateBlankOutputs(quote: meltQuote,
                                                                        proofs: selectedProofs,
                                                                        mint: fromMint,
-                                                                       unit: meltQuote.quoteRequest?.unit ?? "sat",
+                                                                       unit: meltQuote.quoteRequest?.unit ?? Unit.sat.currencyCode,
                                                                        seed: seed) else {
             swapLogger.error("Failed to create change outputs for swap from \(fromMint.url) to \(toMint.url)")
             setCurrentSwapState(.fail(CashuError.cryptoError("Unable to create change outputs.")))
@@ -875,7 +875,7 @@ final class InlineSwapManager: ObservableObject {
         guard let changeOutputs = try? CashuSwift.generateBlankOutputs(quote: meltQuote,
                                                                        proofs: selectedProofs,
                                                                        mint: fromMint,
-                                                                       unit: meltQuote.quoteRequest?.unit ?? "sat",
+                                                                       unit: meltQuote.quoteRequest?.unit ?? Unit.sat.currencyCode,
                                                                        seed: seed) else {
             updateHandler(.fail(error: CashuError.cryptoError("Unable to create change outputs.")))
             return

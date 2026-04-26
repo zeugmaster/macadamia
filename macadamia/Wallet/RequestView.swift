@@ -255,7 +255,7 @@ struct RequestView: View {
         
         let request = CashuSwift.PaymentRequest(paymentId: createPaymentRequestIdentifier(),
                                                 amount: requestAmount,
-                                                unit: "sat",
+                                                unit: Unit.sat.currencyCode,
                                                 singleUse: false,
                                                 mints: mintURLs,
                                                 description: requestDescription,

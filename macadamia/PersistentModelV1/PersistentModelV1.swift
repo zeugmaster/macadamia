@@ -318,7 +318,12 @@ enum AppSchemaV1: VersionedSchema {
 
         var state: Proof.State
 
-        var currencyUnit: Unit = Unit.sat
+        private var currencyUnitCode: String = "sat"
+
+        var currencyUnit: Unit {
+            get { Unit(code: currencyUnitCode) }
+            set { currencyUnitCode = newValue.currencyCode }
+        }
 
         var inputFeePPK:Int
 
@@ -349,7 +354,7 @@ enum AppSchemaV1: VersionedSchema {
             self.mint = mint
             self.wallet = wallet
             self.dateCreated = Date()
-            self.currencyUnit = unit
+            self.currencyUnitCode = unit.currencyCode
             self.inputFeePPK = inputFeePPK
         }
 
@@ -368,7 +373,7 @@ enum AppSchemaV1: VersionedSchema {
             self.dleq = proofRepresenting.dleq
             self.wallet = wallet
             self.mint = mint
-            self.currencyUnit = unit
+            self.currencyUnitCode = unit.currencyCode
             self.inputFeePPK = inputFeePPK
             self.state = state
             self.dateCreated = Date()
@@ -388,7 +393,12 @@ enum AppSchemaV1: VersionedSchema {
         
         var date: Date
 
-        var currencyUnit: Unit = Unit.sat
+        private var currencyUnitCode: String = "sat"
+
+        var currencyUnit: Unit {
+            get { Unit(code: currencyUnitCode) }
+            set { currencyUnitCode = newValue.currencyCode }
+        }
 
         var shortDescription: String
         var visible: Bool
@@ -459,7 +469,7 @@ enum AppSchemaV1: VersionedSchema {
             
             self.eventID = UUID()
             self.date = date
-            self.currencyUnit = unit
+            self.currencyUnitCode = unit.currencyCode
             self.shortDescription = shortDescription
             self.visible = visible
             self.kind = kind

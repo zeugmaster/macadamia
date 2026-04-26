@@ -80,7 +80,7 @@ struct RequestPay: View {
         if paymentRequest.amount ?? userProvidedAmount ?? 0 > selectedMint?.balance(for: .sat) ?? 0 {
             return true
         }
-        if paymentRequest.unit != "sat" {
+        if (Unit(paymentRequest.unit) ?? .sat) != .sat {
             return true
         }
         if let transports = paymentRequest.transports,
@@ -108,7 +108,7 @@ struct RequestPay: View {
                                 .disabled(buttonState.type != .idle)
                         }
                         Spacer()
-                        Text(paymentRequest.unit ?? "sat")
+                        Text((Unit(paymentRequest.unit) ?? .sat).currencyCode)
                     }
                     .monospaced()
                     .lineLimit(1)
@@ -311,7 +311,7 @@ struct RequestPay: View {
                 buttonState = .loading()
                 
                 guard let proofs = selectedMint.select(amount: amount,
-                                                       unit: Unit(paymentRequest.unit ?? "sat") ?? .sat) else {
+                                                       unit: Unit(paymentRequest.unit) ?? .sat) else {
                     // TODO: log error
                     return
                 }
@@ -336,7 +336,7 @@ struct RequestPay: View {
                                            to: modelContext,
                                            increaseDerivationCounter: false)
                 
-                let event = Event.sendEvent(unit: Unit(paymentRequest.unit ?? "sat") ?? .sat,
+                let event = Event.sendEvent(unit: Unit(paymentRequest.unit) ?? .sat,
                                             shortDescription: "Send",
                                             wallet: activeWallet,
                                             amount: paymentRequest.amount ?? userProvidedAmount ?? 0,

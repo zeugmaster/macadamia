@@ -107,7 +107,7 @@ struct SwapView: View {
                         Text("Balance:")
                         Spacer()
                         Text(String(fromMint?.balance(for: .sat) ?? 0))
-                        Text("sat")
+                        Text(Unit.sat.currencyCode)
                     }
                     .font(.caption)
                     .foregroundStyle(amount ?? 0 > selectedMintBalance ? .failureRed : .secondary)

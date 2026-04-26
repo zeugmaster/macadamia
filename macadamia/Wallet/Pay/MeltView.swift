@@ -398,7 +398,7 @@ struct MeltView: View {
                            msat: Int,
                            isMPP: Bool) async throws -> CashuSwift.Bolt11.MeltQuote {
         let options = isMPP ? CashuSwift.Bolt11.RequestMeltQuote.Options(mpp: CashuSwift.Bolt11.RequestMeltQuote.Options.MPP(amount: msat)) : nil
-        let request = CashuSwift.Bolt11.RequestMeltQuote(unit: "sat", request: invoice, options: options)
+        let request = CashuSwift.Bolt11.RequestMeltQuote(unit: Unit.sat.currencyCode, request: invoice, options: options)
         guard let quote = try await CashuSwift.getQuote(mint: mint, quoteRequest: request) as? CashuSwift.Bolt11.MeltQuote else {
             throw CashuError.typeMismatch("CashuSwift returned unexpected type.")
         }
@@ -467,7 +467,7 @@ struct MeltView: View {
                 let blankOutputs = try CashuSwift.generateBlankOutputs(quote: quote,
                                                                            proofs: proofs.selected,
                                                                            mint: mint,
-                                                                           unit: "sat",
+                                                                           unit: Unit.sat.currencyCode,
                                                                            seed: activeWallet.seed)
                 if let keysetID = blankOutputs.outputs.first?.id, blankOutputs.outputs.count > 0 {
                     mint.increaseDerivationCounterForKeysetWithID(keysetID, by: blankOutputs.outputs.count)

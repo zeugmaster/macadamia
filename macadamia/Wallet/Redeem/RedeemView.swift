@@ -295,7 +295,7 @@ struct RedeemView<AdditionalControls: View>: View {
         }
         
         // make sure token is only sat for now
-        if token.unit != "sat" {
+        if Unit(code: token.unit) != .sat {
             displayAlert(alert: AlertDetail(with: macadamiaError.unsupportedUnit))
             return
         }
