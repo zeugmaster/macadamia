@@ -622,11 +622,11 @@ struct SuccessPage: View {
             Text("Your wallet is ready")
                 .font(.title2.bold())
 
-            Text("Tap Finish to start using the app.")
+            Text("Tap Next to start using the app.")
                 .foregroundStyle(.secondary)
             Spacer()
             Spacer()
-            LiquidGlassCheckmark(width: 220, lineWidth: 32)
+            LiquidGlassCheckmark(width: 220, lineWidth: 42)
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, 8)
             Spacer()
