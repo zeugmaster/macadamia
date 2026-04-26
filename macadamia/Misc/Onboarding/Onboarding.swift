@@ -614,21 +614,27 @@ struct WalletSetupPage: View {
     }
 }
 
+// MARK: - Success Page
+
 struct SuccessPage: View {
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(.white.opacity(0.5))
-
+        VStack(alignment: .leading, spacing: 24) {
             Text("Your wallet is ready")
                 .font(.title2.bold())
 
             Text("Tap Finish to start using the app.")
                 .foregroundStyle(.secondary)
+            Spacer()
+            Spacer()
+            LiquidGlassCheckmark(width: 220, lineWidth: 32)
+                .frame(maxWidth: .infinity)
+                .padding(.bottom, 8)
+            Spacer()
+            Spacer()
+            Spacer()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -638,4 +644,12 @@ struct SuccessPage: View {
     OnboardingCanvas(onComplete: { wallet in
         print("Onboarding complete, wallet ID: \(wallet.walletID)")
     })
+}
+
+#Preview("Success Page") {
+    ZStack {
+        MeshBackground()
+        SuccessPage()
+    }
+    .preferredColorScheme(.dark)
 }

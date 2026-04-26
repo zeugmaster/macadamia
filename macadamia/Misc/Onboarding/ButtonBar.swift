@@ -64,7 +64,7 @@ struct ButtonBar: View {
             }
 
             Spacer()
-            Image(systemName: currentPage == .success ? "checkmark" : "arrow.right")
+            Image(systemName: "arrow.right")
                 .font(.title)
                 .padding()
                 .contentTransition(.symbolEffect(.replace))

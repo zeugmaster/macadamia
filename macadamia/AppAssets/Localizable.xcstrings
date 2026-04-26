@@ -12748,6 +12748,9 @@
         }
       }
     },
+    "Liquid Glass" : {
+
+    },
     "LNURL-pay" : {
       "localizations" : {
         "de" : {
@@ -22658,6 +22661,9 @@
         }
       }
     },
+    "Refraction" : {
+
+    },
     "Relays" : {
       "localizations" : {
         "ar" : {
@@ -24203,6 +24209,9 @@
           }
         }
       }
+    },
+    "Scroll to drag varied content under the\ncheckmark and watch the material respond." : {
+
     },
     "Select" : {
       "localizations" : {
