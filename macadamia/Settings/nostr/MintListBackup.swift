@@ -60,6 +60,22 @@ enum MintListBackup {
         pool.disconnect()
     }
 
+    @MainActor
+    static func publishCurrentList(for wallet: Wallet) {
+        let urls = wallet.mints
+            .filter { $0.hidden == false }
+            .sorted { ($0.userIndex ?? 0) < ($1.userIndex ?? 0) }
+            .map(\.url)
+        let seedHex = wallet.seed
+        Task.detached {
+            do {
+                try await publish(mints: urls, seedHex: seedHex)
+            } catch {
+                backupLogger.warning("mint list backup publish failed silently: \(error)")
+            }
+        }
+    }
+
     static func retrieve(seedHex: String) async throws -> [URL] {
         let keypair = try deriveKeypair(from: seedHex)
 

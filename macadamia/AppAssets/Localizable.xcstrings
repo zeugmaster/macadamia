@@ -26247,6 +26247,7 @@
       }
     },
     "Tap Finish to start using the app." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -26315,6 +26316,9 @@
           }
         }
       }
+    },
+    "Tap Next to start using the app." : {
+
     },
     "Tap to select a mint from the list" : {
       "localizations" : {

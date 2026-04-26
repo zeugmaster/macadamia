@@ -47,6 +47,7 @@ struct MintManagerView: View {
                                 NavigationLink(destination: MintInfoView(mint: mint, onRemove: {
                                     sortedMintsOfActiveWallet.setHidden(true, for: mint)
                                     try? modelContext.save()
+                                    if let activeWallet { MintListBackup.publishCurrentList(for: activeWallet) }
                                 })) {
                                     MintInfoRowView(mint: mint,
                                                     amountDisplayString: balanceStrings[mint.mintID] ?? nil,
@@ -192,6 +193,7 @@ struct MintManagerView: View {
                 try await MainActor.run {
                     _ = try AppSchemaV1.addMint(sendableMint, to: modelContext)
                     newMintURLString = ""
+                    MintListBackup.publishCurrentList(for: activeWallet)
                 }
             } catch {
                 logger.error("could not add mint due to error \(error)")
@@ -244,7 +246,9 @@ struct MintManagerView: View {
         }
         
         try? modelContext.save()
-        
+
+        if let activeWallet { MintListBackup.publishCurrentList(for: activeWallet) }
+
         // Clear states after delay
         try? await Task.sleep(nanoseconds: 2_000_000_000)
         for mint in sortedMintsOfActiveWallet {

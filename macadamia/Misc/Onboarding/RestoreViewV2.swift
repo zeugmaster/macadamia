@@ -235,6 +235,9 @@ struct RestoreViewV2: View {
             }
         }
         .scrollContentBackground(.hidden)
+        .onAppear {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
         .task {
             await vm.discover(seed: seed)
         }

@@ -249,6 +249,9 @@ struct RedeemView<AdditionalControls: View>: View {
                     _ = try AppSchemaV1.addMint(sendableMint, to: modelContext)
                     try modelContext.save()
                     redeemLogger.info("adding mint \(sendableMint.url.absoluteString) while trying to redeem a token")
+                    #if !APP_EXTENSION
+                    if let activeWallet { MintListBackup.publishCurrentList(for: activeWallet) }
+                    #endif
                     redeem()
                 }
                 
