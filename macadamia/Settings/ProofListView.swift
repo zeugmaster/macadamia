@@ -193,7 +193,7 @@ struct ProofListView: View {
                                     .monospaced()
                                     HFlow() {
                                         TagView(text: proof.keysetID)
-                                        TagView(text: proof.unit.currencyCode)
+                                        TagView(text: proof.currencyUnit.currencyCode)
                                         TagView(text: String(proof.inputFeePPK))
                                     }
                                 }

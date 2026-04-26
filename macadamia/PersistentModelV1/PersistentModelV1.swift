@@ -201,7 +201,7 @@ enum AppSchemaV1: VersionedSchema {
         func balance(of unit: Unit = .sat, state: Proof.State = .valid) -> Int {
             var sum = 0
             for mint in self.mints.filter({ $0.hidden == false }) {
-                sum += mint.proofs?.filter({ $0.unit == unit && $0.state == state }).sum ?? 0
+                sum += mint.proofs?.filter({ $0.currencyUnit == unit && $0.state == state }).sum ?? 0
             }
             return sum
         }
@@ -258,7 +258,7 @@ enum AppSchemaV1: VersionedSchema {
         }
         
         func balance(for unit: Unit) -> Int {
-            self.proofs?.filter({ $0.unit == unit })
+            self.proofs?.filter({ $0.currencyUnit == unit })
                         .filter({ $0.state == .valid })
                         .sum ?? 0
         }
@@ -318,12 +318,7 @@ enum AppSchemaV1: VersionedSchema {
 
         var state: Proof.State
 
-        private var unitCode: String = "sat"
-
-        var unit: Unit {
-            get { Unit(code: unitCode) }
-            set { unitCode = newValue.currencyCode }
-        }
+        var currencyUnit: Unit = Unit.sat
 
         var inputFeePPK:Int
 
@@ -354,7 +349,7 @@ enum AppSchemaV1: VersionedSchema {
             self.mint = mint
             self.wallet = wallet
             self.dateCreated = Date()
-            self.unitCode = unit.currencyCode
+            self.currencyUnit = unit
             self.inputFeePPK = inputFeePPK
         }
 
@@ -373,7 +368,7 @@ enum AppSchemaV1: VersionedSchema {
             self.dleq = proofRepresenting.dleq
             self.wallet = wallet
             self.mint = mint
-            self.unitCode = unit.currencyCode
+            self.currencyUnit = unit
             self.inputFeePPK = inputFeePPK
             self.state = state
             self.dateCreated = Date()
@@ -393,12 +388,7 @@ enum AppSchemaV1: VersionedSchema {
         
         var date: Date
 
-        private var unitCode: String = "sat"
-
-        var unit: Unit {
-            get { Unit(code: unitCode) }
-            set { unitCode = newValue.currencyCode }
-        }
+        var currencyUnit: Unit = Unit.sat
 
         var shortDescription: String
         var visible: Bool
@@ -469,7 +459,7 @@ enum AppSchemaV1: VersionedSchema {
             
             self.eventID = UUID()
             self.date = date
-            self.unitCode = unit.currencyCode
+            self.currencyUnit = unit
             self.shortDescription = shortDescription
             self.visible = visible
             self.kind = kind

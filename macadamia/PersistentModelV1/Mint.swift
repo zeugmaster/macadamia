@@ -11,7 +11,7 @@ extension AppSchemaV1.Mint {
         
         let proofs = allProofs ?? (self.proofs ?? [])
         
-        let validProofsOfUnit = proofs.filter({ $0.unit == unit && $0.state == .valid && $0.mint == self})
+        let validProofsOfUnit = proofs.filter({ $0.currencyUnit == unit && $0.state == .valid && $0.mint == self})
         
         guard !validProofsOfUnit.isEmpty else {
             return nil
@@ -117,7 +117,7 @@ extension AppSchemaV1.Mint {
     }
     
     func select_v2(allProofs: [Proof], amount: Int, unit: Unit) -> (selected: [Proof], fee: Int)? {
-        let validProofs = allProofs.filter { $0.unit == unit && $0.state == .valid && $0.mint == self }
+        let validProofs = allProofs.filter { $0.currencyUnit == unit && $0.state == .valid && $0.mint == self }
         guard !validProofs.isEmpty else { return nil }
         func dpSelectWithoutFee(amount: Int, proofs: [Proof]) -> [Proof]? {
             var dp: [Int: [Proof]] = [0: []]
@@ -224,7 +224,7 @@ extension AppSchemaV1.Mint {
         }
         
         // Get all valid proofs for fee calculation
-        let proofs = self.proofs?.filter { $0.unit == unit && $0.state == .valid } ?? []
+        let proofs = self.proofs?.filter { $0.currencyUnit == unit && $0.state == .valid } ?? []
         
         // Calculate estimated input fees (proofs that would be spent)
         let estimatedInputFee = proofs.reduce(0) { $0 + $1.inputFeePPK } / 1000

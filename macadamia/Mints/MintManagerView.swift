@@ -147,7 +147,7 @@ struct MintManagerView: View {
         balanceStrings = activeWallet!.mints.reduce(into: [UUID: String?]()) { result, mint in
             let proofsOfMint = allProofs.filter({ $0.mint == mint && $0.state == .valid })
             let sumsByUnit = proofsOfMint.reduce(into: [Unit: Int]()) { result, proof in
-                result[proof.unit, default: 0] += proof.amount
+                result[proof.currencyUnit, default: 0] += proof.amount
             }
             result[mint.mintID] = sumsByUnit.isEmpty ? nil : sumsByUnit.map { (unit, amount) in
                 "\(amount) \(unit.currencyCode)"

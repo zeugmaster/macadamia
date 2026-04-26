@@ -39,7 +39,7 @@ struct RedeemLaterView: View {
                     Text("Total Amount: ")
                     Spacer()
                     Text(amountDisplayString(event.token?.sum() ?? 0,
-                                             unit: event.unit))
+                                             unit: event.currencyUnit))
                 }
                 .foregroundStyle(.secondary)
                 if let tokenMemo = event.memo, !tokenMemo.isEmpty {
