@@ -23,6 +23,8 @@ struct WalletView: View {
     @Binding var urlState: URLState?
     @Binding var pendingNavigation: Destination?
     
+    private let buttonCornerRadius = 14.0
+    
     enum Destination: Identifiable, Hashable {
         case mint
         case send
@@ -141,12 +143,11 @@ struct WalletView: View {
                     InputViewModalButton(inputTypes: [.bolt11Invoice, .token, .creq, .lightningAddress, .lnurlPay, .merchantCode]) {
                         Image(systemName: "qrcode")
                             .font(.largeTitle)
-                            .fontWeight(.semibold)
                             .padding(16)
                             .background(Color.secondary.opacity(0.3))
-                            .cornerRadius(10)
+                            .cornerRadius(buttonCornerRadius)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 10)
+                                RoundedRectangle(cornerRadius: buttonCornerRadius)
                                     .stroke(
                                         LinearGradient(
                                             colors: [Color.gray.opacity(0.6), Color.gray.opacity(0.2)],
@@ -374,10 +375,10 @@ struct WalletView: View {
             .padding(EdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0))
             .frame(maxWidth: .infinity)
             .background(Color.secondary.opacity(0.3))
-            .cornerRadius(10)
+            .cornerRadius(buttonCornerRadius)
             .lineLimit(1)
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: buttonCornerRadius)
                     .stroke(
                         LinearGradient(
                             colors: [Color.gray.opacity(0.6), Color.gray.opacity(0.2)],
@@ -414,5 +415,19 @@ struct WalletView: View {
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
+    }
+}
+
+#Preview {
+    WalletPreviewWrapper()
+        .previewEnvironment()
+}
+
+private struct WalletPreviewWrapper: View {
+    @State private var urlState: URLState?
+    @State private var pendingNavigation: WalletView.Destination?
+
+    var body: some View {
+        WalletView(urlState: $urlState, pendingNavigation: $pendingNavigation)
     }
 }

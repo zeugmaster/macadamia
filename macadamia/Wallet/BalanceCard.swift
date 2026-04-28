@@ -65,10 +65,11 @@ struct BalanceCard: View {
                             if balance == 0 {
                                 Text("-")
                             } else {
-                                Text(balance.formatted(.number))
-                                    .lineLimit(1)
-                                    .contentTransition(.numericText(value: Double(balance)))
-                                    .animation(.snappy, value: balance)
+//                                Text(balance.formatted(.number))
+//                                    .lineLimit(1)
+//                                    .contentTransition(.numericText(value: Double(balance)))
+//                                    .animation(.snappy, value: balance)
+                                AmountView(amount: Double(balance), hideAmount: false)
                             }
                         }
                         .font(.largeTitle)
@@ -162,4 +163,12 @@ struct BalanceCard: View {
         
         convertedBalance = prefix + amountDisplayString(cents, unit: appState.preferredConversionUnit)
     }
+}
+
+#Preview {
+    ZStack {
+        Color.black.ignoresSafeArea()
+        BalanceCard(unit: .sat)
+    }
+    .previewEnvironment()
 }

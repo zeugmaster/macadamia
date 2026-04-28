@@ -12,8 +12,6 @@ import SwiftUI
  -
  */
 
-
-
 struct AmountView: View {
     let amount: Double
     let hideAmount: Bool
