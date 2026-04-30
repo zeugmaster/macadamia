@@ -38,14 +38,6 @@ class AppState: ObservableObject {
         }
     }
     
-    static var showOnboarding: Bool {
-        get {
-            return !UserDefaults.standard.bool(forKey: firstLaunchFlag)
-        } set {
-            UserDefaults.standard.set(!newValue, forKey: firstLaunchFlag)
-        }
-    }
-    
     struct ExchangeRate: Decodable, Equatable {
         let rates: [String: Double]
         

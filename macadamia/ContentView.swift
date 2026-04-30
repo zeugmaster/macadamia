@@ -52,7 +52,6 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            // FIXME: FOR SOME REASON TRACKING TAB SELECTION LEADS TO FUNNY BEHAVIOUR
             TabView(selection: $selectedTab) {
                 // First tab content
                 WalletView(urlState: $urlState, pendingNavigation: $pendingNavigation)
@@ -99,13 +98,11 @@ struct ContentView: View {
                     } catch {
                         logger.critical("Could not save wallet from onboarding: \(error)")
                     }
-                    AppState.showOnboarding = false
                 })
                 .transition(.opacity.animation(.easeInOut(duration: 0.3)))
                 .zIndex(1)
             }
         }
-//        .ignoresSafeArea()
         .onAppear(perform: {
             if !wallets.isEmpty {
                 releaseNotesPopoverShowing = AppState.showReleaseNotes()
@@ -154,7 +151,6 @@ struct ContentView: View {
         }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
-
 
     func handleUrl(_ url: URL) {
         logger.info("""

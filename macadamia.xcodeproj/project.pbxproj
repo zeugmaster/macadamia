@@ -31,7 +31,6 @@
 		37C4CC902E5CB1A90028E4FE /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
 		37C4CC912E5CB1A90028E4FE /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3793B99D2CFCC8F80077F755 /* AppState.swift */; };
 		37C4CC922E5CB1A90028E4FE /* macadamiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034B92B29E1BC00C4F955 /* macadamiaApp.swift */; };
-		37C4CC932E5CB1A90028E4FE /* TOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379ED0402D4580A900D432D0 /* TOS.swift */; };
 		37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */; };
 /* End PBXBuildFile section */
 
@@ -87,7 +86,6 @@
 		378B20472D09F3FD003FEEBD /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
 		3793B99D2CFCC8F80077F755 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		379A27EE2E3029A800827CC1 /* macadamia.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macadamia.entitlements; sourceTree = "<group>"; };
-		379ED0402D4580A900D432D0 /* TOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOS.swift; sourceTree = "<group>"; };
 		37C4CC2E2E5CA4660028E4FE /* macadamiaMessages.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = macadamiaMessages.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		37C4CC2F2E5CA4660028E4FE /* Messages.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Messages.framework; path = System/Library/Frameworks/Messages.framework; sourceTree = SDKROOT; };
 		37DC18A12B8669A900F9B37B /* macadamiaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macadamiaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -224,7 +222,6 @@
 				372034B92B29E1BC00C4F955 /* macadamiaApp.swift */,
 				378B20472D09F3FD003FEEBD /* Error.swift */,
 				3793B99D2CFCC8F80077F755 /* AppState.swift */,
-				379ED0402D4580A900D432D0 /* TOS.swift */,
 				372034BB2B29E1BC00C4F955 /* ContentView.swift */,
 				3793B9A12D0047140077F755 /* Wallet */,
 				3793B9A22D0049AD0077F755 /* Mints */,
@@ -434,7 +431,6 @@
 				37C4CC902E5CB1A90028E4FE /* Error.swift in Sources */,
 				37C4CC912E5CB1A90028E4FE /* AppState.swift in Sources */,
 				37C4CC922E5CB1A90028E4FE /* macadamiaApp.swift in Sources */,
-				37C4CC932E5CB1A90028E4FE /* TOS.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
