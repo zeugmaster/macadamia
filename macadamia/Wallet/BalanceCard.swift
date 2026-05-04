@@ -65,11 +65,7 @@ struct BalanceCard: View {
                             if balance == 0 {
                                 Text("-")
                             } else {
-//                                Text(balance.formatted(.number))
-//                                    .lineLimit(1)
-//                                    .contentTransition(.numericText(value: Double(balance)))
-//                                    .animation(.snappy, value: balance)
-                                AmountView(amount: Double(balance), hideAmount: false)
+                                AmountView(amount: balance, unit: unit, showUnit: false)
                             }
                         }
                         .font(.largeTitle)
@@ -83,7 +79,7 @@ struct BalanceCard: View {
                     Spacer()
                     if appState.preferredConversionUnit != .none {
                         HStack {
-                            Text(convertedBalance)
+                            AmountView(text: convertedBalance)
                             Spacer()
                         }
                         .opacity(0.7)
@@ -95,7 +91,9 @@ struct BalanceCard: View {
             }
             .frame(width: cardWidth, height: cardHeight)
             .onTapGesture {
-                calculateBalance()
+                withAnimation(.snappy(duration: 0.28, extraBounce: 0.05)) {
+                    appState.toggleConcealAmounts()
+                }
             }
         }
         .onAppear {

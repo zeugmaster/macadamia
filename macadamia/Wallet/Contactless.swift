@@ -123,7 +123,7 @@ struct Contactless: View {
                     Label("Payment sent!", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                         .font(.headline)
-                    Text("\(amount) sat")
+                    AmountView(amount: amount, unit: .sat)
                         .font(.title2.bold().monospacedDigit())
                 }
                 .padding()

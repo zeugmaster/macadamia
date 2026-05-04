@@ -186,7 +186,9 @@ struct ProofListView: View {
                                         }
                                         Text(proof.C.prefix(10) + "...")
                                         Spacer()
-                                        Text(String(proof.amount))
+                                        AmountView(amount: proof.amount,
+                                                   unit: proof.currencyUnit,
+                                                   showUnit: false)
                                     }
                                     .bold()
                                     .font(.title3)

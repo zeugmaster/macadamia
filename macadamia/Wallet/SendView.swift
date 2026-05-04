@@ -54,9 +54,8 @@ struct SendView: View {
                     HStack {
                         Text("Balance: ")
                         Spacer()
-                        Text(String(selectedMintBalance))
+                        AmountView(amount: selectedMintBalance, unit: .sat)
                             .monospaced()
-                        Text("sats")
                     }
                     .foregroundStyle(amount > selectedMintBalance ? .failureRed : .secondary)
                     .animation(.linear(duration: 0.2), value: amount > selectedMintBalance)

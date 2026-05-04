@@ -62,7 +62,7 @@ struct TransferView: View {
                 }
                 if let amount = pendingTransferEvent.amount {
                     Section {
-                        Text("\(String(amount)) \(pendingTransferEvent.currencyUnit.currencyCode)")
+                        AmountView(amount: amount, unit: pendingTransferEvent.currencyUnit)
                             .monospaced()
                     } header: {
                         Text("Amount")

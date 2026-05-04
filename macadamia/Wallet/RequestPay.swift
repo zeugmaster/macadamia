@@ -101,7 +101,9 @@ struct RequestPay: View {
                 Section {
                     HStack(alignment: .center) {
                         if let amount = paymentRequest.amount {
-                            Text(String(amount))
+                            AmountView(amount: amount,
+                                       unit: Unit(paymentRequest.unit) ?? .sat,
+                                       showUnit: false)
                         } else {
                             TextField("", text: $userProvidedAmountString, prompt: Text("Amount..."))
                                 .keyboardType(.numberPad)
@@ -234,11 +236,7 @@ struct RequestPay: View {
                                 Group {
                                     let balance = mint.balance(for: .sat)
 
-                                    Text(balance, format: .number)
-                                        .contentTransition(.numericText(value: Double(balance)))
-                                        .animation(.snappy, value: balance)
-
-                                    Text(" sat")
+                                    AmountView(amount: balance, unit: .sat)
                                 }
                                 .monospaced()
                             }

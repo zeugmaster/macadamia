@@ -24,7 +24,7 @@ struct MintEventSummary: View {
                 HStack {
                     Text("Amount: ")
                     Spacer()
-                    Text(String(event.amount ?? 0))
+                    AmountView(amount: event.amount ?? 0, unit: event.currencyUnit, showUnit: false)
                 }
                 HStack {
                     Text("Unit: ")
@@ -91,7 +91,7 @@ struct MeltEventSummary: View {
                 HStack {
                     Text("Total Amount")
                     Spacer()
-                    Text("\(totalAmount) sats")
+                    AmountView(amount: totalAmount, unit: .sat)
                 }
                 
                 HStack {
@@ -122,7 +122,7 @@ struct MeltEventSummary: View {
                     HStack {
                         Text(event.mints?.first?.displayName ?? "nil")
                         Spacer()
-                        Text(amountDisplayString(event.amount ?? 0, unit: .sat))
+                        AmountView(amount: event.amount ?? 0, unit: .sat)
                             .monospaced()
                     }
                     .lineLimit(1)
@@ -287,7 +287,7 @@ struct ReceiveEventSummary: View {
             HStack {
                 Text("Amount: ")
                 Spacer()
-                Text(String(event.amount ?? 0))
+                AmountView(amount: event.amount ?? 0, unit: event.currencyUnit, showUnit: false)
             }
             HStack {
                 Text("Unit: ")
@@ -327,7 +327,7 @@ struct TransferEventSummary: View {
             }
             
             Section {
-                Text("\(String(event.amount ?? 0)) \(event.currencyUnit.currencyCode)")
+                AmountView(amount: event.amount ?? 0, unit: event.currencyUnit)
                     .monospaced()
             } header: {
                 Text("Amount")
@@ -359,7 +359,9 @@ struct TransferEventSummary: View {
                 Section {
                     CopyableRow(label: "Quote ID", value: event.bolt11MeltQuote?.quote ?? "nil")
                     CopyableRow(label: "Payment Preimage", value: event.bolt11MeltQuote?.paymentPreimage ?? "nil")
-                    CopyableRow(label: "Fee Reserve", value: String(event.bolt11MeltQuote?.feeReserve ?? 0))
+                    CopyableRow(label: "Fee Reserve",
+                                value: String(event.bolt11MeltQuote?.feeReserve ?? 0),
+                                concealValue: true)
                 } header: {
                     Text("Payment")
                 }

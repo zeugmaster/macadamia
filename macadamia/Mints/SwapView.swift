@@ -106,8 +106,7 @@ struct SwapView: View {
                     HStack {
                         Text("Balance:")
                         Spacer()
-                        Text(String(fromMint?.balance(for: .sat) ?? 0))
-                        Text(Unit.sat.currencyCode)
+                        AmountView(amount: fromMint?.balance(for: .sat) ?? 0, unit: .sat)
                     }
                     .font(.caption)
                     .foregroundStyle(amount ?? 0 > selectedMintBalance ? .failureRed : .secondary)

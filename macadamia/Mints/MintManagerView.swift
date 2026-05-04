@@ -305,10 +305,14 @@ struct MintInfoRowView: View {
                 Text(mint.nickName ?? mint.url.host(percentEncoded: false) ?? mint.url.absoluteString)
                     .bold()
                     .dynamicTypeSize(.xLarge)
-                Text(amountDisplayString ?? String(localized: "No Balance"))
-                    .foregroundStyle(.gray)
+                if let amountDisplayString {
+                    AmountView(text: amountDisplayString)
+                        .foregroundStyle(.gray)
+                } else {
+                    Text("No Balance")
+                        .foregroundStyle(.gray)
+                }
             }
         }
     }
 }
-

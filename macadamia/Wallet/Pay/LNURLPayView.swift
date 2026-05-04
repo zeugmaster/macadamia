@@ -53,10 +53,14 @@ struct LNURLPayView: View {
                         if payResponse.minSendable != payResponse.maxSendable {
                             HStack {
                                 Text("Min:")
-                                Text(String(payResponse.minSendableSat))
+                                AmountView(amount: Int(payResponse.minSendableSat),
+                                           unit: .sat,
+                                           showUnit: false)
                                 Spacer()
                                 Text("Max:")
-                                Text(String(payResponse.maxSendableSat))
+                                AmountView(amount: Int(payResponse.maxSendableSat),
+                                           unit: .sat,
+                                           showUnit: false)
                             }
                             .foregroundStyle(!invalidUserInput ? .secondary : Color.red)
                             .animation(.linear(duration: 0.2), value: inputWithinfLimits)

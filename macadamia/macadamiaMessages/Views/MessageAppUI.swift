@@ -139,7 +139,7 @@ struct MintGridItem: View {
                 .frame(height: 32) // Fixed height for alignment
             
             // Balance
-            Text(amountDisplayString(mint.balance(for: .sat), unit: .sat))
+            AmountView(amount: mint.balance(for: .sat), unit: .sat)
                 .font(.caption2)
                 .foregroundColor(.secondary)
                 .monospaced()
@@ -279,7 +279,7 @@ struct MessageSendView: View {
                     HStack {
                         Text("Balance: ")
                         Spacer()
-                        Text(String(mint.balance(for: .sat)))
+                        AmountView(amount: mint.balance(for: .sat), unit: .sat, showUnit: false)
                             .monospaced()
                         Text("sats")
                     }

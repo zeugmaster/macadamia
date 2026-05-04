@@ -62,6 +62,13 @@ class AppState: ObservableObject {
         }
     }
 
+    @Published var concealAmounts: Bool {
+        didSet {
+            AmountConcealment.userDefaults.set(concealAmounts,
+                                               forKey: AmountConcealment.userDefaultsKey)
+        }
+    }
+
     init() {
         let candidate: Currency.Unit? = UserDefaults.standard
             .string(forKey: AppState.conversionUnitKey)
@@ -72,12 +79,15 @@ class AppState: ObservableObject {
             preferredConversionUnit = .usd
         }
 
+        concealAmounts = AmountConcealment.userDefaults.bool(forKey: AmountConcealment.userDefaultsKey)
+
         loadExchangeRates()
     }
     
     // Preview/Mock initializer - skips network calls and UserDefaults
-    init(preview: Bool, preferredUnit: Currency.Unit = .none) {
+    init(preview: Bool, preferredUnit: Currency.Unit = .none, concealAmounts: Bool = false) {
         self.preferredConversionUnit = preferredUnit
+        self.concealAmounts = concealAmounts
         
         // Provide mock exchange rates for previews
         if preferredUnit != .none {
@@ -95,6 +105,10 @@ class AppState: ObservableObject {
     }
     
     @Published var exchangeRates: ExchangeRate?
+
+    func toggleConcealAmounts() {
+        concealAmounts.toggle()
+    }
     
     func loadExchangeRates() {
         logger.info("loading exchange rates...")

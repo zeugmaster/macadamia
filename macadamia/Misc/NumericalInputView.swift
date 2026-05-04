@@ -229,7 +229,10 @@ struct NumericalInputView: View {
         
         var body: some View {
             VStack {
-                Text("Amount: \(amount) sats")
+                HStack(spacing: 4) {
+                    Text("Amount:")
+                    AmountView(amount: amount, unit: .sat)
+                }
                     .font(.headline)
                     .padding()
                 

@@ -838,4 +838,47 @@ final class macadamiaTests: XCTestCase {
         XCTAssertFalse(url7.matches(url10))
         XCTAssertFalse(url7.matches(url11))
     }
+
+    func testSatAmountFormattingHasNoDecimal() {
+        XCTAssertEqual(amountDisplayString(42, unit: .sat), "42 sat")
+        XCTAssertEqual(amountDisplayString(0, unit: .sat), "0 sat")
+        XCTAssertEqual(amountDisplayString(42, unit: .sat, negative: true), "- 42 sat")
+    }
+
+    func testAmountConcealmentRandomizesStarCount() {
+        let satAmount = AmountConcealment.concealedString(for: "12345 sat")
+        XCTAssertTrue(satAmount.hasSuffix(" sat"))
+        let satStars = satAmount.dropLast(" sat".count)
+        XCTAssertTrue((4...6).contains(satStars.count))
+        XCTAssertTrue(satStars.allSatisfy { $0 == "*" })
+
+        let negativeAmount = AmountConcealment.concealedString(for: "- 42 sat")
+        XCTAssertTrue(negativeAmount.hasPrefix("- "))
+        XCTAssertTrue(negativeAmount.hasSuffix(" sat"))
+        let negativeStars = negativeAmount
+            .dropFirst("- ".count)
+            .dropLast(" sat".count)
+        XCTAssertTrue((1...3).contains(negativeStars.count))
+        XCTAssertTrue(negativeStars.allSatisfy { $0 == "*" })
+
+        let fiatAmount = AmountConcealment.concealedString(for: "$1.23")
+        XCTAssertTrue(fiatAmount.hasPrefix("$"))
+        let fiatStars = fiatAmount.dropFirst()
+        XCTAssertTrue((3...5).contains(fiatStars.count))
+        XCTAssertTrue(fiatStars.allSatisfy { $0 == "*" })
+    }
+
+    func testAmountConcealmentRandomDigitFramesMatchTargetShape() {
+        let frame = AmountConcealment.randomDigitString(matching: "- **** sat")
+        XCTAssertTrue(frame.hasPrefix("- "))
+        XCTAssertTrue(frame.hasSuffix(" sat"))
+        let digits = frame.dropFirst("- ".count).dropLast(" sat".count)
+        XCTAssertEqual(digits.count, 4)
+        XCTAssertTrue(digits.allSatisfy { $0.isNumber })
+
+        let fiatFrame = AmountConcealment.randomDigitString(matching: "$***")
+        XCTAssertTrue(fiatFrame.hasPrefix("$"))
+        XCTAssertEqual(fiatFrame.dropFirst().count, 3)
+        XCTAssertTrue(fiatFrame.dropFirst().allSatisfy { $0.isNumber })
+    }
 }

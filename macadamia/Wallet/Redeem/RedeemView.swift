@@ -63,7 +63,7 @@ struct RedeemView<AdditionalControls: View>: View {
                         HStack {
                             Text("Total Amount: ")
                             Spacer()
-                            Text(amountDisplayString(token.sum(), unit: Unit(token.unit) ?? .sat))
+                            AmountView(amount: token.sum(), unit: Unit(token.unit) ?? .sat)
                         }
                         .foregroundStyle(.secondary)
                         if let tokenMemo = token.memo, !tokenMemo.isEmpty {
@@ -494,4 +494,3 @@ extension Sequence {
         filter { !$0[keyPath: keyPath] }
     }
 }
-

@@ -117,12 +117,7 @@ struct BalancerView: View {
                                             Group {
                                                 let balance = mint.balance(for: .sat)
 
-                                                Text(balance, format: .number)
-                                                    .monospaced()
-                                                    .contentTransition(.numericText(value: Double(balance)))
-                                                    .animation(.snappy, value: balance)
-
-                                                Text(" sat")
+                                                AmountView(amount: balance, unit: .sat)
                                             }
                                             .monospaced()
                                         }

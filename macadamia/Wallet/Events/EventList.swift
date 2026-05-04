@@ -156,7 +156,7 @@ struct EventList: View {
                         .foregroundStyle(.secondary)
                         Spacer()
                         if let amountString = amountString(for: eventGroup) {
-                            Text(amountString)
+                            AmountView(text: amountString)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -251,7 +251,7 @@ struct EventList: View {
                         }
                         Spacer()
                         if let amountString = amountString(for: eventGroup) {
-                            Text(amountString)
+                            AmountView(text: amountString)
                                 .monospaced()
                         }
                     }

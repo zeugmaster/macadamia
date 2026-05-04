@@ -11,6 +11,7 @@
       "shouldTranslate" : false
     },
     " sat" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -237,17 +238,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@  %2$@"
-          }
-        }
-      },
-      "shouldTranslate" : false
-    },
-    "%@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@"
           }
         }
       },
@@ -481,10 +471,8 @@
     "%lld ppk" : {
       "shouldTranslate" : false
     },
-    "%lld sat" : {
-      "shouldTranslate" : false
-    },
     "%lld sats" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -525,6 +513,9 @@
     },
     "%lld%%" : {
       "shouldTranslate" : false
+    },
+    "• Allocation:" : {
+
     },
     "⚠️ Encoding Error" : {
       "localizations" : {
@@ -2278,6 +2269,9 @@
           }
         }
       }
+    },
+    "Amount hidden" : {
+
     },
     "Amount: " : {
       "localizations" : {
@@ -9294,7 +9288,11 @@
         }
       }
     },
+    "Fee:" : {
+
+    },
     "Fee: %lld • Allocation: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -28983,7 +28981,11 @@
         }
       }
     },
+    "Total Lightning Fees:" : {
+
+    },
     "Total Lightning Fees: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {

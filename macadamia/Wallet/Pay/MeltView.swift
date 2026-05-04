@@ -141,7 +141,10 @@ struct MeltView: View {
                 .foregroundStyle(.orange)
         } else {
             
-            Text("Total Lightning Fees: \(totalFee)")
+            HStack(spacing: 4) {
+                Text("Total Lightning Fees:")
+                AmountView(amount: totalFee, unit: .sat, showUnit: false)
+            }
                 .foregroundStyle(.secondary)
         }
     }
@@ -190,7 +193,7 @@ struct MeltView: View {
                             HStack {
                                 Text("Amount: ")
                                 Spacer()
-                                Text(amountDisplayString(invoiceAmount ?? 0, unit: .sat))
+                                AmountView(amount: invoiceAmount ?? 0, unit: .sat)
                                     .monospaced()
                             }
                             .foregroundStyle(.secondary)
@@ -280,11 +283,7 @@ struct MeltView: View {
                                 Group {
                                     let balance = mint.balance(for: .sat)
 
-                                    Text(balance, format: .number)
-                                        .contentTransition(.numericText(value: Double(balance)))
-                                        .animation(.snappy, value: balance)
-
-                                    Text(" sat")
+                                    AmountView(amount: balance, unit: .sat)
                                 }
                                 .monospaced()
                             }
@@ -300,7 +299,12 @@ struct MeltView: View {
                                 if let quoteEntry = quoteEntries[mint] {
                                     switch quoteEntry {
                                     case .quote(let quote):
-                                        Text("Fee: \(quote.feeReserve) • Allocation: \(quote.amount)")
+                                        HStack(spacing: 4) {
+                                            Text("Fee:")
+                                            AmountView(amount: quote.feeReserve, unit: .sat, showUnit: false)
+                                            Text("• Allocation:")
+                                            AmountView(amount: quote.amount, unit: .sat, showUnit: false)
+                                        }
                                     case .error(let error):
                                         Text(error)
                                             .foregroundStyle(.orange)
