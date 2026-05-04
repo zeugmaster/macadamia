@@ -112,9 +112,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				ActionButton.swift,
+				Alerts.swift,
 				AmountConcealment.swift,
 				AmountView.swift,
-				Alerts.swift,
 				Currency.swift,
 				MintPicker.swift,
 				TokenText.swift,
