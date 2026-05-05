@@ -163,6 +163,7 @@ struct BalanceCard: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ZStack {
         Color.black.ignoresSafeArea()
@@ -170,3 +171,4 @@ struct BalanceCard: View {
     }
     .previewEnvironment()
 }
+#endif

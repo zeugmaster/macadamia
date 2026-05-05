@@ -418,6 +418,7 @@ struct WalletView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     WalletPreviewWrapper()
         .previewEnvironment()
@@ -431,3 +432,4 @@ private struct WalletPreviewWrapper: View {
         WalletView(urlState: $urlState, pendingNavigation: $pendingNavigation)
     }
 }
+#endif
