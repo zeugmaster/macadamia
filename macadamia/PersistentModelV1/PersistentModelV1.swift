@@ -565,8 +565,23 @@ enum AppSchemaV1: VersionedSchema {
         
         let mints = activeWallet.mints
         
-        guard mint.keysets.allSatisfy(\.validID) else {
-            throw macadamiaError.mintVerificationError("This mint is using invalid keyset IDs, you should not trust it.")
+        // Validate keyset IDs, requiring at least all active keysets to be valid.
+        // Inactive keysets with invalid IDs are logged but tolerated,
+        // since mints may stop properly serving keys for rotated keysets.
+        let activeKeysets = mint.keysets.filter(\.active)
+        let inactiveKeysets = mint.keysets.filter { !$0.active }
+
+        let invalidActive = activeKeysets.filter { !$0.validID }
+        let invalidInactive = inactiveKeysets.filter { !$0.validID }
+
+        if !invalidInactive.isEmpty {
+            databaseLogger.warning("Mint \(mint.url.absoluteString) has \(invalidInactive.count) inactive keyset(s) with invalid IDs: \(invalidInactive.map(\.keysetID).joined(separator: ", "))")
+        }
+
+        guard invalidActive.isEmpty else {
+            let failedIDs = invalidActive.map(\.keysetID).joined(separator: ", ")
+            databaseLogger.error("Mint \(mint.url.absoluteString) has active keyset(s) with invalid IDs: \(failedIDs)")
+            throw macadamiaError.mintVerificationError("This mint has active keyset(s) with invalid IDs (\(failedIDs)). You should not trust it.")
         }
         
         if let colliding = mints.filter({ $0.hidden == false }).keysetCollisions(with: mint) {
