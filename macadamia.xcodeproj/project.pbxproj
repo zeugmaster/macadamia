@@ -895,8 +895,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/pengpengliu/BIP39";
 			requirement = {
-				branch = master;
-				kind = branch;
+				kind = exactVersion;
+				version = 1.0.1;
 			};
 		};
 		37A988472EBF9A7C0065FCE6 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */ = {

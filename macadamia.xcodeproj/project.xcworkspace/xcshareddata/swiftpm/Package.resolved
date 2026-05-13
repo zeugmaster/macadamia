@@ -78,8 +78,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pengpengliu/BIP39",
       "state" : {
-        "branch" : "master",
-        "revision" : "e79bd90275e50643cf8f97208ffa536d0def3ec7"
+        "revision" : "e79bd90275e50643cf8f97208ffa536d0def3ec7",
+        "version" : "1.0.1"
       }
     },
     {
@@ -96,8 +96,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/cashu-swift.git",
       "state" : {
-        "revision" : "1c5fa87caac251440b6e470ab9d484b0f7da71b9",
-        "version" : "0.3.1"
+        "revision" : "618decee07ab85ba3749fb459f5e8146e6af98bf",
+        "version" : "0.3.2"
       }
     },
     {
@@ -132,8 +132,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/nostr-sdk-ios.git",
       "state" : {
-        "revision" : "116cc8adf3e07d31101fa289668dc915d78a6b8b",
-        "version" : "0.3.5"
+        "revision" : "567ed86ad685db1274c0de587b11538debde732e",
+        "version" : "0.3.6"
       }
     },
     {
@@ -160,7 +160,7 @@
       "location" : "https://github.com/mkrd/Swift-BigInt.git",
       "state" : {
         "branch" : "master",
-        "revision" : "d09d98b6819e2860160d4f0a909ce7f4925d8926"
+        "revision" : "e3550843fed908ee3759ee37553cc8a83d9ea3b8"
       }
     },
     {
@@ -168,8 +168,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-cmark",
       "state" : {
-        "revision" : "5d9bdaa4228b381639fff09403e39a04926e2dbe",
-        "version" : "0.7.1"
+        "revision" : "924936d0427cb25a61169739a7660230bffa6ea6",
+        "version" : "0.8.0"
       }
     },
     {

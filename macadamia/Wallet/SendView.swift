@@ -78,6 +78,7 @@ struct SendView: View {
                                 .textInputAutocapitalization(.never)
                             InputViewModalButton(inputTypes: [.publicKey]) {
                                 Image(systemName: "qrcode.viewfinder")
+                                    .font(.title2)
                             } onResult: { result in
                                 switch result.type {
                                 case .publicKey:
