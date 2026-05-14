@@ -49,6 +49,7 @@ struct AmountView: View {
         let targetText = hidden ? concealedText : visibleText
 
         Text(displayedText ?? targetText)
+            .contentTransition(.numericText())
             .accessibilityLabel(hidden ? Text("Amount hidden") : Text(visibleText))
             .onAppear {
                 setDisplayedText(targetText)
@@ -60,7 +61,10 @@ struct AmountView: View {
                 if hidden {
                     startCypherTransition(isHidden: true)
                 } else {
-                    setDisplayedText(newValue)
+                    // Animate value-only changes so `.contentTransition(.numericText())`
+                    // morphs the digits. The cypher path keeps writing through an
+                    // un-animated transaction so its rapid frames stay instant.
+                    setDisplayedText(newValue, animated: true)
                 }
             }
             .onDisappear {
@@ -96,9 +100,9 @@ struct AmountView: View {
     }
 
     @MainActor
-    private func setDisplayedText(_ text: String) {
+    private func setDisplayedText(_ text: String, animated: Bool = false) {
         var transaction = Transaction()
-        transaction.animation = nil
+        transaction.animation = animated ? .default : nil
 
         withTransaction(transaction) {
             displayedText = text
