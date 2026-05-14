@@ -51,10 +51,10 @@ enum PreviewData {
         mint.wallet = wallet
         context.insert(mint)
 
-        // Live balance: 256 + 512 + 1024 + 2048 = 3,840 sat
+        // Live sat balance: 256 + 512 + 1024 + 2048 = 3,840 sat
         for amount in [256, 512, 1024, 2048] {
-            let proof = Proof(keysetID: "preview-keyset",
-                              C: "preview-valid-\(amount)",
+            let proof = Proof(keysetID: "preview-keyset-sat",
+                              C: "preview-valid-sat-\(amount)",
                               secret: UUID().uuidString,
                               unit: .sat,
                               inputFeePPK: 0,
@@ -65,10 +65,24 @@ enum PreviewData {
             context.insert(proof)
         }
 
+        // Live USD balance: amounts are in cents, total = 5,555 ¢ = $55.55
+        for amount in [1234, 4321] {
+            let proof = Proof(keysetID: "preview-keyset-usd",
+                              C: "preview-valid-usd-\(amount)",
+                              secret: UUID().uuidString,
+                              unit: .usd,
+                              inputFeePPK: 0,
+                              state: .valid,
+                              amount: amount,
+                              mint: mint,
+                              wallet: wallet)
+            context.insert(proof)
+        }
+
         // History of previously sent ecash that the mint marked as spent.
         let spentProofs: [Proof] = [128, 64].map { amount in
-            let proof = Proof(keysetID: "preview-keyset",
-                              C: "preview-spent-\(amount)",
+            let proof = Proof(keysetID: "preview-keyset-sat",
+                              C: "preview-spent-sat-\(amount)",
                               secret: UUID().uuidString,
                               unit: .sat,
                               inputFeePPK: 0,

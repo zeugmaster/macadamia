@@ -23,8 +23,9 @@ struct AmountView: View {
          negative: Bool = false,
          showUnit: Bool = true,
          hideAmount: Bool? = nil) {
-        let formatted = amountDisplayString(amount, unit: unit, negative: negative)
-        let text = showUnit ? formatted : formatted.replacingUnitSuffix(unit)
+        let text = showUnit
+            ? amountDisplayString(amount, unit: unit, negative: negative)
+            : AmountView.unitlessAmountString(amount, unit: unit, negative: negative)
         visibleText = text
         hideAmountOverride = hideAmount
         _concealedText = State(initialValue: AmountConcealment.concealedString(for: text))
@@ -111,18 +112,32 @@ struct AmountView: View {
             return String(amount)
         }
     }
-}
 
-private extension String {
-    func replacingUnitSuffix(_ unit: Currency.Unit) -> String {
-        guard unit != .none else { return self }
+    /// Format an amount without any unit indicator. Use when the caller
+    /// renders the unit code/symbol separately (e.g. the balance card,
+    /// where the unit sits to the right of the number).
+    fileprivate static func unitlessAmountString(_ amount: Int,
+                                                 unit: Currency.Unit,
+                                                 negative: Bool) -> String {
+        let prefix = (negative && amount != 0) ? "- " : ""
 
-        let suffix = " " + unit.currencyCode
-        if hasSuffix(suffix) {
-            return String(dropLast(suffix.count))
+        switch unit.kind {
+        case .none:
+            return ""
+        case .ecash, .other:
+            return prefix + String(amount)
+        case .fiat:
+            // Format the number with fiat's two-decimal convention but no
+            // currency symbol or code — locale-aware separators preserved.
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.minimumFractionDigits = 2
+            formatter.maximumFractionDigits = 2
+            let fiat = Double(amount) / 100.0
+            let body = formatter.string(from: NSNumber(value: fiat))
+                ?? String(format: "%.2f", fiat)
+            return prefix + body
         }
-
-        return self
     }
 }
 
