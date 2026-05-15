@@ -337,9 +337,11 @@ struct MessageSendView: View {
         
         Task {
             do {
+                // iMessage extension is sat-only today.
                 let token = try await AppSchemaV1.createToken(mint: mint,
                                                               activeWallet: activeWallet,
                                                               amount: amount,
+                                                              unit: .sat,
                                                               memo: memo,
                                                               modelContext: modelContext,
                                                               lockingKey: nil)

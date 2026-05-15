@@ -22,7 +22,8 @@ struct SendView: View {
     @State private var tokenMemo = ""
     
     @State private var selectedMint:Mint?
-    
+    @State private var selectedUnit: Currency.Unit = .sat
+
     @State private var amount = 0
     @State private var selectedMintBalance = 0
     
@@ -42,25 +43,45 @@ struct SendView: View {
             Form {
                 Section {
                     NumericalInputView(output: $amount,
-                                       baseUnit: .sat,
+                                       baseUnit: selectedUnit,
                                        exchangeRates: appState.exchangeRates,
                                        onReturn: {})
-                    
+
                     // TODO: CHECK FOR EMPTY MINT LIST
                     MintPicker(label: "Send from", selectedMint: $selectedMint)
-                        .onChange(of: selectedMint) { _, _ in
-                        updateBalance()
+                        .onChange(of: selectedMint) { _, newValue in
+                            // Snap to the new mint's first supported unit;
+                            // the unit-change handler below will refresh the
+                            // balance and the input view clears its amount.
+                            selectedUnit = newValue?.supportedUnits.first ?? .sat
+                            updateBalance()
                         }
+                    if (selectedMint?.supportedUnits.count ?? 1) > 1 {
+                        Picker(selection: $selectedUnit) {
+                            if let units = selectedMint?.supportedUnits {
+                                ForEach(units, id: \.self) { unit in
+                                    Text(unit.displayName)
+                                }
+                            } else {
+                                Text("No units available.")
+                            }
+                        } label: {
+                            Text("Unit: ")
+                        }
+                    }
                     HStack {
                         Text("Balance: ")
                         Spacer()
-                        AmountView(amount: selectedMintBalance, unit: .sat)
+                        AmountView(amount: selectedMintBalance, unit: selectedUnit)
                             .monospaced()
                     }
                     .foregroundStyle(amount > selectedMintBalance ? .failureRed : .secondary)
                     .animation(.linear(duration: 0.2), value: amount > selectedMintBalance)
                 }
                 .disabled(token != nil)
+                .onChange(of: selectedUnit) { _, _ in
+                    updateBalance()
+                }
                 if token == nil || !tokenMemo.isEmpty {
                     Section {
                         TextField("Add a note to the recipient...", text: $tokenMemo)
@@ -122,11 +143,12 @@ struct SendView: View {
     }
 
     func updateBalance() {
-        guard !proofsOfSelectedMint.isEmpty else {
-            logger.warning("could not update balances because proofs of selectedMint is empty.")
-            return
-        }
-        selectedMintBalance = proofsOfSelectedMint.filter({ $0.state == .valid }).sum
+        // Only count proofs that match the unit the user is currently
+        // sending in — otherwise a USD-denominated mint balance would leak
+        // into the sat input's "you have X" line (or vice versa).
+        selectedMintBalance = proofsOfSelectedMint
+            .filter { $0.state == .valid && $0.currencyUnit == selectedUnit }
+            .sum
     }
     
     @MainActor
@@ -166,6 +188,7 @@ struct SendView: View {
                 token = try await AppSchemaV1.createToken(mint: selectedMint,
                                                           activeWallet: activeWallet,
                                                           amount: amount,
+                                                          unit: selectedUnit,
                                                           memo: tokenMemo,
                                                           modelContext: modelContext,
                                                           lockingKey: pubkey)

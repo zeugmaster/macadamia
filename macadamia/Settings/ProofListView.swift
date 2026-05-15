@@ -69,6 +69,24 @@ struct ProofListView: View {
         ]
         return outer.flatMap { $0 }
     }
+
+    /// `sortedProofs` partitioned by `currencyUnit` so the list can render
+    /// one Section per unit. Ordering within each group is preserved
+    /// (valid → pending → spent, then amount ascending). Section ordering
+    /// pins sat first, then everything else alphabetical by code, matching
+    /// the BalanceCarousel convention.
+    private var proofGroups: [(unit: Unit, proofs: [Proof])] {
+        var byUnit: [Unit: [Proof]] = [:]
+        for p in sortedProofs {
+            byUnit[p.currencyUnit, default: []].append(p)
+        }
+        return byUnit.sorted { lhs, rhs in
+            if lhs.key == .sat { return true }
+            if rhs.key == .sat { return false }
+            return lhs.key.currencyCode < rhs.key.currencyCode
+        }
+        .map { (unit: $0.key, proofs: $0.value) }
+    }
     
     
     var body: some View {
@@ -144,67 +162,73 @@ struct ProofListView: View {
                     Text("Keysets and derivation counters")
                 }
                 
-                Section(content: {
-                    ForEach(sortedProofs) { proof in
-                        NavigationLink {
-                            ProofDataView(proof: proof)
-                        } label: {
-                            HStack {
-                                if let remoteStates, let state = remoteStates[proof.C] {
-                                    Group {
-                                        switch state {
-                                        case .unspent:
-                                            RoundedRectangle(cornerRadius: 2)
-                                                .foregroundStyle(.green)
-                                                .frame(width: 6)
-                                        case .pending:
-                                            RoundedRectangle(cornerRadius: 2)
-                                                .foregroundStyle(.yellow)
-                                                .frame(width: 6)
-                                        case .spent:
-                                            RoundedRectangle(cornerRadius: 2)
-                                                .foregroundStyle(.red)
-                                                .frame(width: 6)
+                ForEach(proofGroups, id: \.unit) { group in
+                    Section(content: {
+                        ForEach(group.proofs) { proof in
+                            NavigationLink {
+                                ProofDataView(proof: proof)
+                            } label: {
+                                HStack {
+                                    if let remoteStates, let state = remoteStates[proof.C] {
+                                        Group {
+                                            switch state {
+                                            case .unspent:
+                                                RoundedRectangle(cornerRadius: 2)
+                                                    .foregroundStyle(.green)
+                                                    .frame(width: 6)
+                                            case .pending:
+                                                RoundedRectangle(cornerRadius: 2)
+                                                    .foregroundStyle(.yellow)
+                                                    .frame(width: 6)
+                                            case .spent:
+                                                RoundedRectangle(cornerRadius: 2)
+                                                    .foregroundStyle(.red)
+                                                    .frame(width: 6)
+                                            }
                                         }
                                     }
-                                }
-                                VStack(alignment:.leading) {
-                                    HStack {
-                                        switch proof.state {
-                                        case .valid:
-                                            Circle()
-                                                .frame(width: 10)
-                                                .foregroundStyle(.green)
-                                        case .pending:
-                                            Circle()
-                                                .frame(width: 10)
-                                                .foregroundStyle(.yellow)
-                                        case .spent:
-                                            Circle()
-                                                .frame(width: 10)
-                                                .foregroundStyle(.red)
+                                    VStack(alignment:.leading) {
+                                        HStack {
+                                            switch proof.state {
+                                            case .valid:
+                                                Circle()
+                                                    .frame(width: 10)
+                                                    .foregroundStyle(.green)
+                                            case .pending:
+                                                Circle()
+                                                    .frame(width: 10)
+                                                    .foregroundStyle(.yellow)
+                                            case .spent:
+                                                Circle()
+                                                    .frame(width: 10)
+                                                    .foregroundStyle(.red)
+                                            }
+                                            Text(proof.C.prefix(10) + "...")
+                                            Spacer()
+                                            // Raw on-wire integer — this is the
+                                            // database inspector, not a balance.
+                                            Text(String(proof.amount))
                                         }
-                                        Text(proof.C.prefix(10) + "...")
-                                        Spacer()
-                                        AmountView(amount: proof.amount,
-                                                   unit: proof.currencyUnit,
-                                                   showUnit: false)
-                                    }
-                                    .bold()
-                                    .font(.title3)
-                                    .monospaced()
-                                    HFlow() {
-                                        TagView(text: proof.keysetID)
-                                        TagView(text: proof.currencyUnit.currencyCode)
-                                        TagView(text: String(proof.inputFeePPK))
+                                        .bold()
+                                        .font(.title3)
+                                        .monospaced()
+                                        HFlow() {
+                                            TagView(text: proof.keysetID)
+                                                .lineLimit(1)
+                                            TagView(text: String(proof.inputFeePPK))
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                }, header: {
-                    Text(String(localized: "\(sortedProofs.count) objects"))
-                })
+                    }, header: {
+                        HStack {
+                            Text(group.unit.currencyCode)
+                            Spacer()
+                            Text(String(localized: "\(group.proofs.count) objects"))
+                        }
+                    })
+                }
             }
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         } else {

@@ -343,9 +343,12 @@ struct Contactless: View {
         
         // TODO: check for locking requirement
         
+        // NFC contactless doesn't yet negotiate a unit — keep the existing
+        // sat-only behavior until a multi-unit handshake is defined.
         let token = try await AppSchemaV1.createToken(mint: selectedMint,
                                                       activeWallet: activeWallet,
                                                       amount: amount,
+                                                      unit: .sat,
                                                       memo: "",
                                                       modelContext: modelContext,
                                                       lockingKey: nil)
