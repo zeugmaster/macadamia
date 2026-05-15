@@ -150,8 +150,17 @@ struct MintManagerView: View {
             let sumsByUnit = proofsOfMint.reduce(into: [Unit: Int]()) { result, proof in
                 result[proof.currencyUnit, default: 0] += proof.amount
             }
-            result[mint.mintID] = sumsByUnit.isEmpty ? nil : sumsByUnit.map { (unit, amount) in
-                "\(amount) \(unit.currencyCode)"
+            // Sort with sat pinned first, the rest alphabetical by code —
+            // same convention as BalanceCarousel / ProofListView grouping.
+            let ordered = sumsByUnit.sorted { lhs, rhs in
+                if lhs.key == .sat { return true }
+                if rhs.key == .sat { return false }
+                return lhs.key.currencyCode < rhs.key.currencyCode
+            }
+            // Use `amountDisplayString` so fiat sums render with their
+            // proper minor-unit precision (e.g. $12.34 instead of "1234 USD").
+            result[mint.mintID] = ordered.isEmpty ? nil : ordered.map { (unit, amount) in
+                amountDisplayString(amount, unit: unit)
             }.joined(separator: " | ")
         }
     }
