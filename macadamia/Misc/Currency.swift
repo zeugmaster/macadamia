@@ -12,14 +12,11 @@ enum Currency {
         let absoluteValue: Double
         let unit: Unit
         let negate: Bool
-        let precision: Int? = nil
 
-        private var _precision: Int {
-            switch unit.kind {
-            case .fiat: return 2
-            case .ecash, .other, .none: return 0
-            }
-        }
+        /// Number of decimal digits between the on-wire integer amount and
+        /// the major display unit. Delegates to the unit, which is what
+        /// actually determines this per NUT-01 / ISO 4217.
+        var precision: Int { unit.minorUnit }
     }
 
     enum Unit: Hashable, Codable {
@@ -51,6 +48,35 @@ enum Currency {
             case .sat, .msat: return .ecash
             case .other: return .other
             default: return .fiat
+            }
+        }
+
+        /// Number of decimal digits between the on-wire integer amount and
+        /// the major display unit, per NUT-01 (which defers to ISO 4217 for
+        /// fiat and stablecoins pegged to fiat). Examples:
+        /// - `.usd` → 2  (amount = 1 means 1 cent)
+        /// - `.jpy` → 0  (amount = 1 means 1 yen)
+        /// - `.kwd` → 3  (amount = 1 means 1 fils)
+        /// - `.sat` / `.msat` → 0 (already the minor unit of themselves)
+        /// - `.other` → 0 (undefined by the spec; treat as raw integer)
+        var minorUnit: Int {
+            switch self {
+            case .none, .sat, .msat:
+                return 0
+            // ISO 4217 currencies with 0 minor-unit digits.
+            case .jpy, .krw, .clp, .isk, .vnd:
+                return 0
+            // ISO 4217 currencies with 3 minor-unit digits.
+            case .kwd:
+                return 3
+            case .other:
+                // The spec doesn't define how to discover precision for a
+                // custom unit, so the safest default is to treat the amount
+                // as a raw integer count. Callers that know better should
+                // gate on `unit.kind != .other`.
+                return 0
+            default:
+                return 2
             }
         }
 
@@ -299,10 +325,16 @@ func amountDisplayString(_ amount: Int, unit: Currency.Unit, negative: Bool = fa
     case .ecash, .other:
         return prefix + String(amount) + " " + unit.currencyCode
     case .fiat:
+        let digits = unit.minorUnit
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = unit.currencyCode
-        let fiat = Double(amount) / 100.0
-        return prefix + (formatter.string(from: NSNumber(value: fiat)) ?? "")
+        // Force the fraction-digit count to match the unit's minor-unit
+        // value so the display always agrees with how we scaled the integer
+        // amount (avoids ICU vs. ISO 4217 disagreements, e.g. on IDR).
+        formatter.minimumFractionDigits = digits
+        formatter.maximumFractionDigits = digits
+        let major = Double(amount) / pow(10.0, Double(digits))
+        return prefix + (formatter.string(from: NSNumber(value: major)) ?? "")
     }
 }

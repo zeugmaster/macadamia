@@ -248,24 +248,29 @@ struct BalanceCard: View {
         case .msat:
             bitcoinAmount = Double(balance) / 100_000_000_000.0
         default:
-            // Fiat-denominated ecash: balance is in minor units (cents).
+            // Fiat-denominated ecash: balance is an integer in this unit's
+            // minor unit (cents for USD, yen for JPY, fils for KWD, …).
             guard unit.kind == .fiat, let unitRate = prices.rate(for: unit) else {
                 convertedBalance = "?"
                 return
             }
-            bitcoinAmount = (Double(balance) / 100.0) / unitRate
+            let major = Double(balance) / pow(10.0, Double(unit.minorUnit))
+            bitcoinAmount = major / unitRate
         }
 
-        let fiatValue = bitcoinAmount * preferredRate
-        var cents = Int(round(fiatValue * 100.0))
+        // Express the result in the preferred unit's minor unit so we can
+        // hand it to `amountDisplayString`, which expects on-wire integers.
+        let preferred = appState.preferredConversionUnit
+        let preferredMajor = bitcoinAmount * preferredRate
+        var preferredMinor = Int(round(preferredMajor * pow(10.0, Double(preferred.minorUnit))))
 
         var prefix = ""
-        if cents == 0 && balance > 0 {
-            cents = 1
+        if preferredMinor == 0 && balance > 0 {
+            preferredMinor = 1
             prefix = "~ "
         }
 
-        convertedBalance = prefix + amountDisplayString(cents, unit: appState.preferredConversionUnit)
+        convertedBalance = prefix + amountDisplayString(preferredMinor, unit: preferred)
     }
 }
 

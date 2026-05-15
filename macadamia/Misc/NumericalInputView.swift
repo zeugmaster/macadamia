@@ -147,27 +147,37 @@ struct NumericalInputView: View {
               let bitcoinPrice = rates.rate(for: conversionUnit) else {
             return nil
         }
-        
+
         let bitcoinAmount = Double(sats) / 100_000_000.0
         let fiatValue = bitcoinAmount * bitcoinPrice
-        return Int(round(fiatValue * 100.0)) // Convert to cents
+        // Express the result as an integer in the conversion unit's minor
+        // unit (cents for USD, yen for JPY, fils for KWD, …) per NUT-01.
+        return Int(round(fiatValue * pow(10.0, Double(conversionUnit.minorUnit))))
     }
     
     private func validateInput(_ value: String) -> String {
         if inputIsFiat {
-            // Fiat mode: allow digits and up to 2 decimal places (support both . and , as decimal separators)
-            
+            // Fiat mode: allow digits and up to `conversionUnit.minorUnit`
+            // decimal places (supports both . and , as decimal separators).
+            // If the unit has zero minor digits (e.g. JPY, KRW), no decimal
+            // separator is permitted.
+            let maxFractionDigits = conversionUnit.minorUnit
+
             // Remove any non-numeric characters except decimal separators
             let filtered = value.filter { $0.isNumber || $0 == "." || $0 == "," }
-            
+
+            if maxFractionDigits == 0 {
+                return filtered.filter { $0 != "." && $0 != "," }
+            }
+
             // Count total decimal separators (both . and ,)
             let decimalCount = filtered.filter { $0 == "." || $0 == "," }.count
-            
+
             // Only allow one decimal separator
             if decimalCount > 1 {
                 return input // Return previous valid input
             }
-            
+
             // Find the decimal separator (. or ,) and split on it
             var components: [String] = []
             if filtered.contains(".") {
@@ -177,13 +187,13 @@ struct NumericalInputView: View {
             } else {
                 components = [filtered]
             }
-            
-            // Limit to 2 decimal places
-            if components.count == 2 && components[1].count > 2 {
+
+            // Clamp to the unit's minor-unit precision
+            if components.count == 2 && components[1].count > maxFractionDigits {
                 let separator = filtered.contains(".") ? "." : ","
-                return String(components[0] + separator + String(components[1].prefix(2)))
+                return String(components[0] + separator + String(components[1].prefix(maxFractionDigits)))
             }
-            
+
             return filtered
         } else {
             // Sats mode: only allow digits (integers only)
@@ -210,11 +220,13 @@ struct NumericalInputView: View {
                 }
             } else {
                 // Convert current sats input to fiat
-                if let sats = Int(input), let fiatCents = convertSatsToFiat(sats) {
-                    let fiatValue = Double(fiatCents) / 100.0
+                if let sats = Int(input), let fiatMinor = convertSatsToFiat(sats) {
+                    let digits = conversionUnit.minorUnit
+                    let fiatValue = Double(fiatMinor) / pow(10.0, Double(digits))
                     // Use the locale's preferred decimal separator, but default to period
                     let decimalSeparator = NumberFormatter().decimalSeparator ?? "."
-                    input = String(format: "%.2f", fiatValue).replacingOccurrences(of: ".", with: decimalSeparator)
+                    input = String(format: "%.\(digits)f", fiatValue)
+                        .replacingOccurrences(of: ".", with: decimalSeparator)
                 }
             }
             

@@ -131,15 +131,19 @@ struct AmountView: View {
         case .ecash, .other:
             return prefix + String(amount)
         case .fiat:
-            // Format the number with fiat's two-decimal convention but no
-            // currency symbol or code — locale-aware separators preserved.
+            // Locale-aware decimal formatting, but with no currency symbol
+            // or code — the caller renders the unit separately. The number
+            // of fraction digits follows the unit's minor-unit precision
+            // (NUT-01 / ISO 4217), so JPY shows whole numbers, USD shows
+            // two decimals, KWD shows three, etc.
+            let digits = unit.minorUnit
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
-            formatter.minimumFractionDigits = 2
-            formatter.maximumFractionDigits = 2
-            let fiat = Double(amount) / 100.0
-            let body = formatter.string(from: NSNumber(value: fiat))
-                ?? String(format: "%.2f", fiat)
+            formatter.minimumFractionDigits = digits
+            formatter.maximumFractionDigits = digits
+            let major = Double(amount) / pow(10.0, Double(digits))
+            let body = formatter.string(from: NSNumber(value: major))
+                ?? String(format: "%.\(digits)f", major)
             return prefix + body
         }
     }
