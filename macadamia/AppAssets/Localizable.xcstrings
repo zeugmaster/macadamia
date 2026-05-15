@@ -17395,6 +17395,9 @@
         }
       }
     },
+    "No units available." : {
+
+    },
     "No wallet initialized yet." : {
       "localizations" : {
         "ar" : {

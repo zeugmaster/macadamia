@@ -23,6 +23,7 @@ struct MintView: View {
     
     @State private var amount: Int = 0
     @State private var selectedMint:Mint?
+    @State private var selectedUnit: Currency.Unit = .sat
     @State private var showDetails = false
 
     @State private var showAlert: Bool = false
@@ -61,6 +62,20 @@ struct MintView: View {
                         getQuote()
                     })
                     MintPicker(label: String(localized: "Mint"), selectedMint: $selectedMint)
+                    if (selectedMint?.supportedUnits.count ?? 1) > 1 {
+                        Picker(selection: $selectedUnit) {
+                            if let units = selectedMint?.supportedUnits {
+                                ForEach(units, id: \.self) { unit in
+                                    Text(unit.displayName)
+                                }
+                            } else {
+                                Text("No units available.")
+                            }
+                        } label: {
+                            Text("Unit: ")
+                        }
+
+                    }
                 }
                 .disabled(pendingMintEvent != nil)
                 if let quote {
@@ -136,6 +151,11 @@ struct MintView: View {
                     buttonState = .idle(String(localized: "Get Invoice"), action: getQuote)
                 }
             }
+            .onChange(of: selectedMint, { oldValue, newValue in
+                if let firstUnit = newValue?.supportedUnits.first {
+                    selectedUnit = firstUnit
+                }
+            })
             .onDisappear {
                 pollingTimer?.invalidate()
             }
@@ -177,7 +197,7 @@ struct MintView: View {
             return
         }
         
-        let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: Unit.sat.currencyCode,
+        let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: selectedUnit.currencyCode.lowercased(),
                                                               amount: self.amount)
         
         buttonState = .loading()

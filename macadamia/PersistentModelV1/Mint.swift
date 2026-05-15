@@ -7,6 +7,15 @@ fileprivate let mintLogger = Logger(subsystem: "macadamia", category: "Mint")
 
 extension AppSchemaV1.Mint {
     
+    var supportedUnits: [Currency.Unit] {
+        var units = [Currency.Unit]()
+        for unitString in self.keysets.filter(\.active)
+                                      .map(\.unit) {
+            units.append(Currency.Unit(code: unitString))
+        }
+        return units
+    }
+    
     func select(allProofs:[Proof]? = nil, amount:Int, unit:Unit) -> (selected:[Proof], fee:Int)? {
         
         let proofs = allProofs ?? (self.proofs ?? [])
