@@ -306,8 +306,11 @@ struct EventList: View {
         case .restore: return nil
         default: negative = false
         }
+        // Events sharing a groupingID belong to the same transaction and
+        // therefore share a currency unit; pull it off the first event.
+        let unit = group.events.first?.currencyUnit ?? .sat
         let sum = group.events.reduce(0, { $0 + ($1.amount ?? 0) })
-        return amountDisplayString(sum, unit: .sat, negative: negative)
+        return amountDisplayString(sum, unit: unit, negative: negative)
     }
     
     @ViewBuilder

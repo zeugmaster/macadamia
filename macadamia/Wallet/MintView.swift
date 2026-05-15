@@ -56,7 +56,7 @@ struct MintView: View {
             Form {
                 Section {
                     NumericalInputView(output: $amount,
-                                       baseUnit: .sat,
+                                       baseUnit: selectedUnit,
                                        exchangeRates: appState.exchangeRates,
                                        onReturn: {
                         getQuote()

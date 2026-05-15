@@ -91,7 +91,7 @@ struct MeltEventSummary: View {
                 HStack {
                     Text("Total Amount")
                     Spacer()
-                    AmountView(amount: totalAmount, unit: .sat)
+                    AmountView(amount: totalAmount, unit: events.first?.currencyUnit ?? .sat)
                 }
                 
                 HStack {
@@ -122,7 +122,7 @@ struct MeltEventSummary: View {
                     HStack {
                         Text(event.mints?.first?.displayName ?? "nil")
                         Spacer()
-                        AmountView(amount: event.amount ?? 0, unit: .sat)
+                        AmountView(amount: event.amount ?? 0, unit: event.currencyUnit)
                             .monospaced()
                     }
                     .lineLimit(1)
@@ -188,8 +188,11 @@ struct SendEventView: View {
            let mints = event.mints,
            mints.count == 1 {
             
+            // NUT-01 mandates lowercase unit codes on the wire. Our
+            // `currencyCode` returns uppercase for fiat (for display), so
+            // lowercase it here when feeding the token wire format.
             return CashuSwift.Token(proofs: [mints.first!.url.absoluteString: proofs],
-                                    unit: Unit.sat.currencyCode,
+                                    unit: event.currencyUnit.currencyCode.lowercased(),
                                     memo: event.memo)
         }
         return nil
