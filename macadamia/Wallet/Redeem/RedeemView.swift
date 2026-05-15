@@ -130,7 +130,9 @@ struct RedeemView<AdditionalControls: View>: View {
                                     buttonState = .idle(String(localized: "Select"))
                                 }
                             #else
-                            selector(hideSwapOption: false)
+                            // Swap is sat-only for now — non-sat tokens
+                            // can still be redeemed by adding the mint.
+                            selector(hideSwapOption: !tokenIsSat)
                                 .onAppear {
                                     buttonState = .idle(String(localized: "Select"))
                                 }
@@ -231,6 +233,14 @@ struct RedeemView<AdditionalControls: View>: View {
     private var swapMintsEmpty: Bool {
         activeWallet?.mints.filter(not: \.hidden).isEmpty ?? true
     }
+
+    /// Swap currently melts-then-mints through Lightning and is sat-only
+    /// in its current shape. We surface the swap option only for sat
+    /// tokens until the multi-unit swap story is in place.
+    private var tokenIsSat: Bool {
+        guard let token else { return false }
+        return Unit(code: token.unit) == .sat
+    }
     
     // MARK: - ADD
     
@@ -296,13 +306,9 @@ struct RedeemView<AdditionalControls: View>: View {
         guard let token else {
             return
         }
-        
-        // make sure token is only sat for now
-        if Unit(code: token.unit) != .sat {
-            displayAlert(alert: AlertDetail(with: macadamiaError.unsupportedUnit))
-            return
-        }
-        
+
+        let tokenUnit = Unit(code: token.unit)
+
         // make sure the mint is known AND NOT HIDDEN
         guard let mint = activeWallet.mints.first(where: {
                 $0.url.absoluteString == token.proofsByMint.keys.first &&
@@ -328,7 +334,7 @@ struct RedeemView<AdditionalControls: View>: View {
                 
                 let proofs = try mint.addProofs(receiveResult.proofs, to: modelContext)
                 
-                let event = Event.receiveEvent(unit: .sat,
+                let event = Event.receiveEvent(unit: tokenUnit,
                                                shortDescription: "Receive",
                                                wallet: activeWallet,
                                                amount: proofs.sum,

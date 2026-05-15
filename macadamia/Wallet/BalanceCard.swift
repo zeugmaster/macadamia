@@ -217,7 +217,7 @@ struct BalanceCard: View {
                 && $0.currencyUnit == unit }
             .reduce(0) { $0 + $1.amount }
 
-        logger.info("calculateBalance() for \(unit.currencyCode) result: \(newBalance)")
+//        logger.info("calculateBalance() for \(unit.currencyCode) result: \(newBalance)")
 
         withAnimation {
             balance = newBalance
