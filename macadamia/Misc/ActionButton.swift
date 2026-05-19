@@ -199,42 +199,4 @@ struct ActionButton: View {
     }
 }
 
-struct TestView: View {
-    @State var text = ""
-    
-    @State var buttonState: ActionButtonState = .idle("Hello World!")
-    
-    var amount: Int {
-        Int(text) ?? 0
-    }
-    
-    var body: some View {
-        ZStack {
-            VStack {
-                TextField("Enter a Number", text: $text)
-                    .padding()
-                    .keyboardType(.numberPad)
-                    .textFieldStyle(.roundedBorder)
-                ActionButton(state: $buttonState)
-                    .actionDisabled(amount < 1)
-                    .onAppear {
-                        buttonState = .idle("Hello World!", action: pressed)
-                    }
-            }
-        }
-    }
-    
-    func pressed() {
-        buttonState = .loading()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            buttonState = .fail()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                buttonState = .idle("Hello World!", action: pressed)
-            }
-        }
-    }
-}
 
-#Preview {
-    TestView()
-}
