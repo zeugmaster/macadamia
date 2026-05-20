@@ -96,8 +96,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/cashu-swift.git",
       "state" : {
-        "revision" : "618decee07ab85ba3749fb459f5e8146e6af98bf",
-        "version" : "0.3.2"
+        "branch" : "payment-methods",
+        "revision" : "f224fd92290f7f20c322e8f9676d8ae1171ed8c0"
       }
     },
     {

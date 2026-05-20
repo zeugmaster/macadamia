@@ -855,8 +855,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/zeugmaster/cashu-swift.git";
 			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.3.0;
+				branch = "payment-methods";
+				kind = branch;
 			};
 		};
 		376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */ = {
