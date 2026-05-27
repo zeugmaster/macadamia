@@ -151,17 +151,11 @@ final class macadamiaTests: XCTestCase {
                 }
                 
                 // Now get quote and mint using sendable types
-                let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat", amount: 100)
-                let quote = try await CashuSwift.getQuote(mint: sendableMint, quoteRequest: quoteRequest)
-                
-                guard let mintQuote = quote as? CashuSwift.Bolt11.MintQuote else {
-                    XCTFail("Quote should be a MintQuote")
-                    mintExpectation.fulfill()
-                    return
-                }
+                let quoteRequest = CashuSwift.Bolt11.MintQuoteRequest(unit: "sat", amount: 100)
+                let mintQuote = try await CashuSwift.Bolt11.requestMintQuote(quoteRequest, from: sendableMint)
                 
                 // Perform minting with sendable types
-                let issueResult = try await CashuSwift.issue(for: mintQuote, mint: sendableMint, seed: seed)
+                let issueResult = try await CashuSwift.Bolt11.mint(quote: mintQuote, from: sendableMint, seed: seed)
                 mintedProofs = issueResult.proofs
                 
                 // Check DLEQ verification result

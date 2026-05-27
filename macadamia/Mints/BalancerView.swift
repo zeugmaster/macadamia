@@ -10,76 +10,79 @@ import SwiftData
 import CashuSwift
 
 struct BalancerView: View {
-    
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var showAlert = false
     @State private var currentAlert: AlertDetail?
-    
+
     @StateObject private var swapManager: SwapManager = SwapManager()
-    
+
     @State private var collapseSelector = false
-    
+
     @State private var buttonState = ActionButtonState.idle(String(localized: "Select"))
     @State private var allocations: Dictionary<Mint, Double> = [:]
-    
+
+    private let distributionUnit: Unit = .sat
+
     private var activeWallet: Wallet? {
         wallets.first
     }
-    
+
     private var mints: [Mint] {
         activeWallet?.mints.filter({ $0.hidden == false })
+            .filter { $0.supportedUnits.contains(distributionUnit) }
             .sorted { ($0.userIndex ?? Int.max) < ($1.userIndex ?? Int.max) } ?? []
     }
-    
+
     /// Returns true if the proposed redistribution represents less than 1% change
     private var isNegligibleChange: Bool {
         guard !allocations.isEmpty else { return true }
-        
+
         // Calculate total balance across selected mints
         var total = 0
         for mint in allocations.keys {
-            total += mint.balance(for: .sat)
+            total += mint.balance(for: distributionUnit)
         }
-        
+
         guard total > 0 else { return true }
-        
+
         // Calculate sum of absolute deltas
         var totalDelta = 0
         for (mint, percentage) in allocations {
-            let currentBalance = mint.balance(for: .sat)
+            let currentBalance = mint.balance(for: distributionUnit)
             let targetBalance = Int((percentage / 100.0) * Double(total))
             let delta = abs(targetBalance - currentBalance)
             totalDelta += delta
         }
-        
+
         // Check if total change is less than 1% of total balance
         let changePercentage = Double(totalDelta) / Double(total)
         return changePercentage < 0.01
     }
-    
+
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
     }) private var wallets: [Wallet]
-    
+
     typealias Transaction = BalanceCalculator<Mint>.Transaction
-    
+
     enum BalancerItem: Identifiable, Equatable {
         case mintRow(Mint)
         case sliderRow(Mint)
-        
+
         var id: String {
             switch self {
             case .mintRow(let mint): return "row:\(mint.id)"
             case .sliderRow(let mint): return "slider:\(mint.id)"
             }
         }
-        
+
         static func == (lhs: BalancerItem, rhs: BalancerItem) -> Bool {
             lhs.id == rhs.id
         }
     }
-    
+
     var items: [BalancerItem] {
         mints.flatMap { mint in
             var arr: [BalancerItem] = [.mintRow(mint)]
@@ -89,7 +92,7 @@ struct BalancerView: View {
             return arr
         }
     }
-    
+
     var body: some View {
         ZStack {
             List {
@@ -115,9 +118,9 @@ struct BalancerView: View {
                                                 .lineLimit(1)
                                             Spacer()
                                             Group {
-                                                let balance = mint.balance(for: .sat)
+                                                let balance = mint.balance(for: distributionUnit)
 
-                                                AmountView(amount: balance, unit: .sat)
+                                                AmountView(amount: balance, unit: distributionUnit)
                                             }
                                             .monospaced()
                                         }
@@ -135,7 +138,7 @@ struct BalancerView: View {
                         }
                     }
                 }
-                
+
                 if let states = swapManager.multiTransactionState {
                     Section(header: Text("Transfer Progress")) {
                         ForEach(states.indices, id: \.self) { index in
@@ -163,7 +166,7 @@ struct BalancerView: View {
                         .lineLimit(1)
                     }
                 }
-                
+
                 Spacer(minLength: 60)
                     .listRowBackground(Color.clear)
             }
@@ -184,7 +187,7 @@ struct BalancerView: View {
         .navigationBarTitleDisplayMode(.inline)
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
-    
+
     private func sliderValue(for mint: Mint) -> Binding<Double> {
         Binding {
             allocations[mint] ?? 0.0
@@ -192,7 +195,7 @@ struct BalancerView: View {
             redistribute(changing: mint, to: newValue)
         }
     }
-    
+
     // updates the sliders in real time
     private func redistribute(changing mint: Mint, to newValue: Double) {
         guard allocations.keys.contains(mint) else { return }
@@ -224,7 +227,7 @@ struct BalancerView: View {
             }
         }
     }
-    
+
     private func toggleSelection(of mint: Mint) {
         if allocations.keys.contains(mint) {
             allocations.removeValue(forKey: mint)
@@ -239,24 +242,24 @@ struct BalancerView: View {
             }
         }
     }
-    
+
     private func handleSwapStateChange(_ states: [SwapManager.TransferState]?) {
         guard let states else { return }
-        
+
         // Check if all swaps are complete (either success or fail)
         let allComplete = states.allSatisfy { transferState in
             if case .success = transferState.state { return true }
             if case .fail = transferState.state { return true }
             return false
         }
-        
+
         if allComplete {
             // Check if all succeeded
             let allSucceeded = states.allSatisfy { transferState in
                 if case .success = transferState.state { return true }
                 return false
             }
-            
+
             if allSucceeded {
                 buttonState = .success()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -267,7 +270,7 @@ struct BalancerView: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private func stateIcon(for state: SwapManager.State) -> some View {
         switch state {
@@ -288,7 +291,7 @@ struct BalancerView: View {
                 .foregroundColor(.red)
         }
     }
-    
+
     @ViewBuilder
     private func stateText(for state: SwapManager.State) -> some View {
         switch state {
@@ -313,51 +316,51 @@ struct BalancerView: View {
             }
         }
     }
-    
+
     private func distribute() {
         var total = 0
         var transferLimits: [Mint: Mint.TransferLimits] = [:]
-        
+
         // Calculate total and limits for each mint
         for mint in allocations.keys {
-            let balance = mint.balance(for: .sat)
+            let balance = mint.balance(for: distributionUnit)
             total += balance
-            transferLimits[mint] = mint.transferLimits(for: .sat)
+            transferLimits[mint] = mint.transferLimits(for: distributionUnit)
         }
-        
+
         // Calculate deltas based on allocations, respecting transfer limits
         var deltas: Dictionary<Mint, Int> = [:]
         print("\n=== Balance Distribution ===")
         print("Total balance: \(total) sat")
-        
+
         for (mint, percentage) in allocations {
-            let currentBalance = mint.balance(for: .sat)
+            let currentBalance = mint.balance(for: distributionUnit)
             let targetBalance = Int((percentage / 100.0) * Double(total))
             var delta = targetBalance - currentBalance
-            
+
             // If this mint needs to send funds (negative delta), check transfer limits
             if delta < 0 {
                 let limits = transferLimits[mint]!
                 let amountToSend = -delta
-                
+
                 if amountToSend > limits.maxTransferable {
                     print("⚠️  \(mint.displayName) would exceed safe transfer limit:")
                     print("    Requested: \(amountToSend) sat")
                     print("    Safe max: \(limits.maxTransferable) sat")
                     print("    Reserved for fees: \(limits.reservedForFees) sat")
-                    
+
                     // Cap the delta to safe maximum
                     delta = -limits.maxTransferable
                 }
             }
-            
+
             deltas[mint] = delta
             print("\(mint.displayName): \(currentBalance) sat → \(currentBalance + delta) sat (delta: \(delta >= 0 ? "+" : "")\(delta))")
         }
-        
+
         // Validate transfers before proceeding
         let transactions = BalanceCalculator<Mint>.calculateTransactions(for: deltas)
-        
+
         print("\nGenerated \(transactions.count) transactions:")
         var hasInvalidTransfer = false
         for transaction in transactions {
@@ -370,7 +373,7 @@ struct BalancerView: View {
             }
         }
         print("=========================\n")
-        
+
         if hasInvalidTransfer {
             displayAlert(alert: AlertDetail(
                 title: String(localized: "Transfer Limit Exceeded"),
@@ -378,26 +381,26 @@ struct BalancerView: View {
             ))
             return
         }
-        
+
         guard let activeWallet else {
             return
         }
-        
+
         withAnimation {
             collapseSelector = true
         }
-        
+
         buttonState = .loading()
-        
+
         // Convert transactions to the format SwapManager expects
         let swapTransfers = transactions.map { transaction in
             (from: transaction.from, to: transaction.to, amount: transaction.amount, seed: activeWallet.seed)
         }
-        
+
         // Start the batch swap
         swapManager.swap(transfers: swapTransfers, modelContext: modelContext)
     }
-    
+
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
@@ -463,7 +466,7 @@ enum Item: Identifiable, Equatable {
 struct RowResizeTestView: View {
     let rows = ["One", "Two", "Three", "Four"]
     @State var selection = Set<String>()
-    
+
     var items: [Item] {
         rows.flatMap { s in
             var arr: [Item] = [.row(s)]
@@ -471,7 +474,7 @@ struct RowResizeTestView: View {
             return arr
         }
     }
-    
+
     var body: some View {
         List {
             ForEach(items) { item in
@@ -493,7 +496,7 @@ struct RowResizeTestView: View {
             }
         }
     }
-    
+
     func toggle(_ row: String) {
         if selection.contains(row) { selection.remove(row) }
         else { selection.insert(row) }

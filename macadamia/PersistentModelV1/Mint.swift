@@ -9,9 +9,14 @@ extension AppSchemaV1.Mint {
     
     var supportedUnits: [Currency.Unit] {
         var units = [Currency.Unit]()
+        var seenUnitCodes = Set<String>()
         for unitString in self.keysets.filter(\.active)
                                       .map(\.unit) {
-            units.append(Currency.Unit(code: unitString))
+            let unit = Currency.Unit(code: unitString)
+            let code = unit.currencyCode.lowercased()
+            guard !seenUnitCodes.contains(code) else { continue }
+            seenUnitCodes.insert(code)
+            units.append(unit)
         }
         return units
     }
