@@ -2834,6 +2834,7 @@
       }
     },
     "Attempting payment..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -9721,6 +9722,9 @@
         }
       }
     },
+    "Generic" : {
+
+    },
     "Get Invoice" : {
       "localizations" : {
         "ar" : {
@@ -11061,6 +11065,7 @@
       }
     },
     "Initialization Error" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -12829,6 +12834,9 @@
           }
         }
       }
+    },
+    "Loading quotes..." : {
+
     },
     "Lock to public key" : {
       "localizations" : {
@@ -17185,6 +17193,9 @@
         }
       }
     },
+    "No supported methods" : {
+
+    },
     "No supported payment method found in bitcoin URI" : {
       "localizations" : {
         "ar" : {
@@ -18097,6 +18108,9 @@
           }
         }
       }
+    },
+    "On-chain" : {
+
     },
     "On-chain Bitcoin payments are not supported" : {
       "localizations" : {
@@ -20482,6 +20496,7 @@
       }
     },
     "Payment successful!" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -20900,6 +20915,9 @@
           }
         }
       }
+    },
+    "Pending Payment Parts" : {
+
     },
     "Pending Receive" : {
       "localizations" : {
@@ -22034,6 +22052,15 @@
           }
         }
       }
+    },
+    "Quote amount mismatch" : {
+
+    },
+    "Quote amounts don't match invoice" : {
+
+    },
+    "Quote fetch failed" : {
+
     },
     "Quote ID" : {
       "localizations" : {
@@ -30037,6 +30064,9 @@
           }
         }
       }
+    },
+    "Unit" : {
+
     },
     "Unit Error 💵" : {
       "localizations" : {

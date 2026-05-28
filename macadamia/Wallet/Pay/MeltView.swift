@@ -4,6 +4,13 @@ import CashuSwift
 
 // TODO: remove unsafe unwrapping, nicer pending error
 
+/// Hosts a payment-method-specific quote source (currently
+/// `BOLT11MeltQuoteSource`), then executes the resulting
+/// `MeltQuoteBundle`s — proof selection, blank outputs, persistent event
+/// bookkeeping, and the actual `CashuSwift.Bolt11.melt` calls. Also handles
+/// resume mode for pending payments and the post-execute "check state"
+/// loop. Everything below the source is intentionally payment-method
+/// agnostic so the source can be swapped without touching execution.
 struct MeltView: View {
 
     struct MeltTaskInput {
@@ -19,8 +26,6 @@ struct MeltView: View {
         let change: [CashuSwift.Proof]
     }
 
-    enum QuoteState { case quote(CashuSwift.Bolt11.MeltQuote), error(String)}
-
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dismissToRoot) private var dismissToRoot
@@ -29,13 +34,13 @@ struct MeltView: View {
         wallet.active == true
     }) private var wallets: [Wallet]
 
-    @State private var invoiceString: String?
-    @State private var pendingMeltEvents = [Event]()
+    private let initialInvoice: String?
+    @State private var pendingMeltEvents: [Event]
 
-    @State private var quoteEntries: [Mint: QuoteState] = [:]
-    @State private var selectedMints = Set<Mint>()
-    @State private var showSelector = false
-    @State private var autoSelect = true
+    // What the source view publishes upward. Drives the action button and
+    // gates execution.
+    @State private var sourceState: MeltSourceState = .awaitingInput
+
     @State private var buttonState = ActionButtonState.idle("...")
 
     @State private var showAlert = false
@@ -50,433 +55,143 @@ struct MeltView: View {
             .sorted { ($0.userIndex ?? Int.max) < ($1.userIndex ?? Int.max) } ?? []
     }
 
-    private var invoiceAmount: Int? {
-        try? invoiceString.map({ try CashuSwift.Bolt11.satAmount(from: $0) })
-    }
-
     private var actionButtonDisabled: Bool {
-        if pendingMeltEvents.isEmpty {
-            if quoteEntries.values.contains(where: { if case .error(_) = $0 { true } else { false } }) ||
-                quoteEntries.isEmpty {
-                return true
-            } else if insufficientBalance {
-                return true
-            } else {
-                return false
-            }
-        } else {
-            return false
-        }
-    }
-
-    private var totalSelectedMintBalance: Int {
-        selected.reduce(0, { $0 + $1.balance(for: .sat) })
-    }
-
-    private var insufficientBalance: Bool {
-        totalSelectedMintBalance < (invoiceAmount ?? 0) + totalFee
-    }
-
-    private var selected: Set<Mint> {
-        if pendingMeltEvents.isEmpty {
-            if autoSelect {
-                guard let amount = invoiceAmount, amount > 0 else { return [] }
-                let ordered = mints
-                if let single = ordered.first(where: { $0.balance(for: .sat) >= amount }) {
-                    return [single]
-                }
-                let mpp = ordered.filter { $0.supportsMPP }
-                let total = mpp.reduce(0) { $0 + $1.balance(for: .sat) }
-                if total < amount {
-                    DispatchQueue.main.async { self.autoSelect = false }
-                    return []
-                }
-                let ranked = mpp.sorted {
-                    let lb = $0.balance(for: .sat), rb = $1.balance(for: .sat)
-                    return lb == rb ? (($0.userIndex ?? Int.max) < ($1.userIndex ?? Int.max)) : (lb > rb)
-                }
-                var acc = 0
-                var chosen = [Mint]()
-                for mint in ranked where acc < amount {
-                    chosen.append(mint)
-                    acc += mint.balance(for: .sat)
-                }
-                return Set(chosen)
-            }
-            return selectedMints
-        } else {
-            return Set(pendingMeltEvents.compactMap { $0.mints }.joined())
-        }
-    }
-
-    private var totalFee: Int {
-        let totalFeeArray = quoteEntries.values.compactMap { state in
-            switch state {
-            case .quote(let quote):
-                return quote.feeReserve
-            case .error(_):
-                return nil
-            }
-        }
-        return totalFeeArray.reduce(0, { $0 + $1 })
-    }
-
-    @ViewBuilder
-    private var subline: some View {
-
-        if selected.isEmpty {
-            Text("Tap to select a mint from the list")
-                .foregroundStyle(.secondary)
-        } else if buttonState.type == .loading {
-            Text("Attempting payment...")
-                .foregroundStyle(.secondary)
-        } else if buttonState.type == .success {
-            Text("Payment successful!")
-                .foregroundStyle(.secondary)
-        } else if insufficientBalance {
-            Text("Insufficient balance (including fees)")
-                .foregroundStyle(.red)
-        } else if quoteEntries.values.contains(where: { if case .error(_) = $0 { true } else { false } }) {
-            Text("Error")
-                .foregroundStyle(.orange)
-        } else {
-
-            HStack(spacing: 4) {
-                Text("Total Lightning Fees:")
-                AmountView(amount: totalFee, unit: .sat, showUnit: false)
-            }
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    private var selectorDisabled: Bool {
-        if pendingMeltEvents.isEmpty {
-            return buttonState.type == .loading ? true : false
-        } else {
-            return true
-        }
-    }
-
-    private var dynamicButtonState: ActionButtonState {
-        switch (pendingMeltEvents.isEmpty, selected.isEmpty) {
-        case (true, true): return .idle(String(localized: "Pay"))
-        case (true, false): return .idle(String(localized: "Pay"), action: { prepareMelt() })
-        case (false, _): return .idle(String(localized: "Check Payment State"),
-                                      action: { checkMeltState(for: pendingMeltEvents) })
-        }
+        if !pendingMeltEvents.isEmpty { return false }
+        if case .ready = sourceState { return false }
+        return true
     }
 
     init(events: [Event]? = nil, invoice: String? = nil) {
         if let events {
             _pendingMeltEvents = State(initialValue: events)
-            let invoices = Set(events.map({ $0.bolt11MeltQuote?.request }))
-            if invoices.count == 1 {
-                _invoiceString = State(initialValue: invoices.first!)
-            } else {
-                _invoiceString = State(initialValue: String(localized: "Initialization Error")) // FIXME: suboptimal and potentially leading to wonky behaviour
-                logger.error("unable to initialize melt view, because none or too many invoice strings where gathered from pending events")
-            }
-            _autoSelect = State(initialValue: false)
-        } else if let invoice {
-            _invoiceString = State(initialValue: invoice)
+            self.initialInvoice = nil
+        } else {
+            _pendingMeltEvents = State(initialValue: [])
+            self.initialInvoice = invoice
         }
     }
 
     var body: some View {
-        Group {
-            if let invoiceString {
-                ZStack {
-                    List {
-                        Section {
-                            Text(invoiceString)
-                                .monospaced()
-                            HStack {
-                                Text("Amount: ")
-                                Spacer()
-                                AmountView(amount: invoiceAmount ?? 0, unit: .sat)
-                                    .monospaced()
-                            }
-                            .foregroundStyle(.secondary)
-                        } header: {
-                            Text("BOLT11 INVOICE")
-                        }
-                        mintSelector
-                        Spacer(minLength: 50)
-                            .listRowBackground(Color.clear)
-                    }
-                    .lineLimit(1) // applies to entire list view, no text in this view should be more than 1 line
-                    VStack {
-                        Spacer()
-                        ActionButton(state: $buttonState)
-                            .actionDisabled(actionButtonDisabled)
-                    }
-                }
-                .alertView(isPresented: $showAlert, currentAlert: currentAlert)
-                .onAppear {
-                    buttonState = dynamicButtonState
-                    updateQuotes()
-                }
+        ZStack {
+            if !pendingMeltEvents.isEmpty {
+                pendingMeltSummaryView
             } else {
-                InputView(supportedTypes: [.bolt11Invoice]) { input in
-                    withAnimation {
-                        invoiceString = input.payload
-                    }
-                }
-                .padding()
+                BOLT11MeltQuoteSource(initialInvoice: initialInvoice,
+                                      state: $sourceState)
+            }
+            VStack {
+                Spacer()
+                ActionButton(state: $buttonState)
+                    .actionDisabled(actionButtonDisabled)
             }
         }
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+        .onAppear { updateButtonState() }
+        .onChange(of: sourceState) { _, _ in updateButtonState() }
     }
 
-    var mintSelector: some View {
-        Section {
-            Button {
-                withAnimation {
-                    showSelector.toggle()
-                }
-            } label: {
-                HStack {
-                    VStack(alignment: .leading) {
-                        switch selected.count {
-                        case 0:
-                            Text("No mint selected")
-                        case 1:
-                            Text("Pay from: \(selected.first?.displayName ?? "nil")")
-                        default:
-                            Text("Pay from \(selected.count) mints")
-                        }
+    // MARK: - Resume mode summary
 
-                        subline
-                            .font(.caption)
+    /// Shown when the view is opened from a pending event row. Mirrors the
+    /// fresh-flow source view visually but is read-only — the action goes
+    /// straight to "Check Payment State".
+    private var pendingMeltSummaryView: some View {
+        List {
+            if let invoiceString = pendingMeltEvents.first?.bolt11MeltQuote?.request {
+                Section {
+                    Text(invoiceString)
+                        .monospaced()
+                    HStack {
+                        Text("Amount: ")
+                        Spacer()
+                        AmountView(amount: pendingMeltEvents.compactMap { $0.amount }.reduce(0, +),
+                                   unit: pendingMeltEvents.first?.currencyUnit ?? .sat)
+                            .monospaced()
                     }
-                    Spacer()
-                    if selected.count > 1 && autoSelect {
-                        Image(systemName: "wand.and.stars")
-                            .foregroundColor(.secondary)
-                            .font(.title3)
-                            .transition(.scale.combined(with: .opacity))
-                            .help("Mints automatically selected for optimal payment")
-                    }
-
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(.secondary)
-                        .font(.footnote)
-                        .rotationEffect(.degrees(showSelector ? 90 : 0))
+                    .foregroundStyle(.secondary)
+                } header: {
+                    Text("BOLT11 INVOICE")
                 }
             }
 
-            // expanding mint list
-            if showSelector {
-                ForEach(mints) { mint in
-                    let disableRow = !mint.supportsMPP && mint.balance(for: .sat) < invoiceAmount ?? 0
-                    HStack {
-                        Button {
-                            toggleSelection(for: mint)
-                        } label: {
-                            Image(systemName: selected.contains(mint) ? "checkmark.circle.fill" : "circle")
-                        }
-                        .disabled(disableRow)
-
-                        VStack {
+            Section {
+                ForEach(pendingMeltEvents) { event in
+                    if let mint = event.mints?.first {
+                        VStack(alignment: .leading) {
                             HStack {
                                 Text(mint.displayName)
                                 Spacer()
-                                Group {
-                                    let balance = mint.balance(for: .sat)
-
-                                    AmountView(amount: balance, unit: .sat)
-                                }
-                                .monospaced()
-                            }
-                            .foregroundStyle(disableRow ? .secondary : .primary)
-                            HStack {
-                                if mint.supportsMPP {
-                                    Text(String(localized: "MPP"))
-                                    Image(systemName: "checkmark")
-                                } else {
-                                    Text(String(localized: "Full payment"))
-                                }
-                                Spacer()
-                                if let quoteEntry = quoteEntries[mint] {
-                                    switch quoteEntry {
-                                    case .quote(let quote):
-                                        HStack(spacing: 4) {
-                                            Text("Fee:")
-                                            AmountView(amount: quote.feeReserve, unit: .sat, showUnit: false)
-                                            Text("• Allocation:")
-                                            AmountView(amount: quote.amount, unit: .sat, showUnit: false)
-                                        }
-                                    case .error(let error):
-                                        Text(error)
-                                            .foregroundStyle(.orange)
-                                    }
+                                if let q = event.bolt11MeltQuote {
+                                    AmountView(amount: q.amount, unit: event.currencyUnit)
+                                        .monospaced()
                                 }
                             }
-                            .foregroundStyle(.secondary)
-                            .font(.caption)
+                            if let q = event.bolt11MeltQuote {
+                                HStack(spacing: 4) {
+                                    Text("Fee:")
+                                    AmountView(amount: q.feeReserve, unit: event.currencyUnit, showUnit: false)
+                                    Spacer()
+                                }
+                                .foregroundStyle(.secondary)
+                                .font(.caption)
+                            }
                         }
                     }
                 }
-                .disabled(selectorDisabled)
+            } header: {
+                Text(pendingMeltEvents.count > 1 ? "Pending Payment Parts" : "Pending Payment")
             }
-        } footer: {
-            if Double(invoiceAmount ?? 0) > Double(totalSelectedMintBalance) * 0.97 {
-                Text("Payment amount approaching the total balance risks payment failure due to fees.")
-                    .lineLimit(3)
-            }
+
+            Spacer(minLength: 50)
+                .listRowBackground(Color.clear)
         }
+        .lineLimit(1)
     }
 
-    private func toggleSelection(for mint: Mint) {
-        if autoSelect { selectedMints = selected }
-        withAnimation { autoSelect = false }
+    // MARK: - Button orchestration
 
-        let hasNonMPP = selectedMints.contains { !$0.supportsMPP }
-        switch (selectedMints.contains(mint), mint.supportsMPP, hasNonMPP) {
-        case (true, _, _):
-            selectedMints.remove(mint)
-        case (false, false, _):
-            selectedMints.removeAll()
-            selectedMints.insert(mint)
-        case (false, true, true):
-            selectedMints.removeAll()
-            selectedMints.insert(mint)
-        case (false, true, false):
-            selectedMints.insert(mint)
-        }
-        quoteEntries = [:]
-
-        updateQuotes()
-    }
-
-
-    private func updateQuotes(selectedMints: Set<Mint>? = nil) {
-        // load quotes and set action button state .loading
-        guard let total = invoiceAmount, let invoiceString else {
+    private func updateButtonState() {
+        if !pendingMeltEvents.isEmpty {
+            buttonState = .idle(String(localized: "Check Payment State"),
+                                action: { checkMeltState(for: pendingMeltEvents) })
             return
         }
 
-        let selectedMints = selectedMints ?? selected
+        switch sourceState {
+        case .awaitingInput, .insufficientBalance, .error:
+            buttonState = .idle(String(localized: "Pay"))
+        case .loading:
+            buttonState = .loading()
+        case .ready:
+            buttonState = .idle(String(localized: "Pay"), action: { executeMelt() })
+        }
+    }
 
-        let totalSelectedBalance = selectedMints.reduce(0) { $0 + $1.balance(for: .sat) }
-        if total > totalSelectedBalance { return }
+    // MARK: - Execution
+
+    /// Take the bundles the source has produced, allocate proofs and blank
+    /// outputs, persist a pending event per bundle, then kick off the
+    /// `CashuSwift.Bolt11.melt` task group.
+    private func executeMelt() {
+        guard case .ready(let bundles, _) = sourceState, let activeWallet else { return }
 
         buttonState = .loading()
 
-        let allocationsSendable = msatAllocations(for: total,
-                                                  mints: Array(selectedMints)).map { (mint, allocation) in
-            (CashuSwift.Mint(mint), allocation)
-        }
+        let groupingID = bundles.count > 1 ? UUID() : nil
+        let disc = bundles.count > 1
+            ? String(localized: "Pending Payment Part")
+            : String(localized: "Pending Payment")
 
-        Task {
-            var results = [(CashuSwift.Mint, QuoteState)]()
-            for (mint, msat) in allocationsSendable {
-                do {
-                    let quote = try await loadQuote(mint: mint,
-                                                    invoice: invoiceString,
-                                                    msat: msat,
-                                                    isMPP: allocationsSendable.count > 1)
-                    results.append((mint, QuoteState.quote(quote)))
-                } catch CashuError.networkError {
-                    results.append((mint, QuoteState.error(String(localized: "Network error"))))
-                } catch CashuError.unknownError(let message) where message.contains("internal mpp not allowed") {
-                    logger.warning("user tried to perform self-pay")
-                    results.append((mint, QuoteState.error(String(localized: "Self-pay not possible"))))
-                } catch {
-                    logger.warning("Error when fetching quote: \(error)")
-                    results.append((mint, QuoteState.error(String(localized: "Unknown error"))))
-                }
-            }
-            await MainActor.run {
-                for result in results {
-                    if let mint = selectedMints.first(where: { $0.matches(result.0) }) {
-                        quoteEntries[mint] = result.1
-                    }
-                }
-                buttonState = dynamicButtonState
-            }
-        }
-    }
-
-    private func loadQuote(mint: CashuSwift.Mint,
-                           invoice: String,
-                           msat: Int,
-                           isMPP: Bool) async throws -> CashuSwift.Bolt11.MeltQuote {
-        if isMPP {
-            let request = CashuSwift.Generic.MeltQuoteRequest(
-                method: .bolt11,
-                unit: Unit.sat.currencyCode,
-                request: invoice,
-                extra: [
-                    "options": .object([
-                        "mpp": .object([
-                            "amount": .integer(Int64(msat))
-                        ])
-                    ])
-                ]
-            )
-            let quote = try await CashuSwift.Generic.requestMeltQuote(request, from: mint)
-            return CashuSwift.Bolt11.MeltQuote(quote: quote.quote,
-                                               request: invoice,
-                                               amount: quote.amount,
-                                               unit: quote.unit,
-                                               feeReserve: quote.feeReserve,
-                                               state: quote.state,
-                                               expiry: quote.expiry,
-                                               paymentPreimage: quote.paymentPreimage,
-                                               change: quote.change)
-        }
-
-        let request = CashuSwift.Bolt11.MeltQuoteRequest(unit: Unit.sat.currencyCode,
-                                                         request: invoice,
-                                                         options: nil)
-        return try await CashuSwift.Bolt11.requestMeltQuote(request, from: mint)
-    }
-
-    private func msatAllocations(for total: Int, mints: [Mint]) -> [Mint: Int] {
-        let totalBalance = mints.reduce(0) { $0 + $1.balance(for: .sat) }
-        guard totalBalance > 0, total > 0 else { return Dictionary(uniqueKeysWithValues: mints.map { ($0, 0) }) }
-
-        let totalMsat = total * 1_000
-        var out = [Mint: Int](minimumCapacity: mints.count)
-
-        for mint in mints {
-            let allocation = (mint.balance(for: .sat) * totalMsat) / totalBalance
-            let roundedUp = ((allocation + 999) / 1000) * 1000
-            out[mint] = roundedUp
-        }
-
-        logger.info("created payment amount splits for \(total): \(out.map({ $0.key.url.absoluteString + ": " + String($0.value) }).joined(separator: ", "))")
-
-        return out
-    }
-
-    private func prepareMelt() {
-        guard let activeWallet else {
-            return
-        }
-
-        buttonState = .loading()
-
-        var quotes = [Mint: CashuSwift.Bolt11.MeltQuote]()
-        for (mint, quoteEntry) in quoteEntries {
-            switch quoteEntry {
-            case .quote(let quote):
-                quotes[mint] = quote
-            case .error(_):
-                logger.error("tried to initiate mint while quote entries contains errors, leaving.")
-                return
-            }
-        }
-
-        //pick proofs,  create pending events (optional grouping id)
-        let groupingID = quotes.count > 1 ? UUID() : nil
-        let disc = quotes.count > 1 ? String(localized: "Pending Payment Part") : String(localized: "Pending Payment")
         var events = [Event]()
-        for (mint, quote) in quotes {
+        for bundle in bundles {
+            let mint = bundle.mint
+            let quote = bundle.quote
+
             guard let proofs = mint.select(amount: quote.amount + quote.feeReserve,
                                            unit: .sat) else {
                 displayAlert(alert: AlertDetail(title: String(localized: "Proof Selection Error"),
                                                 description: String(localized: "The wallet was not able to pick ecash proofs from mint \(mint.displayName).")))
+                updateButtonState()
                 return
             }
 
@@ -492,10 +207,10 @@ struct MeltView: View {
 
             do {
                 let blankOutputs = try CashuSwift.generateBlankOutputs(quote: quote,
-                                                                           proofs: proofs.selected,
-                                                                           mint: mint,
-                                                                           unit: Unit.sat.currencyCode,
-                                                                           seed: activeWallet.seed)
+                                                                       proofs: proofs.selected,
+                                                                       mint: mint,
+                                                                       unit: Unit.sat.currencyCode,
+                                                                       seed: activeWallet.seed)
                 if let keysetID = blankOutputs.outputs.first?.id, blankOutputs.outputs.count > 0 {
                     mint.increaseDerivationCounterForKeysetWithID(keysetID, by: blankOutputs.outputs.count)
                 } else {
@@ -515,15 +230,12 @@ struct MeltView: View {
         events.forEach({ modelContext.insert($0) })
         try? modelContext.save()
 
-        melt(with: events)
+        runMelt(with: events)
     }
 
-    private func melt(with events: [Event]) {
+    private func runMelt(with events: [Event]) {
 
-        // convert event info into labeled, sendable task group inputs
-        let taskGroupInputs: [MeltTaskInput]
-
-        taskGroupInputs = events.map { event in
+        let taskGroupInputs: [MeltTaskInput] = events.map { event in
             let blankOutputs = event.blankOutputs.flatMap { set in
                 !set.outputs.isEmpty ? set.tuple() : nil
             }
@@ -561,7 +273,7 @@ struct MeltView: View {
                 await MainActor.run {
                     logger.error("Unable to complete melt operation due to error \(error)")
                     displayAlert(alert: AlertDetail(with: error))
-                    buttonState = dynamicButtonState
+                    updateButtonState()
                 }
             }
         }
@@ -603,10 +315,10 @@ struct MeltView: View {
                     } else if results.allSatisfy({ $0.quote.state == .pending }) {
                         displayAlert(alert: AlertDetail(title: String(localized: "Payment Pending ⏳"),
                                                         description: String(localized: "This payment is still pending. Please check again later to make sure the lightning payment was successful.")))
-                        buttonState = dynamicButtonState
+                        updateButtonState()
                     } else if results.allSatisfy({ $0.quote.state == .unpaid }) {
                         let primary = AlertButton(title: String(localized: "Retry"),
-                                                  action: { melt(with: events) })
+                                                  action: { runMelt(with: events) })
                         let secondary = AlertButton(title: String(localized: "Remove Payment"),
                                                     role: .destructive,
                                                     action: { removePendingPayment(events: events) })
@@ -614,14 +326,14 @@ struct MeltView: View {
                                                         description: String(localized: "This payment did not go through and is marked \"unpaid\" with the mint. Would you like to try again?"),
                                                         primaryButton: primary,
                                                         secondaryButton: secondary))
-                        buttonState = dynamicButtonState
+                        updateButtonState()
                     } else if results.contains(where: { $0.quote.state == .pending }) {
                         displayAlert(alert: AlertDetail(title: String(localized: "Payment Pending ⏳"),
                                                         description: String(localized: "One or more parts of this payment are still pending. Please check again later to make sure the lightning payment was successful.")))
-                        buttonState = dynamicButtonState
+                        updateButtonState()
                     } else if results.contains(where: { $0.quote.state == .unpaid }) {
                         let primary = AlertButton(title: String(localized: "Retry"),
-                                                  action: { melt(with: events) })
+                                                  action: { runMelt(with: events) })
                         let secondary = AlertButton(title: String(localized: "Remove Payment"),
                                                     role: .destructive,
                                                     action: { removePendingPayment(events: events) })
@@ -629,14 +341,14 @@ struct MeltView: View {
                                                         description: String(localized: "This payment did not go through and one or more parts are marked \"unpaid\". Would you like to try again?"),
                                                         primaryButton: primary,
                                                         secondaryButton: secondary))
-                        buttonState = dynamicButtonState
+                        updateButtonState()
                     }
                 }
             } catch {
                 await MainActor.run {
                     logger.error("unable to check one or more quote states due to error: \(error)")
                     displayAlert(alert: AlertDetail(with: error))
-                    buttonState = dynamicButtonState
+                    updateButtonState()
                 }
             }
         }
