@@ -1,0 +1,356 @@
+{
+  "fill" : "system-light",
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "Macadamia_0 5.png",
+          "name" : "Macadamia_0 5",
+          "opacity-specializations" : [
+            {
+              "value" : 0.4
+            },
+            {
+              "appearance" : "dark",
+              "value" : 0.5
+            },
+            {
+              "appearance" : "tinted",
+              "value" : 0.5
+            }
+          ],
+          "position" : {
+            "scale" : 0.48,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "glass" : false,
+          "image-name" : "Macadamia_1 7.png",
+          "name" : "Macadamia_1 7",
+          "opacity-specializations" : [
+            {
+              "value" : 0.6
+            },
+            {
+              "appearance" : "tinted",
+              "value" : 0.7
+            }
+          ],
+          "position" : {
+            "scale" : 0.48,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "glass" : false,
+          "image-name" : "Macadamia_2 4.png",
+          "name" : "Macadamia_2 4",
+          "position" : {
+            "scale" : 0.48,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "glass-specializations" : [
+            {
+              "value" : false
+            },
+            {
+              "appearance" : "tinted",
+              "value" : true
+            }
+          ],
+          "image-name" : "Macadamia_3 4.png",
+          "name" : "Macadamia_3 4",
+          "position" : {
+            "scale" : 0.48,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "specular-specializations" : [
+        {
+          "value" : true
+        },
+        {
+          "appearance" : "tinted",
+          "value" : false
+        }
+      ],
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "Macadamia_4 4.png",
+          "name" : "Macadamia_4 4",
+          "position" : {
+            "scale" : 0.48,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "glass-specializations" : [
+            {
+              "value" : true
+            },
+            {
+              "appearance" : "tinted",
+              "value" : true
+            }
+          ],
+          "hidden" : false,
+          "image-name" : "Macadamia_5 4.png",
+          "name" : "Macadamia_5 4",
+          "opacity-specializations" : [
+            {
+              "value" : 0.8
+            },
+            {
+              "appearance" : "dark",
+              "value" : 0.7
+            },
+            {
+              "appearance" : "tinted",
+              "value" : 0.7
+            }
+          ],
+          "position" : {
+            "scale" : 0.48,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.60783,0.60783,0.60783,1.00000",
+                  "extended-gray:0.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0,
+                    "y" : 0.8402065334773224
+                  },
+                  "stop" : {
+                    "x" : 0.6816020995218174,
+                    "y" : 1
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "linear-gradient" : [
+                  "extended-gray:0.75000,1.00000",
+                  "extended-gray:0.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.11127909257322176,
+                    "y" : 0.9021468907487399
+                  },
+                  "stop" : {
+                    "x" : 0.6487776138174935,
+                    "y" : 0.9537521373290134
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : {
+                "linear-gradient" : [
+                  "extended-gray:1.00000,1.00000",
+                  "extended-gray:0.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0,
+                    "y" : 0.8288871265298783
+                  },
+                  "stop" : {
+                    "x" : 0.595639694162184,
+                    "y" : 1
+                  }
+                }
+              }
+            }
+          ],
+          "glass-specializations" : [
+            {
+              "value" : false
+            },
+            {
+              "appearance" : "tinted",
+              "value" : false
+            }
+          ],
+          "image-name" : "Macadamia_6 3.png",
+          "name" : "Macadamia_6 3",
+          "position" : {
+            "scale" : 0.48,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency-specializations" : [
+        {
+          "value" : {
+            "enabled" : true,
+            "value" : 0.5
+          }
+        },
+        {
+          "appearance" : "dark",
+          "value" : {
+            "enabled" : true,
+            "value" : 0.5
+          }
+        }
+      ]
+    },
+    {
+      "layers" : [
+        {
+          "glass-specializations" : [
+            {
+              "value" : false
+            },
+            {
+              "appearance" : "dark",
+              "value" : false
+            },
+            {
+              "appearance" : "tinted",
+              "value" : false
+            }
+          ],
+          "hidden" : false,
+          "image-name" : "Macadamia_7 3.png",
+          "name" : "Macadamia_7 3",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 0.48,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "glass-specializations" : [
+            {
+              "value" : false
+            },
+            {
+              "appearance" : "dark",
+              "value" : true
+            },
+            {
+              "appearance" : "tinted",
+              "value" : true
+            }
+          ],
+          "image-name" : "Macadamia_8 3.png",
+          "name" : "Macadamia_8 3",
+          "position" : {
+            "scale" : 0.48,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow-specializations" : [
+        {
+          "value" : {
+            "kind" : "layer-color",
+            "opacity" : 0.4
+          }
+        },
+        {
+          "appearance" : "tinted",
+          "value" : {
+            "kind" : "layer-color",
+            "opacity" : 0.5
+          }
+        }
+      ],
+      "specular-specializations" : [
+        {
+          "value" : true
+        },
+        {
+          "appearance" : "dark",
+          "value" : true
+        },
+        {
+          "appearance" : "tinted",
+          "value" : true
+        }
+      ],
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
