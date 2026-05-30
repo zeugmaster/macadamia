@@ -405,7 +405,16 @@ enum AppSchemaV1: VersionedSchema {
         var kind: Kind
         var wallet: Wallet?
         
-        var bolt11MintQuote: CashuSwift.Bolt11.MintQuote?
+        // Canonical storage: manually (de)serialized JSON, like bolt11MeltQuote/token/blankOutputs.
+        // A `try?` decode means a future MintQuote shape change can never trap on property access.
+        private var bolt11MintQuoteData: Data?
+
+        // Legacy composite attribute for rows written before `bolt11MintQuoteData` existed.
+        // Kept under its original persistent name so existing data survives lightweight migration,
+        // and typed as an all-optional mirror so decoding pre-`unit` rows can never trap. Read-only fallback.
+        @Attribute(originalName: "bolt11MintQuote")
+        private var legacyBolt11MintQuote: StoredBolt11MintQuote?
+
         private var bolt11MeltQuoteData: Data? // SwiftData is unable to serialize CashuSwift.Bolt11.MeltQuote so we do it ourselves
         
         var amount: Int?
@@ -474,7 +483,7 @@ enum AppSchemaV1: VersionedSchema {
             self.visible = visible
             self.kind = kind
             self.wallet = wallet
-            self.bolt11MintQuote = bolt11MintQuote
+            self.bolt11MintQuoteData = bolt11MintQuote.flatMap { try? JSONEncoder().encode($0) }
             self.bolt11MeltQuote = bolt11MeltQuote
             self.amount = amount
             self.token = token
@@ -488,6 +497,20 @@ enum AppSchemaV1: VersionedSchema {
             self.preImage = preImage
         }
         
+        var bolt11MintQuote: CashuSwift.Bolt11.MintQuote? {
+            get {
+                if let bolt11MintQuoteData {
+                    return try? JSONDecoder().decode(CashuSwift.Bolt11.MintQuote.self, from: bolt11MintQuoteData)
+                }
+                // Fall back to the legacy composite attribute for un-migrated rows.
+                return legacyBolt11MintQuote?.asMintQuote
+            }
+            set {
+                bolt11MintQuoteData = newValue.flatMap { try? JSONEncoder().encode($0) }
+                legacyBolt11MintQuote = nil // vacate the legacy slot once rewritten
+            }
+        }
+
         var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? {
             get {
                 guard let data = bolt11MeltQuoteData else { return nil }
@@ -540,7 +563,34 @@ enum AppSchemaV1: VersionedSchema {
             (outputs, blindingFactors, secrets)
         }
     }
-    
+
+    /// All-optional mirror of the persisted `CashuSwift.Bolt11.MintQuote` columns.
+    ///
+    /// `Event.bolt11MintQuote` used to be stored as a SwiftData composite attribute. When
+    /// `CashuSwift.Bolt11.MintQuote` gained the non-optional `unit` field, SwiftData's synthesized
+    /// decoder began force-decoding `unit`, trapping (EXC_BREAKPOINT) on rows written before the
+    /// field existed. Decoding the same columns through this all-optional type instead means a
+    /// missing column yields `nil` rather than a crash, so legacy quotes stay readable.
+    struct StoredBolt11MintQuote: Codable {
+        var quote: String?
+        var request: String?
+        var amount: Int?
+        var unit: String?
+        var state: CashuSwift.QuoteState?
+        var expiry: Int?
+
+        /// Maps the legacy columns back to a real quote, defaulting the unit that old rows lack.
+        var asMintQuote: CashuSwift.Bolt11.MintQuote? {
+            guard let quote, let request else { return nil }
+            return CashuSwift.Bolt11.MintQuote(quote: quote,
+                                               request: request,
+                                               amount: amount,
+                                               unit: unit ?? "sat",
+                                               state: state,
+                                               expiry: expiry)
+        }
+    }
+
     ///Insert the specified list of SwiftData model objects into the model context and save the new state.
     @MainActor
     static func insert(_ models: [any PersistentModel], into modelContext: ModelContext) {
