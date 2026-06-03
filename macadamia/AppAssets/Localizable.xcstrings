@@ -4794,6 +4794,9 @@
         }
       }
     },
+    "Close" : {
+
+    },
     "Colombian Peso" : {
       "localizations" : {
         "ar" : {
@@ -7185,6 +7188,9 @@
           }
         }
       }
+    },
+    "Dismiss this popover." : {
+
     },
     "Display" : {
       "localizations" : {

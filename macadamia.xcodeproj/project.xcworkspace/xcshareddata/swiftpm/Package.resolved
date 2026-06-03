@@ -137,15 +137,6 @@
       }
     },
     {
-      "identity" : "popovers",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/aheze/Popovers.git",
-      "state" : {
-        "revision" : "de44c4dd7271ec6413fe350f7efadb14e5e18dce",
-        "version" : "1.3.2"
-      }
-    },
-    {
       "identity" : "ripemd160",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/anquii/RIPEMD160.git",

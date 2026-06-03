@@ -1,5 +1,4 @@
 import CashuSwift
-import Popovers
 import SwiftData
 import SwiftUI
 import OSLog

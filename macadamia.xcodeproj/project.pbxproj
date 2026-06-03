@@ -14,7 +14,6 @@
 		371AA9132E33EB61006D487F /* CashuSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 371AA9122E33EB61006D487F /* CashuSwift */; };
 		3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3725D4D72CD5001A0037DD08 /* AVKit.framework */; };
 		373CE6582EAE6D66000AC589 /* pull_request_template.md in Resources */ = {isa = PBXBuildFile; fileRef = 373CE6572EAE6D54000AC589 /* pull_request_template.md */; };
-		376E88432BE5468B0026FF8D /* Popovers in Frameworks */ = {isa = PBXBuildFile; productRef = 376E88422BE5468B0026FF8D /* Popovers */; };
 		376F43B22B4FEC0D00E55B0F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 376F43B12B4FEC0D00E55B0F /* README.md */; };
 		377A1BC82E6D9E3B00BC1BC1 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
 		377D26262E1FDE7800CFB880 /* URUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377D26252E1FDE7800CFB880 /* URUI */; };
@@ -149,6 +148,7 @@
 		3793B9A62D004A490077F755 /* Settings */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Settings; sourceTree = "<group>"; };
 		3793B9A72D004ADA0077F755 /* Misc */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (377A1BC72E6D9E1000BC1BC1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Misc; sourceTree = "<group>"; };
 		37C4CC312E5CA4660028E4FE /* macadamiaMessages */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (37C4CC402E5CA4670028E4FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = macadamiaMessages; sourceTree = "<group>"; };
+		37F0FACE2E0000010000FACE /* Popovers */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Popovers; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -165,7 +165,6 @@
 				370A2B332EBFD23800C4A6A5 /* Bolt11 in Frameworks */,
 				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
 				377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */,
-				376E88432BE5468B0026FF8D /* Popovers in Frameworks */,
 				370A84072CC18AEE0039A413 /* Flow in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -233,6 +232,7 @@
 				371338502F2FDFE400F8C0AB /* AppAssets */,
 				37C4CC312E5CA4660028E4FE /* macadamiaMessages */,
 				377A1BAD2E6CF54900BC1BC1 /* Preview Content */,
+				37F0FACE2E0000010000FACE /* Popovers */,
 			);
 			path = macadamia;
 			sourceTree = "<group>";
@@ -273,13 +273,13 @@
 				3793B9A42D0049F60077F755 /* PersistentModelV1 */,
 				3793B9A62D004A490077F755 /* Settings */,
 				3793B9A72D004ADA0077F755 /* Misc */,
+				37F0FACE2E0000010000FACE /* Popovers */,
 			);
 			name = macadamia;
 			packageProductDependencies = (
 				3792122D2B29E7520081F161 /* BigNumber */,
 				379212332B29E7B30081F161 /* BIP39 */,
 				377FFEFF2BC43B6900DD2635 /* MarkdownUI */,
-				376E88422BE5468B0026FF8D /* Popovers */,
 				370A84062CC18AEE0039A413 /* Flow */,
 				377D26252E1FDE7800CFB880 /* URUI */,
 				371AA9122E33EB61006D487F /* CashuSwift */,
@@ -377,7 +377,6 @@
 				3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */,
 				379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */,
 				377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
-				376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */,
 				370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 				377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */,
 				371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */,
@@ -859,14 +858,6 @@
 				kind = branch;
 			};
 		};
-		376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/aheze/Popovers.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.3.2;
-			};
-		};
 		377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/zeugmaster/URUI";
@@ -929,11 +920,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */;
 			productName = CashuSwift;
-		};
-		376E88422BE5468B0026FF8D /* Popovers */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 376E88412BE5468B0026FF8D /* XCRemoteSwiftPackageReference "Popovers" */;
-			productName = Popovers;
 		};
 		377D26252E1FDE7800CFB880 /* URUI */ = {
 			isa = XCSwiftPackageProductDependency;
