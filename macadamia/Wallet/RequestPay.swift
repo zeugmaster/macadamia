@@ -60,8 +60,7 @@ struct RequestPay: View {
     }
     
     private var possibleMints: [Mint] {
-        let urls = paymentRequest.mints ?? []
-        return mintsInUse.filter { urls.isEmpty || urls.contains($0.url.absoluteString) }
+        mintsInUse.acceptedByPaymentRequest(mintURLs: paymentRequest.mints ?? [])
     }
     
     private var relayConnectionIndicatorColor: Color {
@@ -166,7 +165,7 @@ struct RequestPay: View {
             }
             
             if let amount = paymentRequest.amount {
-                selectedMint = mintsInUse.first(where: { $0.balance(for: .sat) >  amount })
+                selectedMint = possibleMints.first(where: { $0.balance(for: .sat) >  amount })
             }
             
             if let transports = paymentRequest.transports, transports.contains(where: { $0.type == "nostr" }) {
