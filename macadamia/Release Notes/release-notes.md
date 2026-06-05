@@ -1,6 +1,9 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
+**Payment requests 🧾**
+You can now request and send ecash with payment requests. Share a request as a QR code, and get paid over a Nostr DM — or just hold two phones together to pay contactlessly via NFC.
+
 **All new onboarding flow 🗒️**
 The onboarding screen has been redesigned from the ground up and now supports restoring from a seed phrase.
 

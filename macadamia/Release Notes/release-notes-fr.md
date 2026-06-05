@@ -1,6 +1,9 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
+**Demandes de paiement 🧾**
+Tu peux désormais demander et envoyer de l'ecash avec des demandes de paiement. Partage une demande sous forme de QR code et reçois le paiement par message privé Nostr — ou rapproche simplement deux téléphones pour payer sans contact via NFC.
+
 **Tout nouveau flux d'onboarding 🗒️**
 L'écran d'onboarding a été entièrement repensé et prend désormais en charge la restauration à partir d'une phrase de récupération.
 

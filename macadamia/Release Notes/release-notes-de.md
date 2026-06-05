@@ -1,6 +1,9 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
+**Zahlungsanforderungen 🧾**
+Du kannst jetzt ecash mit Zahlungsanforderungen anfordern und senden. Teile eine Anforderung als QR-Code und werde per Nostr-DM bezahlt – oder halte einfach zwei Geräte aneinander, um kontaktlos per NFC zu bezahlen.
+
 **Komplett neuer Onboarding-Ablauf 🗒️**
 Der Onboarding-Bildschirm wurde von Grund auf neu gestaltet und unterstützt jetzt auch die Wiederherstellung aus einer Seed-Phrase.
 
