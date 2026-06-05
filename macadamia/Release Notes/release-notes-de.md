@@ -1,15 +1,10 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Zahlungsanforderungen 🧾**
-Du kannst jetzt ecash mit Zahlungsanforderungen anfordern und senden. Teile eine Anforderung als QR-Code und werde per Nostr-DM bezahlt – oder halte einfach zwei Geräte aneinander, um kontaktlos per NFC zu bezahlen.
+**Fehlerbehebungen und Stabilitätsverbesserungen**
+Kleine Fehlerbehebungen für Zahlungsanforderungen und weitere Stabilitätsverbesserungen.
 
-**Komplett neuer Onboarding-Ablauf 🗒️**
-Der Onboarding-Bildschirm wurde von Grund auf neu gestaltet und unterstützt jetzt auch die Wiederherstellung aus einer Seed-Phrase.
-
-**Backup der Mint-Liste 📡**
-Dank NUT-27-Unterstützung musst du deine Mint-Liste nicht mehr selbst sichern — das Wallet lädt automatisch eine verschlüsselte Version zu Nostr-Relays hoch.
-Das funktioniert über alle Wallets hinweg, die es unterstützen.
+**Neues App-Icon 🎨**
 
 ------
 
