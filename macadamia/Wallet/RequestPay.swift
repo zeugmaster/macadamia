@@ -200,12 +200,16 @@ struct RequestPay: View {
         Section {
 
             if possibleMints.isEmpty {
-                NavigationLink(destination: SwapView(), label: {
-                    HStack {
-                        Image(systemName: "arrow.down.left.arrow.up.right")
-                        Text("Make transfer")
-                    }
-                })
+                // "Make transfer" is temporarily disabled: eagerly constructing
+                // SwapView() here freezes the UI. The footer below still explains
+                // why no mint can be selected.
+                // NavigationLink(destination: SwapView(), label: {
+                //     HStack {
+                //         Image(systemName: "arrow.down.left.arrow.up.right")
+                //         Text("Make transfer")
+                //     }
+                // })
+                EmptyView()
             } else {
                 Button {
                     withAnimation {
