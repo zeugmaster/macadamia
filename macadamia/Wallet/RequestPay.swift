@@ -56,7 +56,8 @@ struct RequestPay: View {
     }
     
     private var insufficentBalance: Bool {
-        selectedMint?.balance(for: .sat) ?? 0 < paymentRequest.amount ?? userProvidedAmount ?? 0
+        guard let selectedMint else { return false }
+        return selectedMint.balance(for: .sat) < (paymentRequest.amount ?? userProvidedAmount ?? 0)
     }
     
     private var possibleMints: [Mint] {
@@ -163,11 +164,10 @@ struct RequestPay: View {
             if let transports = paymentRequest.transports, !transports.isEmpty {
                 selectedTransport = transports.first
             }
-            
-            if let amount = paymentRequest.amount {
-                selectedMint = possibleMints.first(where: { $0.balance(for: .sat) >  amount })
-            }
-            
+
+            // Don't pre-select a mint: the user must actively choose one of the
+            // request's accepted mints, so the selector shows "Select a mint" first.
+
             if let transports = paymentRequest.transports, transports.contains(where: { $0.type == "nostr" }) {
                 nostrService.connect()
             }
@@ -356,8 +356,9 @@ struct RequestPay: View {
                     }
                 } else {
                     token = requestResponse.payload.toToken()
+                    buttonState = .success()
                 }
-                
+
             } catch {
                 buttonState = .fail()
                 displayAlert(alert: AlertDetail(with: error))
