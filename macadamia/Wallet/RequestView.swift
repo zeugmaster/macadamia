@@ -69,7 +69,9 @@ struct RequestView: View {
                 Section {
                     StaticQRView(string: string)
                     Button {
-                        UIPasteboard.general.string = string
+                        // The QR uses the uppercase form for alphanumeric-mode compactness,
+                        // but copy the canonical lowercase bech32m so pasted requests are unmodified.
+                        UIPasteboard.general.string = string.lowercased()
                         withAnimation {
                             copied = true
                         }

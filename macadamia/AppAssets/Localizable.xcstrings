@@ -13548,6 +13548,7 @@
       }
     },
     "Make transfer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
