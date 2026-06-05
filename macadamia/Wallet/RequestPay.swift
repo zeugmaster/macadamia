@@ -76,10 +76,15 @@ struct RequestPay: View {
     }
     
     private var actionButtonDisabled: Bool {
-        if paymentRequest.amount ?? userProvidedAmount ?? 0 <= 0 { return true }
-        if paymentRequest.amount ?? userProvidedAmount ?? 0 > selectedMint?.balance(for: .sat) ?? 0 {
-            return true
-        }
+        // Require a selection from the request's accepted mints. When the request
+        // specifies no mints, possibleMints is the whole wallet, so any mint is
+        // allowed; when it requires mints we don't hold, possibleMints is empty and
+        // nothing can be selected, which keeps the button disabled.
+        guard let selectedMint, possibleMints.contains(selectedMint) else { return true }
+
+        let requiredAmount = paymentRequest.amount ?? userProvidedAmount ?? 0
+        if requiredAmount <= 0 { return true }
+        if requiredAmount > selectedMint.balance(for: .sat) { return true }
         if (Unit(paymentRequest.unit) ?? .sat) != .sat {
             return true
         }
