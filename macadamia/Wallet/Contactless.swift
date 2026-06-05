@@ -327,9 +327,7 @@ struct Contactless: View {
         
         // 3. Find matching mint
         let requestedMints = request.mints ?? []
-        let matchingMints = mints.filter { mint in
-            requestedMints.isEmpty || requestedMints.contains(mint.url.absoluteString)
-        }
+        let matchingMints = mints.acceptedByPaymentRequest(mintURLs: requestedMints)
         
         guard !matchingMints.isEmpty else {
             throw NFCPaymentError.noMatchingMint(requestedMints: requestedMints)

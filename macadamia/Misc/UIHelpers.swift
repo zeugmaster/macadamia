@@ -71,6 +71,17 @@ extension Array where Element == Mint {
     func containsMatch(with url: URL) -> Bool {
         self.contains(where: { $0.url.matches(url)} )
     }
+
+    /// Returns the mints accepted by a payment request's list of mint URLs.
+    ///
+    /// An empty list means the request does not restrict the mint, so every mint is returned.
+    /// URLs are compared with `URL.matches(_:)`, which normalizes scheme/host/port/path, so
+    /// cosmetic differences such as a trailing slash do not cause a requested mint to be missed.
+    func acceptedByPaymentRequest(mintURLs urlStrings: [String]) -> [Mint] {
+        guard !urlStrings.isEmpty else { return self }
+        let requestedURLs = urlStrings.compactMap { URL(string: $0) }
+        return filter { mint in requestedURLs.contains { mint.url.matches($0) } }
+    }
 }
 
 struct DismissToRootAction: Sendable {

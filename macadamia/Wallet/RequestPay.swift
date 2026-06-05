@@ -56,12 +56,12 @@ struct RequestPay: View {
     }
     
     private var insufficentBalance: Bool {
-        selectedMint?.balance(for: .sat) ?? 0 < paymentRequest.amount ?? userProvidedAmount ?? 0
+        guard let selectedMint else { return false }
+        return selectedMint.balance(for: .sat) < (paymentRequest.amount ?? userProvidedAmount ?? 0)
     }
     
     private var possibleMints: [Mint] {
-        let urls = paymentRequest.mints ?? []
-        return mintsInUse.filter { urls.isEmpty || urls.contains($0.url.absoluteString) }
+        mintsInUse.acceptedByPaymentRequest(mintURLs: paymentRequest.mints ?? [])
     }
     
     private var relayConnectionIndicatorColor: Color {
@@ -76,10 +76,15 @@ struct RequestPay: View {
     }
     
     private var actionButtonDisabled: Bool {
-        if paymentRequest.amount ?? userProvidedAmount ?? 0 <= 0 { return true }
-        if paymentRequest.amount ?? userProvidedAmount ?? 0 > selectedMint?.balance(for: .sat) ?? 0 {
-            return true
-        }
+        // Require a selection from the request's accepted mints. When the request
+        // specifies no mints, possibleMints is the whole wallet, so any mint is
+        // allowed; when it requires mints we don't hold, possibleMints is empty and
+        // nothing can be selected, which keeps the button disabled.
+        guard let selectedMint, possibleMints.contains(selectedMint) else { return true }
+
+        let requiredAmount = paymentRequest.amount ?? userProvidedAmount ?? 0
+        if requiredAmount <= 0 { return true }
+        if requiredAmount > selectedMint.balance(for: .sat) { return true }
         if (Unit(paymentRequest.unit) ?? .sat) != .sat {
             return true
         }
@@ -164,11 +169,10 @@ struct RequestPay: View {
             if let transports = paymentRequest.transports, !transports.isEmpty {
                 selectedTransport = transports.first
             }
-            
-            if let amount = paymentRequest.amount {
-                selectedMint = mintsInUse.first(where: { $0.balance(for: .sat) >  amount })
-            }
-            
+
+            // Don't pre-select a mint: the user must actively choose one of the
+            // request's accepted mints, so the selector shows "Select a mint" first.
+
             if let transports = paymentRequest.transports, transports.contains(where: { $0.type == "nostr" }) {
                 nostrService.connect()
             }
@@ -196,12 +200,16 @@ struct RequestPay: View {
         Section {
 
             if possibleMints.isEmpty {
-                NavigationLink(destination: SwapView(), label: {
-                    HStack {
-                        Image(systemName: "arrow.down.left.arrow.up.right")
-                        Text("Make transfer")
-                    }
-                })
+                // "Make transfer" is temporarily disabled: eagerly constructing
+                // SwapView() here freezes the UI. The footer below still explains
+                // why no mint can be selected.
+                // NavigationLink(destination: SwapView(), label: {
+                //     HStack {
+                //         Image(systemName: "arrow.down.left.arrow.up.right")
+                //         Text("Make transfer")
+                //     }
+                // })
+                EmptyView()
             } else {
                 Button {
                     withAnimation {
@@ -357,8 +365,9 @@ struct RequestPay: View {
                     }
                 } else {
                     token = requestResponse.payload.toToken()
+                    buttonState = .success()
                 }
-                
+
             } catch {
                 buttonState = .fail()
                 displayAlert(alert: AlertDetail(with: error))

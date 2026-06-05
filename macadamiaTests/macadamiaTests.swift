@@ -661,7 +661,53 @@ final class macadamiaTests: XCTestCase {
         let fromNUT26 = try parsePaymentRequest(nut26)
         XCTAssertEqual(fromNUT26.paymentId, "xyz")
     }
-    
+
+    // MARK: - Payment Request Mint Matching
+
+    func testURLMatchesIgnoresTrailingSlashHostCaseAndDefaultPort() {
+        let base = URL(string: "https://mint.example.com")!
+        XCTAssertTrue(base.matches(URL(string: "https://mint.example.com/")!), "trailing slash should match")
+        XCTAssertTrue(base.matches(URL(string: "https://MINT.EXAMPLE.COM")!), "host case should be ignored")
+        XCTAssertTrue(base.matches(URL(string: "https://mint.example.com:443")!), "explicit default port should match")
+        XCTAssertFalse(base.matches(URL(string: "http://mint.example.com")!), "different scheme should not match")
+        XCTAssertFalse(base.matches(URL(string: "https://other.example.com")!), "different host should not match")
+
+        let pathed = URL(string: "https://mint.example.com/cashu")!
+        XCTAssertTrue(pathed.matches(URL(string: "https://mint.example.com/cashu/")!), "trailing slash on path should match")
+        XCTAssertFalse(pathed.matches(URL(string: "https://mint.example.com")!), "different path should not match")
+    }
+
+    @MainActor
+    func testAcceptedByPaymentRequestNormalizesMintURLs() throws {
+        let context = container.mainContext
+
+        // Local mint stored WITHOUT a trailing slash.
+        let mintA = Mint(url: URL(string: "https://mint.a.example.com")!, keysets: [])
+        // Local mint stored WITH a trailing slash.
+        let mintB = Mint(url: URL(string: "https://mint.b.example.com/")!, keysets: [])
+        context.insert(mintA)
+        context.insert(mintB)
+        let mints = [mintA, mintB]
+
+        // Empty request list -> request accepts any mint.
+        XCTAssertEqual(mints.acceptedByPaymentRequest(mintURLs: []).count, 2)
+
+        // Request lists mint A WITH a trailing slash; local copy has none -> must still match.
+        let matchA = mints.acceptedByPaymentRequest(mintURLs: ["https://mint.a.example.com/"])
+        XCTAssertEqual(matchA.map { $0.url.absoluteString }, ["https://mint.a.example.com"])
+
+        // Request lists mint B WITHOUT a trailing slash; local copy has one -> must still match.
+        let matchB = mints.acceptedByPaymentRequest(mintURLs: ["https://mint.b.example.com"])
+        XCTAssertEqual(matchB.map { $0.url.absoluteString }, ["https://mint.b.example.com/"])
+
+        // Host case differences must not prevent a match.
+        let matchCase = mints.acceptedByPaymentRequest(mintURLs: ["https://MINT.A.EXAMPLE.COM"])
+        XCTAssertEqual(matchCase.count, 1)
+
+        // A genuinely absent mint must not match.
+        XCTAssertTrue(mints.acceptedByPaymentRequest(mintURLs: ["https://unknown.example.com"]).isEmpty)
+    }
+
     // MARK: - BIP-321 Tests
     
     func testBIP321Detection() {
