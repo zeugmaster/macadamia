@@ -236,7 +236,7 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%1$@  %2$@"
           }
         }
@@ -268,7 +268,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%1$lld mint%2$@"
           }
         },
@@ -344,7 +344,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%1$lld Mint%2$@ selected"
           }
         },
@@ -504,7 +504,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%1$lld/%2$lld"
           }
         }
@@ -5099,7 +5099,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Connected to %1$lld of %2$lld relay%3$@."
           }
         },
@@ -5175,7 +5175,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Connected to all %1$lld relay%2$@."
           }
         },
@@ -9321,7 +9321,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Fee: %1$lld • Allocation: %2$lld"
           }
         },
@@ -31217,7 +31217,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Version %1$@ (%2$@)"
           }
         },
