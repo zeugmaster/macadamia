@@ -1,15 +1,10 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Payment requests 🧾**
-You can now request and send ecash with payment requests. Share a request as a QR code, and get paid over a Nostr DM — or just hold two phones together to pay contactlessly via NFC.
+**Bug fixes and stability improvements**
+Small bug fixes for payment requests, and other stability improvements.
 
-**All new onboarding flow 🗒️**
-The onboarding screen has been redesigned from the ground up and now supports restoring from a seed phrase.
-
-**Mint list backup 📡**
-NUT-27 support means you no longer have to save your mint list, the wallet backs up an encrypted version automatically to Nostr relays.
-This works across all wallets that support it. 
+**New App Icon 🎨**
 
 ------
 
