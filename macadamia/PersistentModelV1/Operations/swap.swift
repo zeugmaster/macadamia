@@ -189,7 +189,7 @@ final class SwapManager: ObservableObject {
     }
 
     func resumeTransfer(with pendingTransferEvent: Event, modelContext: ModelContext) {
-        guard let mintQuote = pendingTransferEvent.bolt11MintQuote,
+        guard let mintQuote = pendingTransferEvent.mintQuote,
               let meltQuote = pendingTransferEvent.bolt11MeltQuote,
               let mints     = pendingTransferEvent.mints,
               mints.count  >= 2 else {
@@ -749,7 +749,7 @@ final class InlineSwapManager: ObservableObject {
     }
 
     func resumeTransfer(with pendingTransferEvent: Event) {
-        guard let mintQuote = pendingTransferEvent.bolt11MintQuote,
+        guard let mintQuote = pendingTransferEvent.mintQuote,
               let meltQuote = pendingTransferEvent.bolt11MeltQuote,
               let mints     = pendingTransferEvent.mints,
               mints.count  >= 2 else {

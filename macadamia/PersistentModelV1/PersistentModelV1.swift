@@ -405,15 +405,18 @@ enum AppSchemaV1: VersionedSchema {
         var kind: Kind
         var wallet: Wallet?
         
-        // Canonical storage: manually (de)serialized JSON, like bolt11MeltQuote/token/blankOutputs.
-        // A `try?` decode means a future MintQuote shape change can never trap on property access.
+        // Canonical storage for new mint quotes: manually (de)serialized JSON, like
+        // bolt11MeltQuoteData/token/blankOutputs. A `try?` decode means a future MintQuote shape
+        // change can never trap on property access.
         private var bolt11MintQuoteData: Data?
 
-        // Legacy composite attribute for rows written before `bolt11MintQuoteData` existed.
-        // Kept under its original persistent name so existing data survives lightweight migration,
-        // and typed as an all-optional mirror so decoding pre-`unit` rows can never trap. Read-only fallback.
-        @Attribute(originalName: "bolt11MintQuote")
-        private var legacyBolt11MintQuote: StoredBolt11MintQuote?
+        // Legacy composite attribute for rows written by the App Store / `main` build (before
+        // `bolt11MintQuoteData` existed). It MUST keep the exact persistent name `bolt11MintQuote`:
+        // SwiftData lightweight migration preserves a composite's data across a pure retype, but
+        // DROPS it when the attribute is renamed (e.g. via @Attribute(originalName:)) — proven by
+        // the migration tests. Typed as an all-optional mirror so decoding pre-`unit` rows can never
+        // trap. Read-only fallback; the typed accessor below is `mintQuote`.
+        private var bolt11MintQuote: StoredBolt11MintQuote?
 
         private var bolt11MeltQuoteData: Data? // SwiftData is unable to serialize CashuSwift.Bolt11.MeltQuote so we do it ourselves
         
@@ -463,7 +466,7 @@ enum AppSchemaV1: VersionedSchema {
              visible: Bool,
              kind: Kind,
              wallet: Wallet,
-             bolt11MintQuote: CashuSwift.Bolt11.MintQuote? = nil,
+             mintQuote: CashuSwift.Bolt11.MintQuote? = nil,
              bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? = nil,
              amount: Int? = nil,
              token: CashuSwift.Token? = nil,
@@ -483,7 +486,7 @@ enum AppSchemaV1: VersionedSchema {
             self.visible = visible
             self.kind = kind
             self.wallet = wallet
-            self.bolt11MintQuoteData = bolt11MintQuote.flatMap { try? JSONEncoder().encode($0) }
+            self.bolt11MintQuoteData = mintQuote.flatMap { try? JSONEncoder().encode($0) }
             self.bolt11MeltQuote = bolt11MeltQuote
             self.amount = amount
             self.token = token
@@ -497,24 +500,31 @@ enum AppSchemaV1: VersionedSchema {
             self.preImage = preImage
         }
         
-        var bolt11MintQuote: CashuSwift.Bolt11.MintQuote? {
+        var mintQuote: CashuSwift.Bolt11.MintQuote? {
             get {
                 if let bolt11MintQuoteData {
                     return try? JSONDecoder().decode(CashuSwift.Bolt11.MintQuote.self, from: bolt11MintQuoteData)
                 }
-                // Fall back to the legacy composite attribute for un-migrated rows.
-                return legacyBolt11MintQuote?.asMintQuote
+                // Fall back to the legacy composite for rows migrated from the App Store build.
+                return bolt11MintQuote?.asMintQuote
             }
             set {
                 bolt11MintQuoteData = newValue.flatMap { try? JSONEncoder().encode($0) }
-                legacyBolt11MintQuote = nil // vacate the legacy slot once rewritten
+                bolt11MintQuote = nil // vacate the legacy slot once rewritten
             }
         }
 
         var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? {
             get {
                 guard let data = bolt11MeltQuoteData else { return nil }
-                return try? JSONDecoder().decode(CashuSwift.Bolt11.MeltQuote.self, from: data)
+                // Current shape first. Rows written before the cashu-swift payment-method
+                // namespace overhaul stored `unit`/`request` inside a nested `quoteRequest`
+                // and had no top-level `unit`, so the current decoder throws on them; fall
+                // back to the legacy mirror instead of silently returning nil.
+                if let quote = try? JSONDecoder().decode(CashuSwift.Bolt11.MeltQuote.self, from: data) {
+                    return quote
+                }
+                return (try? JSONDecoder().decode(StoredBolt11MeltQuote.self, from: data))?.asMeltQuote
             }
             set {
                 bolt11MeltQuoteData = try? JSONEncoder().encode(newValue)
@@ -564,13 +574,16 @@ enum AppSchemaV1: VersionedSchema {
         }
     }
 
-    /// All-optional mirror of the persisted `CashuSwift.Bolt11.MintQuote` columns.
+    /// All-optional mirror of the persisted `CashuSwift.Bolt11.MintQuote` columns, used as the
+    /// type of the legacy `Event.bolt11MintQuote` composite attribute.
     ///
-    /// `Event.bolt11MintQuote` used to be stored as a SwiftData composite attribute. When
-    /// `CashuSwift.Bolt11.MintQuote` gained the non-optional `unit` field, SwiftData's synthesized
-    /// decoder began force-decoding `unit`, trapping (EXC_BREAKPOINT) on rows written before the
-    /// field existed. Decoding the same columns through this all-optional type instead means a
-    /// missing column yields `nil` rather than a crash, so legacy quotes stay readable.
+    /// `Event.bolt11MintQuote` was stored as a SwiftData composite attribute by the App Store
+    /// build. When `CashuSwift.Bolt11.MintQuote` gained the non-optional `unit` field, SwiftData's
+    /// synthesized decoder began force-decoding `unit`, trapping (EXC_BREAKPOINT) on rows written
+    /// before the field existed. Reusing the same attribute name but retyping it to this all-optional
+    /// type fixes the trap (a missing column yields `nil`) AND keeps the data: SwiftData preserves a
+    /// composite across a pure retype, but drops it if the attribute is renamed. New quotes are
+    /// written to `bolt11MintQuoteData` instead, so this is a read-only fallback for migrated rows.
     struct StoredBolt11MintQuote: Codable {
         var quote: String?
         var request: String?
@@ -588,6 +601,55 @@ enum AppSchemaV1: VersionedSchema {
                                                unit: unit ?? "sat",
                                                state: state,
                                                expiry: expiry)
+        }
+    }
+
+    /// Legacy-shape mirror of `Event.bolt11MeltQuote`'s serialized JSON.
+    ///
+    /// Unlike the mint quote, the melt quote was always stored as manually serialized JSON in
+    /// `bolt11MeltQuoteData` (never a composite attribute), so old rows can't trap on access —
+    /// but they *can* fail to decode. Before the cashu-swift payment-method namespace overhaul
+    /// (0.3.1), `CashuSwift.Bolt11.MeltQuote` had no top-level `unit` and kept the invoice and
+    /// unit inside a nested `quoteRequest`. The current type makes `unit` a non-optional
+    /// top-level field, so `JSONDecoder` throws `keyNotFound("unit")` on those rows and the
+    /// `try?` getter returns nil — which is why pending payments created on the App Store build
+    /// show no quote info and can't have their state checked. This all-optional type decodes the
+    /// same bytes, recovers `unit`/`request` from `quoteRequest`, and rebuilds a real quote.
+    struct StoredBolt11MeltQuote: Codable {
+        var quote: String?
+        var amount: Int?
+        var feeReserve: Int?
+        var state: CashuSwift.QuoteState?
+        var expiry: Int?
+        var paymentPreimage: String?
+        var quoteRequest: LegacyRequest?
+
+        /// The pre-overhaul nested request that carried the unit and invoice.
+        struct LegacyRequest: Codable {
+            var unit: String?
+            var request: String?
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case quote, amount, state, expiry, quoteRequest
+            case feeReserve = "fee_reserve"
+            case paymentPreimage = "payment_preimage"
+        }
+
+        /// Rebuilds a current melt quote, hoisting the nested unit/invoice and defaulting the
+        /// unit that old rows lack. `change` is intentionally dropped — it's never read back from
+        /// a stored quote (only from a live melt result), so we avoid decoding the legacy shape.
+        var asMeltQuote: CashuSwift.Bolt11.MeltQuote? {
+            guard let quote else { return nil }
+            return CashuSwift.Bolt11.MeltQuote(quote: quote,
+                                               request: quoteRequest?.request,
+                                               amount: amount ?? 0,
+                                               unit: quoteRequest?.unit ?? "sat",
+                                               feeReserve: feeReserve ?? 0,
+                                               state: state,
+                                               expiry: expiry,
+                                               paymentPreimage: paymentPreimage,
+                                               change: nil)
         }
     }
 

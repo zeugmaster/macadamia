@@ -31,7 +31,7 @@ struct MintEventSummary: View {
                     Spacer()
                     Text(event.currencyUnit.currencyCode)
                 }
-                if let text = event.bolt11MintQuote?.request {
+                if let text = event.mintQuote?.request {
                     CopyableRow(label: "Bolt11 Invoice", value: text)
                         .foregroundStyle(.secondary)
                 }
@@ -59,7 +59,7 @@ struct MintEventSummary: View {
                 }
                 
                 if showDetails {
-                    CopyableRow(label: "Quote ID", value: event.bolt11MintQuote?.quote ?? "nil")
+                    CopyableRow(label: "Quote ID", value: event.mintQuote?.quote ?? "nil")
                 }
             }
         }
@@ -370,7 +370,7 @@ struct TransferEventSummary: View {
                 }
                 
                 Section {
-                    CopyableRow(label: "Quote ID", value: event.bolt11MintQuote?.quote ?? "nil")
+                    CopyableRow(label: "Quote ID", value: event.mintQuote?.quote ?? "nil")
                 } header: {
                     Text("Ecash Created")
                 }

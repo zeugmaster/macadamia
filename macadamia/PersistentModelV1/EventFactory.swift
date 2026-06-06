@@ -23,7 +23,7 @@ extension AppSchemaV1.Event {
               visible: visible,
               kind: .pendingMint,
               wallet: wallet,
-              bolt11MintQuote: quote,
+              mintQuote: quote,
               amount: amount,
               expiration: expiration,
               mints: [mint]
@@ -43,7 +43,7 @@ extension AppSchemaV1.Event {
               visible: visible,
               kind: .mint,
               wallet: wallet,
-              bolt11MintQuote: quote,
+              mintQuote: quote,
               amount: amount,
               mints: [mint]
         )
@@ -201,7 +201,7 @@ extension AppSchemaV1.Event {
               visible: true,
               kind: .pendingTransfer,
               wallet: wallet,
-              bolt11MintQuote: mintQuote,
+              mintQuote: mintQuote,
               bolt11MeltQuote: meltQuote,
               amount: amount,
               expiration: nil,
@@ -229,7 +229,7 @@ extension AppSchemaV1.Event {
               visible: true,
               kind: .transfer,
               wallet: wallet,
-              bolt11MintQuote: mintQuote,
+              mintQuote: mintQuote,
               bolt11MeltQuote: meltQuote,
               amount: amount,
               token: nil,

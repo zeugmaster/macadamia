@@ -38,13 +38,13 @@ struct MintView: View {
 
     init(pendingMintEvent: Event? = nil) {
 
-        _quote = State(initialValue: pendingMintEvent?.bolt11MintQuote)
+        _quote = State(initialValue: pendingMintEvent?.mintQuote)
         _pendingMintEvent = State(initialValue: pendingMintEvent)
         _buttonState = State(initialValue: .idle(String(localized: "No Action")))
 
         if let mint = pendingMintEvent?.mints?.first {
             _selectedMint = State(initialValue: mint)
-            if let quote = pendingMintEvent?.bolt11MintQuote {
+            if let quote = pendingMintEvent?.mintQuote {
                 _selectedOption = State(initialValue: PaymentOption(mintID: mint.mintID,
                                                                     direction: .mint,
                                                                     unit: Unit(code: quote.unit),
@@ -52,7 +52,7 @@ struct MintView: View {
             }
         }
 
-        if let quote = pendingMintEvent?.bolt11MintQuote {
+        if let quote = pendingMintEvent?.mintQuote {
             _amount = State(initialValue: quote.amount ?? 0)
             _selectedUnit = State(initialValue: Unit(code: quote.unit))
         }

@@ -77,7 +77,7 @@ struct TransferView: View {
                             Text("Payment Quote")
                         }
                         HStack {
-                            Image(systemName: pendingTransferEvent.bolt11MintQuote == nil ? "xmark" : "checkmark")
+                            Image(systemName: pendingTransferEvent.mintQuote == nil ? "xmark" : "checkmark")
                                 .frame(width: 20)
                             Text("Ecash Quote")
                         }
