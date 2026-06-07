@@ -219,7 +219,7 @@ final class SwapManager: ObservableObject {
             do {
                 let meltResult = try await CashuSwift.Bolt11.meltState(meltQuote.quote,
                                                                        from: sendableFrom,
-                                                                       blankOutputs: blankOutputSet.tuple())
+                                                                       blankOutputs: blankOutputSet.outputs.isEmpty ? nil : blankOutputSet.tuple())
 
                 await MainActor.run {
                     switch meltResult.quote.state {
@@ -776,7 +776,7 @@ final class InlineSwapManager: ObservableObject {
             do {
                 let meltResult = try await CashuSwift.Bolt11.meltState(meltQuote.quote,
                                                                        from: sendableFrom,
-                                                                       blankOutputs: blankOutputSet.tuple())
+                                                                       blankOutputs: blankOutputSet.outputs.isEmpty ? nil : blankOutputSet.tuple())
 
                 await MainActor.run {
                     switch meltResult.quote.state {

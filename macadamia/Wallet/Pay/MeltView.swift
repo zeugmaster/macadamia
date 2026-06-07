@@ -289,10 +289,14 @@ struct MeltView: View {
                 return
             }
 
+            // An empty blank-output set is a legitimate state (the melt had no overpayment
+            // beyond the fee reserve), so map it to nil — exactly as runMelt does — instead
+            // of handing meltState an empty tuple it can't derive a keyset id from.
+            let blankOutputs = event.blankOutputs.flatMap { $0.outputs.isEmpty ? nil : $0.tuple() }
             taskInputs.append(MeltTaskInput(mint: CashuSwift.Mint(mint),
                                             proofs: proofs.sendable(),
                                             quote: quote,
-                                            blankOutputs: event.blankOutputs?.tuple()))
+                                            blankOutputs: blankOutputs))
         }
 
         buttonState = .loading()
