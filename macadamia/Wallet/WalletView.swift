@@ -60,7 +60,8 @@ struct WalletView: View {
     }
     
     @State private var navigationDestination: Destination?
-    
+    @State private var navigationPath = NavigationPath()
+
     static let buttonPadding: CGFloat = 1
     
     init(urlState: Binding<URLState?>, pendingNavigation: Binding<Destination?>) {
@@ -73,7 +74,7 @@ struct WalletView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             VStack {
                 Spacer(minLength: 40)
                 ZStack(alignment: .top) {
@@ -264,6 +265,7 @@ struct WalletView: View {
         }
         .environment(\.dismissToRoot, DismissToRootAction({ @MainActor in
             navigationDestination = nil
+            navigationPath = NavigationPath()
         }))
     }
     
