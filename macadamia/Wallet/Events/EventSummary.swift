@@ -323,8 +323,8 @@ struct TransferEventSummary: View {
     var body: some View {
         List {
             Section {
-                TransferMintLabel(from: event.mints?[0].displayName ?? "Not found",
-                                  to: event.mints?[1].displayName ?? "Not found")
+                TransferMintLabel(from: event.transferMints?.from.displayName ?? "Not found",
+                                  to: event.transferMints?.to.displayName ?? "Not found")
             } header: {
                 Text("Mints")
             }
