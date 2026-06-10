@@ -38,8 +38,8 @@ struct RedeemLaterView: View {
                 HStack {
                     Text("Total Amount: ")
                     Spacer()
-                    Text(amountDisplayString(event.token?.sum() ?? 0,
-                                             unit: event.currencyUnit))
+                    AmountView(amount: event.token?.sum() ?? 0,
+                               unit: event.currencyUnit)
                 }
                 .foregroundStyle(.secondary)
                 if let tokenMemo = event.memo, !tokenMemo.isEmpty {

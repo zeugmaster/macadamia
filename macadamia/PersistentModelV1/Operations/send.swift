@@ -11,11 +11,12 @@ extension AppSchemaV1 {
     static func createToken(mint: Mint,
                             activeWallet: Wallet,
                             amount: Int,
+                            unit: Currency.Unit,
                             memo: String,
                             modelContext: ModelContext,
                             lockingKey: String?) async throws -> CashuSwift.Token {
-        
-        guard let selection = mint.select(amount: amount, unit: .sat) else {
+
+        guard let selection = mint.select(amount: amount, unit: unit) else {
             throw CashuError.insufficientInputs("")
         }
         
@@ -51,7 +52,7 @@ extension AppSchemaV1 {
             mint.increaseDerivationCounterForKeysetWithID(increase.keysetID, by: increase.increase)
         }
         
-        let event = Event.sendEvent(unit: .sat,
+        let event = Event.sendEvent(unit: unit,
                                     shortDescription: "Send",
                                     wallet: activeWallet,
                                     amount: amount,

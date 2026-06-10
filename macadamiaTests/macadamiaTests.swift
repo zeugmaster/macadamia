@@ -151,17 +151,11 @@ final class macadamiaTests: XCTestCase {
                 }
                 
                 // Now get quote and mint using sendable types
-                let quoteRequest = CashuSwift.Bolt11.RequestMintQuote(unit: "sat", amount: 100)
-                let quote = try await CashuSwift.getQuote(mint: sendableMint, quoteRequest: quoteRequest)
-                
-                guard let mintQuote = quote as? CashuSwift.Bolt11.MintQuote else {
-                    XCTFail("Quote should be a MintQuote")
-                    mintExpectation.fulfill()
-                    return
-                }
+                let quoteRequest = CashuSwift.Bolt11.MintQuoteRequest(unit: "sat", amount: 100)
+                let mintQuote = try await CashuSwift.Bolt11.requestMintQuote(quoteRequest, from: sendableMint)
                 
                 // Perform minting with sendable types
-                let issueResult = try await CashuSwift.issue(for: mintQuote, mint: sendableMint, seed: seed)
+                let issueResult = try await CashuSwift.Bolt11.mint(quote: mintQuote, from: sendableMint, seed: seed)
                 mintedProofs = issueResult.proofs
                 
                 // Check DLEQ verification result
@@ -667,7 +661,53 @@ final class macadamiaTests: XCTestCase {
         let fromNUT26 = try parsePaymentRequest(nut26)
         XCTAssertEqual(fromNUT26.paymentId, "xyz")
     }
-    
+
+    // MARK: - Payment Request Mint Matching
+
+    func testURLMatchesIgnoresTrailingSlashHostCaseAndDefaultPort() {
+        let base = URL(string: "https://mint.example.com")!
+        XCTAssertTrue(base.matches(URL(string: "https://mint.example.com/")!), "trailing slash should match")
+        XCTAssertTrue(base.matches(URL(string: "https://MINT.EXAMPLE.COM")!), "host case should be ignored")
+        XCTAssertTrue(base.matches(URL(string: "https://mint.example.com:443")!), "explicit default port should match")
+        XCTAssertFalse(base.matches(URL(string: "http://mint.example.com")!), "different scheme should not match")
+        XCTAssertFalse(base.matches(URL(string: "https://other.example.com")!), "different host should not match")
+
+        let pathed = URL(string: "https://mint.example.com/cashu")!
+        XCTAssertTrue(pathed.matches(URL(string: "https://mint.example.com/cashu/")!), "trailing slash on path should match")
+        XCTAssertFalse(pathed.matches(URL(string: "https://mint.example.com")!), "different path should not match")
+    }
+
+    @MainActor
+    func testAcceptedByPaymentRequestNormalizesMintURLs() throws {
+        let context = container.mainContext
+
+        // Local mint stored WITHOUT a trailing slash.
+        let mintA = Mint(url: URL(string: "https://mint.a.example.com")!, keysets: [])
+        // Local mint stored WITH a trailing slash.
+        let mintB = Mint(url: URL(string: "https://mint.b.example.com/")!, keysets: [])
+        context.insert(mintA)
+        context.insert(mintB)
+        let mints = [mintA, mintB]
+
+        // Empty request list -> request accepts any mint.
+        XCTAssertEqual(mints.acceptedByPaymentRequest(mintURLs: []).count, 2)
+
+        // Request lists mint A WITH a trailing slash; local copy has none -> must still match.
+        let matchA = mints.acceptedByPaymentRequest(mintURLs: ["https://mint.a.example.com/"])
+        XCTAssertEqual(matchA.map { $0.url.absoluteString }, ["https://mint.a.example.com"])
+
+        // Request lists mint B WITHOUT a trailing slash; local copy has one -> must still match.
+        let matchB = mints.acceptedByPaymentRequest(mintURLs: ["https://mint.b.example.com"])
+        XCTAssertEqual(matchB.map { $0.url.absoluteString }, ["https://mint.b.example.com/"])
+
+        // Host case differences must not prevent a match.
+        let matchCase = mints.acceptedByPaymentRequest(mintURLs: ["https://MINT.A.EXAMPLE.COM"])
+        XCTAssertEqual(matchCase.count, 1)
+
+        // A genuinely absent mint must not match.
+        XCTAssertTrue(mints.acceptedByPaymentRequest(mintURLs: ["https://unknown.example.com"]).isEmpty)
+    }
+
     // MARK: - BIP-321 Tests
     
     func testBIP321Detection() {
@@ -837,5 +877,433 @@ final class macadamiaTests: XCTestCase {
         XCTAssertFalse(url8.matches(url9))
         XCTAssertFalse(url7.matches(url10))
         XCTAssertFalse(url7.matches(url11))
+    }
+
+    func testSatAmountFormattingHasNoDecimal() {
+        XCTAssertEqual(amountDisplayString(42, unit: .sat), "42 sat")
+        XCTAssertEqual(amountDisplayString(0, unit: .sat), "0 sat")
+        XCTAssertEqual(amountDisplayString(42, unit: .sat, negative: true), "- 42 sat")
+    }
+
+    func testAmountConcealmentRandomizesStarCount() {
+        let satAmount = AmountConcealment.concealedString(for: "12345 sat")
+        XCTAssertTrue(satAmount.hasSuffix(" sat"))
+        let satStars = satAmount.dropLast(" sat".count)
+        XCTAssertTrue((4...6).contains(satStars.count))
+        XCTAssertTrue(satStars.allSatisfy { $0 == "*" })
+
+        let negativeAmount = AmountConcealment.concealedString(for: "- 42 sat")
+        XCTAssertTrue(negativeAmount.hasPrefix("- "))
+        XCTAssertTrue(negativeAmount.hasSuffix(" sat"))
+        let negativeStars = negativeAmount
+            .dropFirst("- ".count)
+            .dropLast(" sat".count)
+        XCTAssertTrue((1...3).contains(negativeStars.count))
+        XCTAssertTrue(negativeStars.allSatisfy { $0 == "*" })
+
+        let fiatAmount = AmountConcealment.concealedString(for: "$1.23")
+        XCTAssertTrue(fiatAmount.hasPrefix("$"))
+        let fiatStars = fiatAmount.dropFirst()
+        XCTAssertTrue((3...5).contains(fiatStars.count))
+        XCTAssertTrue(fiatStars.allSatisfy { $0 == "*" })
+    }
+
+    func testAmountConcealmentRandomDigitFramesMatchTargetShape() {
+        let frame = AmountConcealment.randomDigitString(matching: "- **** sat")
+        XCTAssertTrue(frame.hasPrefix("- "))
+        XCTAssertTrue(frame.hasSuffix(" sat"))
+        let digits = frame.dropFirst("- ".count).dropLast(" sat".count)
+        XCTAssertEqual(digits.count, 4)
+        XCTAssertTrue(digits.allSatisfy { $0.isNumber })
+
+        let fiatFrame = AmountConcealment.randomDigitString(matching: "$***")
+        XCTAssertTrue(fiatFrame.hasPrefix("$"))
+        XCTAssertEqual(fiatFrame.dropFirst().count, 3)
+        XCTAssertTrue(fiatFrame.dropFirst().allSatisfy { $0.isNumber })
+    }
+
+    // MARK: - Legacy store migration (App Store 0.9.x -> current)
+
+    /// Reproduces the crash scenario on disk: a v0.9.x store whose `Event.bolt11MintQuote`
+    /// composite attribute predates the non-optional `unit` field, then opens it with the
+    /// current (fixed) schema. Verifies the upgrade migrates cleanly (no throw), the formerly
+    /// trapping property access is now safe, and the quote data is preserved with unit -> "sat".
+    @MainActor
+    func testMigrationFromV09PreUnitMintQuotePreservesDataWithoutCrashing() throws {
+        let storeURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("macadamia-migration-\(UUID().uuidString).store")
+        defer {
+            for suffix in ["", "-wal", "-shm"] {
+                try? FileManager.default.removeItem(at: URL(fileURLWithPath: storeURL.path + suffix))
+            }
+        }
+
+        let quoteID = "quote-abc-123"
+        let invoice = "lnbc1500n1pjqxyz0pp5testinvoicepayload"
+        let expiry = 1_900_000_000
+
+        // 1) Write a 0.9.x-shaped store: events carrying the pre-`unit` MintQuote composite.
+        do {
+            let legacyContainer = try ModelContainer(for: LegacyV09Schema.Event.self,
+                                                     configurations: ModelConfiguration(url: storeURL))
+            let context = ModelContext(legacyContainer)
+            let legacyQuote = LegacyV09Schema.LegacyMintQuote(quote: quoteID,
+                                                              request: invoice,
+                                                              paid: nil,
+                                                              state: .paid,
+                                                              expiry: expiry)
+            context.insert(LegacyV09Schema.Event(shortDescription: "Pending Ecash",
+                                                 visible: true,
+                                                 kind: .pendingMint,
+                                                 bolt11MintQuote: legacyQuote,
+                                                 amount: 1500))
+            context.insert(LegacyV09Schema.Event(shortDescription: "Ecash created",
+                                                 visible: true,
+                                                 kind: .mint,
+                                                 bolt11MintQuote: legacyQuote,
+                                                 amount: 1500))
+            try context.save()
+            // legacyContainer / context go out of scope and release the store here.
+        }
+
+        // 2) Open the SAME store with the current schema. This is the upgrade migration that
+        //    affected App Store (0.9.x) users perform. It must not throw (no failed migration).
+        let currentContainer = try ModelContainer(for: Wallet.self, Proof.self, Mint.self, Event.self,
+                                                  configurations: ModelConfiguration(url: storeURL))
+        let context = ModelContext(currentContainer)
+
+        let events = try context.fetch(FetchDescriptor<Event>())
+        XCTAssertEqual(events.count, 2, "Both legacy events must survive the migration")
+
+        for event in events {
+            // 3) This is the exact access that used to trap (EXC_BREAKPOINT) at launch.
+            let quote = event.mintQuote
+            XCTAssertNotNil(quote, "Legacy quote data must be preserved, not dropped")
+            XCTAssertEqual(quote?.quote, quoteID, "Quote ID must survive migration")
+            XCTAssertEqual(quote?.request, invoice, "Invoice must survive migration")
+            XCTAssertEqual(quote?.unit, "sat", "Missing legacy unit must default to sat, not crash")
+            XCTAssertEqual(quote?.state, .paid, "Quote state must survive migration")
+            XCTAssertEqual(quote?.expiry, expiry, "Expiry must survive migration")
+        }
+    }
+
+    /// Verifies the upgrade path for current TestFlight testers on 0.10 build 1/2, whose stores
+    /// already use the current quote columns. Both a row with an explicit `unit` and a row whose
+    /// `unit` is NULL (migrated up from 0.9.x) must migrate cleanly and read back without crashing.
+    @MainActor
+    func testMigrationFrom010Build2StorePreservesUnitAndDefaultsNull() throws {
+        let storeURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("macadamia-migration-b2-\(UUID().uuidString).store")
+        defer {
+            for suffix in ["", "-wal", "-shm"] {
+                try? FileManager.default.removeItem(at: URL(fileURLWithPath: storeURL.path + suffix))
+            }
+        }
+
+        // 1) Write a 0.10 build-2-shaped store: one unit-bearing row, one NULL-unit row.
+        do {
+            let container = try ModelContainer(for: Build2Schema.Event.self,
+                                               configurations: ModelConfiguration(url: storeURL))
+            let context = ModelContext(container)
+            context.insert(Build2Schema.Event(shortDescription: "Ecash created",
+                                              visible: true,
+                                              kind: .mint,
+                                              bolt11MintQuote: .init(quote: "with-unit",
+                                                                     request: "lnbc-with-unit",
+                                                                     amount: 2100,
+                                                                     unit: "sat",
+                                                                     state: .issued,
+                                                                     expiry: 1_900_000_000),
+                                              amount: 2100))
+            context.insert(Build2Schema.Event(shortDescription: "Pending Ecash",
+                                              visible: true,
+                                              kind: .pendingMint,
+                                              bolt11MintQuote: .init(quote: "null-unit",
+                                                                     request: "lnbc-null-unit",
+                                                                     amount: nil,
+                                                                     unit: nil,
+                                                                     state: .unpaid,
+                                                                     expiry: nil),
+                                              amount: 500))
+            try context.save()
+        }
+
+        // 2) Open with the current fixed schema.
+        let currentContainer = try ModelContainer(for: Wallet.self, Proof.self, Mint.self, Event.self,
+                                                  configurations: ModelConfiguration(url: storeURL))
+        let context = ModelContext(currentContainer)
+        let events = try context.fetch(FetchDescriptor<Event>())
+        XCTAssertEqual(events.count, 2, "Both build-2 events must survive the migration")
+
+        let withUnit = try XCTUnwrap(events.first { $0.mintQuote?.quote == "with-unit" }?.mintQuote)
+        XCTAssertEqual(withUnit.request, "lnbc-with-unit")
+        XCTAssertEqual(withUnit.unit, "sat", "Explicit unit must be preserved verbatim")
+        XCTAssertEqual(withUnit.state, .issued)
+
+        let nullUnit = try XCTUnwrap(events.first { $0.mintQuote?.quote == "null-unit" }?.mintQuote)
+        XCTAssertEqual(nullUnit.request, "lnbc-null-unit")
+        XCTAssertEqual(nullUnit.unit, "sat", "NULL unit must default to sat, not crash")
+        XCTAssertEqual(nullUnit.state, .unpaid)
+    }
+
+    // MARK: - Legacy melt quote migration (cashu-swift 0.3.1 shape -> current)
+
+    /// Reproduces a pending payment created on the App Store build: its `bolt11MeltQuote` was
+    /// serialized with the pre-overhaul cashu-swift 0.3.1 shape, where the invoice and unit lived
+    /// inside a nested `quoteRequest` and there was no top-level `unit`. The current
+    /// `CashuSwift.Bolt11.MeltQuote` makes `unit` a required top-level field, so the plain
+    /// `try?` decode returns nil on these rows — which is exactly why the melt view showed a
+    /// pending payment with no quote info and "Check Payment State" did nothing. Verifies the
+    /// legacy fallback recovers the quote instead of dropping it.
+    @MainActor
+    func testLegacyMeltQuoteDecodesViaFallbackWithNestedInvoiceAndUnitDefault() throws {
+        let storeURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("macadamia-melt-migration-\(UUID().uuidString).store")
+        defer {
+            for suffix in ["", "-wal", "-shm"] {
+                try? FileManager.default.removeItem(at: URL(fileURLWithPath: storeURL.path + suffix))
+            }
+        }
+
+        let quoteID = "melt-quote-xyz"
+        let invoice = "lnbc2500n1pjqmeltinvoicepayload"
+        let amount = 2500
+        let feeReserve = 5
+        let expiry = 1_900_000_000
+
+        // 1) Encode an old-shape MeltQuote exactly as cashu-swift 0.3.1 would have, and store it
+        //    in the same `bolt11MeltQuoteData` Data column the current model uses.
+        let legacyData = try JSONEncoder().encode(
+            LegacyMeltSchema.LegacyMeltQuote(quote: quoteID,
+                                             amount: amount,
+                                             feeReserve: feeReserve,
+                                             paid: false,
+                                             expiry: expiry,
+                                             paymentPreimage: nil,
+                                             quoteRequest: .init(unit: "sat",
+                                                                 request: invoice,
+                                                                 options: nil),
+                                             state: .unpaid))
+
+        do {
+            let legacyContainer = try ModelContainer(for: LegacyMeltSchema.Event.self,
+                                                     configurations: ModelConfiguration(url: storeURL))
+            let context = ModelContext(legacyContainer)
+            context.insert(LegacyMeltSchema.Event(shortDescription: "Pending Payment",
+                                                  visible: true,
+                                                  kind: .pendingMelt,
+                                                  bolt11MeltQuoteData: legacyData,
+                                                  amount: amount))
+            try context.save()
+        }
+
+        // 2) Open the SAME store with the current schema and read the quote back through the
+        //    real computed property (which runs the fallback).
+        let currentContainer = try ModelContainer(for: Wallet.self, Proof.self, Mint.self, Event.self,
+                                                  configurations: ModelConfiguration(url: storeURL))
+        let context = ModelContext(currentContainer)
+        let events = try context.fetch(FetchDescriptor<Event>())
+        XCTAssertEqual(events.count, 1, "The legacy melt event must survive the migration")
+
+        let quote = try XCTUnwrap(events.first?.bolt11MeltQuote,
+                                  "Legacy melt quote must decode via the fallback, not return nil")
+        XCTAssertEqual(quote.quote, quoteID, "Quote ID must survive")
+        XCTAssertEqual(quote.request, invoice, "Invoice must be recovered from nested quoteRequest")
+        XCTAssertEqual(quote.amount, amount, "Amount must survive")
+        XCTAssertEqual(quote.feeReserve, feeReserve, "Fee reserve must survive")
+        XCTAssertEqual(quote.unit, "sat", "Missing top-level unit must default to sat")
+        XCTAssertEqual(quote.state, .unpaid, "Quote state must survive")
+        XCTAssertEqual(quote.expiry, expiry, "Expiry must survive")
+    }
+
+    /// A row written by the current build (new top-level `unit`) must still decode directly,
+    /// proving the fallback doesn't interfere with the happy path.
+    @MainActor
+    func testCurrentShapeMeltQuoteStillDecodes() throws {
+        let storeURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("macadamia-melt-current-\(UUID().uuidString).store")
+        defer {
+            for suffix in ["", "-wal", "-shm"] {
+                try? FileManager.default.removeItem(at: URL(fileURLWithPath: storeURL.path + suffix))
+            }
+        }
+
+        let current = CashuSwift.Bolt11.MeltQuote(quote: "current-quote",
+                                                  request: "lnbc-current",
+                                                  amount: 1000,
+                                                  unit: "sat",
+                                                  feeReserve: 2,
+                                                  state: .paid,
+                                                  expiry: 1_900_000_000,
+                                                  paymentPreimage: "preimage123")
+        let data = try JSONEncoder().encode(current)
+
+        do {
+            let legacyContainer = try ModelContainer(for: LegacyMeltSchema.Event.self,
+                                                     configurations: ModelConfiguration(url: storeURL))
+            let context = ModelContext(legacyContainer)
+            context.insert(LegacyMeltSchema.Event(shortDescription: "Payment",
+                                                  visible: true,
+                                                  kind: .melt,
+                                                  bolt11MeltQuoteData: data,
+                                                  amount: 1000))
+            try context.save()
+        }
+
+        let currentContainer = try ModelContainer(for: Wallet.self, Proof.self, Mint.self, Event.self,
+                                                  configurations: ModelConfiguration(url: storeURL))
+        let context = ModelContext(currentContainer)
+        let quote = try XCTUnwrap(try context.fetch(FetchDescriptor<Event>()).first?.bolt11MeltQuote)
+        XCTAssertEqual(quote.quote, "current-quote")
+        XCTAssertEqual(quote.request, "lnbc-current")
+        XCTAssertEqual(quote.unit, "sat")
+        XCTAssertEqual(quote.feeReserve, 2)
+        XCTAssertEqual(quote.paymentPreimage, "preimage123")
+        XCTAssertEqual(quote.state, .paid)
+    }
+}
+
+/// Minimal stand-in for the v0.9.x persisted schema, used only to write a pre-migration store.
+///
+/// The single relevant difference from the current schema is `bolt11MintQuote`: in 0.9.x it was a
+/// composite attribute of a `MintQuote` whose Codable shape had no `unit`/`amount` (cashu-swift 0.3.1).
+/// `Event` here deliberately uses the same entity name and the real `AppSchemaV1.Event.Kind` so the
+/// current schema recognises the store as the same `Event` entity and lightweight-migrates it.
+private enum LegacyV09Schema {
+    /// The pre-`unit` `CashuSwift.Bolt11.MintQuote` shape, as persisted by v0.9.x.
+    struct LegacyMintQuote: Codable {
+        var quote: String
+        var request: String
+        var paid: Bool?
+        var state: CashuSwift.QuoteState?
+        var expiry: Int?
+        // No `unit`, no `amount` — exactly the shape that traps the unpatched current build.
+    }
+
+    @Model
+    final class Event {
+        @Attribute(.unique) var eventID: UUID
+        var date: Date
+        var shortDescription: String
+        var visible: Bool
+        var kind: AppSchemaV1.Event.Kind
+        var bolt11MintQuote: LegacyMintQuote?
+        var amount: Int?
+
+        init(eventID: UUID = UUID(),
+             date: Date = Date(),
+             shortDescription: String,
+             visible: Bool,
+             kind: AppSchemaV1.Event.Kind,
+             bolt11MintQuote: LegacyMintQuote?,
+             amount: Int?) {
+            self.eventID = eventID
+            self.date = date
+            self.shortDescription = shortDescription
+            self.visible = visible
+            self.kind = kind
+            self.bolt11MintQuote = bolt11MintQuote
+            self.amount = amount
+        }
+    }
+}
+
+/// Stand-in for the 0.10 build 1/2 (TestFlight) persisted schema. By then `bolt11MintQuote`
+/// already had the current column set {quote, request, amount, unit, state, expiry}. A real
+/// build-1/2 store mixes rows whose `unit` is set (events those builds created) with rows whose
+/// `unit` is NULL (events migrated up from 0.9.x). `unit` is modelled optional here so we can
+/// write both kinds of row.
+private enum Build2Schema {
+    struct Build2MintQuote: Codable {
+        var quote: String
+        var request: String
+        var amount: Int?
+        var unit: String?
+        var state: CashuSwift.QuoteState?
+        var expiry: Int?
+    }
+
+    @Model
+    final class Event {
+        @Attribute(.unique) var eventID: UUID
+        var date: Date
+        var shortDescription: String
+        var visible: Bool
+        var kind: AppSchemaV1.Event.Kind
+        var bolt11MintQuote: Build2MintQuote?
+        var amount: Int?
+
+        init(eventID: UUID = UUID(),
+             date: Date = Date(),
+             shortDescription: String,
+             visible: Bool,
+             kind: AppSchemaV1.Event.Kind,
+             bolt11MintQuote: Build2MintQuote?,
+             amount: Int?) {
+            self.eventID = eventID
+            self.date = date
+            self.shortDescription = shortDescription
+            self.visible = visible
+            self.kind = kind
+            self.bolt11MintQuote = bolt11MintQuote
+            self.amount = amount
+        }
+    }
+}
+
+/// Stand-in for a store whose `Event.bolt11MeltQuote` JSON predates the cashu-swift
+/// payment-method overhaul. Unlike the mint quote, the melt quote was always a manually
+/// serialized `Data` column (`bolt11MeltQuoteData`), so this models that exact column name and
+/// writes pre-overhaul bytes into it. `LegacyMeltQuote` mirrors the cashu-swift 0.3.1
+/// `Bolt11.MeltQuote` Codable shape: top-level `quote`/`amount`/`fee_reserve` plus a nested
+/// `quoteRequest` carrying `unit` and the invoice, and no top-level `unit`.
+private enum LegacyMeltSchema {
+    struct LegacyMeltQuote: Codable {
+        struct Request: Codable {
+            var unit: String?
+            var request: String?
+            var options: String?   // always nil in these tests; real shape is irrelevant here
+        }
+        var quote: String
+        var amount: Int
+        var feeReserve: Int
+        var paid: Bool?
+        var expiry: Int?
+        var paymentPreimage: String?
+        var quoteRequest: Request?
+        var state: CashuSwift.QuoteState?
+
+        enum CodingKeys: String, CodingKey {
+            case quote, amount, paid, expiry, quoteRequest, state
+            case feeReserve = "fee_reserve"
+            case paymentPreimage = "payment_preimage"
+        }
+    }
+
+    @Model
+    final class Event {
+        @Attribute(.unique) var eventID: UUID
+        var date: Date
+        var shortDescription: String
+        var visible: Bool
+        var kind: AppSchemaV1.Event.Kind
+        var bolt11MeltQuoteData: Data?
+        var amount: Int?
+
+        init(eventID: UUID = UUID(),
+             date: Date = Date(),
+             shortDescription: String,
+             visible: Bool,
+             kind: AppSchemaV1.Event.Kind,
+             bolt11MeltQuoteData: Data?,
+             amount: Int?) {
+            self.eventID = eventID
+            self.date = date
+            self.shortDescription = shortDescription
+            self.visible = visible
+            self.kind = kind
+            self.bolt11MeltQuoteData = bolt11MeltQuoteData
+            self.amount = amount
+        }
     }
 }

@@ -16,7 +16,9 @@ struct ProofDataView: View {
         List {
             Section("Basic Information") {
                 CopyableRow(label: "Proof ID", value: proof.proofID.uuidString)
-                CopyableRow(label: "Amount", value: "\(proof.amount) \(proof.currencyUnit.currencyCode)")
+                CopyableRow(label: "Amount",
+                            value: "\(proof.amount) \(proof.currencyUnit.currencyCode)",
+                            concealValue: true)
                 CopyableRow(label: "State", value: proof.state.description)
                 CopyableRow(label: "Created", value: proof.dateCreated.formatted())
             }
@@ -59,15 +61,22 @@ struct ProofDataView: View {
 struct CopyableRow: View {
     let label: String
     let value: String
+    var concealValue = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Text(value)
-                .font(.system(.body, design: .monospaced))
-                .textSelection(.enabled)
+            if concealValue {
+                AmountView(text: value)
+                    .font(.system(.body, design: .monospaced))
+                    .textSelection(.enabled)
+            } else {
+                Text(value)
+                    .font(.system(.body, design: .monospaced))
+                    .textSelection(.enabled)
+            }
         }
         .lineLimit(1)
         .contextMenu {

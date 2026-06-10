@@ -6,46 +6,53 @@ struct MintPicker: View {
     @Query(filter: #Predicate<AppSchemaV1.Wallet> { wallet in
         wallet.active == true
     }) private var wallets: [AppSchemaV1.Wallet]
-    
+
     @Binding private var selectedMint: AppSchemaV1.Mint?
     @Binding private var hide: Mint?
     @Binding private var isMultipleSelected: Bool
-    
+
     private var allowsNoneState: Bool = false
     private var allowsMultipleState: Bool = false
     private var label: String
-    
+    private var allowedMintIDs: Set<UUID>?
+
     @State private var mintNamesAndIDs = [(name: String, id: UUID)]()
     @State private var selectedID: UUID? = nil
-    
+
     // Special UUID to represent "Multiple" selection
     private static let multipleSelectionID = UUID()
-    
+
     var activeWallet: AppSchemaV1.Wallet? {
         wallets.first
     }
-    
+
     var sortedMintsOfActiveWallet: [AppSchemaV1.Mint] {
-        mints.filter { $0.wallet == activeWallet && !$0.hidden }
+        mints.filter {
+                $0.wallet == activeWallet &&
+                !$0.hidden &&
+                (allowedMintIDs == nil || allowedMintIDs?.contains($0.mintID) == true)
+            }
              .sorted { ($0.userIndex ?? 0) < ($1.userIndex ?? 0) }
     }
-    
+
     init(
-        label: String, 
-        selectedMint: Binding<Mint?>, 
-        allowsNoneState: Bool = false, 
+        label: String,
+        selectedMint: Binding<Mint?>,
+        allowsNoneState: Bool = false,
         allowsMultipleState: Bool = false,
         isMultipleSelected: Binding<Bool> = .constant(false),
+        allowedMintIDs: Set<UUID>? = nil,
         hide: Binding<Mint?>? = nil
     ) {
         self.label = label
         self._selectedMint = selectedMint
         self.allowsNoneState = allowsNoneState
         self.allowsMultipleState = allowsMultipleState
+        self.allowedMintIDs = allowedMintIDs
         self._isMultipleSelected = isMultipleSelected
         self._hide = hide ?? .constant(nil)
     }
-    
+
     var body: some View {
         Group {
             if mintNamesAndIDs.isEmpty {
@@ -115,19 +122,28 @@ struct MintPicker: View {
         .onChange(of: hide) { oldValue, newValue in
             populate()
         }
+        .onChange(of: allowedMintIDs) { _, _ in
+            populate()
+        }
     }
-    
-    func populate() {        
+
+    func populate() {
         mintNamesAndIDs = sortedMintsOfActiveWallet.map { mint in
             (mint.displayName, mint.mintID)
         }
-        
+
         if let hide {
             mintNamesAndIDs = mintNamesAndIDs.filter { (name: String, id: UUID) in
                 id != hide.mintID
             }
         }
-        
+
+        if let selectedID,
+           selectedID != Self.multipleSelectionID,
+           !mintNamesAndIDs.contains(where: { $0.id == selectedID }) {
+            self.selectedID = allowsNoneState ? nil : mintNamesAndIDs.first?.id
+        }
+
         // Only auto-select if we don't already have a valid selection
         if (selectedID == nil || (!mintNamesAndIDs.contains(where: { $0.id == selectedID }) && selectedID != Self.multipleSelectionID)),
            let first = mintNamesAndIDs.first,

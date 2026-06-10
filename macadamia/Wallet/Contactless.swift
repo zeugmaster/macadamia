@@ -123,7 +123,7 @@ struct Contactless: View {
                     Label("Payment sent!", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                         .font(.headline)
-                    Text("\(amount) sat")
+                    AmountView(amount: amount, unit: .sat)
                         .font(.title2.bold().monospacedDigit())
                 }
                 .padding()
@@ -327,9 +327,7 @@ struct Contactless: View {
         
         // 3. Find matching mint
         let requestedMints = request.mints ?? []
-        let matchingMints = mints.filter { mint in
-            requestedMints.isEmpty || requestedMints.contains(mint.url.absoluteString)
-        }
+        let matchingMints = mints.acceptedByPaymentRequest(mintURLs: requestedMints)
         
         guard !matchingMints.isEmpty else {
             throw NFCPaymentError.noMatchingMint(requestedMints: requestedMints)
@@ -343,9 +341,12 @@ struct Contactless: View {
         
         // TODO: check for locking requirement
         
+        // NFC contactless doesn't yet negotiate a unit — keep the existing
+        // sat-only behavior until a multi-unit handshake is defined.
         let token = try await AppSchemaV1.createToken(mint: selectedMint,
                                                       activeWallet: activeWallet,
                                                       amount: amount,
+                                                      unit: .sat,
                                                       memo: "",
                                                       modelContext: modelContext,
                                                       lockingKey: nil)

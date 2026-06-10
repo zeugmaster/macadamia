@@ -10,30 +10,39 @@ import CashuSwift
 
 struct TokenShareView: View {
     let token: CashuSwift.Token
-    
+
     @State private var preferredTokenVersion: CashuSwift.TokenVersion = .V4
     @State private var isCopied = false
     @State private var tokenString = ""
-    
+
+    /// V3 tokens carry no top-level `unit` field (NUT-00) — they're
+    /// implicitly sat. Anything else can only legitimately serialize as V4,
+    /// so we hide the version picker and stick to V4 in that case.
+    private var supportsV3: Bool {
+        Currency.Unit(code: token.unit) == .sat
+    }
+
     init(token: CashuSwift.Token) {
         self.token = token
         let string = (try? token.serialize(to: .V4)) ?? ""
         self._tokenString = State(initialValue: string)
     }
-    
+
     var body: some View {
         Section {
-            HStack {
-                Text("Version: ")
-                Spacer()
-                Picker("", selection: $preferredTokenVersion) {
-                    Text("V3").tag(CashuSwift.TokenVersion.V3)
-                    Text("V4").tag(CashuSwift.TokenVersion.V4)
+            if supportsV3 {
+                HStack {
+                    Text("Version: ")
+                    Spacer()
+                    Picker("", selection: $preferredTokenVersion) {
+                        Text("V3").tag(CashuSwift.TokenVersion.V3)
+                        Text("V4").tag(CashuSwift.TokenVersion.V4)
+                    }
+                    .pickerStyle(.segmented)
+                    .fixedSize()
                 }
-                .pickerStyle(.segmented)
-                .fixedSize()
             }
-            
+
             TokenText(text: tokenString)
                 .frame(idealHeight: 90)
                 .listRowInsets(EdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 14))

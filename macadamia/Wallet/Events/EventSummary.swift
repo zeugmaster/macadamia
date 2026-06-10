@@ -24,14 +24,14 @@ struct MintEventSummary: View {
                 HStack {
                     Text("Amount: ")
                     Spacer()
-                    Text(String(event.amount ?? 0))
+                    AmountView(amount: event.amount ?? 0, unit: event.currencyUnit, showUnit: false)
                 }
                 HStack {
                     Text("Unit: ")
                     Spacer()
                     Text(event.currencyUnit.currencyCode)
                 }
-                if let text = event.bolt11MintQuote?.request {
+                if let text = event.mintQuote?.request {
                     CopyableRow(label: "Bolt11 Invoice", value: text)
                         .foregroundStyle(.secondary)
                 }
@@ -59,7 +59,7 @@ struct MintEventSummary: View {
                 }
                 
                 if showDetails {
-                    CopyableRow(label: "Quote ID", value: event.bolt11MintQuote?.quote ?? "nil")
+                    CopyableRow(label: "Quote ID", value: event.mintQuote?.quote ?? "nil")
                 }
             }
         }
@@ -91,7 +91,7 @@ struct MeltEventSummary: View {
                 HStack {
                     Text("Total Amount")
                     Spacer()
-                    Text("\(totalAmount) sats")
+                    AmountView(amount: totalAmount, unit: events.first?.currencyUnit ?? .sat)
                 }
                 
                 HStack {
@@ -122,7 +122,7 @@ struct MeltEventSummary: View {
                     HStack {
                         Text(event.mints?.first?.displayName ?? "nil")
                         Spacer()
-                        Text(amountDisplayString(event.amount ?? 0, unit: .sat))
+                        AmountView(amount: event.amount ?? 0, unit: event.currencyUnit)
                             .monospaced()
                     }
                     .lineLimit(1)
@@ -188,8 +188,11 @@ struct SendEventView: View {
            let mints = event.mints,
            mints.count == 1 {
             
+            // NUT-01 mandates lowercase unit codes on the wire. Our
+            // `currencyCode` returns uppercase for fiat (for display), so
+            // lowercase it here when feeding the token wire format.
             return CashuSwift.Token(proofs: [mints.first!.url.absoluteString: proofs],
-                                    unit: Unit.sat.currencyCode,
+                                    unit: event.currencyUnit.currencyCode.lowercased(),
                                     memo: event.memo)
         }
         return nil
@@ -287,7 +290,7 @@ struct ReceiveEventSummary: View {
             HStack {
                 Text("Amount: ")
                 Spacer()
-                Text(String(event.amount ?? 0))
+                AmountView(amount: event.amount ?? 0, unit: event.currencyUnit, showUnit: false)
             }
             HStack {
                 Text("Unit: ")
@@ -327,7 +330,7 @@ struct TransferEventSummary: View {
             }
             
             Section {
-                Text("\(String(event.amount ?? 0)) \(event.currencyUnit.currencyCode)")
+                AmountView(amount: event.amount ?? 0, unit: event.currencyUnit)
                     .monospaced()
             } header: {
                 Text("Amount")
@@ -359,13 +362,15 @@ struct TransferEventSummary: View {
                 Section {
                     CopyableRow(label: "Quote ID", value: event.bolt11MeltQuote?.quote ?? "nil")
                     CopyableRow(label: "Payment Preimage", value: event.bolt11MeltQuote?.paymentPreimage ?? "nil")
-                    CopyableRow(label: "Fee Reserve", value: String(event.bolt11MeltQuote?.feeReserve ?? 0))
+                    CopyableRow(label: "Fee Reserve",
+                                value: String(event.bolt11MeltQuote?.feeReserve ?? 0),
+                                concealValue: true)
                 } header: {
                     Text("Payment")
                 }
                 
                 Section {
-                    CopyableRow(label: "Quote ID", value: event.bolt11MintQuote?.quote ?? "nil")
+                    CopyableRow(label: "Quote ID", value: event.mintQuote?.quote ?? "nil")
                 } header: {
                     Text("Ecash Created")
                 }

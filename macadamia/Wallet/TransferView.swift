@@ -62,7 +62,7 @@ struct TransferView: View {
                 }
                 if let amount = pendingTransferEvent.amount {
                     Section {
-                        Text("\(String(amount)) \(pendingTransferEvent.currencyUnit.currencyCode)")
+                        AmountView(amount: amount, unit: pendingTransferEvent.currencyUnit)
                             .monospaced()
                     } header: {
                         Text("Amount")
@@ -77,7 +77,7 @@ struct TransferView: View {
                             Text("Payment Quote")
                         }
                         HStack {
-                            Image(systemName: pendingTransferEvent.bolt11MintQuote == nil ? "xmark" : "checkmark")
+                            Image(systemName: pendingTransferEvent.mintQuote == nil ? "xmark" : "checkmark")
                                 .frame(width: 20)
                             Text("Ecash Quote")
                         }

@@ -11,6 +11,7 @@
       "shouldTranslate" : false
     },
     " sat" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -235,19 +236,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%1$@  %2$@"
-          }
-        }
-      },
-      "shouldTranslate" : false
-    },
-    "%@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@"
           }
         }
       },
@@ -278,7 +268,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%1$lld mint%2$@"
           }
         },
@@ -354,7 +344,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%1$lld Mint%2$@ selected"
           }
         },
@@ -481,10 +471,8 @@
     "%lld ppk" : {
       "shouldTranslate" : false
     },
-    "%lld sat" : {
-      "shouldTranslate" : false
-    },
     "%lld sats" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -516,7 +504,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%1$lld/%2$lld"
           }
         }
@@ -525,6 +513,9 @@
     },
     "%lld%%" : {
       "shouldTranslate" : false
+    },
+    "• Allocation:" : {
+
     },
     "⚠️ Encoding Error" : {
       "localizations" : {
@@ -2279,6 +2270,9 @@
         }
       }
     },
+    "Amount hidden" : {
+
+    },
     "Amount: " : {
       "localizations" : {
         "ar" : {
@@ -2840,6 +2834,7 @@
       }
     },
     "Attempting payment..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -4799,6 +4794,9 @@
         }
       }
     },
+    "Close" : {
+
+    },
     "Colombian Peso" : {
       "localizations" : {
         "ar" : {
@@ -5101,7 +5099,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Connected to %1$lld of %2$lld relay%3$@."
           }
         },
@@ -5177,7 +5175,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Connected to all %1$lld relay%2$@."
           }
         },
@@ -7190,6 +7188,9 @@
           }
         }
       }
+    },
+    "Dismiss this popover." : {
+
     },
     "Display" : {
       "localizations" : {
@@ -9294,7 +9295,11 @@
         }
       }
     },
+    "Fee:" : {
+
+    },
     "Fee: %lld • Allocation: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -9316,7 +9321,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Fee: %1$lld • Allocation: %2$lld"
           }
         },
@@ -9722,6 +9727,9 @@
           }
         }
       }
+    },
+    "Generic" : {
+
     },
     "Get Invoice" : {
       "localizations" : {
@@ -11063,6 +11071,7 @@
       }
     },
     "Initialization Error" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -12832,6 +12841,9 @@
         }
       }
     },
+    "Loading quotes..." : {
+
+    },
     "Lock to public key" : {
       "localizations" : {
         "ar" : {
@@ -13536,6 +13548,7 @@
       }
     },
     "Make transfer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -17187,6 +17200,9 @@
         }
       }
     },
+    "No supported methods" : {
+
+    },
     "No supported payment method found in bitcoin URI" : {
       "localizations" : {
         "ar" : {
@@ -17396,6 +17412,9 @@
           }
         }
       }
+    },
+    "No units available." : {
+
     },
     "No wallet initialized yet." : {
       "localizations" : {
@@ -18096,6 +18115,9 @@
           }
         }
       }
+    },
+    "On-chain" : {
+
     },
     "On-chain Bitcoin payments are not supported" : {
       "localizations" : {
@@ -20481,6 +20503,7 @@
       }
     },
     "Payment successful!" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -20899,6 +20922,9 @@
           }
         }
       }
+    },
+    "Pending Payment Parts" : {
+
     },
     "Pending Receive" : {
       "localizations" : {
@@ -22033,6 +22059,15 @@
           }
         }
       }
+    },
+    "Quote amount mismatch" : {
+
+    },
+    "Quote amounts don't match invoice" : {
+
+    },
+    "Quote fetch failed" : {
+
     },
     "Quote ID" : {
       "localizations" : {
@@ -28983,7 +29018,11 @@
         }
       }
     },
+    "Total Lightning Fees:" : {
+
+    },
     "Total Lightning Fees: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -30032,6 +30071,9 @@
           }
         }
       }
+    },
+    "Unit" : {
+
     },
     "Unit Error 💵" : {
       "localizations" : {
@@ -31175,7 +31217,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Version %1$@ (%2$@)"
           }
         },

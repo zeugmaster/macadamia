@@ -52,7 +52,6 @@ struct ReleaseNoteView: View {
         ScrollView {
             Markdown(mdWithSubstitutions)
                 .markdownTextStyle(\.link, textStyle: {
-//                    UnderlineStyle(.single)
                     ForegroundColor(.blue)
                 })
                 .padding()

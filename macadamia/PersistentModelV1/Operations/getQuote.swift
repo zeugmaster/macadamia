@@ -14,42 +14,21 @@ fileprivate let quoteLogger = Logger(subsystem: "macadamia", category: "GetQuote
 
 extension AppSchemaV1.Mint {
     
-    func getQuote(for quoteRequest:CashuSwift.QuoteRequest) async throws -> (quote:CashuSwift.Quote,
-                                                                             event:Event) {
-        
-        let event: Event
+    func getQuote(for quoteRequest: CashuSwift.Bolt11.MintQuoteRequest) async throws -> (quote: CashuSwift.Bolt11.MintQuote,
+                                                                                         event: Event) {
         
         guard let wallet = self.wallet else {
             throw macadamiaError.databaseError("mint \(self.url.absoluteString) does not have an associated wallet.")
         }
         
-        let quote = try await CashuSwift.getQuote(mint: self, quoteRequest: quoteRequest)
-        
-        switch quote {
-        case let quote as CashuSwift.Bolt11.MintQuote:
-            
-            event = Event.pendingMintEvent(unit: Unit(quote.requestDetail?.unit) ?? .sat,
+        let quote = try await CashuSwift.Bolt11.requestMintQuote(quoteRequest, from: CashuSwift.Mint(self))
+        let event = Event.pendingMintEvent(unit: Unit(code: quote.unit),
                                            shortDescription: "Pending Ecash",
                                            wallet: wallet,
                                            quote: quote,
-                                           amount: quote.requestDetail?.amount ?? 0,
+                                           amount: quote.amount ?? 0,
                                            expiration: Date(timeIntervalSince1970: TimeInterval(quote.expiry ?? 0)),
                                            mint: self)
-            
-        case let quote as CashuSwift.Bolt11.MeltQuote:
-            
-            event = Event.pendingMeltEvent(unit: .sat,
-                                           shortDescription: "Pending Payment",
-                                           wallet: wallet,
-                                           quote: quote,
-                                           amount: (quote.amount),
-                                           expiration: Date(timeIntervalSince1970: TimeInterval(quote.expiry ?? 0)),
-                                           mints: [self],
-                                           proofs: [])
-            
-        default:
-            throw CashuError.typeMismatch("quote is not of any known type.")
-        }
         
         quoteLogger.info("Successfully requested mint quote from mint.")
         
@@ -57,8 +36,8 @@ extension AppSchemaV1.Mint {
     }
     
     @MainActor
-    func getQuote(for quoteRequest: CashuSwift.QuoteRequest,
-                  completion: @escaping (Result<(quote: CashuSwift.Quote,
+    func getQuote(for quoteRequest: CashuSwift.Bolt11.MintQuoteRequest,
+                  completion: @escaping (Result<(quote: CashuSwift.Bolt11.MintQuote,
                                                  event: Event), Error>) -> Void) {
         
         guard let wallet = self.wallet else {
@@ -70,37 +49,17 @@ extension AppSchemaV1.Mint {
         
         Task {
             do {
-                let quote = try await CashuSwift.getQuote(mint: sendableMint, quoteRequest: quoteRequest)
+                let quote = try await CashuSwift.Bolt11.requestMintQuote(quoteRequest, from: sendableMint)
                 
                 await MainActor.run {
-                    let event: Event
-                    switch quote {
-                    case let quote as CashuSwift.Bolt11.MintQuote:
-                        
-                        event = Event.pendingMintEvent(unit: Unit(quote.requestDetail?.unit) ?? .sat,
+                    let event = Event.pendingMintEvent(unit: Unit(code: quote.unit),
                                                        shortDescription: "Mint Quote",
                                                        wallet: wallet,
                                                        quote: quote,
-                                                       amount: quote.requestDetail?.amount ?? 0,
+                                                       amount: quote.amount ?? 0,
                                                        expiration: Date(timeIntervalSince1970: TimeInterval(quote.expiry ?? 0)),
                                                        mint: self)
-                        completion(.success((quote, event)))
-                        
-                    case let quote as CashuSwift.Bolt11.MeltQuote:
-                        
-                        event = Event.pendingMeltEvent(unit: .sat,
-                                                       shortDescription: "Pending Payment",
-                                                       wallet: wallet,
-                                                       quote: quote,
-                                                       amount: (quote.amount),
-                                                       expiration: Date(timeIntervalSince1970: TimeInterval(quote.expiry ?? 0)),
-                                                       mints: [self],
-                                                       proofs: nil) // will later be used to determine if melt has already been attempted
-                        completion(.success((quote, event)))
-                        
-                    default:
-                        completion(.failure(CashuError.typeMismatch("quote is not of any known type.")))
-                    }
+                    completion(.success((quote, event)))
                 }
             } catch {
                 await MainActor.run {
