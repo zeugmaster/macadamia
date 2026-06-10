@@ -29,8 +29,13 @@ struct WalletInfoListView: View {
                     Text("Mints (including hidden): \(wallet.mints.count)")
                     Text("Proofs: \(wallet.proofs.count)")
                     Text("Active: \(wallet.active ? "true" : "false")")
+                    NavigationLink(destination: MintListView(wallet: wallet)) {
+                        Text("Proof Database")
+                    }
                 }
             }
         }
+        .navigationTitle("Wallets")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

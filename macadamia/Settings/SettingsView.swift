@@ -40,8 +40,8 @@ struct SettingsView: View {
                 
                 if hiddenMenuShowing {
                     Section {
-                        NavigationLink(destination: MintListView()) { Text("Proof Database") }
-                        NavigationLink(destination: WalletInfoListView()) { Text("Wallet Info") }
+                        NavigationLink(destination: WalletInfoListView()) { Text("Wallets") }
+                        NavigationLink(destination: EventInspectorView()) { Text("Events") }
                     } header: {
                         Text("Debugging")
                     }
