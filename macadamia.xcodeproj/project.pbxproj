@@ -830,8 +830,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/zeugmaster/Bolt11.git";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.1.3;
 			};
 		};
 		370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */ = {
@@ -854,8 +854,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/zeugmaster/cashu-swift.git";
 			requirement = {
-				branch = "payment-methods";
-				kind = branch;
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.4.1;
 			};
 		};
 		377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */ = {

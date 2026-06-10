@@ -51,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/Bech32Swift.git",
       "state" : {
-        "revision" : "72ff0e36f88290396190bd3067800e44e851a2a4",
-        "version" : "1.0.0"
+        "revision" : "09ec6c35a4fbeaac80e709e1808e8af7b8ef038b",
+        "version" : "1.0.1"
       }
     },
     {
@@ -87,8 +87,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/Bolt11.git",
       "state" : {
-        "branch" : "main",
-        "revision" : "fa8ffb4d3c0d2cc6d7cbdcb84eeb8f5b44e68548"
+        "revision" : "f93a4edfde69e70d5d58b0199bb4a373aff19b57",
+        "version" : "0.1.3"
+      }
+    },
+    {
+      "identity" : "bolt12",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/zeugmaster/Bolt12.git",
+      "state" : {
+        "revision" : "0542a679d189b6fb4bb9488e145fe383c1445ddc",
+        "version" : "0.1.0"
       }
     },
     {
@@ -96,8 +105,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/cashu-swift.git",
       "state" : {
-        "branch" : "payment-methods",
-        "revision" : "6288917cf1aaeafe451c2c57d77f88f4f02e0044"
+        "revision" : "873dcf929b2768a0fff4948cf3e767d9e3685a78",
+        "version" : "0.4.1"
       }
     },
     {
