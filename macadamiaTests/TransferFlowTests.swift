@@ -396,5 +396,234 @@ final class TransferFlowTests: XCTestCase {
         // expiry falls back to the stored quote when `expiration` was never set
         XCTAssertNil(event.expiration)
         XCTAssertEqual(event.mintQuoteExpiry, Date(timeIntervalSince1970: 1750000000))
+
+        // dedicated endpoint references always win over the heuristics
+        event.fromMint = mintB
+        event.toMint = mintA
+        let dedicated = try XCTUnwrap(event.transferMints)
+        XCTAssertEqual(dedicated.from.url, mintB.url)
+        XCTAssertEqual(dedicated.to.url, mintA.url)
+    }
+
+    // MARK: - Migration
+
+    /// Writes a store shaped like the schema BEFORE `Event.fromMint`/`toMint`
+    /// existed, then opens it with the current schema — the exact upgrade
+    /// existing users perform. Must lightweight-migrate without a throw, keep
+    /// legacy rows resolvable, and persist dedicated endpoints on new rows.
+    @MainActor
+    func testLightweightMigrationAddsDedicatedFromToMints() throws {
+        let storeURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("macadamia-fromto-migration-\(UUID().uuidString).store")
+        defer {
+            for suffix in ["", "-wal", "-shm"] {
+                try? FileManager.default.removeItem(at: URL(fileURLWithPath: storeURL.path + suffix))
+            }
+        }
+
+        let urlA = URL(string: "http://localhost:3338")!
+        let urlB = URL(string: "http://localhost:3339")!
+
+        // 1) Write the pre-fromMint/toMint store with a full transfer object graph.
+        do {
+            let container = try ModelContainer(for: PreFromToSchema.Wallet.self,
+                                               PreFromToSchema.Mint.self,
+                                               PreFromToSchema.Proof.self,
+                                               PreFromToSchema.Event.self,
+                                               configurations: ModelConfiguration(url: storeURL))
+            let context = ModelContext(container)
+
+            let wallet = PreFromToSchema.Wallet(mnemonic: "m", seed: "s")
+            context.insert(wallet)
+
+            let mintA = PreFromToSchema.Mint(url: urlA)
+            let mintB = PreFromToSchema.Mint(url: urlB)
+            mintA.wallet = wallet
+            mintB.wallet = wallet
+            context.insert(mintA)
+            context.insert(mintB)
+
+            let inputProof = PreFromToSchema.Proof(C: "02abc", mint: mintA, wallet: wallet)
+            context.insert(inputProof)
+
+            context.insert(PreFromToSchema.Event(shortDescription: "Pending Transfer",
+                                                 kind: .pendingTransfer,
+                                                 wallet: wallet,
+                                                 proofs: [inputProof],
+                                                 mints: [mintA, mintB]))
+            try context.save()
+        }
+
+        // 2) Open the SAME store with the current schema (the production upgrade).
+        do {
+            let container = try ModelContainer(for: Wallet.self, Proof.self, Mint.self, Event.self,
+                                               configurations: ModelConfiguration(url: storeURL))
+            let context = ModelContext(container)
+
+            let legacyEvent = try XCTUnwrap(try context.fetch(FetchDescriptor<Event>()).first)
+            XCTAssertNil(legacyEvent.fromMint, "rows from before the fields existed must read nil")
+            XCTAssertNil(legacyEvent.toMint)
+
+            // legacy resolution still orients via the proofs relationship
+            let endpoints = try XCTUnwrap(legacyEvent.transferMints)
+            XCTAssertEqual(endpoints.from.url, urlA)
+            XCTAssertEqual(endpoints.to.url, urlB)
+
+            // 3) A new event created through the factory carries dedicated endpoints.
+            let wallet = try XCTUnwrap(try context.fetch(FetchDescriptor<Wallet>()).first)
+            let mints = try context.fetch(FetchDescriptor<Mint>())
+            let from = try XCTUnwrap(mints.first(where: { $0.url == urlA }))
+            let to = try XCTUnwrap(mints.first(where: { $0.url == urlB }))
+
+            let meltQuote = CashuSwift.Bolt11.MeltQuote(quote: "melt-q",
+                                                        request: "lnbc210n1...",
+                                                        amount: 21,
+                                                        unit: "sat",
+                                                        feeReserve: 1,
+                                                        state: .unpaid,
+                                                        expiry: nil)
+            let pending = Event.pendingTransferEvent(wallet: wallet,
+                                                     amount: 21,
+                                                     from: from,
+                                                     to: to,
+                                                     proofs: [],
+                                                     meltQuote: meltQuote,
+                                                     mintQuote: makeMintQuote(state: .unpaid),
+                                                     groupingID: nil)
+            context.insert(pending)
+            try context.save()
+        }
+
+        // 4) Reopen once more: the dedicated references must survive on disk —
+        //    unlike the mints array, whose order SwiftData scrambles.
+        let container = try ModelContainer(for: Wallet.self, Proof.self, Mint.self, Event.self,
+                                           configurations: ModelConfiguration(url: storeURL))
+        let context = ModelContext(container)
+
+        let events = try context.fetch(FetchDescriptor<Event>())
+        let newEvent = try XCTUnwrap(events.first(where: { $0.fromMint != nil }))
+        XCTAssertEqual(newEvent.fromMint?.url, urlA)
+        XCTAssertEqual(newEvent.toMint?.url, urlB)
+
+        let resolved = try XCTUnwrap(newEvent.transferMints)
+        XCTAssertEqual(resolved.from.url, urlA)
+        XCTAssertEqual(resolved.to.url, urlB)
+    }
+}
+
+/// Minimal stand-in for the persisted schema BEFORE `Event.fromMint`/`Event.toMint`
+/// existed, used only to write a pre-migration store. Mirrors the relationship
+/// topology between the four entities (same entity names, same inverses) so the
+/// current schema recognises the store and lightweight-migrates it.
+private enum PreFromToSchema {
+
+    @Model
+    final class Wallet {
+        @Attribute(.unique) var walletID: UUID
+        var mnemonic: String
+        var seed: String
+        var active: Bool
+        var dateCreated: Date
+
+        @Relationship(inverse: \Mint.wallet)
+        var mints: [Mint]
+
+        var proofs: [Proof]
+
+        @Relationship(deleteRule: .cascade, inverse: \Event.wallet)
+        var events: [Event]
+
+        init(mnemonic: String, seed: String) {
+            self.walletID = UUID()
+            self.mnemonic = mnemonic
+            self.seed = seed
+            self.active = true
+            self.dateCreated = Date()
+            self.mints = []
+            self.proofs = []
+            self.events = []
+        }
+    }
+
+    @Model
+    final class Mint {
+        @Attribute(.unique) var mintID: UUID
+        var url: URL
+        var keysets: [CashuSwift.Keyset]
+        var dateAdded: Date
+        var hidden: Bool = false
+        var wallet: Wallet?
+        var proofs: [Proof]?
+        var events: [Event]?
+
+        init(url: URL) {
+            self.mintID = UUID()
+            self.url = url
+            self.keysets = []
+            self.dateAdded = Date()
+            self.proofs = []
+        }
+    }
+
+    @Model
+    final class Proof {
+        @Attribute(.unique) var proofID: UUID
+        var keysetID: String
+        var C: String
+        var secret: String
+        var amount: Int
+        var state: AppSchemaV1.Proof.State
+        var inputFeePPK: Int
+        var dateCreated: Date
+
+        @Relationship(inverse: \Mint.proofs)
+        var mint: Mint?
+
+        @Relationship(inverse: \Wallet.proofs)
+        var wallet: Wallet?
+
+        init(C: String, mint: Mint, wallet: Wallet) {
+            self.proofID = UUID()
+            self.keysetID = "009a1f293253e41e"
+            self.C = C
+            self.secret = "secret-\(C)"
+            self.amount = 21
+            self.state = .pending
+            self.inputFeePPK = 0
+            self.dateCreated = Date()
+            self.mint = mint
+            self.wallet = wallet
+        }
+    }
+
+    @Model
+    final class Event {
+        @Attribute(.unique) var eventID: UUID
+        var date: Date
+        var shortDescription: String
+        var visible: Bool
+        var kind: AppSchemaV1.Event.Kind
+        var amount: Int?
+        var wallet: Wallet?
+        var proofs: [Proof]?
+
+        @Relationship(deleteRule: .noAction, inverse: \Mint.events)
+        var mints: [Mint]?
+
+        init(shortDescription: String,
+             kind: AppSchemaV1.Event.Kind,
+             wallet: Wallet,
+             proofs: [Proof],
+             mints: [Mint]) {
+            self.eventID = UUID()
+            self.date = Date()
+            self.shortDescription = shortDescription
+            self.visible = true
+            self.kind = kind
+            self.amount = 21
+            self.wallet = wallet
+            self.proofs = proofs
+            self.mints = mints
+        }
     }
 }

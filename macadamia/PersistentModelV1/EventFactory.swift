@@ -195,25 +195,28 @@ extension AppSchemaV1.Event {
                                      meltQuote: CashuSwift.Bolt11.MeltQuote,
                                      mintQuote: CashuSwift.Bolt11.MintQuote,
                                      groupingID: UUID?) -> Event {
-        Event(date: Date(),
-              unit: unit,
-              shortDescription: "Pending Transfer",
-              visible: true,
-              kind: .pendingTransfer,
-              wallet: wallet,
-              mintQuote: mintQuote,
-              bolt11MeltQuote: meltQuote,
-              amount: amount,
-              // the issuance deadline: mints may refuse to issue ecash on an
-              // expired quote even when it was paid
-              expiration: mintQuote.expiry.map { Date(timeIntervalSince1970: TimeInterval($0)) },
-              longDescription: nil,
-              proofs: proofs,
-              memo: nil,
-              mints: [from, to],
-              preImage: nil,
-              redeemed: nil,
-              groupingID: groupingID)
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: "Pending Transfer",
+                          visible: true,
+                          kind: .pendingTransfer,
+                          wallet: wallet,
+                          mintQuote: mintQuote,
+                          bolt11MeltQuote: meltQuote,
+                          amount: amount,
+                          // the issuance deadline: mints may refuse to issue ecash on an
+                          // expired quote even when it was paid
+                          expiration: mintQuote.expiry.map { Date(timeIntervalSince1970: TimeInterval($0)) },
+                          longDescription: nil,
+                          proofs: proofs,
+                          memo: nil,
+                          mints: [from, to],
+                          preImage: nil,
+                          redeemed: nil,
+                          groupingID: groupingID)
+        event.fromMint = from
+        event.toMint = to
+        return event
     }
     
     static func transferEvent(wallet: Wallet,
@@ -226,36 +229,43 @@ extension AppSchemaV1.Event {
                               mintQuote: CashuSwift.Bolt11.MintQuote,
                               preImage: String?,
                               groupingID: UUID?) -> Event {
-        Event(date: Date(),
-              unit: unit, shortDescription: "Transfer",
-              visible: true,
-              kind: .transfer,
-              wallet: wallet,
-              mintQuote: mintQuote,
-              bolt11MeltQuote: meltQuote,
-              amount: amount,
-              token: nil,
-              expiration: nil,
-              longDescription: nil,
-              proofs: proofs,
-              memo: nil,
-              mints: [from, to],
-              preImage: preImage,
-              redeemed: nil,
-              groupingID: groupingID)
+        let event = Event(date: Date(),
+                          unit: unit, shortDescription: "Transfer",
+                          visible: true,
+                          kind: .transfer,
+                          wallet: wallet,
+                          mintQuote: mintQuote,
+                          bolt11MeltQuote: meltQuote,
+                          amount: amount,
+                          token: nil,
+                          expiration: nil,
+                          longDescription: nil,
+                          proofs: proofs,
+                          memo: nil,
+                          mints: [from, to],
+                          preImage: preImage,
+                          redeemed: nil,
+                          groupingID: groupingID)
+        event.fromMint = from
+        event.toMint = to
+        return event
     }
 }
 
 extension AppSchemaV1.Event {
-    /// The endpoints of a transfer event, by convention stored as
-    /// `mints[0]` = from, `mints[1]` = to.
+    /// The endpoints of a transfer event.
     ///
-    /// SwiftData does NOT reliably preserve the order of a to-many relationship
-    /// array, so the positional convention alone can come back flipped after a
-    /// save. The proofs relationship disambiguates: a pending transfer holds the
-    /// melt inputs (source mint), a completed transfer holds the newly issued
-    /// ecash (destination mint).
+    /// New events carry dedicated `fromMint`/`toMint` references. Legacy rows
+    /// fall back to the old positional convention (`mints[0]` = from,
+    /// `mints[1]` = to) — but SwiftData does NOT reliably preserve the order of
+    /// a to-many relationship array, so the proofs relationship disambiguates
+    /// where possible: a pending transfer holds the melt inputs (source mint),
+    /// a completed transfer holds the newly issued ecash (destination mint).
     var transferMints: (from: Mint, to: Mint)? {
+        if let fromMint, let toMint {
+            return (fromMint, toMint)
+        }
+
         guard let mints, mints.count >= 2 else { return nil }
         var endpoints = (from: mints[0], to: mints[1])
 
