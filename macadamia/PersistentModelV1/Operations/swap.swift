@@ -8,14 +8,11 @@ fileprivate let swapLogger = Logger(subsystem: "macadamia", category: "SwapOpera
 @MainActor
 final class SwapManager: ObservableObject {
 
-    enum TransferError: Error {
-        case missingData(String)
-        case meltFailure(Error)
-        case unknownQuoteState
-    }
-
     enum State: Equatable {
         case waiting, preparing, melting, minting, success
+        /// The transfer could not finish yet but remains resumable from the
+        /// transaction list (e.g. issuance retries exhausted, payment in flight).
+        case pending(String)
         case fail(Error)
 
         static func == (lhs: State, rhs: State) -> Bool {
@@ -25,6 +22,7 @@ final class SwapManager: ObservableObject {
             case (.melting, .melting): return true
             case (.minting, .minting): return true
             case (.success, .success): return true
+            case (.pending, .pending): return true
             case (.fail, .fail): return true
             default: return false
             }
@@ -190,74 +188,107 @@ final class SwapManager: ObservableObject {
 
     func resumeTransfer(with pendingTransferEvent: Event, modelContext: ModelContext) {
         guard let mintQuote = pendingTransferEvent.mintQuote,
-              let meltQuote = pendingTransferEvent.bolt11MeltQuote,
-              let mints     = pendingTransferEvent.mints,
-              mints.count  >= 2 else {
-            swapLogger.error("Cannot resume transfer: missing mint quote, melt quote, or mints")
-            setCurrentSwapState(.fail(TransferError.missingData("Unable to find mint quote, mwlt quote or associated mints for this transfer event.")))
+              let (from, to) = pendingTransferEvent.transferMints else {
+            swapLogger.error("Cannot resume transfer: missing mint quote or mints")
+            setCurrentSwapState(.fail(TransferError.missingData("Unable to find the mint quote or the mints associated with this transfer event.")))
             return
         }
 
-        let from = mints[0]
-        let to   = mints[1]
-
-        guard let blankOutputSet = pendingTransferEvent.blankOutputs else {
-            swapLogger.error("Cannot resume transfer: no change outputs assigned")
-            setCurrentSwapState(.fail(TransferError.missingData("No change outputs where assigned to this operation.")))
-            return
-        }
+        // these are only required for specific resume paths, not up front
+        let meltQuote = pendingTransferEvent.bolt11MeltQuote
+        let blankOutputSet = pendingTransferEvent.blankOutputs
+        let proofs = pendingTransferEvent.proofs
+        let expired = (pendingTransferEvent.mintQuoteExpiry ?? .distantFuture) < Date()
 
         let sendableFrom = CashuSwift.Mint(from)
+        let sendableTo = CashuSwift.Mint(to)
 
-        guard let proofs = pendingTransferEvent.proofs else {
-            swapLogger.error("Cannot resume transfer: no proofs assigned to operation")
-            setCurrentSwapState(.fail(TransferError.missingData("Trying to resume transfer, but no ecash was previously assigned to the operation.")))
-            return
-        }
+        setCurrentSwapState(.preparing)
 
         Task {
-            do {
-                let meltResult = try await CashuSwift.Bolt11.meltState(meltQuote.quote,
-                                                                       from: sendableFrom,
-                                                                       blankOutputs: blankOutputSet.outputs.isEmpty ? nil : blankOutputSet.tuple())
+            // destination first: did the payment arrive, was the ecash already issued?
+            let destination: TransferFlow.QuoteCheck
+            if let state = (try? await CashuSwift.Bolt11.mintQuoteState(mintQuote.quote, from: sendableTo))?.state {
+                destination = .state(state)
+            } else {
+                destination = .unavailable
+            }
 
-                await MainActor.run {
-                    switch meltResult.quote.state {
-                    case .paid:
+            // consult the source melt quote only when the destination has not seen the payment
+            var source: TransferFlow.QuoteCheck? = nil
+            var sourceMeltResult: CashuSwift.MeltResult<CashuSwift.Bolt11.MeltQuote>? = nil
+            if destination == .state(.unpaid), let meltQuote {
+                let outputs = (blankOutputSet?.outputs.isEmpty == false) ? blankOutputSet?.tuple() : nil
+                sourceMeltResult = try? await CashuSwift.Bolt11.meltState(meltQuote.quote,
+                                                                          from: sendableFrom,
+                                                                          blankOutputs: outputs)
+                source = sourceMeltResult.flatMap { result in
+                    result.quote.state.map { TransferFlow.QuoteCheck.state($0) }
+                } ?? .unavailable
+            }
 
-                        meltDidSucceed(mintQuote: mintQuote,
-                                       newMeltQuote: meltResult.quote,
-                                       change: meltResult.change ?? [],
-                                       proofs: proofs,
-                                       from: from,
-                                       to: to,
-                                       pendingTransferEvent: pendingTransferEvent,
-                                       modelContext: modelContext)
+            let context = TransferFlow.ResumeContext(destination: destination,
+                                                     source: source,
+                                                     mintQuoteExpired: expired,
+                                                     hasProofs: !(proofs ?? []).isEmpty,
+                                                     hasBlankOutputs: blankOutputSet != nil)
+            let action = TransferFlow.resumeAction(for: context)
+            swapLogger.info("resuming transfer: destination \(String(describing: destination)), source \(String(describing: source)) → \(String(describing: action))")
 
-                    case .pending:
-                        swapLogger.error("Resume transfer: melt quote state is pending (unknown)")
-                        setCurrentSwapState(.fail(TransferError.unknownQuoteState))
+            switch action {
+            case .issue, .pollDestinationThenIssue:
+                await TransferFlow.recoverSourceSide(meltQuote: meltQuote,
+                                                     from: from,
+                                                     sendableFrom: sendableFrom,
+                                                     preFetched: sourceMeltResult,
+                                                     blankOutputSet: blankOutputSet,
+                                                     proofs: proofs,
+                                                     modelContext: modelContext)
+                transferIssue(mintQuote: mintQuote,
+                              meltQuote: sourceMeltResult?.quote ?? meltQuote,
+                              from: from,
+                              to: to,
+                              pendingTransferEvent: pendingTransferEvent,
+                              modelContext: modelContext)
 
-                    case .unpaid:
+            case .informAlreadyIssued:
+                setCurrentSwapState(.fail(TransferError.alreadyIssued))
 
-                        transferMelt(meltQuote: meltQuote,
-                                     mintQuote: mintQuote,
-                                     from: from,
-                                     to: to,
-                                     with: proofs,
-                                     pendingTransferEvent: pendingTransferEvent,
-                                     modelContext: modelContext)
+            case .waitSourcePending:
+                setCurrentSwapState(.pending(String(localized: "The Lightning payment is still in flight. Check again in a moment.")))
 
-                    case .issued, .none:
-                        swapLogger.error("Resume transfer: melt quote has unknown payment state")
-                        setCurrentSwapState(.fail(TransferError.unknownQuoteState))
-                    }
+            case .remelt:
+                guard let meltQuote, let proofs, !proofs.isEmpty else {
+                    setCurrentSwapState(.fail(TransferError.missingData("The original ecash for this transfer is no longer attached to the event.")))
+                    return
                 }
-            } catch {
-                swapLogger.error("Resume transfer failed: \(error.localizedDescription)")
-                await MainActor.run {
-                    setCurrentSwapState(.fail(error))
+                if blankOutputSet == nil {
+                    swapLogger.warning("re-melting without blank outputs — overpaid fees will not be returned as change")
                 }
+                proofs.setState(.pending)
+                transferMelt(meltQuote: meltQuote,
+                             mintQuote: mintQuote,
+                             from: from,
+                             to: to,
+                             with: proofs,
+                             pendingTransferEvent: pendingTransferEvent,
+                             modelContext: modelContext)
+
+            case .missingDataForRemelt:
+                setCurrentSwapState(.fail(TransferError.missingData("The payment was never made and the original ecash is no longer attached to this transfer event.")))
+
+            case .informExpiredUnpaid:
+                // expired before the payment happened — reverting is the right call
+                setCurrentSwapState(.fail(TransferError.meltFailure(TransferError.mintQuoteExpired)))
+
+            case .expiredStranded:
+                setCurrentSwapState(.pending(String(localized: """
+                                    The payment went through but the destination mint's quote expired. \
+                                    Contact the mint operator to recover the funds.
+                                    """)))
+
+            case .keepPendingUnknown:
+                setCurrentSwapState(.pending(String(localized: "Could not determine the transfer's state. Nothing was changed — try again later.")))
             }
         }
     }
@@ -333,46 +364,71 @@ final class SwapManager: ObservableObject {
 
         setCurrentSwapState(.melting)
 
+        let sendableFrom = CashuSwift.Mint(from)
+        let blankOutputSet = pendingTransferEvent.blankOutputs
+
         Task {
             do {
                 swapLogger.debug("Attempting to melt...")
 
-                swapLogger.debug("transfer event has change outputs assigned: \(pendingTransferEvent.blankOutputs?.outputs.isEmpty ?? true ? "empty" : "assigned and populated")")
+                swapLogger.debug("transfer event has change outputs assigned: \(blankOutputSet?.outputs.isEmpty ?? true ? "empty" : "assigned and populated")")
 
                 let meltResult = try await CashuSwift.Bolt11.melt(quote: meltQuote,
-                                                                  from: CashuSwift.Mint(from),
+                                                                  from: sendableFrom,
                                                                   proofs: proofs.sendable(),
-                                                                  blankOutputs: pendingTransferEvent.blankOutputs?.tuple())
+                                                                  blankOutputs: blankOutputSet?.tuple())
 
                 swapLogger.info("DLEQ check on melt change proofs: \(String(describing: meltResult.dleqResult))")
 
-                await MainActor.run {
-                    if meltResult.quote.state == .paid {
+                if meltResult.quote.state == .paid {
 
-                        meltDidSucceed(mintQuote: mintQuote,
-                                       newMeltQuote: meltResult.quote,
-                                       change: meltResult.change ?? [],
-                                       proofs: proofs,
-                                       from: from,
-                                       to: to,
-                                       pendingTransferEvent: pendingTransferEvent,
-                                       modelContext: modelContext)
-                    } else {
+                    meltDidSucceed(mintQuote: mintQuote,
+                                   newMeltQuote: meltResult.quote,
+                                   change: meltResult.change ?? [],
+                                   proofs: proofs,
+                                   from: from,
+                                   to: to,
+                                   pendingTransferEvent: pendingTransferEvent,
+                                   modelContext: modelContext)
+                } else {
 
-                        swapLogger.info("""
-                                        Melt function returned a quote with state NOT PAID, \
-                                        probably because the lightning payment failed
-                                        """)
-                        meltFailed(with: CashuError.unknownError("Transfer did not complete because the melt quote was returned with state UNPAID."),
-                                         proofs: proofs,
-                                         pendingTransferEvent: pendingTransferEvent,
-                                         modelContext: modelContext)
-                    }
+                    swapLogger.info("""
+                                    Melt function returned a quote with state NOT PAID, \
+                                    probably because the lightning payment failed
+                                    """)
+                    meltFailed(with: CashuError.unknownError("Transfer did not complete because the melt quote was returned with state UNPAID."),
+                               reportedState: meltResult.quote.state,
+                               proofs: proofs,
+                               pendingTransferEvent: pendingTransferEvent,
+                               modelContext: modelContext)
                 }
             } catch {
                 swapLogger.error("Melt operation failed: \(error.localizedDescription)")
-                await MainActor.run {
-                    meltFailed(with: error, proofs: proofs, pendingTransferEvent: pendingTransferEvent, modelContext: modelContext)
+
+                // The thrown error alone cannot tell us whether the payment happened
+                // (e.g. a timeout while the payment settles). Re-check the quote once
+                // before deciding what to do with the inputs.
+                let outputs = (blankOutputSet?.outputs.isEmpty == false) ? blankOutputSet?.tuple() : nil
+                let recheck = try? await CashuSwift.Bolt11.meltState(meltQuote.quote,
+                                                                     from: sendableFrom,
+                                                                     blankOutputs: outputs)
+
+                if let recheck, recheck.quote.state == .paid {
+                    swapLogger.info("melt threw but the quote is PAID — continuing with issuance")
+                    meltDidSucceed(mintQuote: mintQuote,
+                                   newMeltQuote: recheck.quote,
+                                   change: recheck.change ?? [],
+                                   proofs: proofs,
+                                   from: from,
+                                   to: to,
+                                   pendingTransferEvent: pendingTransferEvent,
+                                   modelContext: modelContext)
+                } else {
+                    meltFailed(with: error,
+                               reportedState: recheck?.quote.state,
+                               proofs: proofs,
+                               pendingTransferEvent: pendingTransferEvent,
+                               modelContext: modelContext)
                 }
             }
         }
@@ -403,7 +459,7 @@ final class SwapManager: ObservableObject {
         }
 
         transferIssue(mintQuote: mintQuote,
-                      meltResult: newMeltQuote,
+                      meltQuote: newMeltQuote,
                       from: from,
                       to: to,
                       pendingTransferEvent: pendingTransferEvent,
@@ -411,20 +467,33 @@ final class SwapManager: ObservableObject {
 
     }
 
-    private func meltFailed(with error: Error, proofs: [Proof], pendingTransferEvent: Event, modelContext: ModelContext) {
-        swapLogger.error("Melt failed: \(error.localizedDescription). Reverting proofs to valid state.")
-        proofs.setState(.valid)
-        pendingTransferEvent.blankOutputs = nil
-        pendingTransferEvent.proofs = nil
+    private func meltFailed(with error: Error,
+                            reportedState: CashuSwift.QuoteState?,
+                            proofs: [Proof],
+                            pendingTransferEvent: Event,
+                            modelContext: ModelContext) {
+        switch TransferFlow.classifyMeltFailure(error: error, reportedState: reportedState) {
+        case .definitelyUnpaid:
+            swapLogger.error("Melt definitively unpaid: \(error.localizedDescription). Reverting proofs to valid state.")
+            proofs.setState(.valid)
+            // the event keeps its proofs and blank outputs so the melt can be retried
+            try? modelContext.save()
+            setCurrentSwapState(.fail(TransferError.meltFailure(error)))
 
-        try? modelContext.save()
-        setCurrentSwapState(.fail(error))
+        case .unknownOutcome:
+            swapLogger.warning("Melt outcome unknown: \(error.localizedDescription). Keeping proofs pending and event data intact.")
+            try? modelContext.save()
+            setCurrentSwapState(.pending(String(localized: """
+                                The payment outcome could not be determined. \
+                                Check this transfer again later from the transaction list.
+                                """)))
+        }
 
         nextSwapIfPresent()
     }
 
     private func transferIssue(mintQuote: CashuSwift.Bolt11.MintQuote,
-                               meltResult: CashuSwift.Bolt11.MeltQuote,
+                               meltQuote: CashuSwift.Bolt11.MeltQuote?,
                                from: Mint,
                                to: Mint,
                                pendingTransferEvent: Event,
@@ -433,49 +502,65 @@ final class SwapManager: ObservableObject {
         guard let wallet = from.wallet else {
             swapLogger.error("Mint \(from.url) does not have an associated wallet during issue")
             setCurrentSwapState(.fail(macadamiaError.databaseError("mint \(from.url.absoluteString) does not have an associated wallet.")))
+            nextSwapIfPresent()
             return
         }
 
         setCurrentSwapState(.minting)
 
         let sendableMint = CashuSwift.Mint(to)
+        let seed = wallet.seed
+        let quoteID = mintQuote.quote
 
         Task {
-            do {
-                let mintResult = try await CashuSwift.Bolt11.mint(quote: mintQuote,
-                                                                  from: sendableMint,
-                                                                  seed: wallet.seed)
+            guard !TransferFlow.activeQuoteIDs.contains(quoteID) else {
+                swapLogger.warning("issuance already in progress for quote \(quoteID), skipping duplicate run")
+                return
+            }
+            TransferFlow.activeQuoteIDs.insert(quoteID)
+            defer { TransferFlow.activeQuoteIDs.remove(quoteID) }
 
-                swapLogger.info("DLEQ check on newly minted proofs: \(String(describing: mintResult.dleqResult))")
+            let outcome = await TransferFlow.pollAndIssue(mintQuote: mintQuote,
+                                                          on: sendableMint,
+                                                          seed: seed)
 
-                try await MainActor.run {
-
-                    let internalProofs = try to.addProofs(mintResult.proofs, to: modelContext)
-
-                    let transferEvent = Event.transferEvent(wallet: wallet,
-                                                            amount: pendingTransferEvent.amount ?? 0,
+            switch outcome {
+            case .success(let result):
+                do {
+                    try TransferFlow.finalizeIssuedTransfer(issueResult: result,
+                                                            mintQuote: mintQuote,
+                                                            meltQuote: meltQuote,
                                                             from: from,
                                                             to: to,
-                                                            proofs: internalProofs,
-                                                            meltQuote: meltResult,
-                                                            mintQuote: mintQuote,
-                                                            preImage: meltResult.paymentPreimage,
-                                                            groupingID: nil)
-                    modelContext.insert(transferEvent)
-                    pendingTransferEvent.visible = false
-                    try modelContext.save()
-
+                                                            pendingTransferEvent: pendingTransferEvent,
+                                                            modelContext: modelContext)
                     setCurrentSwapState(.success)
-
-                    nextSwapIfPresent()
-                }
-            } catch {
-                swapLogger.error("Mint/issue operation failed: \(error.localizedDescription)")
-                await MainActor.run {
+                } catch {
+                    swapLogger.error("Failed to persist issued transfer: \(error.localizedDescription)")
                     setCurrentSwapState(.fail(error))
-                    nextSwapIfPresent()
                 }
+
+            case .parkedPending(let message, let lastError):
+                swapLogger.warning("transfer parked as pending. last error: \(String(describing: lastError))")
+                try? modelContext.save()
+                setCurrentSwapState(.pending(message))
+
+            case .alreadyIssued:
+                setCurrentSwapState(.fail(TransferError.alreadyIssued))
+
+            case .staleOutputs(let error):
+                swapLogger.error("stale outputs during issuance: \(error.localizedDescription)")
+                setCurrentSwapState(.fail(error))
+
+            case .expired:
+                setCurrentSwapState(.fail(TransferError.mintQuoteExpired))
+
+            case .failed(let error):
+                swapLogger.error("Mint/issue operation failed: \(error.localizedDescription)")
+                setCurrentSwapState(.fail(error))
             }
+
+            nextSwapIfPresent()
         }
     }
 
@@ -642,14 +727,11 @@ final class SwapService {
 @MainActor
 final class InlineSwapManager: ObservableObject {
 
-    enum TransferError: Error {
-        case missingData(String)
-        case meltFailure(Error)
-        case unknownQuoteState
-    }
-
     enum State {
         case ready, loading, melting, minting, success
+        /// The transfer could not finish yet but remains resumable from the
+        /// transaction list (e.g. issuance retries exhausted, payment in flight).
+        case pending(message: String)
         case fail(error: Error?)
     }
 
@@ -750,67 +832,104 @@ final class InlineSwapManager: ObservableObject {
 
     func resumeTransfer(with pendingTransferEvent: Event) {
         guard let mintQuote = pendingTransferEvent.mintQuote,
-              let meltQuote = pendingTransferEvent.bolt11MeltQuote,
-              let mints     = pendingTransferEvent.mints,
-              mints.count  >= 2 else {
-            updateHandler(.fail(error: TransferError.missingData("Unable to find mint quote, mwlt quote or associated mints for this transfer event.")))
+              let (from, to) = pendingTransferEvent.transferMints else {
+            updateHandler(.fail(error: TransferError.missingData("Unable to find the mint quote or the mints associated with this transfer event.")))
             return
         }
 
-        let from = mints[0]
-        let to   = mints[1]
-
-        guard let blankOutputSet = pendingTransferEvent.blankOutputs else {
-            updateHandler(.fail(error: TransferError.missingData("No change outputs where assigned to this operation.")))
-            return
-        }
+        // these are only required for specific resume paths, not up front
+        let meltQuote = pendingTransferEvent.bolt11MeltQuote
+        let blankOutputSet = pendingTransferEvent.blankOutputs
+        let proofs = pendingTransferEvent.proofs
+        let expired = (pendingTransferEvent.mintQuoteExpiry ?? .distantFuture) < Date()
 
         let sendableFrom = CashuSwift.Mint(from)
+        let sendableTo = CashuSwift.Mint(to)
 
-        guard let proofs = pendingTransferEvent.proofs else {
-            updateHandler(.fail(error: TransferError.missingData("Trying to resume transfer, but no ecash was previously assigned to the operation.")))
-            return
-        }
+        updateHandler(.loading)
 
         Task {
-            do {
-                let meltResult = try await CashuSwift.Bolt11.meltState(meltQuote.quote,
-                                                                       from: sendableFrom,
-                                                                       blankOutputs: blankOutputSet.outputs.isEmpty ? nil : blankOutputSet.tuple())
+            // destination first: did the payment arrive, was the ecash already issued?
+            let destination: TransferFlow.QuoteCheck
+            if let state = (try? await CashuSwift.Bolt11.mintQuoteState(mintQuote.quote, from: sendableTo))?.state {
+                destination = .state(state)
+            } else {
+                destination = .unavailable
+            }
 
-                await MainActor.run {
-                    switch meltResult.quote.state {
-                    case .paid:
+            // consult the source melt quote only when the destination has not seen the payment
+            var source: TransferFlow.QuoteCheck? = nil
+            var sourceMeltResult: CashuSwift.MeltResult<CashuSwift.Bolt11.MeltQuote>? = nil
+            if destination == .state(.unpaid), let meltQuote {
+                let outputs = (blankOutputSet?.outputs.isEmpty == false) ? blankOutputSet?.tuple() : nil
+                sourceMeltResult = try? await CashuSwift.Bolt11.meltState(meltQuote.quote,
+                                                                          from: sendableFrom,
+                                                                          blankOutputs: outputs)
+                source = sourceMeltResult.flatMap { result in
+                    result.quote.state.map { TransferFlow.QuoteCheck.state($0) }
+                } ?? .unavailable
+            }
 
-                        meltDidSucceed(mintQuote: mintQuote,
-                                       newMeltQuote: meltResult.quote,
-                                       change: meltResult.change ?? [],
-                                       proofs: proofs,
-                                       from: from,
-                                       to: to,
-                                       pendingTransferEvent: pendingTransferEvent)
+            let context = TransferFlow.ResumeContext(destination: destination,
+                                                     source: source,
+                                                     mintQuoteExpired: expired,
+                                                     hasProofs: !(proofs ?? []).isEmpty,
+                                                     hasBlankOutputs: blankOutputSet != nil)
+            let action = TransferFlow.resumeAction(for: context)
+            swapLogger.info("resuming transfer: destination \(String(describing: destination)), source \(String(describing: source)) → \(String(describing: action))")
 
-                    case .pending:
+            switch action {
+            case .issue, .pollDestinationThenIssue:
+                await TransferFlow.recoverSourceSide(meltQuote: meltQuote,
+                                                     from: from,
+                                                     sendableFrom: sendableFrom,
+                                                     preFetched: sourceMeltResult,
+                                                     blankOutputSet: blankOutputSet,
+                                                     proofs: proofs,
+                                                     modelContext: modelContext)
+                transferIssue(mintQuote: mintQuote,
+                              meltQuote: sourceMeltResult?.quote ?? meltQuote,
+                              from: from,
+                              to: to,
+                              pendingTransferEvent: pendingTransferEvent)
 
-                        updateHandler(.fail(error: TransferError.unknownQuoteState))
+            case .informAlreadyIssued:
+                updateHandler(.fail(error: TransferError.alreadyIssued))
 
-                    case .unpaid:
+            case .waitSourcePending:
+                updateHandler(.pending(message: String(localized: "The Lightning payment is still in flight. Check again in a moment.")))
 
-                        transferMelt(meltQuote: meltQuote,
-                                     mintQuote: mintQuote,
-                                     from: from,
-                                     to: to,
-                                     with: proofs,
-                                     pendingTransferEvent: pendingTransferEvent)
-
-                    case .issued, .none:
-                        updateHandler(.fail(error: TransferError.unknownQuoteState))
-                    }
+            case .remelt:
+                guard let meltQuote, let proofs, !proofs.isEmpty else {
+                    updateHandler(.fail(error: TransferError.missingData("The original ecash for this transfer is no longer attached to the event.")))
+                    return
                 }
-            } catch {
-                await MainActor.run {
-                    updateHandler(.fail(error: error))
+                if blankOutputSet == nil {
+                    swapLogger.warning("re-melting without blank outputs — overpaid fees will not be returned as change")
                 }
+                proofs.setState(.pending)
+                transferMelt(meltQuote: meltQuote,
+                             mintQuote: mintQuote,
+                             from: from,
+                             to: to,
+                             with: proofs,
+                             pendingTransferEvent: pendingTransferEvent)
+
+            case .missingDataForRemelt:
+                updateHandler(.fail(error: TransferError.missingData("The payment was never made and the original ecash is no longer attached to this transfer event.")))
+
+            case .informExpiredUnpaid:
+                // expired before the payment happened — reverting is the right call
+                updateHandler(.fail(error: TransferError.meltFailure(TransferError.mintQuoteExpired)))
+
+            case .expiredStranded:
+                updateHandler(.pending(message: String(localized: """
+                              The payment went through but the destination mint's quote expired. \
+                              Contact the mint operator to recover the funds.
+                              """)))
+
+            case .keepPendingUnknown:
+                updateHandler(.pending(message: String(localized: "Could not determine the transfer's state. Nothing was changed — try again later.")))
             }
         }
     }
@@ -881,43 +1000,67 @@ final class InlineSwapManager: ObservableObject {
 
         updateHandler(.melting)
 
+        let sendableFrom = CashuSwift.Mint(from)
+        let blankOutputSet = pendingTransferEvent.blankOutputs
+
         Task {
             do {
                 swapLogger.debug("Attempting to melt...")
 
-                swapLogger.debug("transfer event has change outputs assigned: \(pendingTransferEvent.blankOutputs?.outputs.isEmpty ?? true ? "empty" : "assigned and populated")")
+                swapLogger.debug("transfer event has change outputs assigned: \(blankOutputSet?.outputs.isEmpty ?? true ? "empty" : "assigned and populated")")
 
                 let meltResult = try await CashuSwift.Bolt11.melt(quote: meltQuote,
-                                                                  from: CashuSwift.Mint(from),
+                                                                  from: sendableFrom,
                                                                   proofs: proofs.sendable(),
-                                                                  blankOutputs: pendingTransferEvent.blankOutputs?.tuple())
+                                                                  blankOutputs: blankOutputSet?.tuple())
 
                 swapLogger.info("DLEQ check on melt change proofs: \(String(describing: meltResult.dleqResult))")
 
-                await MainActor.run {
-                    if meltResult.quote.state == .paid {
+                if meltResult.quote.state == .paid {
 
-                        meltDidSucceed(mintQuote: mintQuote,
-                                       newMeltQuote: meltResult.quote,
-                                       change: meltResult.change ?? [],
-                                       proofs: proofs,
-                                       from: from,
-                                       to: to,
-                                       pendingTransferEvent: pendingTransferEvent)
-                    } else {
+                    meltDidSucceed(mintQuote: mintQuote,
+                                   newMeltQuote: meltResult.quote,
+                                   change: meltResult.change ?? [],
+                                   proofs: proofs,
+                                   from: from,
+                                   to: to,
+                                   pendingTransferEvent: pendingTransferEvent)
+                } else {
 
-                        swapLogger.info("""
-                                        Melt function returned a quote with state NOT PAID, \
-                                        probably because the lightning payment failed
-                                        """)
-                        meltFailed(with: CashuError.unknownError("Transfer did not complete because the melt quote was returned with state UNPAID."),
-                                         proofs: proofs,
-                                         pendingTransferEvent: pendingTransferEvent)
-                    }
+                    swapLogger.info("""
+                                    Melt function returned a quote with state NOT PAID, \
+                                    probably because the lightning payment failed
+                                    """)
+                    meltFailed(with: CashuError.unknownError("Transfer did not complete because the melt quote was returned with state UNPAID."),
+                               reportedState: meltResult.quote.state,
+                               proofs: proofs,
+                               pendingTransferEvent: pendingTransferEvent)
                 }
             } catch {
-                await MainActor.run {
-                    meltFailed(with: error, proofs: proofs, pendingTransferEvent: pendingTransferEvent)
+                swapLogger.error("Melt operation failed: \(error.localizedDescription)")
+
+                // The thrown error alone cannot tell us whether the payment happened
+                // (e.g. a timeout while the payment settles). Re-check the quote once
+                // before deciding what to do with the inputs.
+                let outputs = (blankOutputSet?.outputs.isEmpty == false) ? blankOutputSet?.tuple() : nil
+                let recheck = try? await CashuSwift.Bolt11.meltState(meltQuote.quote,
+                                                                     from: sendableFrom,
+                                                                     blankOutputs: outputs)
+
+                if let recheck, recheck.quote.state == .paid {
+                    swapLogger.info("melt threw but the quote is PAID — continuing with issuance")
+                    meltDidSucceed(mintQuote: mintQuote,
+                                   newMeltQuote: recheck.quote,
+                                   change: recheck.change ?? [],
+                                   proofs: proofs,
+                                   from: from,
+                                   to: to,
+                                   pendingTransferEvent: pendingTransferEvent)
+                } else {
+                    meltFailed(with: error,
+                               reportedState: recheck?.quote.state,
+                               proofs: proofs,
+                               pendingTransferEvent: pendingTransferEvent)
                 }
             }
         }
@@ -945,24 +1088,37 @@ final class InlineSwapManager: ObservableObject {
         }
 
         transferIssue(mintQuote: mintQuote,
-                      meltResult: newMeltQuote,
+                      meltQuote: newMeltQuote,
                       from: from,
                       to: to,
                       pendingTransferEvent: pendingTransferEvent)
 
     }
 
-    private func meltFailed(with error: Error, proofs: [Proof], pendingTransferEvent: Event) {
-        proofs.setState(.valid)
-        pendingTransferEvent.blankOutputs = nil
-        pendingTransferEvent.proofs = nil
+    private func meltFailed(with error: Error,
+                            reportedState: CashuSwift.QuoteState?,
+                            proofs: [Proof],
+                            pendingTransferEvent: Event) {
+        switch TransferFlow.classifyMeltFailure(error: error, reportedState: reportedState) {
+        case .definitelyUnpaid:
+            swapLogger.error("Melt definitively unpaid: \(error.localizedDescription). Reverting proofs to valid state.")
+            proofs.setState(.valid)
+            // the event keeps its proofs and blank outputs so the melt can be retried
+            try? modelContext.save()
+            updateHandler(.fail(error: TransferError.meltFailure(error)))
 
-        try? modelContext.save()
-        updateHandler(.fail(error: error))
+        case .unknownOutcome:
+            swapLogger.warning("Melt outcome unknown: \(error.localizedDescription). Keeping proofs pending and event data intact.")
+            try? modelContext.save()
+            updateHandler(.pending(message: String(localized: """
+                          The payment outcome could not be determined. \
+                          Check this transfer again later from the transaction list.
+                          """)))
+        }
     }
 
     private func transferIssue(mintQuote: CashuSwift.Bolt11.MintQuote,
-                               meltResult: CashuSwift.Bolt11.MeltQuote,
+                               meltQuote: CashuSwift.Bolt11.MeltQuote?,
                                from: Mint,
                                to: Mint,
                                pendingTransferEvent: Event) {
@@ -975,43 +1131,55 @@ final class InlineSwapManager: ObservableObject {
         updateHandler(.minting)
 
         let sendableMint = CashuSwift.Mint(to)
+        let seed = wallet.seed
+        let quoteID = mintQuote.quote
 
         Task {
-            do {
-                let mintResult = try await CashuSwift.Bolt11.mint(quote: mintQuote,
-                                                                  from: sendableMint,
-                                                                  seed: wallet.seed)
+            guard !TransferFlow.activeQuoteIDs.contains(quoteID) else {
+                swapLogger.warning("issuance already in progress for quote \(quoteID), skipping duplicate run")
+                return
+            }
+            TransferFlow.activeQuoteIDs.insert(quoteID)
+            defer { TransferFlow.activeQuoteIDs.remove(quoteID) }
 
-                swapLogger.info("DLEQ check on newly minted proofs: \(String(describing: mintResult.dleqResult))")
+            let outcome = await TransferFlow.pollAndIssue(mintQuote: mintQuote,
+                                                          on: sendableMint,
+                                                          seed: seed)
 
-                await MainActor.run {
-                    do {
-                        let internalProofs = try to.addProofs(mintResult.proofs, to: modelContext)
-
-                        let transferEvent = Event.transferEvent(wallet: wallet,
-                                                                amount: pendingTransferEvent.amount ?? 0,
-                                                                from: from,
-                                                                to: to,
-                                                                proofs: internalProofs,
-                                                                meltQuote: meltResult,
-                                                                mintQuote: mintQuote,
-                                                                preImage: meltResult.paymentPreimage,
-                                                                groupingID: nil)
-                        modelContext.insert(transferEvent)
-                        pendingTransferEvent.visible = false
-                        try modelContext.save()
-
-                        updateHandler(.success)
-                    } catch {
-                        updateHandler(.fail(error: error))
-                    }
+            switch outcome {
+            case .success(let result):
+                do {
+                    try TransferFlow.finalizeIssuedTransfer(issueResult: result,
+                                                            mintQuote: mintQuote,
+                                                            meltQuote: meltQuote,
+                                                            from: from,
+                                                            to: to,
+                                                            pendingTransferEvent: pendingTransferEvent,
+                                                            modelContext: modelContext)
+                    updateHandler(.success)
+                } catch {
+                    swapLogger.error("Failed to persist issued transfer: \(error.localizedDescription)")
+                    updateHandler(.fail(error: error))
                 }
-            } catch {
-                DispatchQueue.main.async {
-                    #warning("handle error during minting")
 
-                    self.updateHandler(.fail(error: error))
-                }
+            case .parkedPending(let message, let lastError):
+                swapLogger.warning("transfer parked as pending. last error: \(String(describing: lastError))")
+                try? modelContext.save()
+                updateHandler(.pending(message: message))
+
+            case .alreadyIssued:
+                updateHandler(.fail(error: TransferError.alreadyIssued))
+
+            case .staleOutputs(let error):
+                swapLogger.error("stale outputs during issuance: \(error.localizedDescription)")
+                updateHandler(.fail(error: error))
+
+            case .expired:
+                updateHandler(.fail(error: TransferError.mintQuoteExpired))
+
+            case .failed(let error):
+                swapLogger.error("Mint/issue operation failed: \(error.localizedDescription)")
+                updateHandler(.fail(error: error))
             }
         }
     }
