@@ -32,6 +32,9 @@ struct WalletInfoListView: View {
                     NavigationLink(destination: MintListView(wallet: wallet)) {
                         Text("Proof Database")
                     }
+                    NavigationLink(destination: EventInspectorView(wallet: wallet)) {
+                        Text("Event Database")
+                    }
                 }
             }
         }

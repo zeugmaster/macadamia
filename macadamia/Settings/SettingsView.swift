@@ -41,7 +41,6 @@ struct SettingsView: View {
                 if hiddenMenuShowing {
                     Section {
                         NavigationLink(destination: WalletInfoListView()) { Text("Wallets") }
-                        NavigationLink(destination: EventInspectorView()) { Text("Events") }
                     } header: {
                         Text("Debugging")
                     }

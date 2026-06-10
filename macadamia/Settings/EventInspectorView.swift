@@ -1,10 +1,13 @@
 import SwiftUI
-import SwiftData
 import CashuSwift
 
 struct EventInspectorView: View {
 
-    @Query(sort: \Event.date, order: .reverse) private var events: [Event]
+    let wallet: Wallet
+
+    private var events: [Event] {
+        wallet.events.sorted { $0.date > $1.date }
+    }
 
     var body: some View {
         List {
