@@ -773,10 +773,6 @@ extension Array where Element == Mint {
         
         return collidingMints.isEmpty ? nil : collidingMints
     }
-    
-    func containsKeysetCollision(with mint: MintRepresenting) -> Bool {
-        return keysetCollisions(with: mint) != nil
-    }
 }
 
 // TODO: MOVE TO LIBRARY

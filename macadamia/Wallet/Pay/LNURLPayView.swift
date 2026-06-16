@@ -146,7 +146,3 @@ struct LNURLPayView: View {
         showAlert = true
     }
 }
-
-//#Preview {
-//    LNURLPayView()
-//}

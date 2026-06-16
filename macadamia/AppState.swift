@@ -20,8 +20,7 @@ class AppState: ObservableObject {
     
     private static let conversionUnitKey = "PreferredCurrencyConversionUnit"
     private static let lastRNackHashKey = "LastReleaseNotesAcknoledgedHash"
-    private static let firstLaunchFlag = "HasLaunchedBefore"
-    
+
     struct ExchangeRateResponse: Decodable {
         let bitcoin: ExchangeRate
     }

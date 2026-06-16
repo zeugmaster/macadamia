@@ -165,12 +165,6 @@ struct MintManagerView: View {
         }
     }
     
-    func proofsForMint(_ mint: Mint) -> [Proof] {
-        return allProofs.filter { proof in
-            proof.mint == mint && proof.state == .valid
-        }
-    }
-
     func addMint(urlString: String) {
         guard let activeWallet else {
             return

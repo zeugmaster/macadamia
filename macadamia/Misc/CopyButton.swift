@@ -30,7 +30,6 @@ struct CopyButton: View {
                 Spacer()
                 Image(systemName: copied ? "list.clipboard.fill" : "clipboard")
             }
-//            .fontWeight(.medium)
         }
     }
 }
