@@ -255,9 +255,9 @@ struct MintView: View {
                     fflush(stdout)
                 }
                 isCheckingInvoiceState = true
-                let mintQuote = try await CashuSwift.Bolt11.mintQuoteState(quote.quote, from: CashuSwift.Mint(selectedMint))
+                let refreshed = try await QuoteExecutor.refreshMintQuote(quote, from: CashuSwift.Mint(selectedMint))
 
-                if mintQuote.state == .paid {
+                if QuoteExecutor.mintQuoteIsPaid(refreshed) {
                     print("")  // New line after polling completes
                     isCheckingInvoiceState = false
                     await MainActor.run {
@@ -297,10 +297,10 @@ struct MintView: View {
 
         Task {
             do {
-                let issueResult = try await CashuSwift.Bolt11.mint(quote: quote,
-                                                                   from: CashuSwift.Mint(selectedMint),
-                                                                   seed: activeWallet.seed,
-                                                                   preferredDistribution: nil)
+                let issueResult = try await QuoteExecutor.mint(quote,
+                                                               amount: quote.amount ?? amount,
+                                                               from: CashuSwift.Mint(selectedMint),
+                                                               seed: activeWallet.seed)
 
                 logger.info("DLEQ check on issuance \(String(describing: issueResult.dleqResult))")
 

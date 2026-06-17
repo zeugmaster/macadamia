@@ -17,4 +17,5 @@ enum macadamiaError: Error, Sendable {
     
     case lockedToken
     case unsupportedUnit
+    case unsupportedPaymentMethod(String)
 }

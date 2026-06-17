@@ -16,13 +16,13 @@ struct MeltView: View {
     struct MeltTaskInput {
         let mint: CashuSwift.Mint
         let proofs: [CashuSwift.Proof]
-        let quote: CashuSwift.Bolt11.MeltQuote
+        let quote: any CashuSwift.MeltQuoteResponse
         let blankOutputs: (outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String])?
     }
 
     struct MeltTaskResult {
         let mint: CashuSwift.Mint
-        let quote: CashuSwift.Bolt11.MeltQuote
+        let quote: any CashuSwift.MeltQuoteResponse
         let change: [CashuSwift.Proof]
     }
 
@@ -251,11 +251,11 @@ struct MeltView: View {
 
                     for input in taskGroupInputs {
                         group.addTask {
-                            let meltResult = try await CashuSwift.Bolt11.melt(quote: input.quote,
-                                                                              from: input.mint,
-                                                                              proofs: input.proofs,
-                                                                              blankOutputs: input.blankOutputs)
-                            return MeltTaskResult(mint: input.mint, quote: meltResult.quote, change: meltResult.change ?? [])
+                            let outcome = try await QuoteExecutor.melt(input.quote,
+                                                                       from: input.mint,
+                                                                       proofs: input.proofs,
+                                                                       blankOutputs: input.blankOutputs)
+                            return MeltTaskResult(mint: input.mint, quote: outcome.quote, change: outcome.change)
                         }
                     }
 
@@ -305,12 +305,12 @@ struct MeltView: View {
         Task {
             do {
                 for input in taskInputs {
-                    let result = try await CashuSwift.Bolt11.meltState(input.quote.quote,
-                                                                       from: input.mint,
-                                                                       blankOutputs: input.blankOutputs)
+                    let outcome = try await QuoteExecutor.meltState(input.quote,
+                                                                    from: input.mint,
+                                                                    blankOutputs: input.blankOutputs)
                     results.append(MeltTaskResult(mint: input.mint,
-                                                  quote: result.quote,
-                                                  change: result.change ?? []))
+                                                  quote: outcome.quote,
+                                                  change: outcome.change))
                 }
 
                 await MainActor.run {
@@ -387,9 +387,12 @@ struct MeltView: View {
                                           longDescription: "",
                                           mints: [mint],
                                           change: internalChange,
-                                          preImage: result.quote.paymentPreimage,
+                                          preImage: QuoteExecutor.paymentPreimage(of: result.quote),
                                           groupingID: groupingID,
-                                          meltQuote: result.quote))
+                                          // Transitional: only BOLT11 melts exist today, so this
+                                          // downcast always succeeds. Step 2 (method-tagged quote
+                                          // persistence) replaces it with an envelope write.
+                                          meltQuote: result.quote as? CashuSwift.Bolt11.MeltQuote))
         }
 
         events.forEach({ modelContext.insert($0) })

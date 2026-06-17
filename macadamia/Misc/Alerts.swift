@@ -78,6 +78,8 @@ struct AlertDetail {
                 self = AlertDetail(title: String(localized: "Keyset Error"), description: String(localized: "Detail: \(string)"))
             case .mintVerificationError(let detail):
                 self = AlertDetail(title: String(localized: "Mint Verification Error"), description: String(localized: "This mint did not pass verification before being added. Detail: \(detail ?? "None")"))
+            case .unsupportedPaymentMethod(let method):
+                self = AlertDetail(title: String(localized: "Unsupported Payment Method"), description: String(localized: "This operation uses a payment method the wallet does not support yet: \(method)."))
             }
         default:
             self = AlertDetail(title: String(localized: "Unknown Error"), description: error.localizedDescription)
