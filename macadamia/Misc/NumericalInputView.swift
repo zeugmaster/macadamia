@@ -18,7 +18,7 @@ struct NumericalInputView: View {
     let baseUnit: Currency.Unit
 
     /// Optional exchange rates - if nil, conversion features are disabled.
-    let exchangeRates: AppState.ExchangeRate?
+    let exchangeRates: Currency.ExchangeRate?
     let onReturn: () -> Void
 
     @State private var input: String = ""

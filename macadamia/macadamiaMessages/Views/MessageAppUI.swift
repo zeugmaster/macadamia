@@ -208,22 +208,18 @@ struct MessageSendView: View {
     }
     
     @State private var memo: String = ""
-    @State private var amountString: String = ""
+    @State private var amount = 0
     @State private var buttonState = ActionButtonState.idle("...")
     @State private var mintIcon: UIImage?
     @State private var selectedBanner: String = ""
+    @State private var exchangeRates: Currency.ExchangeRate?
     
-    @FocusState private var amountFieldInFocus
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 60
     
     private var buttonDisabled: Bool {
         amount <= 0 || amount > mint.balance(for: .sat)
     }
-    
-    private var amount: Int {
-        Int(amountString) ?? 0
-    }
-    
+
     var body: some View {
         ZStack {
             List {
@@ -267,14 +263,10 @@ struct MessageSendView: View {
                 }
                 
                 Section {
-                    HStack {
-                        TextField("Enter amount...", text: $amountString)
-                            .keyboardType(.numberPad)
-                            .focused($amountFieldInFocus)
-                        Spacer()
-                        Text("sat")
-                    }
-                    .monospaced()
+                    NumericalInputView(output: $amount,
+                                       baseUnit: .sat,
+                                       exchangeRates: exchangeRates,
+                                       onReturn: createToken)
                     
                     HStack {
                         Text("Balance: ")
@@ -321,13 +313,20 @@ struct MessageSendView: View {
         }
         .onAppear {
             buttonState = .idle(String(localized: "Send"), action: createToken)
-            amountFieldInFocus = true
+        }
+        .task {
+            guard exchangeRates == nil else { return }
+            exchangeRates = await Currency.fetchBitcoinExchangeRates()
         }
         .navigationTitle("Send")
         .navigationBarTitleDisplayMode(.inline)
     }
     
     private func createToken() {
+        guard !buttonDisabled else {
+            return
+        }
+
         guard let activeWallet else {
             buttonState = .fail(String(localized: "No active wallet"))
             return
@@ -337,7 +336,6 @@ struct MessageSendView: View {
         
         Task {
             do {
-                // iMessage extension is sat-only today.
                 let token = try await AppSchemaV1.createToken(mint: mint,
                                                               activeWallet: activeWallet,
                                                               amount: amount,
