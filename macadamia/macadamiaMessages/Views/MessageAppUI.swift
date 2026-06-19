@@ -316,6 +316,7 @@ struct MessageSendView: View {
         }
         .task {
             guard exchangeRates == nil else { return }
+            guard Currency.Unit.preferred.kind == .fiat else { return }
             exchangeRates = await Currency.fetchBitcoinExchangeRates()
         }
         .navigationTitle("Send")
