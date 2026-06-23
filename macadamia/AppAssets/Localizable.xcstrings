@@ -11265,9 +11265,6 @@
         }
       }
     },
-    "Here goes the slider for %@" : {
-      "shouldTranslate" : false
-    },
     "Hi there!" : {
       "localizations" : {
         "ar" : {
@@ -31640,6 +31637,76 @@
         }
       }
     },
+    "This operation uses a payment method the wallet does not support yet: %@." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تستخدم هذه العملية طريقة دفع لا تدعمها المحفظة بعد: %@."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এই অপারেশনটি এমন একটি পেমেন্ট পদ্ধতি ব্যবহার করে যা Wallet এখনও সমর্থন করে না: %@।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Vorgang verwendet eine Zahlungsmethode, die das Wallet noch nicht unterstützt: %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta operación usa un método de pago que el wallet aún no soporta: %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette opération utilise une méthode de paiement que le wallet ne prend pas encore en charge : %@."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह ऑपरेशन एक भुगतान विधि का उपयोग करता है जिसे Wallet अभी तक समर्थन नहीं करता: %@।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この操作は、ウォレットがまだサポートしていない支払い方法を使用しています：%@。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 작업은 지갑이 아직 지원하지 않는 결제 방식을 사용합니다: %@."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta operação usa um método de pagamento que o wallet ainda não suporta: %@."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эта операция использует способ оплаты, который кошелёк пока не поддерживает: %@."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu işlem, cüzdanın henüz desteklemediği bir ödeme yöntemi kullanıyor: %@."
+          }
+        }
+      }
+    },
     "This payment did not go through and is marked \"unpaid\" with the mint. Would you like to try again?" : {
       "localizations" : {
         "ar" : {
@@ -35281,6 +35348,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Desteklenmeyen giriş"
+          }
+        }
+      }
+    },
+    "Unsupported Payment Method" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "طريقة دفع غير مدعومة"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "অসমর্থিত পেমেন্ট পদ্ধতি"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht unterstützte Zahlungsmethode"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Método de pago no soportado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Méthode de paiement non supportée"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "असमर्थित भुगतान विधि"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サポートされていない支払い方法"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지원되지 않는 결제 방식"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Método de pagamento não suportado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неподдерживаемый способ оплаты"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desteklenmeyen ödeme yöntemi"
           }
         }
       }
