@@ -246,27 +246,38 @@ struct BalancerView: View {
     private func handleSwapStateChange(_ states: [SwapManager.TransferState]?) {
         guard let states else { return }
 
-        // Check if all swaps are complete (either success or fail)
+        // Check if all swaps are complete (success, parked as pending, or fail)
         let allComplete = states.allSatisfy { transferState in
             if case .success = transferState.state { return true }
+            if case .pending = transferState.state { return true }
             if case .fail = transferState.state { return true }
             return false
         }
 
         if allComplete {
-            // Check if all succeeded
-            let allSucceeded = states.allSatisfy { transferState in
-                if case .success = transferState.state { return true }
+            let anyFailed = states.contains { transferState in
+                if case .fail = transferState.state { return true }
+                return false
+            }
+            let anyPending = states.contains { transferState in
+                if case .pending = transferState.state { return true }
                 return false
             }
 
-            if allSucceeded {
+            if anyFailed {
+                buttonState = .fail()
+            } else if anyPending {
+                buttonState = .success()
+                displayAlert(alert: AlertDetail(title: String(localized: "Transfers Pending"),
+                                                description: String(localized: """
+                                                Some transfers could not finish yet. \
+                                                You can complete them from the transaction list.
+                                                """)))
+            } else {
                 buttonState = .success()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     dismiss()
                 }
-            } else {
-                buttonState = .fail()
             }
         }
     }
@@ -286,6 +297,9 @@ struct BalancerView: View {
         case .success:
             Image(systemName: "checkmark.circle.fill")
                 .foregroundColor(.green)
+        case .pending:
+            Image(systemName: "hourglass")
+                .foregroundColor(.orange)
         case .fail:
             Image(systemName: "xmark.circle.fill")
                 .foregroundColor(.red)
@@ -307,6 +321,9 @@ struct BalancerView: View {
         case .success:
             Text("Complete")
                 .foregroundColor(.green)
+        case .pending:
+            Text("Pending")
+                .foregroundColor(.orange)
         case .fail(let error):
             VStack(alignment: .leading) {
                 Text("Failed")

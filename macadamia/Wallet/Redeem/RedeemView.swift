@@ -391,6 +391,10 @@ struct RedeemView<AdditionalControls: View>: View {
                 if let onSuccess {
                     onSuccess()
                 }
+            case .pending(let message):
+                buttonState = .idle(String(localized: "Close"), action: { dismiss() })
+                displayAlert(alert: AlertDetail(title: String(localized: "Transfer Pending"),
+                                                description: message))
             case .fail(let error):
                 buttonState = .fail()
                 redeemLogger.error("could not swap token to mint due to error \(error)")

@@ -199,8 +199,7 @@ struct EventList: View {
         private var mintLabel: Text {
             switch eventGroup.events.first?.kind {
             case .pendingTransfer, .transfer:
-                if let from = eventGroup.events.first?.mints?[0],
-                   let to = eventGroup.events.first?.mints?[1] {
+                if let (from, to) = eventGroup.events.first?.transferMints {
                     return Text("\(from.displayName) ") + Text(Image(systemName: "arrow.right")) + Text(" \(to.displayName)")
                 } else {
                     return Text("...")

@@ -443,9 +443,20 @@ enum AppSchemaV1: VersionedSchema {
         private var blankOutputData: Data?
         
         var redeemed: Bool?
-        
+
         var groupingID: UUID?
-        
+
+        // Dedicated transfer endpoints, set on creation for new transfer events.
+        // nil on rows written before these fields existed — those resolve via the
+        // proofs relationship / positional order in `transferMints`. Deliberately
+        // unidirectional: `mints` keeps the only explicit inverse pair with
+        // Mint.events, so relationship inference stays unambiguous.
+        @Relationship(deleteRule: .nullify)
+        var fromMint: Mint?
+
+        @Relationship(deleteRule: .nullify)
+        var toMint: Mint?
+
         enum Kind: Codable {
             case pendingMint
             case mint
