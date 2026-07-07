@@ -1161,6 +1161,117 @@ final class macadamiaTests: XCTestCase {
         XCTAssertEqual(quote.paymentPreimage, "preimage123")
         XCTAssertEqual(quote.state, .paid)
     }
+
+    /// Non-BOLT11 quotes are persisted through a method-tagged envelope in the same Data
+    /// column BOLT11 quotes use. The envelope must round-trip to the right concrete type,
+    /// must never leak through the BOLT11-typed accessors, and BOLT11 quotes written through
+    /// the method-agnostic accessor must keep their legacy byte layout.
+    @MainActor
+    func testStoredQuoteEnvelopeRoundtrip() throws {
+        let container = try ModelContainer(for: Wallet.self, Proof.self, Mint.self, Event.self,
+                                           configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
+        let mnemonic = Mnemonic()
+        let wallet = Wallet(mnemonic: mnemonic.phrase.joined(separator: " "), seed: String(bytes: mnemonic.seed))
+        context.insert(wallet)
+
+        // Generic (custom method) melt quote → envelope write.
+        let meltRaw: CashuSwift.JSONObject = [
+            "quote": .string("generic-melt-id"),
+            "amount": .integer(42),
+            "unit": .string("usd"),
+            "fee_reserve": .integer(1),
+            "state": .string("UNPAID"),
+            "expiry": .integer(1_900_000_000),
+            "method": .string("credit")
+        ]
+        let genericMelt = CashuSwift.Generic.MeltQuote(method: CashuSwift.PaymentMethodID(rawValue: "credit"),
+                                                       quote: "generic-melt-id",
+                                                       amount: 42,
+                                                       unit: "usd",
+                                                       feeReserve: 1,
+                                                       state: .unpaid,
+                                                       expiry: 1_900_000_000,
+                                                       paymentPreimage: nil,
+                                                       change: nil,
+                                                       raw: meltRaw)
+        let genericMeltEvent = Event.pendingMeltEvent(unit: Unit(code: "usd"),
+                                                      shortDescription: "Pending Payment",
+                                                      wallet: wallet,
+                                                      quote: genericMelt,
+                                                      amount: 42,
+                                                      expiration: nil,
+                                                      mints: [])
+        context.insert(genericMeltEvent)
+        try context.save()
+
+        let restoredMelt = try XCTUnwrap(genericMeltEvent.storedMeltQuote)
+        XCTAssertTrue(restoredMelt is CashuSwift.Generic.MeltQuote, "envelope must restore the concrete type")
+        XCTAssertEqual(restoredMelt.quote, "generic-melt-id")
+        XCTAssertEqual(restoredMelt.method.rawValue, "credit")
+        XCTAssertEqual(restoredMelt.unit, "usd")
+        XCTAssertEqual(restoredMelt.amount, 42)
+        XCTAssertNil(genericMeltEvent.bolt11MeltQuote,
+                     "an envelope row must not decode through the BOLT11-typed accessor")
+
+        // BOLT11 melt quote through the method-agnostic accessor → legacy byte layout.
+        let bolt11 = CashuSwift.Bolt11.MeltQuote(quote: "bolt11-melt-id",
+                                                 request: "lnbc-envelope-test",
+                                                 amount: 21,
+                                                 unit: "sat",
+                                                 feeReserve: 2,
+                                                 state: .unpaid,
+                                                 expiry: nil)
+        let bolt11Event = Event.pendingMeltEvent(unit: .sat,
+                                                 shortDescription: "Pending Payment",
+                                                 wallet: wallet,
+                                                 quote: bolt11,
+                                                 amount: 21,
+                                                 expiration: nil,
+                                                 mints: [])
+        context.insert(bolt11Event)
+        try context.save()
+
+        XCTAssertEqual(bolt11Event.bolt11MeltQuote?.quote, "bolt11-melt-id",
+                       "BOLT11 quotes must remain readable through the legacy accessor")
+        XCTAssertTrue(bolt11Event.storedMeltQuote is CashuSwift.Bolt11.MeltQuote)
+        XCTAssertEqual(bolt11Event.storedMeltQuote?.quote, "bolt11-melt-id")
+
+        // Generic mint quote → envelope write on the mint quote column.
+        let mintRaw: CashuSwift.JSONObject = [
+            "quote": .string("generic-mint-id"),
+            "request": .string(""),
+            "unit": .string("usd"),
+            "amount": .integer(42),
+            "state": .string("PAID"),
+            "method": .string("credit")
+        ]
+        let genericMint = CashuSwift.Generic.MintQuote(method: CashuSwift.PaymentMethodID(rawValue: "credit"),
+                                                       quote: "generic-mint-id",
+                                                       request: "",
+                                                       unit: "usd",
+                                                       amount: 42,
+                                                       state: .paid,
+                                                       expiry: nil,
+                                                       raw: mintRaw)
+        let mintEvent = Event(date: Date(),
+                              unit: Unit(code: "usd"),
+                              shortDescription: "Pending Ecash",
+                              visible: true,
+                              kind: .pendingMint,
+                              wallet: wallet)
+        mintEvent.storedMintQuote = genericMint
+        context.insert(mintEvent)
+        try context.save()
+
+        let restoredMint = try XCTUnwrap(mintEvent.storedMintQuote)
+        XCTAssertTrue(restoredMint is CashuSwift.Generic.MintQuote)
+        XCTAssertEqual(restoredMint.quote, "generic-mint-id")
+        XCTAssertEqual(restoredMint.method.rawValue, "credit")
+        XCTAssertEqual(restoredMint.unit, "usd")
+        XCTAssertNil(mintEvent.mintQuote,
+                     "an envelope row must not decode through the BOLT11-typed accessor")
+    }
 }
 
 /// Minimal stand-in for the v0.9.x persisted schema, used only to write a pre-migration store.

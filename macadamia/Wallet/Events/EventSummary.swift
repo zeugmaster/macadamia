@@ -31,8 +31,8 @@ struct MintEventSummary: View {
                     Spacer()
                     Text(event.currencyUnit.currencyCode)
                 }
-                if let text = event.mintQuote?.request {
-                    CopyableRow(label: "Bolt11 Invoice", value: text)
+                if let text = event.storedMintQuote?.request, !text.isEmpty {
+                    CopyableRow(label: "Payment Request", value: text)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -59,7 +59,7 @@ struct MintEventSummary: View {
                 }
                 
                 if showDetails {
-                    CopyableRow(label: "Quote ID", value: event.mintQuote?.quote ?? "nil")
+                    CopyableRow(label: "Quote ID", value: event.storedMintQuote?.quote ?? "nil")
                 }
             }
         }
@@ -158,7 +158,7 @@ struct MeltEventSummary: View {
                 
                 if showDetails {
                     ForEach(events) { event in
-                        CopyableRow(label: (event.mints?.first?.displayName ?? "nil") + " - Quote ID", value: event.bolt11MeltQuote?.quote ?? "nil")
+                        CopyableRow(label: (event.mints?.first?.displayName ?? "nil") + " - Quote ID", value: event.storedMeltQuote?.quote ?? "nil")
                     }
                     CopyableRow(label: "Preimage", value: events.first?.preImage ?? "nil")
                 }
@@ -360,17 +360,17 @@ struct TransferEventSummary: View {
             
             if showDetails {
                 Section {
-                    CopyableRow(label: "Quote ID", value: event.bolt11MeltQuote?.quote ?? "nil")
-                    CopyableRow(label: "Payment Preimage", value: event.bolt11MeltQuote?.paymentPreimage ?? "nil")
+                    CopyableRow(label: "Quote ID", value: event.storedMeltQuote?.quote ?? "nil")
+                    CopyableRow(label: "Payment Preimage", value: event.storedMeltQuote.flatMap({ QuoteExecutor.paymentPreimage(of: $0) }) ?? "nil")
                     CopyableRow(label: "Fee Reserve",
-                                value: String(event.bolt11MeltQuote?.feeReserve ?? 0),
+                                value: String(event.storedMeltQuote.map({ QuoteExecutor.feeReserve(of: $0) }) ?? 0),
                                 concealValue: true)
                 } header: {
                     Text("Payment")
                 }
-                
+
                 Section {
-                    CopyableRow(label: "Quote ID", value: event.mintQuote?.quote ?? "nil")
+                    CopyableRow(label: "Quote ID", value: event.storedMintQuote?.quote ?? "nil")
                 } header: {
                     Text("Ecash Created")
                 }

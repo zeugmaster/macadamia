@@ -4,14 +4,21 @@ import CashuSwift
 
 // TODO: remove unsafe unwrapping, nicer pending error
 
-/// Hosts a payment-method-specific quote source (currently
-/// `BOLT11MeltQuoteSource`), then executes the resulting
-/// `MeltQuoteBundle`s — proof selection, blank outputs, persistent event
-/// bookkeeping, and the actual `CashuSwift.Bolt11.melt` calls. Also handles
-/// resume mode for pending payments and the post-execute "check state"
-/// loop. Everything below the source is intentionally payment-method
-/// agnostic so the source can be swapped without touching execution.
+/// Hosts a payment-method-specific quote source (`BOLT11MeltQuoteSource`
+/// for invoices, `QuoteIDMeltQuoteSource` for bare quote IDs), then executes
+/// the resulting `MeltQuoteBundle`s — proof selection, blank outputs,
+/// persistent event bookkeeping, and the actual melt calls dispatched
+/// through `QuoteExecutor`. Also handles resume mode for pending payments
+/// and the post-execute "check state" loop. Everything below the source is
+/// intentionally payment-method agnostic so sources can be swapped without
+/// touching execution.
 struct MeltView: View {
+
+    /// The user input a quote source is derived from.
+    enum PaymentInput: Equatable {
+        case bolt11Invoice(String)
+        case quoteID(String)
+    }
 
     struct MeltTaskInput {
         let mint: CashuSwift.Mint
@@ -34,7 +41,7 @@ struct MeltView: View {
         wallet.active == true
     }) private var wallets: [Wallet]
 
-    private let initialInvoice: String?
+    @State private var paymentInput: PaymentInput?
     @State private var pendingMeltEvents: [Event]
 
     // What the source view publishes upward. Drives the action button and
@@ -61,13 +68,19 @@ struct MeltView: View {
         return true
     }
 
-    init(events: [Event]? = nil, invoice: String? = nil) {
+    init(events: [Event]? = nil, invoice: String? = nil, quoteID: String? = nil) {
         if let events {
             _pendingMeltEvents = State(initialValue: events)
-            self.initialInvoice = nil
+            _paymentInput = State(initialValue: nil)
         } else {
             _pendingMeltEvents = State(initialValue: [])
-            self.initialInvoice = invoice
+            if let invoice {
+                _paymentInput = State(initialValue: .bolt11Invoice(invoice))
+            } else if let quoteID {
+                _paymentInput = State(initialValue: .quoteID(quoteID))
+            } else {
+                _paymentInput = State(initialValue: nil)
+            }
         }
     }
 
@@ -76,8 +89,26 @@ struct MeltView: View {
             if !pendingMeltEvents.isEmpty {
                 pendingMeltSummaryView
             } else {
-                BOLT11MeltQuoteSource(initialInvoice: initialInvoice,
-                                      state: $sourceState)
+                switch paymentInput {
+                case .bolt11Invoice(let invoice):
+                    BOLT11MeltQuoteSource(initialInvoice: invoice,
+                                          state: $sourceState)
+                case .quoteID(let quoteID):
+                    QuoteIDMeltQuoteSource(quoteID: quoteID,
+                                           state: $sourceState)
+                case nil:
+                    InputView(supportedTypes: [.bolt11Invoice, .quoteID]) { input in
+                        withAnimation {
+                            switch input.type {
+                            case .quoteID:
+                                paymentInput = .quoteID(input.payload)
+                            default:
+                                paymentInput = .bolt11Invoice(input.payload)
+                            }
+                        }
+                    }
+                    .padding()
+                }
             }
             VStack {
                 Spacer()
@@ -112,6 +143,14 @@ struct MeltView: View {
                 } header: {
                     Text("BOLT11 INVOICE")
                 }
+            } else if let quoteID = pendingMeltEvents.first?.storedMeltQuote?.quote {
+                // Melts started from a bare quote ID may not carry a payment request.
+                Section {
+                    Text(quoteID)
+                        .monospaced()
+                } header: {
+                    Text("QUOTE ID")
+                }
             }
 
             Section {
@@ -121,15 +160,15 @@ struct MeltView: View {
                             HStack {
                                 Text(mint.displayName)
                                 Spacer()
-                                if let q = event.bolt11MeltQuote {
+                                if let q = event.storedMeltQuote {
                                     AmountView(amount: q.amount, unit: event.currencyUnit)
                                         .monospaced()
                                 }
                             }
-                            if let q = event.bolt11MeltQuote {
+                            if let q = event.storedMeltQuote {
                                 HStack(spacing: 4) {
                                     Text("Fee:")
-                                    AmountView(amount: q.feeReserve, unit: event.currencyUnit, showUnit: false)
+                                    AmountView(amount: QuoteExecutor.feeReserve(of: q), unit: event.currencyUnit, showUnit: false)
                                     Spacer()
                                 }
                                 .foregroundStyle(.secondary)
@@ -186,16 +225,24 @@ struct MeltView: View {
         for bundle in bundles {
             let mint = bundle.mint
             let quote = bundle.quote
+            let unit = Unit(code: quote.unit)
 
-            guard let proofs = mint.select(amount: quote.amount + quote.feeReserve,
-                                           unit: .sat) else {
+            guard let requiredAmount = try? quote.requiredInputAmount(inputFee: 0) else {
+                displayAlert(alert: AlertDetail(title: String(localized: "Quote Error"),
+                                                description: String(localized: "The quote from mint \(mint.displayName) does not determine the amount it requires.")))
+                updateButtonState()
+                return
+            }
+
+            guard let proofs = mint.select(amount: requiredAmount,
+                                           unit: unit) else {
                 displayAlert(alert: AlertDetail(title: String(localized: "Proof Selection Error"),
                                                 description: String(localized: "The wallet was not able to pick ecash proofs from mint \(mint.displayName).")))
                 updateButtonState()
                 return
             }
 
-            let event = Event.pendingMeltEvent(unit: .sat,
+            let event = Event.pendingMeltEvent(unit: unit,
                                                shortDescription: disc,
                                                wallet: activeWallet,
                                                quote: quote,
@@ -209,7 +256,7 @@ struct MeltView: View {
                 let blankOutputs = try CashuSwift.generateBlankOutputs(quote: quote,
                                                                        proofs: proofs.selected,
                                                                        mint: mint,
-                                                                       unit: Unit.sat.currencyCode,
+                                                                       unit: quote.unit,
                                                                        seed: activeWallet.seed)
                 if let keysetID = blankOutputs.outputs.first?.id, blankOutputs.outputs.count > 0 {
                     mint.increaseDerivationCounterForKeysetWithID(keysetID, by: blankOutputs.outputs.count)
@@ -235,14 +282,26 @@ struct MeltView: View {
 
     private func runMelt(with events: [Event]) {
 
-        let taskGroupInputs: [MeltTaskInput] = events.map { event in
+        let taskGroupInputs: [MeltTaskInput] = events.compactMap { event in
             let blankOutputs = event.blankOutputs.flatMap { set in
                 !set.outputs.isEmpty ? set.tuple() : nil
             }
-            return MeltTaskInput(mint: CashuSwift.Mint(event.mints!.first!), // FIXME: unsafe unwrapping
-                                proofs: event.proofs!.sendable(),
-                                quote: event.bolt11MeltQuote!,
+            guard let mint = event.mints?.first,
+                  let proofs = event.proofs,
+                  let quote = event.storedMeltQuote else {
+                return nil
+            }
+            return MeltTaskInput(mint: CashuSwift.Mint(mint),
+                                proofs: proofs.sendable(),
+                                quote: quote,
                                 blankOutputs: blankOutputs)
+        }
+
+        guard taskGroupInputs.count == events.count else {
+            displayAlert(alert: AlertDetail(title: String(localized: "Missing Payment Data"),
+                                            description: String(localized: "One or more parts of this payment are missing their quote or proof data and cannot be executed.")))
+            updateButtonState()
+            return
         }
 
         Task {
@@ -284,8 +343,9 @@ struct MeltView: View {
         for event in events {
             guard let mint = event.mints?.first,
                   let proofs = event.proofs,
-                  let quote = event.bolt11MeltQuote else {
-                // show error
+                  let quote = event.storedMeltQuote else {
+                displayAlert(alert: AlertDetail(title: String(localized: "Missing Payment Data"),
+                                                description: String(localized: "This pending payment is missing its quote or proof data, so its state cannot be checked.")))
                 return
             }
 
@@ -380,7 +440,7 @@ struct MeltView: View {
             let internalChange = try? mint.addProofs(result.change,
                                                      to: modelContext)
 
-            events.append(Event.meltEvent(unit: .sat,
+            events.append(Event.meltEvent(unit: Unit(code: result.quote.unit),
                                           shortDescription: "Payment",
                                           wallet: activeWallet,
                                           amount: result.quote.amount,
@@ -389,10 +449,7 @@ struct MeltView: View {
                                           change: internalChange,
                                           preImage: QuoteExecutor.paymentPreimage(of: result.quote),
                                           groupingID: groupingID,
-                                          // Transitional: only BOLT11 melts exist today, so this
-                                          // downcast always succeeds. Step 2 (method-tagged quote
-                                          // persistence) replaces it with an envelope write.
-                                          meltQuote: result.quote as? CashuSwift.Bolt11.MeltQuote))
+                                          meltQuote: result.quote))
         }
 
         events.forEach({ modelContext.insert($0) })

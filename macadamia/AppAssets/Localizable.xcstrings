@@ -1365,6 +1365,9 @@
         }
       }
     },
+    "A payment for this quote is already in flight. Check back later." : {
+
+    },
     "A transfers incurs fees with the selected mints." : {
       "localizations" : {
         "ar" : {
@@ -2415,6 +2418,12 @@
         }
       }
     },
+    "Already Issued" : {
+
+    },
+    "Already paid" : {
+
+    },
     "Already Spent 💸" : {
       "localizations" : {
         "ar" : {
@@ -2484,6 +2493,9 @@
           }
         }
       }
+    },
+    "Alternatively, load a previously created quote from the selected mint by entering its ID." : {
+
     },
     "Amount" : {
       "localizations" : {
@@ -5427,6 +5439,9 @@
           }
         }
       }
+    },
+    "Checking your mints..." : {
+
     },
     "Chilean Peso" : {
       "localizations" : {
@@ -8733,6 +8748,9 @@
         }
       }
     },
+    "Ecash for this quote has already been issued." : {
+
+    },
     "Ecash issued" : {
       "localizations" : {
         "ar" : {
@@ -10065,6 +10083,9 @@
         }
       }
     },
+    "Existing Quote" : {
+
+    },
     "expired — completing may fail" : {
       "localizations" : {
         "ar" : {
@@ -10134,6 +10155,9 @@
           }
         }
       }
+    },
+    "Expires at" : {
+
     },
     "Expires at: " : {
       "localizations" : {
@@ -10554,6 +10578,9 @@
           }
         }
       }
+    },
+    "Fee Reserve" : {
+
     },
     "Fee:" : {
       "localizations" : {
@@ -12955,6 +12982,9 @@
         }
       }
     },
+    "Insufficient balance (including fees) with mint %@." : {
+
+    },
     "Insufficient balance." : {
       "localizations" : {
         "ar" : {
@@ -14442,6 +14472,9 @@
       },
       "shouldTranslate" : false
     },
+    "Load Quote" : {
+
+    },
     "Load States" : {
       "localizations" : {
         "ar" : {
@@ -15566,6 +15599,9 @@
         }
       }
     },
+    "MELT QUOTE" : {
+
+    },
     "Memo" : {
       "localizations" : {
         "ar" : {
@@ -15916,6 +15952,9 @@
         }
       }
     },
+    "Method" : {
+
+    },
     "Mexican Peso" : {
       "localizations" : {
         "ar" : {
@@ -16128,6 +16167,9 @@
           }
         }
       }
+    },
+    "Mint %@ did not return a mint quote for this ID." : {
+
     },
     "Mint could not be found" : {
       "localizations" : {
@@ -16898,6 +16940,9 @@
           }
         }
       }
+    },
+    "Missing Payment Data" : {
+
     },
     "Mnemonic: %@" : {
       "shouldTranslate" : false
@@ -18448,6 +18493,9 @@
         }
       }
     },
+    "No mints" : {
+
+    },
     "No Mints" : {
       "localizations" : {
         "ar" : {
@@ -19568,6 +19616,9 @@
         }
       }
     },
+    "None of your mints recognize this quote ID." : {
+
+    },
     "Norwegian Krone" : {
       "localizations" : {
         "ar" : {
@@ -20337,6 +20388,9 @@
           }
         }
       }
+    },
+    "One or more parts of this payment are missing their quote or proof data and cannot be executed." : {
+
     },
     "One or more parts of this payment are still pending. Please check again later to make sure the lightning payment was successful." : {
       "localizations" : {
@@ -22370,6 +22424,9 @@
           }
         }
       }
+    },
+    "Payment pending" : {
+
     },
     "Payment Pending ⏳" : {
       "localizations" : {
@@ -24694,6 +24751,12 @@
         }
       }
     },
+    "Quote Error" : {
+
+    },
+    "Quote expired" : {
+
+    },
     "Quote expires" : {
       "localizations" : {
         "ar" : {
@@ -24903,6 +24966,12 @@
           }
         }
       }
+    },
+    "QUOTE ID" : {
+
+    },
+    "Quote Not Found" : {
+
     },
     "Quote Not Paid 🚫💰" : {
       "localizations" : {
@@ -28836,6 +28905,9 @@
         }
       }
     },
+    "State" : {
+
+    },
     "Status" : {
       "localizations" : {
         "ar" : {
@@ -30937,6 +31009,9 @@
         }
       }
     },
+    "The quote from mint %@ does not determine the amount it requires." : {
+
+    },
     "The quote has not been paid. Try again after paying the displayed quote to the mint." : {
       "localizations" : {
         "ar" : {
@@ -31498,6 +31573,7 @@
       }
     },
     "This field supports BOLT11 invoices, LNURL strings (LNURL1...) or Lightning Addresses (e.g. user@host.com)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -31566,6 +31642,9 @@
           }
         }
       }
+    },
+    "This field supports BOLT11 invoices, LNURL strings (LNURL1...), Lightning Addresses (e.g. user@host.com) or melt quote IDs." : {
+
     },
     "This mint did not pass verification before being added. Detail: %@" : {
       "localizations" : {
@@ -32128,6 +32207,15 @@
         }
       }
     },
+    "This pending payment is missing its quote or proof data, so its state cannot be checked." : {
+
+    },
+    "This quote has already been paid." : {
+
+    },
+    "This quote has expired." : {
+
+    },
     "This wallet and the Cashu protocol are in active development. Be cautious when using this software and follow best practices:\n\n• Mint only as much as you are ready to lose\n\n• Only use mints you trust\n\n• Back up your wallet\n\nIf you experience any issues, don't hesitate to send a request for support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues)." : {
       "localizations" : {
         "ar" : {
@@ -32267,6 +32355,9 @@
           }
         }
       }
+    },
+    "This wallet does not contain any mints to look the quote up with." : {
+
     },
     "This wallet still contains valid ecash that will become inaccessible if you restore now. Are you sure? " : {
       "localizations" : {
@@ -35071,6 +35162,9 @@
           }
         }
       }
+    },
+    "Unknown quote ID" : {
+
     },
     "Unpaid" : {
       "localizations" : {

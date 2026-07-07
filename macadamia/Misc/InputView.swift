@@ -143,10 +143,16 @@ struct InputValidator {
         case _ where MerchantParser.isMerchantQRCode(input):
             type = .merchantCode
         default:
-            if let pubkeyData = try? input.bytes,
+            if supportedTypes.contains(.publicKey),
+               let pubkeyData = try? input.bytes,
                let _ = try? secp256k1.Signing.PublicKey(dataRepresentation: pubkeyData,
                                                              format: .compressed) {
                 type = .publicKey
+            } else if supportedTypes.contains(.quoteID), isPlausibleQuoteID(input) {
+                // Quote IDs have no defined format, so this check is contextual:
+                // only offered where the caller explicitly accepts quote IDs, and
+                // only after every structured type has failed to match.
+                type = .quoteID
             } else {
                 return .invalid(String(localized: "Unsupported Input"))
             }
@@ -164,6 +170,16 @@ struct InputValidator {
         return .valid(InputView.Result(payload: input, type: type))
     }
     
+    /// Loose plausibility check for mint/melt quote IDs. The spec doesn't
+    /// define a format; in practice they are UUIDs, hex or base64url strings,
+    /// so accept URL-path-safe characters at a sane length.
+    private static func isPlausibleQuoteID(_ string: String) -> Bool {
+        let allowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-")
+        return string.count >= 8
+            && string.count <= 128
+            && string.unicodeScalars.allSatisfy { allowed.contains($0) }
+    }
+
     private static func isLightningAddress(_ string: String) -> Bool {
         let components = string.split(separator: "@")
         guard components.count == 2 else { return false }
@@ -181,7 +197,7 @@ struct InputView: View {
     }
     
     enum InputType: Hashable {
-        case bolt11Invoice, bolt12Offer, token, creq, publicKey, lnurlPay, lightningAddress, merchantCode
+        case bolt11Invoice, bolt12Offer, token, creq, publicKey, lnurlPay, lightningAddress, merchantCode, quoteID
     }
     
     private let invalidScanRetryDelay = 3.0
@@ -307,7 +323,7 @@ struct InputView: View {
 }
 
 struct SupportedTypeIndicator: View {
-    let allTypes: [InputView.InputType] = [.bolt11Invoice, .bolt12Offer, .creq, .publicKey, .token, .lnurlPay, .lightningAddress, .merchantCode]
+    let allTypes: [InputView.InputType] = [.bolt11Invoice, .bolt12Offer, .creq, .publicKey, .token, .lnurlPay, .lightningAddress, .merchantCode, .quoteID]
     let supportedTypes: [InputView.InputType]
     
     var prioritized: [InputView.InputType] {
@@ -327,6 +343,7 @@ struct SupportedTypeIndicator: View {
             case .lnurlPay:          label = String(localized: "LNURL-pay")
             case .lightningAddress:  label = String(localized: "Lightning Address")
             case .merchantCode:      label = String(localized: "Merchant QR")
+            case .quoteID:           label = String(localized: "Quote ID")
         }
         return label
     }

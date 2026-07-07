@@ -5,12 +5,11 @@ import CashuSwift
 /// A `(Mint, MeltQuote)` pair that's been validated and is ready for execution.
 ///
 /// Produced by a quote-source view and consumed by `MeltView` to run the
-/// actual melt operation. The bundle is intentionally specific to BOLT11
-/// today; future payment methods will either add their own bundle shape or
-/// drive a generalization here.
+/// actual melt operation. The quote is method-agnostic; `QuoteExecutor`
+/// dispatches on the concrete type at execution time.
 struct MeltQuoteBundle: Equatable {
     let mint: Mint
-    let quote: CashuSwift.Bolt11.MeltQuote
+    let quote: any CashuSwift.MeltQuoteResponse
 
     static func == (lhs: MeltQuoteBundle, rhs: MeltQuoteBundle) -> Bool {
         lhs.mint.mintID == rhs.mint.mintID &&

@@ -60,6 +60,22 @@ enum QuoteExecutor {
         }
     }
 
+    /// Fetches a mint quote by its ID for a known payment method. Used when the
+    /// user enters a bare quote ID and the wallet has to look the quote up
+    /// rather than create it.
+    static func mintQuoteState(id: String,
+                               method: CashuSwift.PaymentMethodID,
+                               from mint: CashuSwift.Mint) async throws -> any CashuSwift.MintQuoteResponse {
+        switch method {
+        case .bolt11:
+            return try await CashuSwift.Bolt11.mintQuoteState(id, from: mint)
+        case .bolt12:
+            return try await CashuSwift.Bolt12.mintQuoteState(id, from: mint)
+        default:
+            return try await CashuSwift.Generic.mintQuoteState(id, method: method, from: mint)
+        }
+    }
+
     /// Method-aware "has the user paid?" predicate. BOLT11 and Generic expose a
     /// `state`; BOLT12 mint quotes never carry one, so we consult the
     /// paid/issued delta instead.
@@ -68,6 +84,16 @@ enum QuoteExecutor {
             return bolt12.mintableAmount > 0
         }
         return quote.state == .paid
+    }
+
+    /// The amount an issue call should request for this quote, or nil when the
+    /// quote doesn't determine it. BOLT12 quotes mint the paid/issued delta;
+    /// everything else mints the quoted amount.
+    static func mintableAmount(of quote: any CashuSwift.MintQuoteResponse) -> Int? {
+        if let bolt12 = quote as? CashuSwift.Bolt12.MintQuote {
+            return bolt12.mintableAmount
+        }
+        return quote.amount
     }
 
     /// Issues ecash against a paid mint quote. BOLT11 derives the amount from
@@ -89,6 +115,30 @@ enum QuoteExecutor {
     }
 
     // MARK: - Melt
+
+    /// Fetches a melt quote by its ID for a known payment method, without
+    /// touching blank outputs or change. Used when the user enters a bare quote
+    /// ID and the wallet has to discover which mint (and method) it belongs to.
+    static func meltQuoteState(id: String,
+                               method: CashuSwift.PaymentMethodID,
+                               from mint: CashuSwift.Mint) async throws -> any CashuSwift.MeltQuoteResponse {
+        switch method {
+        case .bolt11:
+            return try await CashuSwift.Bolt11.meltQuoteState(id, from: mint)
+        case .bolt12:
+            return try await CashuSwift.Bolt12.meltQuoteState(id, from: mint)
+        default:
+            return try await CashuSwift.Generic.meltQuoteState(id, method: method, from: mint)
+        }
+    }
+
+    /// The fee reserve of a melt quote, derived through the protocol's
+    /// `requiredInputAmount` so it works for any fee model. 0 when the quote
+    /// can't determine it (e.g. onchain quotes without a selected fee option).
+    static func feeReserve(of quote: any CashuSwift.MeltQuoteResponse) -> Int {
+        guard let required = try? quote.requiredInputAmount(inputFee: 0) else { return 0 }
+        return max(required - quote.amount, 0)
+    }
 
     /// Melts proofs to fulfill a melt quote.
     static func melt(_ quote: any CashuSwift.MeltQuoteResponse,

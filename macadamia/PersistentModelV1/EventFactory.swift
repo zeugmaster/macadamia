@@ -13,40 +13,42 @@ extension AppSchemaV1.Event {
                                  shortDescription: String,
                                  visible: Bool = true,
                                  wallet: Wallet,
-                                 quote: CashuSwift.Bolt11.MintQuote,
+                                 quote: any CashuSwift.MintQuoteResponse,
                                  amount: Int,
                                  expiration: Date,
                                  mint: Mint) -> Event {
-        Event(date: Date(),
-              unit: unit,
-              shortDescription: shortDescription,
-              visible: visible,
-              kind: .pendingMint,
-              wallet: wallet,
-              mintQuote: quote,
-              amount: amount,
-              expiration: expiration,
-              mints: [mint]
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: shortDescription,
+                          visible: visible,
+                          kind: .pendingMint,
+                          wallet: wallet,
+                          amount: amount,
+                          expiration: expiration,
+                          mints: [mint]
         )
+        event.storedMintQuote = quote
+        return event
     }
-    
+
     static func mintEvent(unit: Unit,
                           shortDescription: String,
                           visible: Bool = true,
                           wallet: Wallet,
-                          quote: CashuSwift.Bolt11.MintQuote,
+                          quote: any CashuSwift.MintQuoteResponse,
                           mint: Mint,
                           amount: Int) -> Event {
-        Event(date: Date(),
-              unit: unit,
-              shortDescription: shortDescription,
-              visible: visible,
-              kind: .mint,
-              wallet: wallet,
-              mintQuote: quote,
-              amount: amount,
-              mints: [mint]
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: shortDescription,
+                          visible: visible,
+                          kind: .mint,
+                          wallet: wallet,
+                          amount: amount,
+                          mints: [mint]
         )
+        event.storedMintQuote = quote
+        return event
     }
     
     static func sendEvent(unit: Unit,
@@ -125,27 +127,28 @@ extension AppSchemaV1.Event {
                                  shortDescription: String,
                                  visible: Bool = true,
                                  wallet: Wallet,
-                                 quote: CashuSwift.Bolt11.MeltQuote,
+                                 quote: any CashuSwift.MeltQuoteResponse,
                                  amount: Int,
                                  expiration: Date?,
                                  mints: [Mint],
                                  proofs: [Proof]? = nil,
                                  groupingID: UUID? = nil) -> Event {
-        Event(date: Date(),
-              unit: unit,
-              shortDescription: shortDescription,
-              visible: visible,
-              kind: .pendingMelt,
-              wallet: wallet,
-              bolt11MeltQuote: quote,
-              amount: amount,
-              expiration: expiration,
-              proofs: proofs,
-              mints: mints,
-              groupingID: groupingID
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: shortDescription,
+                          visible: visible,
+                          kind: .pendingMelt,
+                          wallet: wallet,
+                          amount: amount,
+                          expiration: expiration,
+                          proofs: proofs,
+                          mints: mints,
+                          groupingID: groupingID
         )
+        event.storedMeltQuote = quote
+        return event
     }
-    
+
     static func meltEvent(unit: Unit,
                           shortDescription: String,
                           visible: Bool = true,
@@ -156,21 +159,22 @@ extension AppSchemaV1.Event {
                           change: [Proof]? = nil,
                           preImage: String? = nil, // FIXME: should not be optional
                           groupingID: UUID? = nil,
-                          meltQuote: CashuSwift.Bolt11.MeltQuote? = nil /* should not be optional either */) -> Event {
-        Event(date: Date(),
-              unit: unit,
-              shortDescription: shortDescription,
-              visible: visible,
-              kind: .melt,
-              wallet: wallet,
-              bolt11MeltQuote: meltQuote,
-              amount: amount,
-              longDescription: longDescription,
-              proofs: change,
-              mints: mints,
-              preImage: preImage,
-              groupingID: groupingID
+                          meltQuote: (any CashuSwift.MeltQuoteResponse)? = nil /* should not be optional either */) -> Event {
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: shortDescription,
+                          visible: visible,
+                          kind: .melt,
+                          wallet: wallet,
+                          amount: amount,
+                          longDescription: longDescription,
+                          proofs: change,
+                          mints: mints,
+                          preImage: preImage,
+                          groupingID: groupingID
         )
+        event.storedMeltQuote = meltQuote
+        return event
     }
     
     static func restoreEvent(shortDescription: String,

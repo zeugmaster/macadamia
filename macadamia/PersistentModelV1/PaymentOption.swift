@@ -144,6 +144,24 @@ extension AppSchemaV1.Mint {
             .sortedForDisplay()
     }
 
+    /// Distinct payment method IDs this mint advertises for the given
+    /// direction, BOLT11 first. Used to probe quote IDs whose method is
+    /// unknown. Falls back to BOLT11 when the mint advertises nothing.
+    @MainActor
+    func supportedQuoteMethodIDs(direction: PaymentDirection) async -> [CashuSwift.PaymentMethodID] {
+        var seen = Set<String>()
+        var methods = [CashuSwift.PaymentMethodID]()
+        for option in await supportedPaymentOptions(direction: direction)
+        where seen.insert(option.method.rawValue).inserted {
+            methods.append(option.method.id)
+        }
+        if methods.isEmpty {
+            return [.bolt11]
+        }
+        // Probe BOLT11 first — by far the most common method.
+        return methods.sorted { $0 == .bolt11 && $1 != .bolt11 }
+    }
+
     private func paymentMethods(from nutInfo: CashuSwift.Mint.Info.NutInfo?) -> [CashuSwift.Mint.Info.PaymentMethod] {
         if let methods = nutInfo?.methods {
             return methods

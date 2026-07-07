@@ -525,6 +525,31 @@ enum AppSchemaV1: VersionedSchema {
             }
         }
 
+        /// Method-agnostic accessor over the same storage as `mintQuote`. BOLT11
+        /// quotes keep the exact byte layout old builds wrote (and read); any other
+        /// method is wrapped in a `StoredQuoteEnvelope` that tags the JSON with its
+        /// method so it can be decoded back to the right concrete type.
+        var storedMintQuote: (any CashuSwift.MintQuoteResponse)? {
+            get {
+                if let bolt11MintQuoteData,
+                   let envelope = try? JSONDecoder().decode(StoredQuoteEnvelope.self, from: bolt11MintQuoteData) {
+                    return envelope.mintQuote
+                }
+                return mintQuote
+            }
+            set {
+                switch newValue {
+                case let bolt11 as CashuSwift.Bolt11.MintQuote:
+                    mintQuote = bolt11
+                case let quote?:
+                    bolt11MintQuoteData = StoredQuoteEnvelope(wrapping: quote)?.encoded()
+                    bolt11MintQuote = nil
+                case nil:
+                    mintQuote = nil
+                }
+            }
+        }
+
         var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? {
             get {
                 guard let data = bolt11MeltQuoteData else { return nil }
@@ -539,6 +564,30 @@ enum AppSchemaV1: VersionedSchema {
             }
             set {
                 bolt11MeltQuoteData = try? JSONEncoder().encode(newValue)
+            }
+        }
+
+        /// Method-agnostic accessor over the same storage as `bolt11MeltQuote`;
+        /// same envelope scheme as `storedMintQuote`. The envelope check runs
+        /// first because its dedicated keys cannot collide with either the current
+        /// BOLT11 shape or the all-optional legacy mirror.
+        var storedMeltQuote: (any CashuSwift.MeltQuoteResponse)? {
+            get {
+                if let bolt11MeltQuoteData,
+                   let envelope = try? JSONDecoder().decode(StoredQuoteEnvelope.self, from: bolt11MeltQuoteData) {
+                    return envelope.meltQuote
+                }
+                return bolt11MeltQuote
+            }
+            set {
+                switch newValue {
+                case let bolt11 as CashuSwift.Bolt11.MeltQuote:
+                    bolt11MeltQuote = bolt11
+                case let quote?:
+                    bolt11MeltQuoteData = StoredQuoteEnvelope(wrapping: quote)?.encoded()
+                case nil:
+                    bolt11MeltQuoteData = nil
+                }
             }
         }
         
@@ -582,6 +631,62 @@ enum AppSchemaV1: VersionedSchema {
         
         func tuple() -> (outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String]) {
             (outputs, blindingFactors, secrets)
+        }
+    }
+
+    /// Method-tagged wrapper for non-BOLT11 quotes stored in the `bolt11MintQuoteData` /
+    /// `bolt11MeltQuoteData` columns. BOLT11 quotes are deliberately NOT wrapped — they keep
+    /// the exact byte layout previous builds wrote, so downgrades and the legacy accessors
+    /// keep working. Discrimination is by shape: the envelope's keys don't exist on any
+    /// quote type, and a raw quote JSON lacks `envelope_method`, so each decoder cleanly
+    /// rejects the other's bytes.
+    struct StoredQuoteEnvelope: Codable {
+        let method: String
+        let quoteData: Data
+
+        enum CodingKeys: String, CodingKey {
+            case method = "envelope_method"
+            case quoteData = "envelope_quote_data"
+        }
+
+        init?(wrapping quote: any Codable, method: CashuSwift.PaymentMethodID) {
+            guard let data = try? JSONEncoder().encode(quote) else { return nil }
+            self.method = method.rawValue
+            self.quoteData = data
+        }
+
+        init?(wrapping quote: any CashuSwift.MintQuoteResponse) {
+            self.init(wrapping: quote, method: quote.method)
+        }
+
+        init?(wrapping quote: any CashuSwift.MeltQuoteResponse) {
+            self.init(wrapping: quote, method: quote.method)
+        }
+
+        func encoded() -> Data? {
+            try? JSONEncoder().encode(self)
+        }
+
+        var mintQuote: (any CashuSwift.MintQuoteResponse)? {
+            switch CashuSwift.PaymentMethodID(rawValue: method) {
+            case .bolt11:
+                return try? JSONDecoder().decode(CashuSwift.Bolt11.MintQuote.self, from: quoteData)
+            case .bolt12:
+                return try? JSONDecoder().decode(CashuSwift.Bolt12.MintQuote.self, from: quoteData)
+            default:
+                return try? JSONDecoder().decode(CashuSwift.Generic.MintQuote.self, from: quoteData)
+            }
+        }
+
+        var meltQuote: (any CashuSwift.MeltQuoteResponse)? {
+            switch CashuSwift.PaymentMethodID(rawValue: method) {
+            case .bolt11:
+                return try? JSONDecoder().decode(CashuSwift.Bolt11.MeltQuote.self, from: quoteData)
+            case .bolt12:
+                return try? JSONDecoder().decode(CashuSwift.Bolt12.MeltQuote.self, from: quoteData)
+            default:
+                return try? JSONDecoder().decode(CashuSwift.Generic.MeltQuote.self, from: quoteData)
+            }
         }
     }
 

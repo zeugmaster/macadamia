@@ -7,7 +7,7 @@ struct MintView: View {
     @State private var buttonState: ActionButtonState
     @EnvironmentObject private var appState: AppState
 
-    @State var quote: CashuSwift.Bolt11.MintQuote?
+    @State var quote: (any CashuSwift.MintQuoteResponse)?
     @State var pendingMintEvent: Event?
 
     @Environment(\.modelContext) private var modelContext
@@ -36,23 +36,26 @@ struct MintView: View {
     @State private var isCheckingInvoiceState = false
     @State private var hasLoggedPollingStart = false
 
+    @State private var quoteIDInput: String = ""
+    @State private var isLoadingQuoteByID = false
+
     init(pendingMintEvent: Event? = nil) {
 
-        _quote = State(initialValue: pendingMintEvent?.mintQuote)
+        _quote = State(initialValue: pendingMintEvent?.storedMintQuote)
         _pendingMintEvent = State(initialValue: pendingMintEvent)
         _buttonState = State(initialValue: .idle(String(localized: "No Action")))
 
         if let mint = pendingMintEvent?.mints?.first {
             _selectedMint = State(initialValue: mint)
-            if let quote = pendingMintEvent?.mintQuote {
+            if let quote = pendingMintEvent?.storedMintQuote {
                 _selectedOption = State(initialValue: PaymentOption(mintID: mint.mintID,
                                                                     direction: .mint,
                                                                     unit: Unit(code: quote.unit),
-                                                                    method: .bolt11))
+                                                                    method: PaymentMethodKind(quote.method)))
             }
         }
 
-        if let quote = pendingMintEvent?.mintQuote {
+        if let quote = pendingMintEvent?.storedMintQuote {
             _amount = State(initialValue: quote.amount ?? 0)
             _selectedUnit = State(initialValue: Unit(code: quote.unit))
         }
@@ -75,7 +78,7 @@ struct MintView: View {
                                         selectedOption: $selectedOption,
                                         allowedMethods: [.bolt11])
                 }
-                .disabled(pendingMintEvent != nil)
+                .disabled(pendingMintEvent != nil || quote != nil)
                 if let quote {
                     Section {
                         if let expiry = quote.expiry {
@@ -86,20 +89,24 @@ struct MintView: View {
                             }
                             .foregroundStyle(.secondary)
                         }
-                        QRView(string: quote.request)
-                        Button {
-                            copyToClipboard()
-                        } label: {
-                            HStack {
-                                if isCopied {
-                                    Text("Copied!")
-                                        .transition(.opacity)
-                                } else {
-                                    Text("Copy to clipboard")
-                                        .transition(.opacity)
+                        // Quotes loaded by ID may carry no payment request
+                        // (e.g. methods settled out of band).
+                        if !quote.request.isEmpty {
+                            QRView(string: quote.request)
+                            Button {
+                                copyToClipboard()
+                            } label: {
+                                HStack {
+                                    if isCopied {
+                                        Text("Copied!")
+                                            .transition(.opacity)
+                                    } else {
+                                        Text("Copy to clipboard")
+                                            .transition(.opacity)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "list.clipboard")
                                 }
-                                Spacer()
-                                Image(systemName: "list.clipboard")
                             }
                         }
                     }
@@ -134,7 +141,43 @@ struct MintView: View {
 
                         if showDetails {
                             CopyableRow(label: String(localized: "Quote ID"), value: quote.quote)
+                            if quote.method != .bolt11 {
+                                HStack {
+                                    Text("Method")
+                                    Spacer()
+                                    Text(PaymentMethodKind(quote.method).displayName)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
                         }
+                    }
+                }
+                if quote == nil && pendingMintEvent == nil {
+                    Section {
+                        HStack {
+                            TextField("Quote ID", text: $quoteIDInput)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .monospaced()
+                                .onSubmit { loadQuoteByID() }
+                            if isLoadingQuoteByID {
+                                ProgressView()
+                            }
+                        }
+                        Button {
+                            loadQuoteByID()
+                        } label: {
+                            HStack {
+                                Text("Load Quote")
+                                Spacer()
+                                Image(systemName: "square.and.arrow.down")
+                            }
+                        }
+                        .disabled(loadQuoteByIDDisabled)
+                    } header: {
+                        Text("Existing Quote")
+                    } footer: {
+                        Text("Alternatively, load a previously created quote from the selected mint by entering its ID.")
                     }
                 }
                 Spacer(minLength: 50)
@@ -177,6 +220,58 @@ struct MintView: View {
             return amount < 1 || selectedMint == nil || selectedOption == nil
         }
         return selectedMint == nil
+    }
+
+    private var loadQuoteByIDDisabled: Bool {
+        quoteIDInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || selectedMint == nil
+            || isLoadingQuoteByID
+    }
+
+    /// Fetches an existing mint quote by its ID from the selected mint, probing
+    /// each payment method the mint advertises for issuance (BOLT11 first).
+    /// A hit populates the same UI and flow a freshly requested quote would.
+    private func loadQuoteByID() {
+        guard let selectedMint, !loadQuoteByIDDisabled else { return }
+
+        let id = quoteIDInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sendableMint = CashuSwift.Mint(selectedMint)
+        isLoadingQuoteByID = true
+
+        Task { @MainActor in
+            var loadedQuote: (any CashuSwift.MintQuoteResponse)?
+            for method in await selectedMint.supportedQuoteMethodIDs(direction: .mint) {
+                if let result = try? await QuoteExecutor.mintQuoteState(id: id, method: method, from: sendableMint) {
+                    loadedQuote = result
+                    break
+                }
+            }
+
+            isLoadingQuoteByID = false
+
+            guard let loadedQuote else {
+                displayAlert(alert: AlertDetail(title: String(localized: "Quote Not Found"),
+                                                description: String(localized: "Mint \(selectedMint.displayName) did not return a mint quote for this ID.")))
+                return
+            }
+
+            guard loadedQuote.state != .issued else {
+                displayAlert(alert: AlertDetail(title: String(localized: "Already Issued"),
+                                                description: String(localized: "Ecash for this quote has already been issued.")))
+                return
+            }
+
+            withAnimation {
+                quote = loadedQuote
+                amount = QuoteExecutor.mintableAmount(of: loadedQuote) ?? 0
+                selectedUnit = Unit(code: loadedQuote.unit)
+                selectedOption = PaymentOption(mintID: selectedMint.mintID,
+                                               direction: .mint,
+                                               unit: Unit(code: loadedQuote.unit),
+                                               method: PaymentMethodKind(loadedQuote.method))
+            }
+            buttonState = .idle(String(localized: "Issue Ecash"), action: requestMint)
+        }
     }
 
     private func copyToClipboard() {
@@ -298,7 +393,7 @@ struct MintView: View {
         Task {
             do {
                 let issueResult = try await QuoteExecutor.mint(quote,
-                                                               amount: quote.amount ?? amount,
+                                                               amount: QuoteExecutor.mintableAmount(of: quote) ?? amount,
                                                                from: CashuSwift.Mint(selectedMint),
                                                                seed: activeWallet.seed)
 
@@ -311,7 +406,7 @@ struct MintView: View {
                                             wallet: activeWallet,
                                             quote: quote,
                                             mint: selectedMint,
-                                            amount: quote.amount ?? issueResult.proofs.sum)
+                                            amount: issueResult.proofs.sum)
 
                 modelContext.insert(event)
                 try modelContext.save()
