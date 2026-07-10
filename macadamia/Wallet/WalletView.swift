@@ -31,6 +31,7 @@ struct WalletView: View {
         case melt(invoice: String?)
         case reqPay(req: CashuSwift.PaymentRequest)
         case reqView
+        case nfcRequest
         case contactless
         case lnurl(userInput: String)
         case payeeInput
@@ -49,6 +50,8 @@ struct WalletView: View {
                 return "reqPay"
             case .reqView:
                 return "reqView"
+            case .nfcRequest:
+                return "nfcRequest"
             case .contactless:
                 return "contactless"
             case .lnurl(_):
@@ -114,6 +117,15 @@ struct WalletView: View {
                             menuButtonLabel(title: String(localized: "Request"),
                                             subtitle: String(localized: "Create Payment Request"),
                                             imageSystemName: "wallet.pass",
+                                            fade: fade)
+                        }
+                        .background(Color.black)
+                        Templates.MenuItem {
+                            navigationDestination = .nfcRequest
+                        } label: { fade in
+                            menuButtonLabel(title: String(localized: "Contactless"),
+                                            subtitle: String(localized: "Request ecash via NFC"),
+                                            imageSystemName: "wave.3.right",
                                             fade: fade)
                         }
                         .background(Color.black)
@@ -234,6 +246,8 @@ struct WalletView: View {
                     RequestPay(paymentRequest: req)
                 case .reqView:
                     RequestView()
+                case .nfcRequest:
+                    NFCRequestView()
                 case .contactless:
                     Contactless()
                 case .lnurl(userInput: let userInput):
