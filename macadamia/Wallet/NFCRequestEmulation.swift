@@ -181,7 +181,7 @@ final class Type4TagEmulator {
     /// Builds a Type 4 NDEF file (NLEN prefix) containing a single
     /// well-known Text record with language code "en", like Numo's
     /// `NdefMessageBuilder.createNdefMessage`.
-    private static func type4NDEFFile(text: String) -> [UInt8] {
+    static func type4NDEFFile(text: String) -> [UInt8] {
         let textBytes = [UInt8](text.utf8)
         let language = [UInt8]("en".utf8)
         let payload = [UInt8(language.count)] + language + textBytes
@@ -203,7 +203,7 @@ final class Type4TagEmulator {
 
     /// Parses a Type 4 NDEF file and decodes the first record if it is a
     /// well-known Text ("T") or URI ("U") record.
-    private static func parseNDEFFile(_ data: [UInt8]) -> String? {
+    static func parseNDEFFile(_ data: [UInt8]) -> String? {
         guard data.count > 2 else { return nil }
         let totalLength = (Int(data[0]) << 8) | Int(data[1])
         guard totalLength > 0, totalLength + 2 <= data.count else { return nil }

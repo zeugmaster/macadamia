@@ -4937,6 +4937,12 @@
         }
       }
     },
+    "Card emulation is currently not available. It is limited to devices in the European Economic Area." : {
+
+    },
+    "Card emulation is not supported on this device. It requires the HCE entitlement and iOS 17.4 or later." : {
+
+    },
     "Cashu" : {
       "localizations" : {
         "ar" : {
@@ -6069,6 +6075,9 @@
           }
         }
       }
+    },
+    "Connected, sending payment request..." : {
+
     },
     "Contact the developer" : {
       "localizations" : {
@@ -10065,6 +10074,9 @@
         }
       }
     },
+    "Event Log" : {
+
+    },
     "expired — completing may fail" : {
       "localizations" : {
         "ar" : {
@@ -11547,6 +11559,12 @@
           }
         }
       }
+    },
+    "Hold near the payer's device." : {
+
+    },
+    "Hold near the payer's device..." : {
+
     },
     "Hong Kong Dollar" : {
       "localizations" : {
@@ -17818,6 +17836,9 @@
         }
       }
     },
+    "NFC Request" : {
+
+    },
     "Nickname" : {
       "localizations" : {
         "ar" : {
@@ -22585,6 +22606,9 @@
         }
       }
     },
+    "Payment received!" : {
+
+    },
     "Payment Request" : {
       "localizations" : {
         "ar" : {
@@ -23915,6 +23939,9 @@
           }
         }
       }
+    },
+    "Present Again" : {
+
     },
     "Privacy is a human right." : {
       "localizations" : {
@@ -25960,6 +25987,9 @@
         }
       }
     },
+    "Request ecash via NFC" : {
+
+    },
     "Request from" : {
       "localizations" : {
         "ar" : {
@@ -26029,6 +26059,9 @@
           }
         }
       }
+    },
+    "Request read, awaiting payment..." : {
+
     },
     "Restore" : {
       "localizations" : {
@@ -27648,6 +27681,9 @@
           }
         }
       }
+    },
+    "Session ended." : {
+
     },
     "Set up Nostr Key" : {
       "localizations" : {
@@ -31009,6 +31045,9 @@
           }
         }
       }
+    },
+    "The request is offered to any mint. The payer returns the ecash token over NFC." : {
+
     },
     "The request returned status: %@" : {
       "localizations" : {

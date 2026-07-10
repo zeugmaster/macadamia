@@ -20,5 +20,10 @@
 	<false/>
 	<key>NFCReaderUsageDescription</key>
 	<string>macadamia uses NFC to receive payment requests from compatible devices.</string>
+	<key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
+	<array>
+		<string>0000006361736875</string>
+		<string>D2760000850101</string>
+	</array>
 </dict>
 </plist>
