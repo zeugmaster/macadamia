@@ -47,6 +47,7 @@ struct NFCRequestView: View {
 
             if requestPayload != nil {
                 emulationSection
+                eventLogSection
             } else {
                 Section {
                     TextField("", text: $description, prompt: Text("Optional description..."))
@@ -118,6 +119,27 @@ struct NFCRequestView: View {
                     .font(.caption.monospaced())
                     .lineLimit(2)
                     .truncationMode(.middle)
+            }
+        }
+    }
+
+    private var eventLogSection: some View {
+        Section {
+            ForEach(Array(cardSession.eventLog.enumerated()), id: \.offset) { _, line in
+                Text(line)
+                    .font(.caption2.monospaced())
+                    .foregroundStyle(.secondary)
+                    .listRowSeparator(.hidden)
+            }
+        } header: {
+            HStack {
+                Text("Event Log")
+                Spacer()
+                Button {
+                    UIPasteboard.general.string = cardSession.eventLog.joined(separator: "\n")
+                } label: {
+                    Image(systemName: "clipboard")
+                }
             }
         }
     }

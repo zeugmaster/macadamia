@@ -300,13 +300,37 @@ final class NFCRequestCardSession: ObservableObject {
 
     @Published private(set) var status: Status = .idle
 
+    /// Timestamped diagnostic log of session events and raw APDU traffic,
+    /// shown in the UI while the flow is experimental.
+    @Published private(set) var eventLog: [String] = []
+
     private var cardSession: CardSession?
     private var presentmentIntent: NFCPresentmentIntentAssertion?
     private var emulationTask: Task<Void, Never>?
 
+    private static let logTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss.SSS"
+        return formatter
+    }()
+
+    private func log(_ message: String) {
+        nfcHCELogger.info("\(message, privacy: .public)")
+        eventLog.append("\(Self.logTimeFormatter.string(from: Date())) \(message)")
+        if eventLog.count > 300 {
+            eventLog.removeFirst(eventLog.count - 300)
+        }
+    }
+
+    private func hex(_ data: Data, limit: Int = 32) -> String {
+        let shown = data.prefix(limit).map { String(format: "%02X", $0) }.joined()
+        return data.count > limit ? "\(shown)… (\(data.count) B)" : shown
+    }
+
     func start(payload: String) {
         stop()
         status = .idle
+        eventLog = []
         emulationTask = Task { await run(payload: payload) }
     }
 
@@ -319,11 +343,14 @@ final class NFCRequestCardSession: ObservableObject {
     }
 
     private func run(payload: String) async {
+        log("starting, payload \(payload.count) chars")
         guard CardSession.isSupported else {
+            log("CardSession.isSupported == false")
             status = .unavailable(String(localized: "Card emulation is not supported on this device. It requires the HCE entitlement and iOS 17.4 or later."))
             return
         }
         guard await CardSession.isEligible else {
+            log("CardSession.isEligible == false")
             status = .unavailable(String(localized: "Card emulation is currently not available. It is limited to devices in the European Economic Area."))
             return
         }
@@ -333,8 +360,10 @@ final class NFCRequestCardSession: ObservableObject {
         do {
             // Prevents the default contactless app from launching while presenting.
             presentmentIntent = try await NFCPresentmentIntentAssertion.acquire()
+            log("presentment intent acquired")
             let session = try await CardSession()
             cardSession = session
+            log("card session created")
             status = .waitingForReader
 
             for try await event in session.eventStream {
@@ -346,14 +375,18 @@ final class NFCRequestCardSession: ObservableObject {
                     // the system presentment sheet only appears once emulation is
                     // in progress, and the device only answers reader polling then.
                     try await session.startEmulation()
+                    log("session started, emulation running (60 s window)")
                     status = .waitingForReader
                 case .readerDetected:
+                    log("reader detected")
                     if await !session.isEmulationInProgress {
                         try await session.startEmulation()
+                        log("emulation restarted")
                     }
                     status = .readerConnected
                 case .readerDeselected:
-                    // RF link lost: end successfully if we got the token, otherwise keep waiting.
+                    log("reader deselected (RF link lost)")
+                    // End successfully if we got the token, otherwise keep waiting.
                     if case .tokenReceived = status {
                         await session.stopEmulation(status: .success)
                         session.invalidate()
@@ -362,34 +395,41 @@ final class NFCRequestCardSession: ObservableObject {
                     }
                 case .received(let apdu):
                     let (response, effect) = emulator.handle(apdu.payload)
+                    log("rx \(hex(apdu.payload))")
                     try await apdu.respond(response: response)
+                    log("tx \(hex(response, limit: 8))")
                     switch effect {
                     case .requestRead:
+                        log("reader has read the full request")
                         if status == .readerConnected { status = .requestRead }
                     case .messageReceived(let message):
+                        log("NDEF message received: \(message.prefix(40))…")
                         if let token = Type4TagEmulator.extractCashuToken(from: message) {
+                            log("cashu token extracted")
                             status = .tokenReceived(token)
                             await session.stopEmulation(status: .success)
                             session.invalidate()
                         } else {
-                            nfcHCELogger.warning("received NDEF message without a cashu token")
+                            log("no cashu token found in message")
                         }
                     case nil:
                         break
                     }
                 case .sessionInvalidated(let reason):
+                    log("session invalidated: \(String(describing: reason))")
                     if case .tokenReceived = status {} else {
                         status = .ended(reason.localizedDescription)
                     }
                 }
             }
         } catch {
-            nfcHCELogger.error("card session error: \(error)")
+            log("error: \(String(describing: error))")
             if case .tokenReceived = status {} else {
                 status = .ended(error.localizedDescription)
             }
         }
 
+        log("session loop ended")
         presentmentIntent = nil
         cardSession = nil
         if case .readerConnected = status { status = .ended(nil) }
