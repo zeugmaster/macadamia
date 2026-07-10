@@ -342,8 +342,15 @@ final class NFCRequestCardSession: ObservableObject {
                 switch event {
                 case .sessionStarted:
                     session.alertMessage = String(localized: "Hold near the payer's device.")
-                case .readerDetected:
+                    // Start emulating right away rather than waiting for a reader:
+                    // the system presentment sheet only appears once emulation is
+                    // in progress, and the device only answers reader polling then.
                     try await session.startEmulation()
+                    status = .waitingForReader
+                case .readerDetected:
+                    if await !session.isEmulationInProgress {
+                        try await session.startEmulation()
+                    }
                     status = .readerConnected
                 case .readerDeselected:
                     // RF link lost: end successfully if we got the token, otherwise keep waiting.
