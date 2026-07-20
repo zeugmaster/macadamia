@@ -76,24 +76,50 @@ enum QuoteExecutor {
         }
     }
 
-    /// Method-aware "has the user paid?" predicate. BOLT11 and Generic expose a
-    /// `state`; BOLT12 mint quotes never carry one, so we consult the
-    /// paid/issued delta instead.
+    /// Method-aware "has the user paid?" predicate. BOLT11 exposes a `state`;
+    /// BOLT12 mint quotes never carry one, so we consult the paid/issued delta
+    /// instead. Generic quotes for custom methods (e.g. NUT-XX offer claims
+    /// against cdk's "branch" method) also come back WITHOUT a `state` field
+    /// and expose bolt12-style progress fields (`amount_paid`/`amount_issued`)
+    /// in their raw body, so those are consulted when `state` is absent.
     static func mintQuoteIsPaid(_ quote: any CashuSwift.MintQuoteResponse) -> Bool {
         if let bolt12 = quote as? CashuSwift.Bolt12.MintQuote {
             return bolt12.mintableAmount > 0
+        }
+        if let generic = quote as? CashuSwift.Generic.MintQuote,
+           generic.state == nil,
+           let paid = rawInt(generic.raw, "amount_paid"),
+           let amount = generic.amount {
+            return paid >= amount
         }
         return quote.state == .paid
     }
 
     /// The amount an issue call should request for this quote, or nil when the
-    /// quote doesn't determine it. BOLT12 quotes mint the paid/issued delta;
+    /// quote doesn't determine it. BOLT12 quotes — and state-less Generic
+    /// quotes with bolt12-style progress fields — mint the paid/issued delta;
     /// everything else mints the quoted amount.
     static func mintableAmount(of quote: any CashuSwift.MintQuoteResponse) -> Int? {
         if let bolt12 = quote as? CashuSwift.Bolt12.MintQuote {
             return bolt12.mintableAmount
         }
+        if let generic = quote as? CashuSwift.Generic.MintQuote,
+           generic.state == nil,
+           let paid = rawInt(generic.raw, "amount_paid") {
+            let issued = rawInt(generic.raw, "amount_issued") ?? 0
+            let mintable = paid - issued
+            return mintable > 0 ? mintable : generic.amount
+        }
         return quote.amount
+    }
+
+    /// Integer field from a Generic quote's raw JSON body.
+    private static func rawInt(_ raw: CashuSwift.JSONObject, _ key: String) -> Int? {
+        switch raw[key] {
+        case .integer(let v): return Int(v)
+        case .double(let v): return Int(v)
+        default: return nil
+        }
     }
 
     /// Issues ecash against a paid mint quote. BOLT11 derives the amount from

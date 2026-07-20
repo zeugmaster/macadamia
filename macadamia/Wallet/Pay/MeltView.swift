@@ -5,19 +5,24 @@ import CashuSwift
 // TODO: remove unsafe unwrapping, nicer pending error
 
 /// Hosts a payment-method-specific quote source (`BOLT11MeltQuoteSource`
-/// for invoices, `QuoteIDMeltQuoteSource` for bare quote IDs), then executes
-/// the resulting `MeltQuoteBundle`s — proof selection, blank outputs,
+/// for invoices, `QuoteOfferMeltQuoteSource` for NUT-XX quote offers), then
+/// executes the resulting `MeltQuoteBundle`s — proof selection, blank outputs,
 /// persistent event bookkeeping, and the actual melt calls dispatched
 /// through `QuoteExecutor`. Also handles resume mode for pending payments
 /// and the post-execute "check state" loop. Everything below the source is
 /// intentionally payment-method agnostic so sources can be swapped without
 /// touching execution.
+///
+/// Offer melts are always asynchronous per NUT-XX: the mint answers the melt
+/// request with `PENDING`, so this view auto-polls the quote state and shows
+/// a teller-facing payment code (derived from the secret quote ID) until —
+/// and after — the payment completes.
 struct MeltView: View {
 
     /// The user input a quote source is derived from.
     enum PaymentInput: Equatable {
         case bolt11Invoice(String)
-        case quoteID(String)
+        case quoteOffer(CashuSwift.QuoteOffer)
     }
 
     struct MeltTaskInput {
@@ -53,6 +58,15 @@ struct MeltView: View {
     @State private var showAlert = false
     @State private var currentAlert: AlertDetail?
 
+    // Offer-melt async execution: polling driver and terminal state.
+    @State private var pollingTimer: Timer?
+    @State private var isPollingMeltState = false
+    @State private var offerMeltPaid = false
+
+    // A mint offer scanned in the inline input (a teller hands out one QR for
+    // either operation) routes onward to the offer-mint flow.
+    @State private var routedMintOffer: CashuSwift.QuoteOffer?
+
     private var activeWallet: Wallet? {
         wallets.first
     }
@@ -68,7 +82,7 @@ struct MeltView: View {
         return true
     }
 
-    init(events: [Event]? = nil, invoice: String? = nil, quoteID: String? = nil) {
+    init(events: [Event]? = nil, invoice: String? = nil, quoteOffer: CashuSwift.QuoteOffer? = nil) {
         if let events {
             _pendingMeltEvents = State(initialValue: events)
             _paymentInput = State(initialValue: nil)
@@ -76,8 +90,8 @@ struct MeltView: View {
             _pendingMeltEvents = State(initialValue: [])
             if let invoice {
                 _paymentInput = State(initialValue: .bolt11Invoice(invoice))
-            } else if let quoteID {
-                _paymentInput = State(initialValue: .quoteID(quoteID))
+            } else if let quoteOffer {
+                _paymentInput = State(initialValue: .quoteOffer(quoteOffer))
             } else {
                 _paymentInput = State(initialValue: nil)
             }
@@ -93,19 +107,12 @@ struct MeltView: View {
                 case .bolt11Invoice(let invoice):
                     BOLT11MeltQuoteSource(initialInvoice: invoice,
                                           state: $sourceState)
-                case .quoteID(let quoteID):
-                    QuoteIDMeltQuoteSource(quoteID: quoteID,
-                                           state: $sourceState)
+                case .quoteOffer(let offer):
+                    QuoteOfferMeltQuoteSource(offer: offer,
+                                              state: $sourceState)
                 case nil:
-                    InputView(supportedTypes: [.bolt11Invoice, .quoteID]) { input in
-                        withAnimation {
-                            switch input.type {
-                            case .quoteID:
-                                paymentInput = .quoteID(input.payload)
-                            default:
-                                paymentInput = .bolt11Invoice(input.payload)
-                            }
-                        }
+                    InputView(supportedTypes: [.bolt11Invoice, .quoteOffer]) { input in
+                        handleInput(input)
                     }
                     .padding()
                 }
@@ -117,8 +124,58 @@ struct MeltView: View {
             }
         }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
-        .onAppear { updateButtonState() }
+        .onAppear {
+            updateButtonState()
+            // Resuming a pending offer melt: the payment is asynchronous, so
+            // pick the state monitoring back up right away.
+            if isOfferMelt && !pendingMeltEvents.isEmpty && !offerMeltPaid {
+                startOfferMeltPolling()
+            }
+        }
+        .onDisappear { pollingTimer?.invalidate() }
         .onChange(of: sourceState) { _, _ in updateButtonState() }
+        .navigationDestination(isPresented: Binding(get: { routedMintOffer != nil },
+                                                    set: { if !$0 { routedMintOffer = nil } })) {
+            if let routedMintOffer {
+                QuoteOfferMintView(offer: routedMintOffer)
+            }
+        }
+    }
+
+    /// Routes inline scanner results: BOLT11 invoices feed the invoice source,
+    /// melt offers feed the offer source, and mint offers push the offer-mint
+    /// flow — a teller hands out a single QR and the wallet must do the right
+    /// thing for either operation.
+    private func handleInput(_ input: InputView.Result) {
+        switch input.type {
+        case .quoteOffer:
+            do {
+                let offer = try CashuSwift.QuoteOffer(encodedOffer: input.payload)
+                withAnimation {
+                    if offer.operation == .melt {
+                        paymentInput = .quoteOffer(offer)
+                    } else {
+                        routedMintOffer = offer
+                    }
+                }
+            } catch {
+                logger.error("could not decode quote offer: \(error)")
+                displayAlert(alert: AlertDetail(title: String(localized: "Invalid Quote Offer"),
+                                                description: error.localizedDescription))
+            }
+        default:
+            withAnimation {
+                paymentInput = .bolt11Invoice(input.payload)
+            }
+        }
+    }
+
+    /// Offer melts execute asynchronously and get the teller-facing payment
+    /// code UI. Detected via the concrete quote type so resume mode (where
+    /// only the stored events exist) is covered too.
+    private var isOfferMelt: Bool {
+        if case .quoteOffer = paymentInput { return true }
+        return pendingMeltEvents.first?.storedMeltQuote is CashuSwift.Generic.MeltQuote
     }
 
     // MARK: - Resume mode summary
@@ -128,7 +185,13 @@ struct MeltView: View {
     /// straight to "Check Payment State".
     private var pendingMeltSummaryView: some View {
         List {
-            if let invoiceString = pendingMeltEvents.first?.bolt11MeltQuote?.request {
+            if let offerQuote = pendingMeltEvents.first?.storedMeltQuote as? CashuSwift.Generic.MeltQuote {
+                // Offer melt: the (secret) quote ID doubles as the wallet's
+                // proof that it initiated the payment. The short code is the
+                // last 6 characters of the quote ID, uppercased — the teller
+                // compares it against their terminal before handing out cash.
+                paymentCodeSection(for: offerQuote)
+            } else if let invoiceString = pendingMeltEvents.first?.bolt11MeltQuote?.request {
                 Section {
                     Text(invoiceString)
                         .monospaced()
@@ -144,7 +207,7 @@ struct MeltView: View {
                     Text("BOLT11 INVOICE")
                 }
             } else if let quoteID = pendingMeltEvents.first?.storedMeltQuote?.quote {
-                // Melts started from a bare quote ID may not carry a payment request.
+                // Older melts may not carry a payment request.
                 Section {
                     Text(quoteID)
                         .monospaced()
@@ -187,9 +250,45 @@ struct MeltView: View {
         .lineLimit(1)
     }
 
+    private func paymentCodeSection(for quote: CashuSwift.Generic.MeltQuote) -> some View {
+        Section {
+            VStack(alignment: .center, spacing: 10) {
+                Text(QuoteOfferTools.paymentCode(forQuoteID: quote.quote))
+                    .font(.system(size: 52, weight: .bold, design: .monospaced))
+                    .frame(maxWidth: .infinity)
+                if offerMeltPaid {
+                    Label(String(localized: "Payment complete"), systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                        .font(.callout)
+                } else {
+                    Text("Show this code to the teller")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    HStack(spacing: 6) {
+                        ProgressView()
+                        Text("Waiting for the payment to complete...")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.vertical, 8)
+            CopyableRow(label: String(localized: "Quote ID"), value: quote.quote)
+        } header: {
+            Text("PAYMENT CODE")
+        } footer: {
+            Text("The teller verifies this code against their terminal before paying out.")
+        }
+    }
+
     // MARK: - Button orchestration
 
     private func updateButtonState() {
+        if offerMeltPaid {
+            buttonState = .idle(String(localized: "Done"), action: { dismissToRoot() })
+            return
+        }
+
         if !pendingMeltEvents.isEmpty {
             buttonState = .idle(String(localized: "Check Payment State"),
                                 action: { checkMeltState(for: pendingMeltEvents) })
@@ -325,7 +424,15 @@ struct MeltView: View {
                     }
 
                     await MainActor.run {
-                        handleSuccess(with: results)
+                        if isOfferMelt, results.contains(where: { $0.quote.state == .pending }) {
+                            // Offer melts are asynchronous per NUT-XX: the mint
+                            // answers PENDING after validating the request and the
+                            // wallet monitors the quote until the payment completes.
+                            startOfferMeltPolling()
+                            updateButtonState()
+                        } else {
+                            handleSuccess(with: results)
+                        }
                     }
                 }
             } catch {
@@ -418,10 +525,71 @@ struct MeltView: View {
         }
     }
 
+    // MARK: - Offer melt PENDING monitoring
+
+    /// Auto-polls the melt quote state every few seconds while an offer melt
+    /// is PENDING. Silent by design — unlike the manual "Check Payment State"
+    /// button it never raises alerts, it just waits for PAID.
+    private func startOfferMeltPolling() {
+        guard pollingTimer == nil || pollingTimer?.isValid == false else { return }
+        pollingTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: { _ in
+            Task { @MainActor in
+                pollOfferMeltState()
+            }
+        })
+    }
+
+    @MainActor
+    private func pollOfferMeltState() {
+        guard !isPollingMeltState, !offerMeltPaid, !pendingMeltEvents.isEmpty else { return }
+
+        var taskInputs = [MeltTaskInput]()
+        for event in pendingMeltEvents {
+            guard let mint = event.mints?.first,
+                  let proofs = event.proofs,
+                  let quote = event.storedMeltQuote else {
+                pollingTimer?.invalidate()
+                return
+            }
+            let blankOutputs = event.blankOutputs.flatMap { $0.outputs.isEmpty ? nil : $0.tuple() }
+            taskInputs.append(MeltTaskInput(mint: CashuSwift.Mint(mint),
+                                            proofs: proofs.sendable(),
+                                            quote: quote,
+                                            blankOutputs: blankOutputs))
+        }
+
+        isPollingMeltState = true
+        Task {
+            defer { isPollingMeltState = false }
+            do {
+                var results = [MeltTaskResult]()
+                for input in taskInputs {
+                    let outcome = try await QuoteExecutor.meltState(input.quote,
+                                                                    from: input.mint,
+                                                                    blankOutputs: input.blankOutputs)
+                    results.append(MeltTaskResult(mint: input.mint,
+                                                  quote: outcome.quote,
+                                                  change: outcome.change))
+                }
+                await MainActor.run {
+                    if results.allSatisfy({ $0.quote.state == .paid }) {
+                        handleSuccess(with: results)
+                    }
+                    // Still pending: keep polling silently.
+                }
+            } catch {
+                // Transient poll errors are expected (network); keep the timer running.
+                logger.warning("offer melt state poll failed with error: \(error)")
+            }
+        }
+    }
+
     private func handleSuccess(with results: [MeltTaskResult]) {
         guard let activeWallet else {
             return
         }
+
+        pollingTimer?.invalidate()
 
         for event in pendingMeltEvents {
             event.proofs?.setState(.spent)
@@ -432,7 +600,9 @@ struct MeltView: View {
 
         var events = [Event]()
         for result in results {
-            guard let mint = mints.first(where: { $0.matches(result.mint) }) else {
+            // Search ALL of the wallet's mints — an offer melt may spend from a
+            // mint that was auto-added hidden when the offer was claimed.
+            guard let mint = activeWallet.mints.first(where: { $0.matches(result.mint) }) else {
                 // TODO: show error saving change
                 return
             }
@@ -458,8 +628,18 @@ struct MeltView: View {
 
         buttonState = .success(String(localized: "Paid!"))
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            dismissToRoot()
+        if isOfferMelt {
+            // Keep the payment code on screen: the teller compares it against
+            // their terminal before handing out cash, so the view must not
+            // dismiss itself on success.
+            withAnimation { offerMeltPaid = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                updateButtonState()
+            }
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                dismissToRoot()
+            }
         }
     }
 

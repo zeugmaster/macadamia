@@ -379,7 +379,7 @@
 				377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 				377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */,
-				371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */,
+				371AA9112E33EB61006D487F /* XCLocalSwiftPackageReference "../CashuSwift-Dependencies/CashuSwift" */,
 				37A988472EBF9A7C0065FCE6 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */,
 				370A2B312EBFD23800C4A6A5 /* XCRemoteSwiftPackageReference "Bolt11" */,
 				370F7F532F16AC6400C625C0 /* XCRemoteSwiftPackageReference "LNURL-Swift" */,
@@ -850,14 +850,6 @@
 				minimumVersion = 0.1.0;
 			};
 		};
-		371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/zeugmaster/cashu-swift.git";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.4.1;
-			};
-		};
 		377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/zeugmaster/URUI";
@@ -900,6 +892,13 @@
 		};
 /* End XCRemoteSwiftPackageReference section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		371AA9112E33EB61006D487F /* XCLocalSwiftPackageReference "../CashuSwift-Dependencies/CashuSwift" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../CashuSwift-Dependencies/CashuSwift";
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		370A2B322EBFD23800C4A6A5 /* Bolt11 */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -918,7 +917,7 @@
 		};
 		371AA9122E33EB61006D487F /* CashuSwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */;
+			package = 371AA9112E33EB61006D487F /* XCLocalSwiftPackageReference "../CashuSwift-Dependencies/CashuSwift" */;
 			productName = CashuSwift;
 		};
 		377D26252E1FDE7800CFB880 /* URUI */ = {
@@ -963,12 +962,12 @@
 		};
 		37BC5F552E6CCF23000E1799 /* CashuSwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */;
+			package = 371AA9112E33EB61006D487F /* XCLocalSwiftPackageReference "../CashuSwift-Dependencies/CashuSwift" */;
 			productName = CashuSwift;
 		};
 		37C4CC4A2E5CAAE30028E4FE /* CashuSwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */;
+			package = 371AA9112E33EB61006D487F /* XCLocalSwiftPackageReference "../CashuSwift-Dependencies/CashuSwift" */;
 			productName = CashuSwift;
 		};
 /* End XCSwiftPackageProductDependency section */

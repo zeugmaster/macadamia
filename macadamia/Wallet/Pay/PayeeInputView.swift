@@ -71,7 +71,7 @@ struct PayeeInputView: View {
             
             Spacer().frame(height: 20)
             
-            InputView(supportedTypes: [.bolt11Invoice, .lightningAddress, .lnurlPay, .merchantCode, .quoteID]) { result in
+            InputView(supportedTypes: [.bolt11Invoice, .lightningAddress, .lnurlPay, .merchantCode, .quoteOffer]) { result in
                 input = result
             }
             .opacity(hideScanner ? 0 : 1)
@@ -85,9 +85,10 @@ struct PayeeInputView: View {
             case .bolt11Invoice:
                 // go directly to melt view
                 MeltView(invoice: input.payload)
-            case .quoteID:
-                // melt quote id: MeltView looks it up across the wallet's mints
-                MeltView(quoteID: input.payload)
+            case .quoteOffer:
+                // NUT-XX quote offer: decoded and routed to the melt or mint
+                // flow depending on the offer's operation.
+                QuoteOfferRouteView(encoded: input.payload)
             case .lightningAddress, .lnurlPay, .merchantCode:
                 // merchantCode payload is already converted to a lightning address
                 LNURLPayView(userInput: input.payload)
@@ -104,7 +105,7 @@ struct PayeeInputView: View {
             return
         }
         
-        let inputValidationResult = InputValidator.validate(textFieldInput, supportedTypes: [.bolt11Invoice, .lightningAddress, .lnurlPay, .quoteID])
+        let inputValidationResult = InputValidator.validate(textFieldInput, supportedTypes: [.bolt11Invoice, .lightningAddress, .lnurlPay, .quoteOffer])
 
         switch inputValidationResult {
         case .valid(let result):
@@ -112,7 +113,7 @@ struct PayeeInputView: View {
         case .invalid(_):
             let desc = String(localized: """
                 This field supports BOLT11 invoices, LNURL strings (LNURL1...), \
-                Lightning Addresses (e.g. user@host.com) or melt quote IDs.
+                Lightning Addresses (e.g. user@host.com) or quote offers (cquote...).
                 """)
             displayAlert(alert: AlertDetail(title: String(localized: "Invalid Input"), description: desc))
         }

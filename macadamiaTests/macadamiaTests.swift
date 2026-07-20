@@ -2,6 +2,7 @@ import BIP39
 @testable import macadamia
 import XCTest
 import CashuSwift
+import CryptoKit
 import SwiftData
 import secp256k1
 
@@ -300,6 +301,36 @@ final class macadamiaTests: XCTestCase {
             }
         }
         
+        // Test NUT-XX quote offers (spec test vector: mint offer for 500 ora
+        // via method "branch" with description "Cash deposit")
+        let offerVector = "cquoteAp2FteBhodHRwczovL21pbnQuZXhhbXBsZS5jb21hb2RtaW50YWhmYnJhbmNoYXVjb3JhYWEZAfRhdHgkMDE5OGMwZWYtM2YxMS03MDAwLWEzZjctMmY0YjZlMmQ5YzFhYWRsQ2FzaCBkZXBvc2l0"
+
+        switch InputValidator.validate(offerVector, supportedTypes: [.quoteOffer]) {
+        case .valid(let res):
+            XCTAssertEqual(res.type, .quoteOffer)
+            guard let offer = try? CashuSwift.QuoteOffer(encodedOffer: res.payload) else {
+                XCTFail("validated quote offer payload must decode")
+                break
+            }
+            XCTAssertEqual(offer.mintURL, "https://mint.example.com")
+            XCTAssertEqual(offer.operation, .mint)
+            XCTAssertEqual(offer.method.rawValue, "branch")
+            XCTAssertEqual(offer.unit, "ora")
+            XCTAssertEqual(offer.amount, 500)
+            XCTAssertEqual(offer.ticket, "0198c0ef-3f11-7000-a3f7-2f4b6e2d9c1a")
+            XCTAssertEqual(offer.offerDescription, "Cash deposit")
+        case .invalid:
+            XCTFail("Expected valid result for quote offer test vector")
+        }
+
+        // A quote offer must be rejected where the caller doesn't accept offers
+        switch InputValidator.validate(offerVector, supportedTypes: [.bolt11Invoice, .token]) {
+        case .invalid:
+            break // Expected
+        default:
+            XCTFail("Quote offer must be invalid when .quoteOffer is not supported")
+        }
+
         // Test public keys
         // Using a valid compressed public key from Bitcoin wiki test vectors
         let validPubkey = "0279BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798"
@@ -368,6 +399,29 @@ final class macadamiaTests: XCTestCase {
         }
     }
     
+    /// The prototype NUT-20 counter for an offer ticket is the first 4 bytes of
+    /// SHA256(ticket) read as a big-endian UInt32, masked to a non-hardened
+    /// BIP-32 index. Recomputed here independently with CryptoKit so the app
+    /// helper can't drift without this test catching it.
+    func testQuoteOfferCounterDerivation() throws {
+        let ticket = "0198c0ef-3f11-7000-a3f7-2f4b6e2d9c1a"
+
+        let digest = Data(SHA256.hash(data: Data(ticket.utf8)))
+        let expected = digest.prefix(4).withUnsafeBytes {
+            UInt32(bigEndian: $0.loadUnaligned(as: UInt32.self))
+        } & 0x7FFF_FFFF
+
+        XCTAssertEqual(QuoteOfferTools.nut20Counter(forTicket: ticket), expected)
+
+        // The counter must always be a valid non-hardened derivation index.
+        XCTAssertLessThanOrEqual(QuoteOfferTools.nut20Counter(forTicket: ticket), 0x7FFF_FFFF)
+
+        // Deterministic: same ticket, same counter (key recovery after restart
+        // depends on this).
+        XCTAssertEqual(QuoteOfferTools.nut20Counter(forTicket: ticket),
+                       QuoteOfferTools.nut20Counter(forTicket: ticket))
+    }
+
     // MARK: - Balance Calculator Tests
     
     func testBalanceCalculatorSimpleTransfer() {

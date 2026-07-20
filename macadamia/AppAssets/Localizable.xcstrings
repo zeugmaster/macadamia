@@ -732,6 +732,132 @@
     "%lld%%" : {
       "shouldTranslate" : false
     },
+    "Add Mint" : {
+
+    },
+    "Add Mint?" : {
+
+    },
+    "Claim Offer" : {
+
+    },
+    "CLAIMED MELT QUOTE" : {
+
+    },
+    "CLAIMED QUOTE" : {
+
+    },
+    "Claiming is final: the offer's single-use ticket will be bound to this wallet's quote." : {
+
+    },
+    "Claiming is final: the offer's single-use ticket will be bound to this wallet's quote. Only claim while you are ready to complete the deposit." : {
+
+    },
+    "Do not hand over cash before this screen shows the claimed quote. Ecash is issued automatically once the teller confirms the deposit." : {
+
+    },
+    "Expired" : {
+
+    },
+    "Expires" : {
+
+    },
+    "Invalid mint URL" : {
+
+    },
+    "Invalid Mint URL" : {
+
+    },
+    "INVALID QUOTE OFFER" : {
+
+    },
+    "Invalid Quote Offer" : {
+
+    },
+    "Mint %@ has no active keyset for unit %@, so this offer cannot be claimed." : {
+
+    },
+    "No active wallet could be found for this operation." : {
+
+    },
+    "No wallet" : {
+
+    },
+    "Offer Already Claimed" : {
+
+    },
+    "Offer Expired" : {
+
+    },
+    "Offer expired" : {
+
+    },
+    "Offer Not Recognized" : {
+
+    },
+    "PAYMENT CODE" : {
+
+    },
+    "Payment complete" : {
+
+    },
+    "Quote claimed — show this to the teller" : {
+
+    },
+    "Quote Offer" : {
+
+    },
+    "QUOTE OFFER" : {
+
+    },
+    "Show this code to the teller" : {
+
+    },
+    "The amount is determined by the mint from the offer's ticket." : {
+
+    },
+    "The mint does not recognize this offer's ticket, or it has expired. Ask the teller to issue a new one." : {
+
+    },
+    "The offer does not contain a valid mint URL." : {
+
+    },
+    "The scanned code could not be decoded as a quote offer. Ask the teller to display it again." : {
+
+    },
+    "The teller verifies this code against their terminal before paying out." : {
+
+    },
+    "This field supports BOLT11 invoices, LNURL strings (LNURL1...), Lightning Addresses (e.g. user@host.com) or quote offers (cquote...)." : {
+
+    },
+    "This offer has expired. Ask the teller to issue a new one." : {
+
+    },
+    "This offer is from a mint that is not in your wallet yet. It has to be added before the offer can be claimed." : {
+
+    },
+    "This offer is from mint %@ which is not in your wallet. Would you like to add it?" : {
+
+    },
+    "This offer was already claimed — ask the teller to issue a new one." : {
+
+    },
+    "This offer's claim window has passed. Ask the teller to issue a new one." : {
+
+    },
+    "Unsupported unit" : {
+
+    },
+    "Unsupported Unit" : {
+
+    },
+    "Waiting for the payment to complete..." : {
+
+    },
+    "Waiting for the teller to confirm..." : {
+
+    },
     "• Allocation:" : {
       "localizations" : {
         "ar" : {
@@ -2418,9 +2544,6 @@
         }
       }
     },
-    "Already Issued" : {
-
-    },
     "Already paid" : {
 
     },
@@ -2493,9 +2616,6 @@
           }
         }
       }
-    },
-    "Alternatively, load a previously created quote from the selected mint by entering its ID." : {
-
     },
     "Amount" : {
       "localizations" : {
@@ -5439,9 +5559,6 @@
           }
         }
       }
-    },
-    "Checking your mints..." : {
-
     },
     "Chilean Peso" : {
       "localizations" : {
@@ -8748,9 +8865,6 @@
         }
       }
     },
-    "Ecash for this quote has already been issued." : {
-
-    },
     "Ecash issued" : {
       "localizations" : {
         "ar" : {
@@ -10082,9 +10196,6 @@
           }
         }
       }
-    },
-    "Existing Quote" : {
-
     },
     "expired — completing may fail" : {
       "localizations" : {
@@ -14472,9 +14583,6 @@
       },
       "shouldTranslate" : false
     },
-    "Load Quote" : {
-
-    },
     "Load States" : {
       "localizations" : {
         "ar" : {
@@ -16167,9 +16275,6 @@
           }
         }
       }
-    },
-    "Mint %@ did not return a mint quote for this ID." : {
-
     },
     "Mint could not be found" : {
       "localizations" : {
@@ -18493,9 +18598,6 @@
         }
       }
     },
-    "No mints" : {
-
-    },
     "No Mints" : {
       "localizations" : {
         "ar" : {
@@ -19615,9 +19717,6 @@
           }
         }
       }
-    },
-    "None of your mints recognize this quote ID." : {
-
     },
     "Norwegian Krone" : {
       "localizations" : {
@@ -24968,9 +25067,6 @@
       }
     },
     "QUOTE ID" : {
-
-    },
-    "Quote Not Found" : {
 
     },
     "Quote Not Paid 🚫💰" : {
@@ -31643,9 +31739,6 @@
         }
       }
     },
-    "This field supports BOLT11 invoices, LNURL strings (LNURL1...), Lightning Addresses (e.g. user@host.com) or melt quote IDs." : {
-
-    },
     "This mint did not pass verification before being added. Detail: %@" : {
       "localizations" : {
         "ar" : {
@@ -32355,9 +32448,6 @@
           }
         }
       }
-    },
-    "This wallet does not contain any mints to look the quote up with." : {
-
     },
     "This wallet still contains valid ecash that will become inaccessible if you restore now. Are you sure? " : {
       "localizations" : {
@@ -35162,9 +35252,6 @@
           }
         }
       }
-    },
-    "Unknown quote ID" : {
-
     },
     "Unpaid" : {
       "localizations" : {

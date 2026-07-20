@@ -1,5 +1,5 @@
 {
-  "originHash" : "af80550afa0d26540e679425fa503c3579bc6fcfe9aa2fdc9d221e5e897b6bf9",
+  "originHash" : "275dc48dcb379b6f3d34d3f3f7651f1f1309b3e0375b741526b8c59b21664af7",
   "pins" : [
     {
       "identity" : "base58",
@@ -98,15 +98,6 @@
       "state" : {
         "revision" : "0542a679d189b6fb4bb9488e145fe383c1445ddc",
         "version" : "0.1.0"
-      }
-    },
-    {
-      "identity" : "cashu-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/zeugmaster/cashu-swift.git",
-      "state" : {
-        "revision" : "873dcf929b2768a0fff4948cf3e767d9e3685a78",
-        "version" : "0.4.1"
       }
     },
     {
