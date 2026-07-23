@@ -732,132 +732,6 @@
     "%lld%%" : {
       "shouldTranslate" : false
     },
-    "Add Mint" : {
-
-    },
-    "Add Mint?" : {
-
-    },
-    "Claim Offer" : {
-
-    },
-    "CLAIMED MELT QUOTE" : {
-
-    },
-    "CLAIMED QUOTE" : {
-
-    },
-    "Claiming is final: the offer's single-use ticket will be bound to this wallet's quote." : {
-
-    },
-    "Claiming is final: the offer's single-use ticket will be bound to this wallet's quote. Only claim while you are ready to complete the deposit." : {
-
-    },
-    "Do not hand over cash before this screen shows the claimed quote. Ecash is issued automatically once the teller confirms the deposit." : {
-
-    },
-    "Expired" : {
-
-    },
-    "Expires" : {
-
-    },
-    "Invalid mint URL" : {
-
-    },
-    "Invalid Mint URL" : {
-
-    },
-    "INVALID QUOTE OFFER" : {
-
-    },
-    "Invalid Quote Offer" : {
-
-    },
-    "Mint %@ has no active keyset for unit %@, so this offer cannot be claimed." : {
-
-    },
-    "No active wallet could be found for this operation." : {
-
-    },
-    "No wallet" : {
-
-    },
-    "Offer Already Claimed" : {
-
-    },
-    "Offer Expired" : {
-
-    },
-    "Offer expired" : {
-
-    },
-    "Offer Not Recognized" : {
-
-    },
-    "PAYMENT CODE" : {
-
-    },
-    "Payment complete" : {
-
-    },
-    "Quote claimed — show this to the teller" : {
-
-    },
-    "Quote Offer" : {
-
-    },
-    "QUOTE OFFER" : {
-
-    },
-    "Show this code to the teller" : {
-
-    },
-    "The amount is determined by the mint from the offer's ticket." : {
-
-    },
-    "The mint does not recognize this offer's ticket, or it has expired. Ask the teller to issue a new one." : {
-
-    },
-    "The offer does not contain a valid mint URL." : {
-
-    },
-    "The scanned code could not be decoded as a quote offer. Ask the teller to display it again." : {
-
-    },
-    "The teller verifies this code against their terminal before paying out." : {
-
-    },
-    "This field supports BOLT11 invoices, LNURL strings (LNURL1...), Lightning Addresses (e.g. user@host.com) or quote offers (cquote...)." : {
-
-    },
-    "This offer has expired. Ask the teller to issue a new one." : {
-
-    },
-    "This offer is from a mint that is not in your wallet yet. It has to be added before the offer can be claimed." : {
-
-    },
-    "This offer is from mint %@ which is not in your wallet. Would you like to add it?" : {
-
-    },
-    "This offer was already claimed — ask the teller to issue a new one." : {
-
-    },
-    "This offer's claim window has passed. Ask the teller to issue a new one." : {
-
-    },
-    "Unsupported unit" : {
-
-    },
-    "Unsupported Unit" : {
-
-    },
-    "Waiting for the payment to complete..." : {
-
-    },
-    "Waiting for the teller to confirm..." : {
-
-    },
     "• Allocation:" : {
       "localizations" : {
         "ar" : {
@@ -2264,6 +2138,9 @@
         }
       }
     },
+    "Add Mint" : {
+
+    },
     "Add Mint " : {
       "localizations" : {
         "ar" : {
@@ -2333,6 +2210,9 @@
           }
         }
       }
+    },
+    "Add Mint?" : {
+
     },
     "Add new Mint URL..." : {
       "localizations" : {
@@ -5700,6 +5580,21 @@
         }
       }
     },
+    "Claim Offer" : {
+
+    },
+    "CLAIMED MELT QUOTE" : {
+
+    },
+    "CLAIMED QUOTE" : {
+
+    },
+    "Claiming is final: the offer's single-use ticket will be bound to this wallet's quote." : {
+
+    },
+    "Claiming is final: the offer's single-use ticket will be bound to this wallet's quote. Only claim while you are ready to complete the deposit." : {
+
+    },
     "Close" : {
       "localizations" : {
         "ar" : {
@@ -8445,6 +8340,9 @@
     "DLEQ Proof" : {
       "shouldTranslate" : false
     },
+    "Do not hand over cash before this screen shows the claimed quote. Ecash is issued automatically once the teller confirms the deposit." : {
+
+    },
     "Done" : {
       "localizations" : {
         "ar" : {
@@ -10197,6 +10095,9 @@
         }
       }
     },
+    "Expired" : {
+
+    },
     "expired — completing may fail" : {
       "localizations" : {
         "ar" : {
@@ -10267,7 +10168,7 @@
         }
       }
     },
-    "Expires at" : {
+    "Expires" : {
 
     },
     "Expires at: " : {
@@ -13376,6 +13277,12 @@
         }
       }
     },
+    "Invalid mint URL" : {
+
+    },
+    "Invalid Mint URL" : {
+
+    },
     "Invalid public key 🔑" : {
       "localizations" : {
         "ar" : {
@@ -13445,6 +13352,12 @@
           }
         }
       }
+    },
+    "Invalid Quote Offer" : {
+
+    },
+    "INVALID QUOTE OFFER" : {
+
     },
     "Invalid URL" : {
       "localizations" : {
@@ -15707,9 +15620,6 @@
         }
       }
     },
-    "MELT QUOTE" : {
-
-    },
     "Memo" : {
       "localizations" : {
         "ar" : {
@@ -16275,6 +16185,9 @@
           }
         }
       }
+    },
+    "Mint %@ has no active keyset for unit %@, so this offer cannot be claimed." : {
+
     },
     "Mint could not be found" : {
       "localizations" : {
@@ -18248,6 +18161,9 @@
         }
       }
     },
+    "No active wallet could be found for this operation." : {
+
+    },
     "No Balance" : {
       "localizations" : {
         "ar" : {
@@ -19578,6 +19494,9 @@
         }
       }
     },
+    "No wallet" : {
+
+    },
     "No wallet initialized yet." : {
       "localizations" : {
         "ar" : {
@@ -20207,6 +20126,18 @@
           }
         }
       }
+    },
+    "Offer Already Claimed" : {
+
+    },
+    "Offer expired" : {
+
+    },
+    "Offer Expired" : {
+
+    },
+    "Offer Not Recognized" : {
+
     },
     "OK" : {
       "localizations" : {
@@ -22313,6 +22244,12 @@
           }
         }
       }
+    },
+    "PAYMENT CODE" : {
+
+    },
+    "Payment complete" : {
+
     },
     "Payment Date" : {
       "localizations" : {
@@ -24850,6 +24787,9 @@
         }
       }
     },
+    "Quote claimed — show this to the teller" : {
+
+    },
     "Quote Error" : {
 
     },
@@ -25138,6 +25078,12 @@
           }
         }
       }
+    },
+    "Quote Offer" : {
+
+    },
+    "QUOTE OFFER" : {
+
     },
     "Random" : {
       "localizations" : {
@@ -28441,6 +28387,9 @@
         }
       }
     },
+    "Show this code to the teller" : {
+
+    },
     "Singapore Dollar" : {
       "localizations" : {
         "ar" : {
@@ -29775,6 +29724,9 @@
         }
       }
     },
+    "The amount is determined by the mint from the offer's ticket." : {
+
+    },
     "The destination mint did not respond. You can complete this transfer later from the transaction list." : {
       "localizations" : {
         "ar" : {
@@ -30335,6 +30287,9 @@
         }
       }
     },
+    "The mint does not recognize this offer's ticket, or it has expired. Ask the teller to issue a new one." : {
+
+    },
     "The mint returned an unknown quote state." : {
       "localizations" : {
         "ar" : {
@@ -30544,6 +30499,9 @@
           }
         }
       }
+    },
+    "The offer does not contain a valid mint URL." : {
+
     },
     "The operation could not be completed due to an unexpected database inconsistency. %@" : {
       "localizations" : {
@@ -31248,6 +31206,9 @@
         }
       }
     },
+    "The scanned code could not be decoded as a quote offer. Ask the teller to display it again." : {
+
+    },
     "The state of the reserved ecash could not be checked with the mint. Try again later." : {
       "localizations" : {
         "ar" : {
@@ -31387,6 +31348,9 @@
           }
         }
       }
+    },
+    "The teller verifies this code against their terminal before paying out." : {
+
     },
     "The transaction is unbalanced." : {
       "localizations" : {
@@ -31739,6 +31703,9 @@
         }
       }
     },
+    "This field supports BOLT11 invoices, LNURL strings (LNURL1...), Lightning Addresses (e.g. user@host.com) or quote offers (cquote...)." : {
+
+    },
     "This mint did not pass verification before being added. Detail: %@" : {
       "localizations" : {
         "ar" : {
@@ -31808,6 +31775,21 @@
           }
         }
       }
+    },
+    "This offer has expired. Ask the teller to issue a new one." : {
+
+    },
+    "This offer is from a mint that is not in your wallet yet. It has to be added before the offer can be claimed." : {
+
+    },
+    "This offer is from mint %@ which is not in your wallet. Would you like to add it?" : {
+
+    },
+    "This offer was already claimed — ask the teller to issue a new one." : {
+
+    },
+    "This offer's claim window has passed. Ask the teller to issue a new one." : {
+
     },
     "This operation uses a payment method the wallet does not support yet: %@." : {
       "localizations" : {
@@ -35603,6 +35585,12 @@
         }
       }
     },
+    "Unsupported unit" : {
+
+    },
+    "Unsupported Unit" : {
+
+    },
     "Unsupported URL Scheme" : {
       "localizations" : {
         "ar" : {
@@ -36378,6 +36366,12 @@
           }
         }
       }
+    },
+    "Waiting for the payment to complete..." : {
+
+    },
+    "Waiting for the teller to confirm..." : {
+
     },
     "Waiting..." : {
       "localizations" : {
