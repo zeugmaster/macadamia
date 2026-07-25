@@ -4,17 +4,17 @@ import SwiftUI
 
 /// Flow for claiming a NUT-XX mint offer (e.g. a cash deposit at a teller).
 ///
-/// 1. Shows the offer's details and requires an explicit "Claim Offer" tap —
-///    the single-use ticket must never be claimed implicitly on appear.
-/// 2. Claiming requests a NUT-04 mint quote referencing the ticket, locked to
-///    a NUT-20 pubkey derived deterministically from the wallet seed and the
-///    ticket (see `QuoteOfferTools.nut20Counter`), and persists a pending
-///    mint event so the claim survives an app restart.
-/// 3. The claimed state is what the customer shows the teller BEFORE handing
+/// 1. The offer is claimed immediately once its mint is resolved — right
+///    after scanning for known mints, right after the user adds the mint
+///    otherwise. Claiming requests a NUT-04 mint quote referencing the
+///    ticket, locked to a NUT-20 pubkey derived deterministically from the
+///    wallet seed and the ticket (see `QuoteOfferTools.nut20Counter`), and
+///    persists a pending mint event so the claim survives an app restart.
+/// 2. The claimed quote is what the customer shows the teller BEFORE handing
 ///    over cash — per spec, the operator must not accept payment until the
 ///    payer confirms their wallet holds the claimed quote.
-/// 4. The quote state is polled; once the operator marks it PAID the wallet
-///    issues the ecash with a NUT-20 signature.
+/// 3. The quote state is polled; once the operator marks it PAID (cash
+///    received) the wallet issues the ecash with a NUT-20 signature.
 struct QuoteOfferMintView: View {
 
     let offer: CashuSwift.QuoteOffer
@@ -31,6 +31,8 @@ struct QuoteOfferMintView: View {
 
     @State private var quote: CashuSwift.Generic.MintQuote?
     @State private var pendingMintEvent: Event?
+    @State private var isClaiming = false
+    @State private var claimError: String?
 
     @State private var buttonState: ActionButtonState = .idle("...")
     @State private var pollingTimer: Timer?
@@ -57,11 +59,20 @@ struct QuoteOfferMintView: View {
 
                 if quote != nil {
                     claimedSection
-                } else {
+                } else if let claimError {
                     Section {
-                        EmptyView()
-                    } footer: {
-                        Text("Claiming is final: the offer's single-use ticket will be bound to this wallet's quote. Only claim while you are ready to complete the deposit.")
+                        Text(claimError)
+                            .foregroundStyle(.orange)
+                            .lineLimit(4)
+                    }
+                } else if resolvedMint != nil {
+                    Section {
+                        HStack {
+                            Text("Requesting quote...")
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            ProgressView()
+                        }
                     }
                 }
 
@@ -81,6 +92,7 @@ struct QuoteOfferMintView: View {
         .onAppear {
             resolveMint()
             updateButtonState()
+            claimOffer() // no-op while the mint is unknown; claims right after scanning otherwise
         }
         .onDisappear {
             pollingTimer?.invalidate()
@@ -175,19 +187,24 @@ struct QuoteOfferMintView: View {
 
     private var actionButtonDisabled: Bool {
         if minted { return false }
-        if quote == nil {
-            return resolvedMint == nil || offer.isExpired()
+        if isClaiming { return true }
+        if let quote {
+            // Issuance is automatic on PAID; the button is only a manual
+            // fallback for when that issue call failed.
+            return isMinting || !QuoteExecutor.mintQuoteIsPaid(quote)
         }
-        return isMinting
+        return claimError == nil // resolving the mint or waiting for "Add Mint"
     }
 
     private func updateButtonState() {
         if minted {
             buttonState = .idle(String(localized: "Done"), action: { dismiss() })
-        } else if quote == nil {
-            buttonState = .idle(String(localized: "Claim Offer"), action: { claimOffer() })
-        } else {
+        } else if quote != nil {
             buttonState = .idle(String(localized: "Issue Ecash"), action: { requestMint() })
+        } else if claimError != nil {
+            buttonState = .idle(String(localized: "Retry"), action: { claimOffer() })
+        } else {
+            buttonState = .idle("...")
         }
     }
 
@@ -228,6 +245,7 @@ struct QuoteOfferMintView: View {
                     logger.info("added mint \(sendableMint.url.absoluteString) while claiming a quote offer")
                     withAnimation { resolvedMint = mint }
                     isAddingMint = false
+                    claimOffer()
                 }
             } catch {
                 await MainActor.run {
@@ -242,19 +260,22 @@ struct QuoteOfferMintView: View {
     // MARK: - Claiming
 
     private func claimOffer() {
-        guard let resolvedMint, let activeWallet, quote == nil else { return }
+        guard let resolvedMint, let activeWallet, quote == nil, !isClaiming else { return }
 
+        // The claim fires automatically on appear, so pre-check failures are
+        // surfaced inline rather than as an alert over a screen that just opened.
         guard !offer.isExpired() else {
-            displayAlert(alert: QuoteOfferTools.claimAlertDetail(for: CashuError.quoteOfferExpired))
+            setClaimError(String(localized: "This offer's claim window has passed. Ask the teller to issue a new one."))
             return
         }
 
         guard QuoteOfferTools.hasKeyset(for: offer.unit, on: resolvedMint) else {
-            displayAlert(alert: AlertDetail(title: String(localized: "Unsupported Unit"),
-                                            description: String(localized: "Mint \(resolvedMint.displayName) has no active keyset for unit \(offer.unit.uppercased()), so this offer cannot be claimed.")))
+            setClaimError(String(localized: "Mint \(resolvedMint.displayName) has no active keyset for unit \(offer.unit.uppercased()), so this offer cannot be claimed."))
             return
         }
 
+        isClaiming = true
+        withAnimation { claimError = nil }
         buttonState = .loading()
         let sendableMint = CashuSwift.Mint(resolvedMint)
 
@@ -275,6 +296,7 @@ struct QuoteOfferMintView: View {
                                                    mint: resolvedMint)
                 AppSchemaV1.insert([event], into: modelContext)
 
+                isClaiming = false
                 withAnimation {
                     quote = newQuote
                     pendingMintEvent = event
@@ -282,14 +304,22 @@ struct QuoteOfferMintView: View {
                 updateButtonState()
                 startPolling()
             } catch {
+                isClaiming = false
                 logger.error("claiming mint offer failed with error \(error)")
-                displayAlert(alert: QuoteOfferTools.claimAlertDetail(for: error))
+                let alert = QuoteOfferTools.claimAlertDetail(for: error)
+                withAnimation { claimError = alert.alertDescription ?? alert.title }
+                displayAlert(alert: alert)
                 buttonState = .fail()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     updateButtonState()
                 }
             }
         }
+    }
+
+    private func setClaimError(_ message: String) {
+        withAnimation { claimError = message }
+        updateButtonState()
     }
 
     // MARK: - Quote state polling

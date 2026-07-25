@@ -5592,9 +5592,6 @@
     "Claiming is final: the offer's single-use ticket will be bound to this wallet's quote." : {
 
     },
-    "Claiming is final: the offer's single-use ticket will be bound to this wallet's quote. Only claim while you are ready to complete the deposit." : {
-
-    },
     "Close" : {
       "localizations" : {
         "ar" : {
@@ -26138,6 +26135,9 @@
         }
       }
     },
+    "Requesting quote..." : {
+
+    },
     "Restore" : {
       "localizations" : {
         "ar" : {
@@ -35586,9 +35586,6 @@
       }
     },
     "Unsupported unit" : {
-
-    },
-    "Unsupported Unit" : {
 
     },
     "Unsupported URL Scheme" : {
