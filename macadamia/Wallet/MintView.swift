@@ -89,6 +89,14 @@ struct MintView: View {
                             }
                             .foregroundStyle(.secondary)
                         }
+                        if case .generic = quote {
+                            // The mint operator matches a deposit by the trailing
+                            // characters of the quote id, so show them prominently.
+                            Text(String(quote.quoteID.suffix(6)))
+                                .font(.title3)
+                                .monospaced()
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        }
                         QRView(string: quote.request)
                         Button {
                             copyToClipboard()
