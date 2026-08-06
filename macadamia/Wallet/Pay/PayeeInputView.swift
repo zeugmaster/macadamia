@@ -76,7 +76,27 @@ struct PayeeInputView: View {
             }
             .opacity(hideScanner ? 0 : 1)
             .animation(.easeInOut(duration: 0.2), value: hideScanner)
-            
+
+            Spacer().frame(height: 20)
+
+            NavigationLink {
+                GenericMeltView()
+            } label: {
+                HStack {
+                    Image(systemName: "banknote")
+                    Text("Other Withdrawal Methods")
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+                .background(RoundedRectangle(cornerRadius: 12).fill(Color.gray.opacity(0.3)))
+            }
+            .foregroundStyle(.primary)
+            .opacity(hideScanner ? 0 : 1)
+            .animation(.easeInOut(duration: 0.2), value: hideScanner)
+
             Spacer()
         }
         .padding()

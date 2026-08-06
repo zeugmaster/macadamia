@@ -7,7 +7,7 @@ struct MintView: View {
     @State private var buttonState: ActionButtonState
     @EnvironmentObject private var appState: AppState
 
-    @State var quote: CashuSwift.Bolt11.MintQuote?
+    @State var quote: MintQuoteVariant?
     @State var pendingMintEvent: Event?
 
     @Environment(\.modelContext) private var modelContext
@@ -38,23 +38,27 @@ struct MintView: View {
 
     init(pendingMintEvent: Event? = nil) {
 
-        _quote = State(initialValue: pendingMintEvent?.mintQuote)
+        let variant: MintQuoteVariant? =
+            pendingMintEvent?.mintQuote.map(MintQuoteVariant.bolt11)
+            ?? pendingMintEvent?.genericMintQuote.map(MintQuoteVariant.generic)
+
+        _quote = State(initialValue: variant)
         _pendingMintEvent = State(initialValue: pendingMintEvent)
         _buttonState = State(initialValue: .idle(String(localized: "No Action")))
 
         if let mint = pendingMintEvent?.mints?.first {
             _selectedMint = State(initialValue: mint)
-            if let quote = pendingMintEvent?.mintQuote {
+            if let variant {
                 _selectedOption = State(initialValue: PaymentOption(mintID: mint.mintID,
                                                                     direction: .mint,
-                                                                    unit: Unit(code: quote.unit),
-                                                                    method: .bolt11))
+                                                                    unit: Unit(code: variant.unitCode),
+                                                                    method: variant.method))
             }
         }
 
-        if let quote = pendingMintEvent?.mintQuote {
-            _amount = State(initialValue: quote.amount ?? 0)
-            _selectedUnit = State(initialValue: Unit(code: quote.unit))
+        if let variant {
+            _amount = State(initialValue: variant.amount ?? pendingMintEvent?.amount ?? 0)
+            _selectedUnit = State(initialValue: Unit(code: variant.unitCode))
         }
     }
 
@@ -72,8 +76,7 @@ struct MintView: View {
                     PaymentOptionPicker(direction: .mint,
                                         label: String(localized: "Unit"),
                                         selectedMint: $selectedMint,
-                                        selectedOption: $selectedOption,
-                                        allowedMethods: [.bolt11])
+                                        selectedOption: $selectedOption)
                 }
                 .disabled(pendingMintEvent != nil)
                 if let quote {
@@ -85,6 +88,14 @@ struct MintView: View {
                                 Text(Date(timeIntervalSince1970: TimeInterval(expiry)).formatted())
                             }
                             .foregroundStyle(.secondary)
+                        }
+                        if case .generic = quote {
+                            // The mint operator matches a deposit by the trailing
+                            // characters of the quote id, so show them prominently.
+                            Text(String(quote.quoteID.suffix(6)))
+                                .font(.title3)
+                                .monospaced()
+                                .frame(maxWidth: .infinity, alignment: .center)
                         }
                         QRView(string: quote.request)
                         Button {
@@ -133,7 +144,7 @@ struct MintView: View {
                         }
 
                         if showDetails {
-                            CopyableRow(label: String(localized: "Quote ID"), value: quote.quote)
+                            CopyableRow(label: String(localized: "Quote ID"), value: quote.quoteID)
                         }
                     }
                 }
@@ -146,7 +157,7 @@ struct MintView: View {
                 if quote != nil {
                     buttonState = .idle(String(localized: "Issue"), action: requestMint)
                 } else {
-                    buttonState = .idle(String(localized: "Get Invoice"), action: getQuote)
+                    buttonState = .idle(getQuoteButtonLabel, action: getQuote)
                 }
             }
             .onChange(of: selectedMint, { oldValue, newValue in
@@ -157,6 +168,11 @@ struct MintView: View {
             .onChange(of: selectedOption) { _, newValue in
                 if let unit = newValue?.unit {
                     selectedUnit = unit
+                }
+                // The picker loads options asynchronously, so the idle label has
+                // to follow the selected method reactively.
+                if quote == nil, buttonState.type == .idle {
+                    buttonState = .idle(getQuoteButtonLabel, action: getQuote)
                 }
             }
             .onDisappear {
@@ -177,6 +193,12 @@ struct MintView: View {
             return amount < 1 || selectedMint == nil || selectedOption == nil
         }
         return selectedMint == nil
+    }
+
+    private var getQuoteButtonLabel: String {
+        selectedOption == nil || selectedOption?.method == .bolt11
+            ? String(localized: "Get Invoice")
+            : String(localized: "Request Quote")
     }
 
     private func copyToClipboard() {
@@ -208,30 +230,44 @@ struct MintView: View {
             return
         }
 
-        let quoteRequest = CashuSwift.Bolt11.MintQuoteRequest(unit: selectedOption.unit.currencyCode.lowercased(),
-                                                              amount: self.amount)
-
         buttonState = .loading()
-        selectedMint.getQuote(for: quoteRequest) { result in
-            switch result {
-            case .success(let (quote, event)):
-                self.quote = quote
-                pendingMintEvent = event
-                AppSchemaV1.insert([event], into: modelContext)
 
-                buttonState = .idle(String(localized: "Issue Ecash"), action: {
-                    requestMint()
-                })
-            case .failure(let error):
-                displayAlert(alert: AlertDetail(with: error))
-                logger.error("""
-                             could not get quote from mint \(selectedMint.url.absoluteString) \
-                             because of error \(error)
-                             """)
-                buttonState = .fail()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    buttonState = .idle(String(localized: "Get Invoice"), action: getQuote)
-                }
+        if selectedOption.method == .bolt11 {
+            let quoteRequest = CashuSwift.Bolt11.MintQuoteRequest(unit: selectedOption.unit.currencyCode.lowercased(),
+                                                                  amount: self.amount)
+            selectedMint.getQuote(for: quoteRequest) { result in
+                handleQuoteResult(result.map { (MintQuoteVariant.bolt11($0.quote), $0.event) },
+                                  from: selectedMint)
+            }
+        } else {
+            selectedMint.getGenericMintQuote(method: selectedOption.method,
+                                             unit: selectedOption.unitCode,
+                                             amount: self.amount) { result in
+                handleQuoteResult(result.map { (MintQuoteVariant.generic($0.quote), $0.event) },
+                                  from: selectedMint)
+            }
+        }
+    }
+
+    private func handleQuoteResult(_ result: Result<(MintQuoteVariant, Event), Error>, from mint: Mint) {
+        switch result {
+        case .success(let (quote, event)):
+            self.quote = quote
+            pendingMintEvent = event
+            AppSchemaV1.insert([event], into: modelContext)
+
+            buttonState = .idle(String(localized: "Issue Ecash"), action: {
+                requestMint()
+            })
+        case .failure(let error):
+            displayAlert(alert: AlertDetail(with: error))
+            logger.error("""
+                         could not get quote from mint \(mint.url.absoluteString) \
+                         because of error \(error)
+                         """)
+            buttonState = .fail()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                buttonState = .idle(getQuoteButtonLabel, action: getQuote)
             }
         }
     }
@@ -247,7 +283,7 @@ struct MintView: View {
             do {
                 buttonState = .loading()
                 if !hasLoggedPollingStart {
-                    print("auto polling for quote state with mint \(selectedMint.url.absoluteString) and id \(quote.quote)", terminator: "")
+                    print("auto polling for quote state with mint \(selectedMint.url.absoluteString) and id \(quote.quoteID)", terminator: "")
                     fflush(stdout)
                     hasLoggedPollingStart = true
                 } else {
@@ -255,9 +291,27 @@ struct MintView: View {
                     fflush(stdout)
                 }
                 isCheckingInvoiceState = true
-                let mintQuote = try await CashuSwift.Bolt11.mintQuoteState(quote.quote, from: CashuSwift.Mint(selectedMint))
 
-                if mintQuote.state == .paid {
+                let readyToIssue: Bool
+                switch quote {
+                case .bolt11(let bolt11Quote):
+                    let mintQuote = try await CashuSwift.Bolt11.mintQuoteState(bolt11Quote.quote, from: CashuSwift.Mint(selectedMint))
+                    readyToIssue = mintQuote.state == .paid
+                case .generic(let genericQuote):
+                    // Poll results are read for paidness only and never stored: they
+                    // lack the locking-key counter grafted onto the held quote.
+                    let fresh = try await CashuSwift.Generic.mintQuoteState(genericQuote.quote,
+                                                                            method: genericQuote.method,
+                                                                            from: CashuSwift.Mint(selectedMint))
+                    if fresh.indicatesIssued {
+                        pollingTimer?.invalidate()
+                        readyToIssue = false
+                    } else {
+                        readyToIssue = fresh.indicatesPaid
+                    }
+                }
+
+                if readyToIssue {
                     print("")  // New line after polling completes
                     isCheckingInvoiceState = false
                     await MainActor.run {
@@ -297,21 +351,61 @@ struct MintView: View {
 
         Task {
             do {
-                let issueResult = try await CashuSwift.Bolt11.mint(quote: quote,
-                                                                   from: CashuSwift.Mint(selectedMint),
+                let sendableMint = CashuSwift.Mint(selectedMint)
+                let issueResult: CashuSwift.IssueResult
+                let event: Event
+
+                switch quote {
+                case .bolt11(let bolt11Quote):
+                    issueResult = try await CashuSwift.Bolt11.mint(quote: bolt11Quote,
+                                                                   from: sendableMint,
                                                                    seed: activeWallet.seed,
                                                                    preferredDistribution: nil)
 
-                logger.info("DLEQ check on issuance \(String(describing: issueResult.dleqResult))")
+                    try selectedMint.addProofs(issueResult.proofs, to: modelContext)
 
-                try selectedMint.addProofs(issueResult.proofs, to: modelContext)
-
-                let event = Event.mintEvent(unit: Unit(code: quote.unit),
+                    event = Event.mintEvent(unit: Unit(code: bolt11Quote.unit),
                                             shortDescription: "Ecash created",
                                             wallet: activeWallet,
-                                            quote: quote,
+                                            quote: bolt11Quote,
                                             mint: selectedMint,
-                                            amount: quote.amount ?? issueResult.proofs.sum)
+                                            amount: bolt11Quote.amount ?? issueResult.proofs.sum)
+
+                case .generic(let genericQuote):
+                    let issueAmount = genericQuote.amount ?? (amount > 0 ? amount : nil)
+
+                    if genericQuote.lockingPubkey != nil {
+                        guard let counter = genericQuote.nut20Counter else {
+                            throw macadamiaError.databaseError("The pending quote is NUT-20 locked but its signing-key counter was not persisted.")
+                        }
+                        let key = try CashuSwift.Generic.quoteLockingKey(seed: activeWallet.seed, counter: counter)
+                        issueResult = try await CashuSwift.Generic.mint(quote: genericQuote,
+                                                                        from: sendableMint,
+                                                                        seed: activeWallet.seed,
+                                                                        quoteKey: key.privateKey,
+                                                                        amount: issueAmount,
+                                                                        signatureFormat: .legacyConcat) // cdk <= rev 6132607
+                    } else {
+                        guard let issueAmount else {
+                            throw CashuError.invalidAmount
+                        }
+                        issueResult = try await CashuSwift.Generic.mint(quote: genericQuote,
+                                                                        from: sendableMint,
+                                                                        amount: issueAmount,
+                                                                        seed: activeWallet.seed)
+                    }
+
+                    try selectedMint.addProofs(issueResult.proofs, to: modelContext)
+
+                    event = Event.mintEvent(unit: Unit(code: genericQuote.unit),
+                                            shortDescription: "Ecash created",
+                                            wallet: activeWallet,
+                                            genericQuote: genericQuote,
+                                            mint: selectedMint,
+                                            amount: genericQuote.amount ?? issueResult.proofs.sum)
+                }
+
+                logger.info("DLEQ check on issuance \(String(describing: issueResult.dleqResult))")
 
                 modelContext.insert(event)
                 try modelContext.save()

@@ -514,6 +514,13 @@ enum AppSchemaV1: VersionedSchema {
         var mintQuote: CashuSwift.Bolt11.MintQuote? {
             get {
                 if let bolt11MintQuoteData {
+                    // A generic quote's stored JSON would also decode as a BOLT11 quote
+                    // (unknown keys are ignored), so route on the persisted method first:
+                    // BOLT11 rows never contain a `method` key, generic rows always do.
+                    if let method = (try? JSONDecoder().decode(StoredQuoteMethodProbe.self, from: bolt11MintQuoteData))?.method,
+                       method != PaymentMethodKind.bolt11.rawValue {
+                        return nil
+                    }
                     return try? JSONDecoder().decode(CashuSwift.Bolt11.MintQuote.self, from: bolt11MintQuoteData)
                 }
                 // Fall back to the legacy composite for rows migrated from the App Store build.
@@ -525,9 +532,32 @@ enum AppSchemaV1: VersionedSchema {
             }
         }
 
+        var genericMintQuote: CashuSwift.Generic.MintQuote? {
+            get {
+                guard let bolt11MintQuoteData,
+                      let quote = try? JSONDecoder().decode(CashuSwift.Generic.MintQuote.self, from: bolt11MintQuoteData),
+                      !quote.method.rawValue.isEmpty,
+                      quote.method.rawValue != PaymentMethodKind.bolt11.rawValue else {
+                    return nil
+                }
+                return quote
+            }
+            set {
+                bolt11MintQuoteData = newValue.flatMap { try? JSONEncoder().encode($0) }
+                bolt11MintQuote = nil // vacate the legacy slot once rewritten
+            }
+        }
+
         var bolt11MeltQuote: CashuSwift.Bolt11.MeltQuote? {
             get {
                 guard let data = bolt11MeltQuoteData else { return nil }
+                // A generic quote's stored JSON would also decode through one of the
+                // BOLT11 shapes below, so route on the persisted method first: BOLT11
+                // rows never contain a `method` key, generic rows always do.
+                if let method = (try? JSONDecoder().decode(StoredQuoteMethodProbe.self, from: data))?.method,
+                   method != PaymentMethodKind.bolt11.rawValue {
+                    return nil
+                }
                 // Current shape first. Rows written before the cashu-swift payment-method
                 // namespace overhaul stored `unit`/`request` inside a nested `quoteRequest`
                 // and had no top-level `unit`, so the current decoder throws on them; fall
@@ -539,6 +569,21 @@ enum AppSchemaV1: VersionedSchema {
             }
             set {
                 bolt11MeltQuoteData = try? JSONEncoder().encode(newValue)
+            }
+        }
+
+        var genericMeltQuote: CashuSwift.Generic.MeltQuote? {
+            get {
+                guard let data = bolt11MeltQuoteData,
+                      let quote = try? JSONDecoder().decode(CashuSwift.Generic.MeltQuote.self, from: data),
+                      !quote.method.rawValue.isEmpty,
+                      quote.method.rawValue != PaymentMethodKind.bolt11.rawValue else {
+                    return nil
+                }
+                return quote
+            }
+            set {
+                bolt11MeltQuoteData = newValue.flatMap { try? JSONEncoder().encode($0) }
             }
         }
         
@@ -583,6 +628,15 @@ enum AppSchemaV1: VersionedSchema {
         func tuple() -> (outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String]) {
             (outputs, blindingFactors, secrets)
         }
+    }
+
+    /// Decodes only the `method` key of a stored quote blob, to route between the
+    /// BOLT11-typed and generic accessors. Rows written from BOLT11 quotes (current
+    /// shape and the legacy mirrors) never contain a `method` key — it is a computed
+    /// property excluded from their CodingKeys — while generic-method rows always
+    /// do: the library grafts the method into the quote's raw JSON on creation.
+    fileprivate struct StoredQuoteMethodProbe: Decodable {
+        let method: String?
     }
 
     /// All-optional mirror of the persisted `CashuSwift.Bolt11.MintQuote` columns, used as the

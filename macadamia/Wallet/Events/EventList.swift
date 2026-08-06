@@ -326,7 +326,13 @@ struct EventList: View {
         case .pendingReceive:
             if let e = group.events.first { RedeemLaterView(event: e) } else { Text("No pending receive event provided.") }
         case .pendingMelt:
-            MeltView(events: group.events)
+            // Generic (non-BOLT11) melts are single events with their own flow;
+            // BOLT11 payments (incl. MPP groups) resume in MeltView.
+            if let e = group.events.first, e.genericMeltQuote != nil {
+                GenericMeltView(pendingEvent: e)
+            } else {
+                MeltView(events: group.events)
+            }
         case .melt:
             MeltEventSummary(events: group.events)
         case .restore:
