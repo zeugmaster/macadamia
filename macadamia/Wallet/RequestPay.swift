@@ -377,13 +377,6 @@ struct RequestPay: View {
     
     private func sendViaNIP17(payload: CashuSwift.PaymentRequestPayload, receiveerNPUB: String) async {
         do {
-            // Get sender's nsec from keychain
-            guard let senderNsec = try? NostrKeychain.getNsec() else {
-                displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Nostr Key Missing"), description: String(localized: "Please configure your Nostr key in Settings to send DMs.")))
-                buttonState = .fail()
-                return
-            }
-            
             // Encode payload as JSON
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
@@ -393,9 +386,9 @@ struct RequestPay: View {
                 buttonState = .fail()
                 return
             }
-            
-            // Send the DM via NIP-17
-            try await nostrService.sendNIP17(from: senderNsec, to: receiveerNPUB, message: jsonString)
+
+            // Send the DM via NIP-17, signed by a throwaway key the service generates
+            try await nostrService.sendNIP17(to: receiveerNPUB, message: jsonString)
             
             buttonState = .success()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -406,7 +399,7 @@ struct RequestPay: View {
             if let nostrError = error as? NostrServiceError {
                 switch nostrError {
                 case .noKeypairAvailable:
-                    errorMessage = "Invalid Nostr key format"
+                    errorMessage = "Failed to generate Nostr key"
                 case .invalidRecipientPubkey:
                     errorMessage = "Invalid recipient public key"
                 case .encryptionFailed:

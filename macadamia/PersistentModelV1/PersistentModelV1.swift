@@ -13,6 +13,8 @@ typealias Proof = AppSchemaV1.Proof
 typealias Event = AppSchemaV1.Event
 typealias Unit = Currency.Unit
 typealias BlankOutputSet = AppSchemaV1.BlankOutputSet
+typealias NostrKeypair = AppSchemaV1.NostrKeypair
+typealias NostrMessage = AppSchemaV1.NostrMessage
 
 class DatabaseManager {
     static let shared = DatabaseManager()
@@ -28,6 +30,8 @@ class DatabaseManager {
             Proof.self,
             Mint.self,
             Event.self,
+            NostrKeypair.self,
+            NostrMessage.self,
         ])
         
         // Try to use app group container
@@ -162,7 +166,9 @@ enum AppSchemaV1: VersionedSchema {
         [Wallet.self,
          Mint.self,
          Proof.self,
-         Event.self]
+         Event.self,
+         NostrKeypair.self,
+         NostrMessage.self]
     }
     
     @Model
@@ -627,6 +633,108 @@ enum AppSchemaV1: VersionedSchema {
         
         func tuple() -> (outputs: [CashuSwift.Output], blindingFactors: [String], secrets: [String]) {
             (outputs, blindingFactors, secrets)
+        }
+    }
+
+    /// An ephemeral nostr keypair generated for a single payment request (NUT-18 nostr
+    /// transport). Stored in the database — NOT the keychain — so it shares the wallet's
+    /// lifecycle and cannot survive an app uninstall. Key material is kept as plain hex
+    /// strings because this file is compiled into the messages extension, which does not
+    /// link NostrSDK.
+    @Model
+    final class NostrKeypair {
+
+        @Attribute(.unique)
+        var keypairID: UUID
+
+        /// 64-character lowercase hex private key
+        var privateKeyHex: String
+
+        /// 64-character lowercase hex public key, cached for subscription filter construction
+        var publicKeyHex: String
+
+        var dateCreated: Date
+
+        /// The paymentId of the payment request this key was generated for;
+        /// nil for the key imported from the legacy keychain storage.
+        var paymentId: String?
+
+        /// Whether this key was imported from the legacy single-key keychain storage.
+        var isLegacy: Bool
+
+        // Deliberately unidirectional (no inverse on Wallet), like Event.fromMint/toMint:
+        // Wallet keeps its single explicit inverse pair and its stored schema stays untouched.
+        @Relationship(deleteRule: .nullify)
+        var wallet: Wallet?
+
+        @Relationship(deleteRule: .cascade, inverse: \NostrMessage.keypair)
+        var messages: [NostrMessage]
+
+        /// Keys stop being included in relay subscriptions this long after creation.
+        static let activeLifetime: TimeInterval = 90 * 24 * 60 * 60
+
+        var isActive: Bool {
+            Date().timeIntervalSince(dateCreated) < Self.activeLifetime
+        }
+
+        init(privateKeyHex: String,
+             publicKeyHex: String,
+             paymentId: String?,
+             isLegacy: Bool = false,
+             wallet: Wallet?) {
+            self.keypairID = UUID()
+            self.privateKeyHex = privateKeyHex
+            self.publicKeyHex = publicKeyHex
+            self.dateCreated = Date()
+            self.paymentId = paymentId
+            self.isLegacy = isLegacy
+            self.wallet = wallet
+            self.messages = []
+        }
+    }
+
+    /// Ledger row for a gift-wrapped nostr message the wallet has processed, keyed by the
+    /// unsealed rumor's event id. Lets the receive pipeline skip messages relays replay
+    /// across launches without re-checking proof state or re-attempting a redeem.
+    @Model
+    final class NostrMessage {
+
+        /// The unsealed rumor's nostr event id (hex).
+        @Attribute(.unique)
+        var messageID: String
+
+        var dateReceived: Date
+
+        private var outcomeRawValue: String
+
+        var outcome: Outcome {
+            get { Outcome(rawValue: outcomeRawValue) ?? .failed }
+            set { outcomeRawValue = newValue.rawValue }
+        }
+
+        /// eventID of the history Event created on a successful redeem, if any.
+        var eventID: UUID?
+
+        var keypair: NostrKeypair?
+
+        enum Outcome: String {
+            case redeemed      // terminal: proofs were swapped into the wallet
+            case spent         // terminal: proofs were already spent elsewhere
+            case unknownMint   // retryable: the user may add the mint later
+            case failed        // retryable: transient network or mint error
+
+            var isTerminal: Bool { self == .redeemed || self == .spent }
+        }
+
+        init(messageID: String,
+             outcome: Outcome,
+             eventID: UUID? = nil,
+             keypair: NostrKeypair?) {
+            self.messageID = messageID
+            self.dateReceived = Date()
+            self.outcomeRawValue = outcome.rawValue
+            self.eventID = eventID
+            self.keypair = keypair
         }
     }
 

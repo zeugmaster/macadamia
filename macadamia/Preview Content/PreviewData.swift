@@ -25,12 +25,13 @@ enum PreviewData {
     static let appState: AppState = AppState(preview: true, preferredUnit: .usd)
 
     /// Shared `NostrService`. The init is inert — it only loads relay URLs
-    /// from `@AppStorage`; `connect()` is only invoked when an nsec is stored
-    /// in the keychain, which previews never have.
+    /// from `@AppStorage`; `connect()` is only invoked when the database holds
+    /// active nostr receive keys, which previews never have.
     static let nostrService: NostrService = NostrService()
 
     private static func makeContainer() -> ModelContainer {
-        let schema = Schema([Wallet.self, Mint.self, Proof.self, Event.self])
+        let schema = Schema([Wallet.self, Mint.self, Proof.self, Event.self,
+                             NostrKeypair.self, NostrMessage.self])
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
 
         let container: ModelContainer

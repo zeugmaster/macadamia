@@ -110,6 +110,7 @@ struct ContentView: View {
             selectedTab = .wallet
         })
         .onAppear {
+            NostrKeyMigrator.run(context: modelContext)
             Task { @MainActor in
                 if let activeWallet {
                     for mint in activeWallet.mints {
