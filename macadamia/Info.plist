@@ -20,5 +20,25 @@
 	<false/>
 	<key>NFCReaderUsageDescription</key>
 	<string>macadamia uses NFC to receive payment requests from compatible devices.</string>
+	<key>OSLogPreferences</key>
+	<dict>
+		<!-- NostrSDK's Relay category logs every raw websocket frame (including
+		     multi-kilobyte encrypted gift-wrap payloads) at info level. Disable it
+		     process-wide instead of patching the library; NostrService logs relay
+		     state changes under the app's own subsystem. -->
+		<key>NostrSDK</key>
+		<dict>
+			<key>Relay</key>
+			<dict>
+				<key>Level</key>
+				<dict>
+					<key>Enable</key>
+					<string>Off</string>
+					<key>Persist</key>
+					<string>Off</string>
+				</dict>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>

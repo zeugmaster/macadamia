@@ -141,8 +141,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/nostr-sdk-ios.git",
       "state" : {
-        "revision" : "567ed86ad685db1274c0de587b11538debde732e",
-        "version" : "0.3.6"
+        "revision" : "ff02be10f4a482a49e6f0617daa5e3b2e457077d",
+        "version" : "0.3.7"
       }
     },
     {
