@@ -339,6 +339,12 @@ final class NFCRequestCardSession: ObservableObject {
         presentmentIntent = nil
     }
 
+    /// Appends a line to the on-device event log from outside the session,
+    /// e.g. the redeem steps that follow token receipt.
+    func note(_ message: String) {
+        log(message)
+    }
+
     private func run(payload: String) async {
         log("starting, payload \(payload.count) chars")
         guard CardSession.isSupported else {
