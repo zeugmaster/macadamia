@@ -11,16 +11,10 @@
 //
 
 import CashuSwift
-import SwiftData
 import SwiftUI
 
 struct NFCRequestView: View {
-    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var appState: AppState
-
-    @Query(filter: #Predicate<Wallet> { wallet in
-        wallet.active == true
-    }) private var wallets: [Wallet]
 
     @StateObject private var cardSession = NFCRequestCardSession()
 
@@ -31,10 +25,6 @@ struct NFCRequestView: View {
 
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
-
-    private var activeWallet: Wallet? {
-        wallets.first
-    }
 
     var body: some View {
         List {

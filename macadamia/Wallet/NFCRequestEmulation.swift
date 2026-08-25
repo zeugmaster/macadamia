@@ -41,14 +41,11 @@ final class Type4TagEmulator {
     private static let ok = Data([0x90, 0x00])
     private static let error = Data([0x6A, 0x82])
 
-    /// Standard NFC Forum Type 4 NDEF tag application AID (D2760000850101).
-    /// Numo-spec payers select this before reading.
+    /// Standard NFC Forum Type 4 NDEF tag application AID (D2760000850101),
+    /// selected by macadamia's Contactless payer and Numo-spec payers alike.
+    /// iOS only routes this SELECT to the card session because the AID is
+    /// registered in com.apple.developer.nfc.hce.iso7816.select-identifier-prefixes.
     private static let ndefTagAID: [UInt8] = [0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01]
-
-    /// The AID prefix registered with Apple for this app's HCE entitlement:
-    /// 0x000000 followed by ASCII "cashu". Must match the provisioning
-    /// profile's com.apple.developer.nfc.hce.iso7816.select-identifier-prefixes.
-    private static let cashuAID: [UInt8] = [0x00, 0x00, 0x00, 0x63, 0x61, 0x73, 0x68, 0x75]
 
     /// Capability container advertising the NDEF file E104, byte-identical to Numo's.
     private static let ccFile = Data([0x00, 0x0F, 0x20, 0x00, 0x3B, 0x00, 0x34,
@@ -92,7 +89,7 @@ final class Type4TagEmulator {
         guard bytes.count >= 5 + lc else { return Self.error }
         let aid = Array(bytes[5 ..< 5 + lc])
 
-        if aid.starts(with: Self.ndefTagAID) || aid.starts(with: Self.cashuAID) {
+        if aid.starts(with: Self.ndefTagAID) {
             return Self.ok
         }
         nfcHCELogger.warning("SELECT for unknown AID: \(aid.map { String(format: "%02X", $0) }.joined())")
