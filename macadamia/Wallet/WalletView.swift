@@ -14,7 +14,9 @@ struct WalletView: View {
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
     }) private var wallets: [Wallet]
-    
+
+    @Query private var nostrKeys: [NostrKeypair]
+
     @State var showAlert: Bool = false
     @State var currentAlert: AlertDetail?
     @State private var processedMessageIds = Set<String>()
@@ -289,6 +291,11 @@ struct WalletView: View {
             .onAppear {
                 connectNostrIfConfigured()
             }
+            .onChange(of: nostrKeys) { _, _ in
+                // Fires when the legacy-key migrator or a new payment request adds a key
+                // (or a key is deleted) while this view is already on screen
+                connectNostrIfConfigured()
+            }
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
         .environment(\.dismissToRoot, DismissToRootAction({ @MainActor in
@@ -299,27 +306,66 @@ struct WalletView: View {
     
     // MARK: - Nostr Ecash Receiving
     
-    private func connectNostrIfConfigured() {
-        guard autoConnectEnabled else {
-            walletLogger.debug("Auto-connect to relays disabled, skipping connection")
-            return
-        }
-        
-        guard NostrKeychain.hasNsec() else {
-            walletLogger.debug("No Nostr key configured, skipping connection")
-            return
-        }
-        
-        walletLogger.info("Connecting to Nostr relays for ecash messages")
-        nostrService.connect()
+    private var activeReceiveKeysExist: Bool {
+        guard let wallet = wallets.first else { return false }
+        return nostrKeys.contains { $0.wallet?.walletID == wallet.walletID && $0.isActive }
     }
-    
+
+    private func connectNostrIfConfigured() {
+        guard activeReceiveKeysExist else {
+            walletLogger.debug("No active nostr receive keys, skipping connection")
+            return
+        }
+
+        if nostrService.hasRelayPool {
+            // Already connected: make sure the subscription covers the current key set
+            nostrService.refreshSubscriptions()
+        } else {
+            guard autoConnectEnabled else {
+                walletLogger.debug("Auto-connect to relays disabled, skipping connection")
+                return
+            }
+            walletLogger.info("Connecting to Nostr relays for ecash messages")
+            nostrService.connect()
+        }
+    }
+
     private func processNewEcashMessages(_ messages: [ReceivedEcashMessage]) {
-        for message in messages where !processedMessageIds.contains(message.id) && !message.isRedeemed {
+        // processedMessageIds only prevents duplicate concurrent tasks within this
+        // session; the persisted NostrMessage ledger is the source of truth
+        for message in messages where !processedMessageIds.contains(message.id) {
             processedMessageIds.insert(message.id)
             Task {
                 await receiveEcashFromMessage(message)
             }
+        }
+    }
+
+    private func ledgerEntry(for messageID: String) -> NostrMessage? {
+        let descriptor = FetchDescriptor<NostrMessage>(predicate: #Predicate<NostrMessage> { $0.messageID == messageID })
+        return try? modelContext.fetch(descriptor).first
+    }
+
+    /// Updates or inserts the persisted ledger row for a processed nostr message.
+    private func recordOutcome(_ outcome: NostrMessage.Outcome,
+                               for message: ReceivedEcashMessage,
+                               eventID: UUID? = nil) {
+        if let existing = ledgerEntry(for: message.id) {
+            existing.outcome = outcome
+            if let eventID { existing.eventID = eventID }
+        } else {
+            let receiverPubkeyHex = message.receiverPubkeyHex
+            let keyDescriptor = FetchDescriptor<NostrKeypair>(predicate: #Predicate<NostrKeypair> { $0.publicKeyHex == receiverPubkeyHex })
+            let keypair = try? modelContext.fetch(keyDescriptor).first
+            modelContext.insert(NostrMessage(messageID: message.id,
+                                             outcome: outcome,
+                                             eventID: eventID,
+                                             keypair: keypair))
+        }
+        do {
+            try modelContext.save()
+        } catch {
+            walletLogger.error("Failed to save nostr message ledger entry: \(error)")
         }
     }
     
@@ -328,67 +374,90 @@ struct WalletView: View {
             walletLogger.error("No active wallet to receive ecash")
             return
         }
-        
+
+        // The persisted ledger is the cross-launch source of truth: skip anything
+        // already redeemed or known to be spent without touching the network
+        if let existing = ledgerEntry(for: message.id), existing.outcome.isTerminal {
+            walletLogger.debug("Skipping message \(message.id), already processed (\(existing.outcome.rawValue))")
+            return
+        }
+
         let token = message.payload.toToken()
-        
+
         // Get the mint URL from the token
         guard let mintURLString = token.proofsByMint.keys.first else {
             walletLogger.error("Could not determine mint URL from token")
             return
         }
-        
+
         // Find the mint in our wallet
         guard let mint = activeWallet.mints.first(where: { $0.url.absoluteString == mintURLString && !$0.hidden }) else {
             walletLogger.warning("Received ecash from unknown mint: \(mintURLString)")
-            displayAlert(alert: AlertDetail(title: String(localized: "⚡ Incoming Ecash"),
-                                            description: String(localized: "Received ecash from an unknown mint (\(mintURLString)). Add this mint to redeem.")))
+            // Retryable: if the user adds the mint later, a future replay redeems it.
+            // Only alert the first time we see this message, not on every replay.
+            let firstSighting = ledgerEntry(for: message.id) == nil
+            recordOutcome(.unknownMint, for: message)
+            if firstSighting {
+                displayAlert(alert: AlertDetail(title: String(localized: "⚡ Incoming Ecash"),
+                                                description: String(localized: "Received ecash from an unknown mint (\(mintURLString)). Add this mint to redeem.")))
+            }
             return
         }
-        
+
         // Check if proofs are still valid/unspent
         guard let proofs = token.proofsByMint[mintURLString] else {
             walletLogger.error("No proofs found in token")
             return
         }
-        
+
         Task { @MainActor in
             do {
                 let proofStates = try await CashuSwift.check(proofs, mint: CashuSwift.Mint(mint))
-                
+
                 // All proofs must be unspent to proceed
                 guard proofStates.allSatisfy({ $0 == .unspent }) else {
                     walletLogger.warning("Received ecash contains spent proofs, skipping")
+                    recordOutcome(.spent, for: message)
                     return
                 }
-                
+
                 walletLogger.info("Proofs are valid, receiving \(token.sum()) sats")
-                
+
                 // Get private key for P2PK locked tokens
                 let privateKeyString = activeWallet.privateKeyData.map { String(bytes: $0) }
-                
+
                 let redeemResult = try await CashuSwift.receive(token: token,
                                                                 of: CashuSwift.Mint(mint),
                                                                 seed: activeWallet.seed,
                                                                 privateKey: privateKeyString)
-                
+
                 walletLogger.debug("result of redeeming token DLEQ check; in: \(String(describing: redeemResult.inputDLEQ)) out: \(String(describing: redeemResult.outputDLEQ))")
-                
+
                 let internalProofs = try mint.addProofs(redeemResult.proofs, to: modelContext)
-                
-                modelContext.insert(Event.receiveEvent(unit: .sat,
-                                                       shortDescription: "Receive",
-                                                       wallet: activeWallet,
-                                                       amount: redeemResult.proofs.sum,
-                                                       longDescription: "",
-                                                       proofs: internalProofs,
-                                                       memo: token.memo,
-                                                       mint: mint,
-                                                       redeemed: true))
-                
+
+                let receiveEvent = Event.receiveEvent(unit: .sat,
+                                                      shortDescription: "Receive",
+                                                      wallet: activeWallet,
+                                                      amount: redeemResult.proofs.sum,
+                                                      longDescription: "",
+                                                      proofs: internalProofs,
+                                                      memo: token.memo,
+                                                      mint: mint,
+                                                      redeemed: true)
+                modelContext.insert(receiveEvent)
+
                 try modelContext.save()
-                
+
+                recordOutcome(.redeemed, for: message, eventID: receiveEvent.eventID)
+
             } catch {
-                displayAlert(alert: AlertDetail(title: String(localized: "Something went wrong"), description: String(localized: "An error occured while trying to redeem a token received via Nostr DMs. \(String(describing: error))")))
+                // Retryable: transient network or mint errors may resolve on a later replay
+                let firstSighting = ledgerEntry(for: message.id) == nil
+                recordOutcome(.failed, for: message)
+                processedMessageIds.remove(message.id)
+                if firstSighting {
+                    displayAlert(alert: AlertDetail(title: String(localized: "Something went wrong"), description: String(localized: "An error occured while trying to redeem a token received via Nostr DMs. \(String(describing: error))")))
+                }
                 walletLogger.error("error while trying to auto-redeem token from nostr dm: \(error)")
             }
         }

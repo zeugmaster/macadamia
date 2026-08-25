@@ -104,6 +104,33 @@ struct EventDataView: View {
                 }
             }
 
+            if let genericQuote = event.genericMintQuote {
+                Section("Mint Quote") {
+                    CopyableRow(label: "Quote ID", value: genericQuote.quote)
+                    CopyableRow(label: "Method", value: genericQuote.method.rawValue)
+                    if let state = genericQuote.state {
+                        CopyableRow(label: "State", value: state.rawValue)
+                    }
+                    if let amount = genericQuote.amount {
+                        CopyableRow(label: "Amount", value: "\(amount) \(genericQuote.unit)")
+                    }
+                    if let amountPaid = genericQuote.amountPaid {
+                        CopyableRow(label: "Amount Paid", value: String(amountPaid))
+                    }
+                    if let amountIssued = genericQuote.amountIssued {
+                        CopyableRow(label: "Amount Issued", value: String(amountIssued))
+                    }
+                    CopyableRow(label: "Payment Request", value: genericQuote.request)
+                    if let counter = genericQuote.nut20Counter {
+                        CopyableRow(label: "NUT-20 Counter", value: String(counter))
+                    }
+                    if let expiry = genericQuote.expiry {
+                        CopyableRow(label: "Expiry",
+                                    value: Date(timeIntervalSince1970: TimeInterval(expiry)).formatted())
+                    }
+                }
+            }
+
             if let meltQuote = event.bolt11MeltQuote {
                 Section("Melt Quote") {
                     CopyableRow(label: "Quote ID", value: meltQuote.quote)
@@ -121,6 +148,25 @@ struct EventDataView: View {
                     }
                     if let preimage = meltQuote.paymentPreimage, !preimage.isEmpty {
                         CopyableRow(label: "Payment Preimage", value: preimage)
+                    }
+                }
+            }
+
+            if let genericQuote = event.genericMeltQuote {
+                Section("Melt Quote") {
+                    CopyableRow(label: "Quote ID", value: genericQuote.quote)
+                    CopyableRow(label: "Method", value: genericQuote.method.rawValue)
+                    if let state = genericQuote.rawStateString {
+                        CopyableRow(label: "State", value: state)
+                    }
+                    CopyableRow(label: "Amount", value: "\(genericQuote.amount) \(genericQuote.unit)")
+                    CopyableRow(label: "Fee Reserve", value: String(genericQuote.feeReserve))
+                    if let expiry = genericQuote.expiry {
+                        CopyableRow(label: "Expiry",
+                                    value: Date(timeIntervalSince1970: TimeInterval(expiry)).formatted())
+                    }
+                    if let preimage = genericQuote.paymentPreimage, !preimage.isEmpty {
+                        CopyableRow(label: "Payment Note", value: preimage)
                     }
                 }
             }

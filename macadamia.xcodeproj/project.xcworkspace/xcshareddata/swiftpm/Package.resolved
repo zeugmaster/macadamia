@@ -105,8 +105,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/cashu-swift.git",
       "state" : {
-        "revision" : "873dcf929b2768a0fff4948cf3e767d9e3685a78",
-        "version" : "0.4.1"
+        "revision" : "1199678da6c1a34f4220182461b73901002ca02c",
+        "version" : "0.4.3"
       }
     },
     {
@@ -141,8 +141,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/nostr-sdk-ios.git",
       "state" : {
-        "revision" : "567ed86ad685db1274c0de587b11538debde732e",
-        "version" : "0.3.6"
+        "revision" : "ff02be10f4a482a49e6f0617daa5e3b2e457077d",
+        "version" : "0.3.7"
       }
     },
     {

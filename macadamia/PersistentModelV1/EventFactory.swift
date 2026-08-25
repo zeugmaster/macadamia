@@ -250,6 +250,104 @@ extension AppSchemaV1.Event {
         event.toMint = to
         return event
     }
+
+    // MARK: - Generic (non-BOLT11) payment methods
+
+    static func pendingMintEvent(unit: Unit,
+                                 shortDescription: String,
+                                 visible: Bool = true,
+                                 wallet: Wallet,
+                                 genericQuote: CashuSwift.Generic.MintQuote,
+                                 amount: Int,
+                                 expiration: Date?,
+                                 mint: Mint) -> Event {
+        assert(!genericQuote.method.rawValue.isEmpty, "a generic mint quote must carry its payment method")
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: shortDescription,
+                          visible: visible,
+                          kind: .pendingMint,
+                          wallet: wallet,
+                          amount: amount,
+                          expiration: expiration,
+                          mints: [mint])
+        event.genericMintQuote = genericQuote
+        return event
+    }
+
+    static func mintEvent(unit: Unit,
+                          shortDescription: String,
+                          visible: Bool = true,
+                          wallet: Wallet,
+                          genericQuote: CashuSwift.Generic.MintQuote,
+                          mint: Mint,
+                          amount: Int) -> Event {
+        assert(!genericQuote.method.rawValue.isEmpty, "a generic mint quote must carry its payment method")
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: shortDescription,
+                          visible: visible,
+                          kind: .mint,
+                          wallet: wallet,
+                          amount: amount,
+                          mints: [mint])
+        event.genericMintQuote = genericQuote
+        return event
+    }
+
+    static func pendingMeltEvent(unit: Unit,
+                                 shortDescription: String,
+                                 visible: Bool = true,
+                                 wallet: Wallet,
+                                 genericQuote: CashuSwift.Generic.MeltQuote,
+                                 amount: Int,
+                                 expiration: Date?,
+                                 mints: [Mint],
+                                 proofs: [Proof]? = nil,
+                                 memo: String? = nil) -> Event {
+        assert(!genericQuote.method.rawValue.isEmpty, "a generic melt quote must carry its payment method")
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: shortDescription,
+                          visible: visible,
+                          kind: .pendingMelt,
+                          wallet: wallet,
+                          amount: amount,
+                          expiration: expiration,
+                          proofs: proofs,
+                          memo: memo,
+                          mints: mints)
+        event.genericMeltQuote = genericQuote
+        return event
+    }
+
+    static func meltEvent(unit: Unit,
+                          shortDescription: String,
+                          visible: Bool = true,
+                          wallet: Wallet,
+                          amount: Int,
+                          longDescription: String,
+                          mints: [Mint],
+                          change: [Proof]? = nil,
+                          preImage: String? = nil,
+                          memo: String? = nil,
+                          genericQuote: CashuSwift.Generic.MeltQuote) -> Event {
+        assert(!genericQuote.method.rawValue.isEmpty, "a generic melt quote must carry its payment method")
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: shortDescription,
+                          visible: visible,
+                          kind: .melt,
+                          wallet: wallet,
+                          amount: amount,
+                          longDescription: longDescription,
+                          proofs: change,
+                          memo: memo,
+                          mints: mints,
+                          preImage: preImage)
+        event.genericMeltQuote = genericQuote
+        return event
+    }
 }
 
 extension AppSchemaV1.Event {

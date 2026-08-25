@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import CashuSwift
+import NostrSDK
 
 struct RequestView: View {
     @Environment(\.modelContext) private var modelContext
@@ -44,16 +45,6 @@ struct RequestView: View {
     
     private var activeWallet: Wallet? {
         wallets.first
-    }
-    
-    private var doneButtonDisabled: Bool {
-        
-        // Disable if NIP-17 is selected but no Nostr key is available
-        if useNIP17Transport && !NostrKeychain.hasNsec() {
-            return true
-        }
-        
-        return false
     }
     
     var body: some View {
@@ -103,7 +94,7 @@ struct RequestView: View {
                             Image(systemName: useNIP17Transport ? "checkmark.circle.fill" : "circle")
                             VStack(alignment: .leading) {
                                 Text("Nostr DM")
-                                Text((try? NostrKeychain.getNprofile(relays: nil)) ?? "Unable to get key")
+                                Text("A one-time key is generated for this request")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -112,6 +103,10 @@ struct RequestView: View {
                     }
                 } header: {
                     Text("Receive via")
+                } footer: {
+                    if useNIP17Transport {
+                        Text("Payments to this request can be received via Nostr for 90 days.")
+                    }
                 }
                 
                 if let publicKeyString = activeWallet?.publicKeyString {
@@ -150,7 +145,6 @@ struct RequestView: View {
                     }) {
                         Text("Done")
                     }
-                    .disabled(doneButtonDisabled)
                     .opacity(paymentRequest == nil ? 1 : 0)
                 }
             }
@@ -221,30 +215,66 @@ struct RequestView: View {
     }
     
     private func generatePaymentRequest() {
-        
+
         // Convert selected mints to URL strings
         let mintURLs: [String]? = selectedMints.isEmpty ? nil : selectedMints.map { $0.url.absoluteString }
-        
+
+        let paymentId = createPaymentRequestIdentifier()
+
         // Create transports array if NIP-17 is enabled
         var transports: [CashuSwift.Transport]? = nil
         if useNIP17Transport {
-            do {
-                // Use nprofile format with relay hints so sender knows where to publish
-                let relayStrings = defaultRelayURLs.map { $0.absoluteString }
-                let nprofile = try NostrKeychain.getNprofile(relays: relayStrings)
-                let nostrTransport = CashuSwift.Transport(type: CashuSwift.Transport.TransportType.nostr, target: nprofile)
-                transports = [nostrTransport]
-            } catch {
+            guard let activeWallet else {
                 displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Nostr Key Error"),
-                                                description: String(localized: "Failed to get your Nostr public key: \(error.localizedDescription)")))
+                                                description: String(localized: "No active wallet to create a receive key for.")))
                 return
             }
+
+            // A fresh random keypair for every request: requests stay unlinkable to each
+            // other, and the key lives in the database, sharing the wallet's lifecycle
+            guard let keypair = Keypair() else {
+                displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Nostr Key Error"),
+                                                description: String(localized: "Failed to generate a Nostr key for this request.")))
+                return
+            }
+
+            // Use nprofile format with relay hints so the sender knows where to publish.
+            // These must be the saved relays this wallet actually listens on.
+            let relayStrings = nostrService.relayURLs.map { $0.absoluteString }
+
+            let nprofile: String
+            do {
+                nprofile = try NostrKeyMaterial.nprofile(publicKeyHex: keypair.publicKey.hex,
+                                                         relays: relayStrings)
+            } catch {
+                displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Nostr Key Error"),
+                                                description: String(localized: "Failed to encode the Nostr key for this request: \(error.localizedDescription)")))
+                return
+            }
+
+            let keyRow = NostrKeypair(privateKeyHex: keypair.privateKey.hex,
+                                      publicKeyHex: keypair.publicKey.hex,
+                                      paymentId: paymentId,
+                                      wallet: activeWallet)
+            modelContext.insert(keyRow)
+            do {
+                try modelContext.save()
+            } catch {
+                // Never show a QR code nobody will be listening for
+                modelContext.delete(keyRow)
+                displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Nostr Key Error"),
+                                                description: String(localized: "Failed to store the Nostr key for this request: \(error.localizedDescription)")))
+                return
+            }
+
+            let nostrTransport = CashuSwift.Transport(type: CashuSwift.Transport.TransportType.nostr, target: nprofile)
+            transports = [nostrTransport]
         }
-        
+
         // Extract complex expressions to help type inference
         let requestAmount: Int? = amount > 0 ? amount : nil
         let requestDescription: String? = description.isEmpty ? nil : description
-        
+
         // Create NUT-10 locking condition if P2PK is enabled and we have a public key
         let lockingCondition: CashuSwift.NUT10Option?
         if useP2PK, let publicKeyString = activeWallet?.publicKeyString {
@@ -254,8 +284,8 @@ struct RequestView: View {
         } else {
             lockingCondition = nil
         }
-        
-        let request = CashuSwift.PaymentRequest(paymentId: createPaymentRequestIdentifier(),
+
+        let request = CashuSwift.PaymentRequest(paymentId: paymentId,
                                                 amount: requestAmount,
                                                 unit: Unit.sat.currencyCode,
                                                 singleUse: false,
@@ -263,11 +293,15 @@ struct RequestView: View {
                                                 description: requestDescription,
                                                 transports: transports,
                                                 lockingCondition: lockingCondition)
-        
+
         withAnimation {
             paymentRequest = request
         }
-        
+
+        if useNIP17Transport {
+            // Start or extend the relay subscription to include the new key
+            nostrService.refreshSubscriptions()
+        }
     }
 
     func createPaymentRequestIdentifier() -> String {

@@ -416,3 +416,454 @@ struct MeltView: View {
         showAlert = true
     }
 }
+
+/// Self-contained withdrawal flow for non-BOLT11 NUT-05 melt methods (e.g. a
+/// custom "branch" method): amount + optional memo -> generic melt quote ->
+/// execute with prefer_async -> poll until the operator settles or fails the
+/// payout. Single mint, single unit, no MPP. BOLT11 payments stay in
+/// `MeltView` / `BOLT11MeltQuoteSource`.
+struct GenericMeltView: View {
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismissToRoot) private var dismissToRoot
+    @EnvironmentObject private var appState: AppState
+
+    @Query(filter: #Predicate<Wallet> { wallet in
+        wallet.active == true
+    }) private var wallets: [Wallet]
+
+    @State private var amount: Int = 0
+    @State private var memo: String = ""
+    @State private var selectedMint: Mint?
+    @State private var selectedOption: PaymentOption?
+    @State private var quote: CashuSwift.Generic.MeltQuote?
+    @State private var pendingMeltEvent: Event?
+    @State private var showDetails = false
+
+    @State private var buttonState = ActionButtonState.idle("...")
+    @State private var pollingTimer: Timer?
+    @State private var isCheckingState = false
+
+    @State private var showAlert = false
+    @State private var currentAlert: AlertDetail?
+
+    private var activeWallet: Wallet? {
+        wallets.first
+    }
+
+    init(pendingEvent: Event? = nil) {
+        _pendingMeltEvent = State(initialValue: pendingEvent)
+        if let pendingEvent, let quote = pendingEvent.genericMeltQuote {
+            _quote = State(initialValue: quote)
+            _amount = State(initialValue: quote.amount)
+            _memo = State(initialValue: pendingEvent.memo ?? "")
+            if let mint = pendingEvent.mints?.first {
+                _selectedMint = State(initialValue: mint)
+                _selectedOption = State(initialValue: PaymentOption(mintID: mint.mintID,
+                                                                    direction: .melt,
+                                                                    unit: Unit(code: quote.unit),
+                                                                    method: PaymentMethodKind(quote.method)))
+            }
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            Form {
+                Section {
+                    NumericalInputView(output: $amount,
+                                       baseUnit: selectedOption?.unit ?? .sat,
+                                       exchangeRates: selectedOption?.unit.kind == .other ? nil : appState.exchangeRates,
+                                       onReturn: getQuote)
+                    MintPicker(label: String(localized: "Mint"), selectedMint: $selectedMint)
+                    PaymentOptionPicker(direction: .melt,
+                                        label: String(localized: "Method"),
+                                        selectedMint: $selectedMint,
+                                        selectedOption: $selectedOption,
+                                        excludedMethods: [.bolt11],
+                                        hidesWhenSingleOption: false)
+                    TextField(String(localized: "Memo (optional)"), text: $memo)
+                        .autocorrectionDisabled()
+                        .onChange(of: memo) { _, newValue in
+                            if newValue.count > 1024 { memo = String(newValue.prefix(1024)) }
+                        }
+                }
+                .disabled(quote != nil || pendingMeltEvent != nil)
+
+                if let quote {
+                    Section {
+                        HStack {
+                            Text("Amount: ")
+                            Spacer()
+                            AmountView(amount: quote.amount, unit: Unit(code: quote.unit))
+                                .monospaced()
+                        }
+                        if quote.feeReserve > 0 {
+                            HStack {
+                                Text("Fee:")
+                                Spacer()
+                                AmountView(amount: quote.feeReserve, unit: Unit(code: quote.unit))
+                                    .monospaced()
+                            }
+                            .foregroundStyle(.secondary)
+                        }
+                        if let expiry = quote.expiry {
+                            HStack {
+                                Text("Expires at: ")
+                                Spacer()
+                                Text(Date(timeIntervalSince1970: TimeInterval(expiry)).formatted())
+                            }
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    if pendingMeltEvent != nil {
+                        Section {
+                            HStack(spacing: 12) {
+                                ProgressView()
+                                Text("Waiting for the mint operator to confirm the payout. This can take a few minutes.")
+                                    .foregroundStyle(.secondary)
+                                    .font(.callout)
+                            }
+                        }
+                    }
+
+                    Section {
+                        Button {
+                            withAnimation {
+                                showDetails.toggle()
+                            }
+                        } label: {
+                            HStack {
+                                if showDetails {
+                                    Text("Hide details")
+                                } else {
+                                    Text("Show details")
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                                    .font(.footnote)
+                                    .rotationEffect(.degrees(showDetails ? 90 : 0))
+                            }
+                            .opacity(0.8)
+                        }
+
+                        if showDetails {
+                            CopyableRow(label: String(localized: "Quote ID"), value: quote.quote)
+                        }
+                    }
+                }
+
+                Spacer(minLength: 50)
+                    .listRowBackground(Color.clear)
+            }
+            VStack {
+                Spacer()
+                ActionButton(state: $buttonState)
+                    .actionDisabled(actionButtonDisabled)
+            }
+        }
+        .navigationTitle("Withdrawal")
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+        .onAppear {
+            updateButtonState()
+            if pendingMeltEvent != nil {
+                startPolling()
+            }
+        }
+        .onDisappear {
+            pollingTimer?.invalidate()
+        }
+    }
+
+    // MARK: - Button orchestration
+
+    private var actionButtonDisabled: Bool {
+        if pendingMeltEvent != nil || quote != nil { return false }
+        guard amount > 0, let selectedMint, let selectedOption else { return true }
+        if let minAmount = selectedOption.minAmount, amount < minAmount { return true }
+        if let maxAmount = selectedOption.maxAmount, amount > maxAmount { return true }
+        return selectedMint.balance(for: selectedOption.unit) < amount
+    }
+
+    private func updateButtonState() {
+        if pendingMeltEvent != nil {
+            buttonState = .idle(String(localized: "Check Payment State"), action: { checkState(manual: true) })
+        } else if quote != nil {
+            buttonState = .idle(String(localized: "Withdraw"), action: { executeMelt() })
+        } else {
+            buttonState = .idle(String(localized: "Get Quote"), action: { getQuote() })
+        }
+    }
+
+    // MARK: - Quote
+
+    private func getQuote() {
+        guard let selectedMint, let selectedOption, amount > 0, quote == nil else { return }
+
+        buttonState = .loading()
+
+        let sendableMint = CashuSwift.Mint(selectedMint)
+        let methodID = selectedOption.method.id
+        // cdk requires `method` repeated inside the body and the payout declared
+        // as a flattened `amount` field; harmless for mints that ignore extras.
+        let quoteRequest = CashuSwift.Generic.MeltQuoteRequest(
+            method: methodID,
+            unit: selectedOption.unitCode,
+            request: memo,
+            extra: ["method": .string(methodID.rawValue),
+                    "amount": .integer(Int64(amount))]
+        )
+        let requestedAmount = amount
+
+        Task {
+            do {
+                let freshQuote = try await CashuSwift.Generic.requestMeltQuote(quoteRequest, from: sendableMint)
+                await MainActor.run {
+                    guard freshQuote.amount == requestedAmount else {
+                        displayAlert(alert: AlertDetail(title: String(localized: "Amount Mismatch"),
+                                                        description: String(localized: "The mint's quote amount does not match the requested amount.")))
+                        updateButtonState()
+                        return
+                    }
+                    self.quote = freshQuote
+                    updateButtonState()
+                }
+            } catch {
+                await MainActor.run {
+                    displayAlert(alert: AlertDetail(with: error))
+                    buttonState = .fail()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        updateButtonState()
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Execution
+
+    private func executeMelt() {
+        guard let quote, let selectedMint, let selectedOption, let activeWallet,
+              pendingMeltEvent == nil else { return }
+
+        guard let selection = selectedMint.select(amount: quote.amount + quote.feeReserve,
+                                                  unit: selectedOption.unit) else {
+            displayAlert(alert: AlertDetail(title: String(localized: "Proof Selection Error"),
+                                            description: String(localized: "The wallet was not able to pick ecash proofs from mint \(selectedMint.displayName).")))
+            return
+        }
+
+        buttonState = .loading()
+
+        let event = Event.pendingMeltEvent(unit: selectedOption.unit,
+                                           shortDescription: String(localized: "Pending Withdrawal"),
+                                           wallet: activeWallet,
+                                           genericQuote: quote,
+                                           amount: quote.amount,
+                                           expiration: quote.expiry.map { Date(timeIntervalSince1970: TimeInterval($0)) },
+                                           mints: [selectedMint],
+                                           proofs: selection.selected,
+                                           memo: memo.isEmpty ? nil : memo)
+
+        do {
+            let blankOutputs = try CashuSwift.generateBlankOutputs(quote: quote,
+                                                                   proofs: selection.selected,
+                                                                   mint: selectedMint,
+                                                                   unit: quote.unit,
+                                                                   seed: activeWallet.seed)
+            // An empty set is legitimate (no overpayment beyond the fee reserve).
+            if !blankOutputs.outputs.isEmpty, let keysetID = blankOutputs.outputs.first?.id {
+                selectedMint.increaseDerivationCounterForKeysetWithID(keysetID, by: blankOutputs.outputs.count)
+                event.blankOutputs = BlankOutputSet(tuple: blankOutputs)
+            }
+        } catch {
+            logger.error("failed to create blank outputs for generic melt on mint \(selectedMint.url) due to error \(error)")
+        }
+
+        modelContext.insert(event)
+        try? modelContext.save()
+        selection.selected.setState(.pending)
+        pendingMeltEvent = event
+
+        runMelt(event: event)
+    }
+
+    private func runMelt(event: Event) {
+        guard let selectedMint, let quote = event.genericMeltQuote else { return }
+
+        buttonState = .loading()
+
+        let sendableMint = CashuSwift.Mint(selectedMint)
+        let sendableProofs = event.proofs?.sendable() ?? []
+        let blankOutputs = event.blankOutputs.flatMap { $0.outputs.isEmpty ? nil : $0.tuple() }
+
+        Task {
+            do {
+                let result = try await CashuSwift.Generic.melt(quote: quote,
+                                                               from: sendableMint,
+                                                               proofs: sendableProofs,
+                                                               blankOutputs: blankOutputs,
+                                                               preferAsync: true)
+                await MainActor.run {
+                    if result.quote.state == .paid {
+                        finalize(result: result)
+                    } else if result.quote.isFailed {
+                        fail()
+                    } else {
+                        startPolling()
+                    }
+                }
+            } catch CashuError.quoteIsPending {
+                // Error code 20005: the operator has not settled the payout inside
+                // the mint's synchronous window — not a failure, keep polling.
+                await MainActor.run { startPolling() }
+            } catch {
+                await MainActor.run {
+                    displayAlert(alert: AlertDetail(with: error))
+                    updateButtonState()
+                }
+            }
+        }
+    }
+
+    // MARK: - Polling
+
+    private func startPolling() {
+        updateButtonState()
+        guard pollingTimer?.isValid != true else { return }
+        pollingTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true, block: { _ in
+            Task { @MainActor in
+                checkState()
+            }
+        })
+    }
+
+    private func checkState(manual: Bool = false) {
+        guard let pendingMeltEvent, let quote = pendingMeltEvent.genericMeltQuote,
+              let mint = pendingMeltEvent.mints?.first else { return }
+        if isCheckingState { return }
+        isCheckingState = true
+
+        let sendableMint = CashuSwift.Mint(mint)
+        let blankOutputs = pendingMeltEvent.blankOutputs.flatMap { $0.outputs.isEmpty ? nil : $0.tuple() }
+
+        Task {
+            do {
+                let result = try await CashuSwift.Generic.meltState(quote.quote,
+                                                                    method: quote.method,
+                                                                    from: sendableMint,
+                                                                    blankOutputs: blankOutputs)
+                await MainActor.run {
+                    isCheckingState = false
+                    switch result.quote.state {
+                    case .paid:
+                        finalize(result: result)
+                    case .unpaid:
+                        pollingTimer?.invalidate()
+                        let primary = AlertButton(title: String(localized: "Retry"),
+                                                  action: { runMelt(event: pendingMeltEvent) })
+                        let secondary = AlertButton(title: String(localized: "Remove Payment"),
+                                                    role: .destructive,
+                                                    action: { removePending() })
+                        displayAlert(alert: AlertDetail(title: String(localized: "Unpaid ⚠"),
+                                                        description: String(localized: "This payment did not go through and is marked \"unpaid\" with the mint. Would you like to try again?"),
+                                                        primaryButton: primary,
+                                                        secondaryButton: secondary))
+                        updateButtonState()
+                    case .pending:
+                        if manual {
+                            displayAlert(alert: AlertDetail(title: String(localized: "Payment Pending ⏳"),
+                                                            description: String(localized: "Waiting for the mint operator to confirm the payout. This can take a few minutes.")))
+                            updateButtonState()
+                        }
+                    default:
+                        // FAILED and UNKNOWN decode to a nil typed state; the raw
+                        // string distinguishes them.
+                        if result.quote.isFailed {
+                            fail()
+                        } else if manual {
+                            displayAlert(alert: AlertDetail(title: String(localized: "Withdrawal"),
+                                                            description: String(localized: "The state of this withdrawal could not be determined. Please check again later.")))
+                            updateButtonState()
+                        }
+                    }
+                }
+            } catch CashuError.quoteIsPending {
+                await MainActor.run { isCheckingState = false }
+            } catch {
+                await MainActor.run {
+                    isCheckingState = false
+                    pollingTimer?.invalidate()
+                    displayAlert(alert: AlertDetail(with: error))
+                    updateButtonState()
+                }
+            }
+        }
+    }
+
+    // MARK: - Settlement
+
+    private func finalize(result: CashuSwift.MeltResult<CashuSwift.Generic.MeltQuote>) {
+        guard let activeWallet, let pendingMeltEvent,
+              let storedQuote = pendingMeltEvent.genericMeltQuote,
+              let mint = pendingMeltEvent.mints?.first else { return }
+
+        pollingTimer?.invalidate()
+
+        pendingMeltEvent.proofs?.setState(.spent)
+        pendingMeltEvent.visible = false
+
+        let internalChange = try? mint.addProofs(result.change ?? [], to: modelContext)
+
+        // Melt results come off the wire without a method — re-graft the stored
+        // quote's method so the persisted event routes to the generic accessor.
+        let finalQuote = result.quote.settingMethod(storedQuote.method)
+
+        let event = Event.meltEvent(unit: pendingMeltEvent.currencyUnit,
+                                    shortDescription: String(localized: "Withdrawal"),
+                                    wallet: activeWallet,
+                                    amount: result.quote.amount,
+                                    longDescription: "",
+                                    mints: [mint],
+                                    change: internalChange,
+                                    preImage: result.quote.paymentPreimage,
+                                    memo: pendingMeltEvent.memo,
+                                    genericQuote: finalQuote)
+        modelContext.insert(event)
+        try? modelContext.save()
+
+        buttonState = .success(String(localized: "Paid!"))
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            dismissToRoot()
+        }
+    }
+
+    private func fail() {
+        pollingTimer?.invalidate()
+        // A FAILED quote means the mint has released the locked inputs.
+        pendingMeltEvent?.proofs?.setState(.valid)
+        pendingMeltEvent?.visible = false
+        try? modelContext.save()
+        pendingMeltEvent = nil
+        quote = nil
+        displayAlert(alert: AlertDetail(title: String(localized: "Withdrawal Failed"),
+                                        description: String(localized: "The mint reported this withdrawal as failed. Your ecash has been returned to your balance.")))
+        updateButtonState()
+    }
+
+    private func removePending() {
+        pollingTimer?.invalidate()
+        pendingMeltEvent?.proofs?.setState(.valid)
+        pendingMeltEvent?.visible = false
+        try? modelContext.save()
+        dismissToRoot()
+    }
+
+    private func displayAlert(alert: AlertDetail) {
+        currentAlert = alert
+        showAlert = true
+    }
+}
