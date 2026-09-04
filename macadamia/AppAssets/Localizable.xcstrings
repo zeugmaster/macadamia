@@ -732,6 +732,356 @@
     "%lld%%" : {
       "shouldTranslate" : false
     },
+    "Hold the payer's device to this iPhone. Ecash received over NFC is redeemed automatically." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قرّب جهاز الدافع من هذا الـ iPhone. يتم استرداد Ecash المستلم عبر NFC تلقائيًا."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পরিশোধকারীর ডিভাইসটি এই iPhone-এর কাছে ধরুন। NFC-এর মাধ্যমে প্রাপ্ত Ecash স্বয়ংক্রিয়ভাবে রিডিম হয়।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halte das Gerät des Zahlenden an dieses iPhone. Per NFC empfangenes Ecash wird automatisch eingelöst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca el dispositivo del pagador a este iPhone. El Ecash recibido por NFC se canjea automáticamente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approche l'appareil du payeur de cet iPhone. L'Ecash reçu par NFC est encaissé automatiquement."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "भुगतान करने वाले का डिवाइस इस iPhone के पास रखें। NFC से प्राप्त Ecash अपने आप रिडीम हो जाता है।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支払う側のデバイスをこのiPhoneにかざしてください。NFCで受け取ったEcashは自動的に引き換えられます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "결제하는 사람의 기기를 이 iPhone에 가까이 대세요. NFC로 받은 Ecash는 자동으로 사용됩니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aproxime o dispositivo do pagador deste iPhone. O Ecash recebido por NFC é resgatado automaticamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поднеси устройство плательщика к этому iPhone. Ecash, полученный по NFC, зачисляется автоматически."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ödeyenin cihazını bu iPhone'a yaklaştır. NFC ile alınan Ecash otomatik olarak kullanılır."
+          }
+        }
+      }
+    },
+    "NFC is not available right now. Make sure it is turned on and try again." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC غير متاح حاليًا. تأكد من تشغيله وحاول مرة أخرى."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC এখন উপলব্ধ নয়। এটি চালু আছে কিনা নিশ্চিত করুন এবং আবার চেষ্টা করুন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC ist gerade nicht verfügbar. Stell sicher, dass es eingeschaltet ist, und versuch es noch einmal."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC no está disponible ahora mismo. Asegúrate de que esté activado e inténtalo de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le NFC n'est pas disponible pour le moment. Vérifie qu'il est activé et réessaie."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC अभी उपलब्ध नहीं है। सुनिश्चित करें कि यह चालू है और फिर से कोशिश करें।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在NFCを利用できません。NFCがオンになっていることを確認して、もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지금은 NFC를 사용할 수 없습니다. NFC가 켜져 있는지 확인하고 다시 시도해 주세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O NFC não está disponível no momento. Verifique se está ativado e tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC сейчас недоступен. Убедись, что он включён, и попробуй ещё раз."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC şu anda kullanılamıyor. Açık olduğundan emin ol ve tekrar dene."
+          }
+        }
+      }
+    },
+    "Receive via NFC" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاستلام عبر NFC"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC-এর মাধ্যমে গ্রহণ করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per NFC empfangen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recibir por NFC"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recevoir par NFC"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC से प्राप्त करें"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFCで受け取る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC로 받기"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receber por NFC"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Получить по NFC"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC ile al"
+          }
+        }
+      }
+    },
+    "Receiving via NFC is not available on this device or in your region." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاستلام عبر NFC غير متاح على هذا الجهاز أو في منطقتك."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এই ডিভাইসে বা আপনার অঞ্চলে NFC-এর মাধ্যমে গ্রহণ করা উপলব্ধ নয়।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfangen per NFC ist auf diesem Gerät oder in deiner Region nicht verfügbar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recibir por NFC no está disponible en este dispositivo o en tu región."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La réception par NFC n'est pas disponible sur cet appareil ou dans ta région."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस डिवाइस या आपके क्षेत्र में NFC से प्राप्त करना उपलब्ध नहीं है।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFCでの受け取りは、このデバイスまたはお住まいの地域では利用できません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 기기 또는 현재 지역에서는 NFC로 받기를 사용할 수 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receber por NFC não está disponível neste dispositivo ou na sua região."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Получение по NFC недоступно на этом устройстве или в твоём регионе."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC ile alma bu cihazda veya bölgende kullanılamıyor."
+          }
+        }
+      }
+    },
+    "The connection to the payer's device was lost. Try again." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انقطع الاتصال بجهاز الدافع. حاول مرة أخرى."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পরিশোধকারীর ডিভাইসের সাথে সংযোগ বিচ্ছিন্ন হয়ে গেছে। আবার চেষ্টা করুন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Verbindung zum Gerät des Zahlenden wurde unterbrochen. Versuch es noch einmal."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se perdió la conexión con el dispositivo del pagador. Inténtalo de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La connexion avec l'appareil du payeur a été perdue. Réessaie."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "भुगतान करने वाले के डिवाइस से कनेक्शन टूट गया। फिर से कोशिश करें।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支払う側のデバイスとの接続が切れました。もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "결제하는 사람의 기기와 연결이 끊어졌습니다. 다시 시도해 주세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A conexão com o dispositivo do pagador foi perdida. Tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Соединение с устройством плательщика потеряно. Попробуй ещё раз."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ödeyenin cihazıyla bağlantı kesildi. Tekrar dene."
+          }
+        }
+      }
+    },
     "• Allocation:" : {
       "localizations" : {
         "ar" : {
@@ -868,6 +1218,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "⚠️ Kodlama hatası"
+          }
+        }
+      }
+    },
+    "⚠️ NFC Error" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ خطأ في NFC"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ NFC ত্রুটি"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ NFC-Fehler"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Error de NFC"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Erreur NFC"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ NFC त्रुटि"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ NFCエラー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ NFC 오류"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Erro de NFC"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Ошибка NFC"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ NFC Hatası"
           }
         }
       }
@@ -5220,12 +5640,6 @@
         }
       }
     },
-    "Card emulation is currently not available. It is limited to devices in the European Economic Area." : {
-
-    },
-    "Card emulation is not supported on this device. It requires the HCE entitlement and iOS 17.4 or later." : {
-
-    },
     "Cashu" : {
       "localizations" : {
         "ar" : {
@@ -6358,9 +6772,6 @@
           }
         }
       }
-    },
-    "Connected, sending payment request..." : {
-
     },
     "Contact the developer" : {
       "localizations" : {
@@ -10430,9 +10841,6 @@
         }
       }
     },
-    "Event Log" : {
-
-    },
     "Expired" : {
       "localizations" : {
         "ar" : {
@@ -12269,10 +12677,74 @@
       }
     },
     "Hold near the payer's device." : {
-
-    },
-    "Hold near the payer's device..." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قرّب الجهاز من جهاز الدافع."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পরিশোধকারীর ডিভাইসের কাছে ধরুন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nah an das Gerät des Zahlenden halten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca el iPhone al dispositivo del pagador."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approche l'iPhone de l'appareil du payeur."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "भुगतान करने वाले के डिवाइस के पास रखें।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支払う側のデバイスに近づけてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "결제하는 사람의 기기에 가까이 대세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aproxime do dispositivo do pagador."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поднеси к устройству плательщика."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ödeyenin cihazına yaklaştır."
+          }
+        }
+      }
     },
     "Hong Kong Dollar" : {
       "localizations" : {
@@ -18825,9 +19297,6 @@
         }
       }
     },
-    "NFC Request" : {
-
-    },
     "Nickname" : {
       "localizations" : {
         "ar" : {
@@ -23806,9 +24275,6 @@
         }
       }
     },
-    "Payment received!" : {
-
-    },
     "Payment Request" : {
       "localizations" : {
         "ar" : {
@@ -25280,9 +25746,6 @@
           }
         }
       }
-    },
-    "Present Again" : {
-
     },
     "Privacy is a human right." : {
       "localizations" : {
@@ -27612,9 +28075,6 @@
         }
       }
     },
-    "Request ecash via NFC" : {
-
-    },
     "Request from" : {
       "localizations" : {
         "ar" : {
@@ -27754,9 +28214,6 @@
           }
         }
       }
-    },
-    "Request read, awaiting payment..." : {
-
     },
     "Restore" : {
       "localizations" : {
@@ -29377,9 +29834,6 @@
           }
         }
       }
-    },
-    "Session ended." : {
-
     },
     "Set up Nostr Key" : {
       "extractionState" : "stale",
@@ -32882,9 +33336,6 @@
           }
         }
       }
-    },
-    "The request is offered to any mint. The payer returns the ecash token over NFC." : {
-
     },
     "The request returned status: %@" : {
       "localizations" : {
