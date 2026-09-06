@@ -872,6 +872,76 @@
         }
       }
     },
+    "None of the accepted mints hold any ecash in the requested unit." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يوجد ecash بالوحدة المطلوبة لدى أي من الـ mints المقبولة."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "গ্রহণযোগ্য কোনো Mint-এ অনুরোধ করা ইউনিটে কোনো ecash নেই।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei keiner der akzeptierten Mints hältst du Ecash in der angefragten Einheit."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ninguno de los mints aceptados tiene ecash en la unidad solicitada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun des mints acceptés ne contient d'ecash dans l'unité demandée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्वीकृत किसी भी Mint में अनुरोधित यूनिट में कोई ecash नहीं है।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "受け入れ可能なミントのいずれにも、要求された単位のecashがありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "허용된 민트 중 요청된 단위의 ecash를 보유한 민트가 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum dos mints aceitos tem ecash na unidade solicitada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ни на одном из принимаемых минтов у тебя нет ecash в запрошенной единице."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kabul edilen Mint'lerin hiçbirinde istenen birimde Ecash yok."
+          }
+        }
+      }
+    },
     "Receive via NFC" : {
       "localizations" : {
         "ar" : {

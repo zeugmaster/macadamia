@@ -108,6 +108,77 @@ final class macadamiaTests: XCTestCase {
         print(proofs.sum)
     }
     
+    // MARK: - Multi-unit send path
+
+    /// Builds an offline mint with keysets for the given units. Keysets are decoded
+    /// from JSON because `CashuSwift.Keyset` only exposes a decoder initializer.
+    private func makeOfflineMint(url: String, units: [(unit: String, active: Bool)]) throws -> Mint {
+        let keysets: [CashuSwift.Keyset] = try units.enumerated().map { index, entry in
+            let json = """
+            {"id":"00ks\(index)","unit":"\(entry.unit)","active":\(entry.active),"keys":{},"input_fee_ppk":0}
+            """
+            return try JSONDecoder().decode(CashuSwift.Keyset.self, from: Data(json.utf8))
+        }
+        return Mint(url: URL(string: url)!, keysets: keysets)
+    }
+
+    @MainActor
+    func testProofSelectionIsScopedToRequestedUnit() throws {
+        let context = container.mainContext
+        let mnemonic = Mnemonic()
+        let wallet = Wallet(mnemonic: mnemonic.phrase.joined(separator: " "), seed: String(bytes: mnemonic.seed))
+        context.insert(wallet)
+        let mint = try makeOfflineMint(url: "https://mint.example.com", units: [("sat", true), ("bux", true)])
+        mint.wallet = wallet
+        context.insert(mint)
+
+        let bux = Currency.Unit(code: "bux")
+        let proofs = [
+            Proof(keysetID: "00ks0", C: "C1", secret: "s1", unit: .sat, inputFeePPK: 0, state: .valid, amount: 8, mint: mint, wallet: wallet),
+            Proof(keysetID: "00ks0", C: "C2", secret: "s2", unit: .sat, inputFeePPK: 0, state: .valid, amount: 4, mint: mint, wallet: wallet),
+            Proof(keysetID: "00ks1", C: "C3", secret: "s3", unit: bux, inputFeePPK: 0, state: .valid, amount: 2, mint: mint, wallet: wallet),
+            Proof(keysetID: "00ks1", C: "C4", secret: "s4", unit: bux, inputFeePPK: 0, state: .valid, amount: 1, mint: mint, wallet: wallet),
+            Proof(keysetID: "00ks1", C: "C5", secret: "s5", unit: bux, inputFeePPK: 0, state: .pending, amount: 16, mint: mint, wallet: wallet),
+        ]
+        mint.proofs = proofs
+        proofs.forEach { context.insert($0) }
+        try context.save()
+
+        XCTAssertEqual(mint.balance(for: .sat), 12)
+        XCTAssertEqual(mint.balance(for: bux), 3, "pending proofs must not count toward the spendable balance")
+        XCTAssertEqual(mint.balance(for: .usd), 0)
+
+        let selection = try XCTUnwrap(mint.select(amount: 3, unit: bux))
+        XCTAssertEqual(selection.selected.sum, 3)
+        XCTAssertTrue(selection.selected.allSatisfy { $0.currencyUnit == bux })
+        XCTAssertTrue(selection.selected.allSatisfy { $0.state == .valid })
+
+        XCTAssertNil(mint.select(amount: 4, unit: bux), "must not borrow sat proofs to cover a bux amount")
+        XCTAssertNil(mint.select(amount: 1, unit: .usd), "no proofs exist in that unit")
+
+        let satSelection = try XCTUnwrap(mint.select(amount: 5, unit: .sat))
+        XCTAssertTrue(satSelection.selected.allSatisfy { $0.currencyUnit == .sat })
+    }
+
+    @MainActor
+    func testSupportedUnitsComeFromActiveKeysetsOnly() throws {
+        let mint = try makeOfflineMint(url: "https://mint.example.com",
+                                       units: [("sat", true), ("bux", true), ("usd", false), ("BUX", true)])
+        XCTAssertEqual(mint.supportedUnits, [.sat, .other("bux")],
+                       "inactive keysets are excluded and unit codes de-duplicate case-insensitively")
+    }
+
+    func testUnitCodeParsingForCustomUnits() {
+        XCTAssertEqual(Currency.Unit(code: "bux"), .other("bux"))
+        XCTAssertEqual(Currency.Unit(code: "bux").currencyCode, "bux")
+        XCTAssertEqual(Currency.Unit(code: "bux").kind, .other)
+        XCTAssertEqual(Currency.Unit(code: "bux").minorUnit, 0)
+        XCTAssertEqual(Currency.Unit(code: "SAT"), .sat)
+        XCTAssertEqual(Currency.Unit(code: ""), Currency.Unit.none)
+        XCTAssertEqual(Currency.Unit("bux"), .other("bux"))
+        XCTAssertNil(Currency.Unit(nil), "a request without a unit falls back to sat at the call site, not here")
+    }
+
     @MainActor
     func testMintEcashDerivationCounter() {
         // Set up the test environment synchronously
