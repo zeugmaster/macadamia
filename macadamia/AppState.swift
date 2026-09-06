@@ -18,13 +18,8 @@ class AppState: ObservableObject {
     
     @Published var pendingDeepLink: DeepLink?
     
-    private static let conversionUnitKey = "PreferredCurrencyConversionUnit"
     private static let lastRNackHashKey = "LastReleaseNotesAcknoledgedHash"
     private static let firstLaunchFlag = "HasLaunchedBefore"
-    
-    struct ExchangeRateResponse: Decodable {
-        let bitcoin: ExchangeRate
-    }
     
     static func showReleaseNotes() -> Bool {
         let releaseNotesSeenHash = UserDefaults.standard.string(forKey: AppState.lastRNackHashKey)
@@ -38,27 +33,9 @@ class AppState: ObservableObject {
         }
     }
     
-    struct ExchangeRate: Decodable, Equatable {
-        let rates: [String: Double]
-        
-        init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            rates = try container.decode([String: Double].self)
-        }
-        
-        // Regular initializer for mocking/testing
-        init(rates: [String: Double]) {
-            self.rates = rates
-        }
-        
-        func rate(for unit: Currency.Unit) -> Double? {
-            return rates[unit.currencyCode.lowercased()]
-        }
-    }
-    
     @Published var preferredConversionUnit: Currency.Unit {
         didSet {
-            UserDefaults.standard.setValue(preferredConversionUnit.currencyCode, forKey: AppState.conversionUnitKey)
+            Currency.Unit.savePreferred(preferredConversionUnit)
         }
     }
 
@@ -70,13 +47,14 @@ class AppState: ObservableObject {
     }
 
     init() {
-        let candidate: Currency.Unit? = UserDefaults.standard
-            .string(forKey: AppState.conversionUnitKey)
-            .map { Currency.Unit(code: $0) }
-        if let candidate, candidate.kind == .fiat || candidate.kind == .none {
+        Currency.Unit.migratePreferredFromStandardDefaultsIfNeeded()
+
+        let candidate = Currency.Unit.preferred
+        if candidate.kind == .fiat || candidate.kind == .none {
             preferredConversionUnit = candidate
         } else {
             preferredConversionUnit = .usd
+            Currency.Unit.savePreferred(.usd)
         }
 
         concealAmounts = AmountConcealment.userDefaults.bool(forKey: AmountConcealment.userDefaultsKey)
@@ -91,7 +69,7 @@ class AppState: ObservableObject {
         
         // Provide mock exchange rates for previews
         if preferredUnit != .none {
-            self.exchangeRates = ExchangeRate(rates: [
+            self.exchangeRates = Currency.ExchangeRate(rates: [
                 "usd": 95000.0,
                 "eur": 87000.0,
                 "gbp": 75000.0,
@@ -104,7 +82,7 @@ class AppState: ObservableObject {
         // Don't call loadExchangeRates() for previews
     }
     
-    @Published var exchangeRates: ExchangeRate?
+    @Published var exchangeRates: Currency.ExchangeRate?
 
     func toggleConcealAmounts() {
         concealAmounts.toggle()
@@ -112,24 +90,13 @@ class AppState: ObservableObject {
     
     func loadExchangeRates() {
         logger.info("loading exchange rates...")
-        
-        let currencies = Currency.Unit.fiatCases.map { $0.currencyCode.lowercased() }.joined(separator: ",")
-        guard let url = URL(string: "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=\(currencies)") else {
-            logger.warning("could not fetch exchange rates from API due to an invalid URL.")
-            return
-        }
-        
+
         Task {
-            guard let (data, _) = try? await URLSession.shared.data(from: url) else {
+            guard let prices = await Currency.fetchBitcoinExchangeRates() else {
                 logger.warning("unable to load conversion data.")
                 return
             }
-            
-            guard let prices = try? JSONDecoder().decode(ExchangeRateResponse.self, from: data).bitcoin else {
-                logger.warning("unable to decode exchange rate data from request response.")
-                return
-            }
-            
+
             await MainActor.run {
                 self.exchangeRates = prices
             }
