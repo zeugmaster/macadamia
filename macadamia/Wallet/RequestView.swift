@@ -30,6 +30,12 @@ struct RequestView: View {
     @State private var description = ""
     @State private var copied = false
     
+    @StateObject private var nfcSession = NFCRequestCardSession()
+    /// nil until the asynchronous NFC eligibility check has completed
+    @State private var nfcAvailable: Bool?
+    /// A token the payer wrote back over NFC; drives navigation to the redeem screen
+    @State private var receivedTokenString: String?
+    
     @Query private var allProofs:[Proof]
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
@@ -81,6 +87,8 @@ struct RequestView: View {
                 } footer: {
                     Text(paymentRequest.paymentId ?? "No ID")
                 }
+                
+                nfcSection
             } else {
                 mintSelectorSection
                 
@@ -150,7 +158,71 @@ struct RequestView: View {
             }
         }
         .navigationTitle("Payment Request")
+        .task {
+            nfcAvailable = await NFCRequestCardSession.isAvailable
+        }
+        .onChange(of: nfcSession.status) { _, status in
+            switch status {
+            case .tokenReceived(let tokenString):
+                receivedTokenString = tokenString
+            case .failed(let message):
+                displayAlert(alert: AlertDetail(title: String(localized: "⚠️ NFC Error"),
+                                                description: message))
+            case .idle, .presenting:
+                break
+            }
+        }
+        .navigationDestination(item: $receivedTokenString) { tokenString in
+            // Same screen as a scanned or pasted token, but redeeming starts on its own
+            RedeemView(tokenString: tokenString, autoRedeem: true)
+        }
+        .onDisappear {
+            nfcSession.stop()
+        }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+    }
+    
+    /// Lets the payer read the request from this iPhone by tapping it. The
+    /// button is always shown; it is only enabled once card emulation is known
+    /// to be available on this device and in this region.
+    private var nfcSection: some View {
+        Section {
+            Button {
+                presentViaNFC()
+            } label: {
+                HStack {
+                    Text("Receive via NFC")
+                    Spacer()
+                    if nfcSession.isPresenting {
+                        ProgressView()
+                    } else {
+                        Image(systemName: "wave.3.right")
+                    }
+                }
+            }
+            .disabled(nfcAvailable != true || nfcSession.isPresenting)
+        } footer: {
+            switch nfcAvailable {
+            case true?:
+                Text("Hold the payer's device to this iPhone. Ecash received over NFC is redeemed automatically.")
+            case false?:
+                Text("Receiving via NFC is not available on this device or in your region.")
+            case nil:
+                EmptyView()
+            }
+        }
+    }
+    
+    private func presentViaNFC() {
+        guard let paymentRequest else { return }
+        do {
+            // NUT-18 (creqA) is what Numo-spec payers and macadamia's Contactless
+            // view expect to read from the tag; the QR code uses the compact NUT-26 form.
+            let payload = try paymentRequest.serialize()
+            nfcSession.start(payload: payload)
+        } catch {
+            displayAlert(alert: AlertDetail(with: error))
+        }
     }
     
     private var mintSelectorSection: some View {

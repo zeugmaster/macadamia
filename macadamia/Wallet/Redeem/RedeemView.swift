@@ -10,6 +10,9 @@ struct RedeemView<AdditionalControls: View>: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    #if !APP_EXTENSION
+    @Environment(\.dismissToRoot) private var dismissToRoot
+    #endif
     
     @Query(filter: #Predicate<AppSchemaV1.Wallet> { wallet in
         wallet.active == true
@@ -19,6 +22,7 @@ struct RedeemView<AdditionalControls: View>: View {
     }
     
     private let tokenString: String
+    private let autoRedeem: Bool
     private let additionalControls: AdditionalControls?
     private let onSuccess: (() -> Void)?
     
@@ -31,6 +35,7 @@ struct RedeemView<AdditionalControls: View>: View {
     @State private var swapTargetMint: Mint?
     
     @State private var didAddLockedToken = false
+    @State private var didStartAutoRedeem = false
     
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
@@ -44,10 +49,16 @@ struct RedeemView<AdditionalControls: View>: View {
     }
 
     
-    init(tokenString: String, @ViewBuilder
-         additionalControls: () -> AdditionalControls? = { EmptyView() },
+    /// - Parameter autoRedeem: Starts redeeming as soon as the view appears when
+    ///   the token's mint is known and the token is either unlocked or locked to
+    ///   this wallet's key. Unknown mints and foreign locks still wait for the
+    ///   user, so adding a mint or swapping stays an explicit decision.
+    init(tokenString: String,
+         autoRedeem: Bool = false,
+         @ViewBuilder additionalControls: () -> AdditionalControls? = { EmptyView() },
          onSuccess: (() -> Void)? = nil) {
         self.tokenString = tokenString
+        self.autoRedeem = autoRedeem
         self.token = try? tokenString.deserializeToken()
         self.additionalControls = additionalControls()
         self.onSuccess = onSuccess
@@ -88,6 +99,10 @@ struct RedeemView<AdditionalControls: View>: View {
                             Text(knownMintFromToken.displayName)
                                 .onAppear {
                                     buttonState = .idle(String(localized: "Redeem"), action: { redeem() })
+                                    if autoRedeem && !didStartAutoRedeem && canRedeemWithoutInteraction {
+                                        didStartAutoRedeem = true
+                                        redeem()
+                                    }
                                 }
                                 .foregroundStyle(.secondary)
                         } header: {
@@ -353,9 +368,7 @@ struct RedeemView<AdditionalControls: View>: View {
                     onSuccess()
                 }
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    dismiss()
-                }
+                leaveAfterSuccess(delay: 1.5)
             } catch {
                 redeemLogger.error("error during redeeming of token \(error)")
                 displayAlert(alert: AlertDetail(with: error))
@@ -385,9 +398,7 @@ struct RedeemView<AdditionalControls: View>: View {
                 buttonState = .loading(String(localized: "Issuing..."))
             case .success:
                 buttonState = .success()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    dismiss()
-                }
+                leaveAfterSuccess(delay: 1.5)
                 if let onSuccess {
                     onSuccess()
                 }
@@ -441,9 +452,7 @@ struct RedeemView<AdditionalControls: View>: View {
             didAddLockedToken = true
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            dismiss()
-        }
+        leaveAfterSuccess(delay: 1)
         
         if let onSuccess {
             onSuccess()
@@ -451,6 +460,31 @@ struct RedeemView<AdditionalControls: View>: View {
     }
     
     // MARK: - MISC
+    
+    /// Once the token is dealt with, the whole flow is finished: after the
+    /// success state has been visible for `delay`, return to the wallet root
+    /// like the other flows do, no matter how deep this screen was pushed
+    /// (e.g. from the payment request screen after an NFC payment). The
+    /// Messages extension has no navigation stack and dismisses via `onSuccess`.
+    private func leaveAfterSuccess(delay: TimeInterval) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            #if APP_EXTENSION
+            dismiss()
+            #else
+            dismissToRoot()
+            #endif
+        }
+    }
+    
+    /// True when redeeming can succeed without the user resolving anything first.
+    private var canRedeemWithoutInteraction: Bool {
+        switch tokenLockState {
+        case .notLocked, .match:
+            return true
+        case .mismatch, .noKey, .partial, nil:
+            return false
+        }
+    }
     
     private var knownMintFromToken: Mint? {
         let mintURLString = token?.proofsByMint.first?.key
