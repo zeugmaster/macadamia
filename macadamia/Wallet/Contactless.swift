@@ -362,7 +362,7 @@ struct Contactless: View {
                                                       activeWallet: activeWallet,
                                                       amount: amount,
                                                       unit: unit,
-                                                      memo: "",
+                                                      memo: request.description ?? "",
                                                       modelContext: modelContext,
                                                       lockingKey: lockingKey)
         

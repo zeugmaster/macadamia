@@ -66,6 +66,12 @@ struct RequestPay: View {
         paymentRequest.amount ?? userProvidedAmount
     }
     
+    /// The note the requester attached (NUT-18 `d`). It travels with the
+    /// payment as the payload memo so the recipient sees what was paid for.
+    private var requestMemo: String? {
+        (paymentRequest.description?.trimmingCharacters(in: .whitespacesAndNewlines)).nilWhenEmtpy
+    }
+    
     private var insufficentBalance: Bool {
         guard let selectedMint else { return false }
         return selectedMint.balance(for: requestUnit) < (requestedAmount ?? 0)
@@ -151,6 +157,14 @@ struct RequestPay: View {
                     .disabled(buttonState.type != .idle || token != nil)
                 transportSelector
                     .disabled(buttonState.type != .idle || token != nil)
+                
+                if let requestMemo {
+                    Section {
+                        Text(requestMemo)
+                    } header: {
+                        Text("Memo")
+                    }
+                }
                 
                 if let lockingCondition = paymentRequest.lockingCondition {
                     Section {
@@ -337,11 +351,10 @@ struct RequestPay: View {
             
             let requestResponse: CashuSwift.SendPayloadResult
             do {
-                // TODO: add memo field
                 requestResponse = try await CashuSwift.send(request: paymentRequest,
                                                             mint: CashuSwift.Mint(selectedMint),
                                                             inputs: selection.selected.sendable(),
-                                                            memo: nil,
+                                                            memo: requestMemo,
                                                             seed: activeWallet.seed)
             } catch {
                 // The swap did not go through, so the inputs are still ours.
@@ -381,7 +394,7 @@ struct RequestPay: View {
                                             token: payload.toToken(),
                                             longDescription: "",
                                             proofs: sentProofs,
-                                            memo: "",
+                                            memo: requestMemo ?? "",
                                             mint: selectedMint)
                 
                 modelContext.insert(event)
