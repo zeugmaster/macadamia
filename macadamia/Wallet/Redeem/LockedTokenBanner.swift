@@ -32,7 +32,7 @@ struct LockedTokenBanner<Content: View>: View {
         case .partial:
             return .orange
         case .noKey, .notLocked:
-            return .clear
+            return .primary
         }
     }
     
@@ -86,10 +86,9 @@ struct LockedTokenBanner<Content: View>: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(tint.opacity(0.7), lineWidth: 2)
-                .background(tint.opacity(0.07))
-                .shadow(color: tint, radius: 2))
+            RoundedRectangle(cornerRadius: 20)
+                .fill(tint.opacity(0.07))
+                .stroke(tint.opacity(0.7).shadow(.drop(color: tint, radius: 4)), lineWidth: 2))
     }
 }
 
@@ -120,6 +119,19 @@ struct LockedTokenBanner<Content: View>: View {
         }
         .listRowBackground(EmptyView())
         LockedTokenBanner(dleqState: .noData, lockState: .mismatch) {
+            Button {
+                withAnimation {
+                    addedToQueue = true
+                }
+            } label: {
+                Spacer()
+                Text(addedToQueue ? "\(Image(systemName: "checkmark")) Added" :
+                        "\(Image(systemName: "hourglass")) Redeem Later").padding(2)
+                Spacer()
+            }
+        }
+        .listRowBackground(EmptyView())
+        LockedTokenBanner(dleqState: .noData, lockState: .noKey) {
             Button {
                 withAnimation {
                     addedToQueue = true
