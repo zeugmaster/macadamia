@@ -43,9 +43,16 @@ enum PreviewData {
 
         let context = container.mainContext
 
-        let wallet = Wallet(mnemonic: "preview", seed: "preview", active: true)
+        let wallet = Wallet(mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+                            seed: "preview",
+                            active: true)
         wallet.name = "Preview Wallet"
         context.insert(wallet)
+
+        // Pretend the mint list was backed up two hours ago so MnemonicView
+        // shows its live "last backed up" footer.
+        MintListBackupStatus.shared.recordSuccess(for: wallet.walletID,
+                                                  at: Date().addingTimeInterval(-2 * 3600))
 
         let mint = Mint(url: URL(string: "https://preview.mint")!, keysets: [])
         mint.nickName = "Preview Mint"

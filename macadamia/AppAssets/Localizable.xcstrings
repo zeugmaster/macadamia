@@ -616,6 +616,9 @@
         }
       }
     },
+    "%lld Mints" : {
+
+    },
     "%lld objects" : {
       "localizations" : {
         "ar" : {
@@ -731,426 +734,6 @@
     },
     "%lld%%" : {
       "shouldTranslate" : false
-    },
-    "Hold the payer's device to this iPhone. Ecash received over NFC is redeemed automatically." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "قرّب جهاز الدافع من هذا الـ iPhone. يتم استرداد Ecash المستلم عبر NFC تلقائيًا."
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "পরিশোধকারীর ডিভাইসটি এই iPhone-এর কাছে ধরুন। NFC-এর মাধ্যমে প্রাপ্ত Ecash স্বয়ংক্রিয়ভাবে রিডিম হয়।"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Halte das Gerät des Zahlenden an dieses iPhone. Per NFC empfangenes Ecash wird automatisch eingelöst."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Acerca el dispositivo del pagador a este iPhone. El Ecash recibido por NFC se canjea automáticamente."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Approche l'appareil du payeur de cet iPhone. L'Ecash reçu par NFC est encaissé automatiquement."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "भुगतान करने वाले का डिवाइस इस iPhone के पास रखें। NFC से प्राप्त Ecash अपने आप रिडीम हो जाता है।"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "支払う側のデバイスをこのiPhoneにかざしてください。NFCで受け取ったEcashは自動的に引き換えられます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "결제하는 사람의 기기를 이 iPhone에 가까이 대세요. NFC로 받은 Ecash는 자동으로 사용됩니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aproxime o dispositivo do pagador deste iPhone. O Ecash recebido por NFC é resgatado automaticamente."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Поднеси устройство плательщика к этому iPhone. Ecash, полученный по NFC, зачисляется автоматически."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ödeyenin cihazını bu iPhone'a yaklaştır. NFC ile alınan Ecash otomatik olarak kullanılır."
-          }
-        }
-      }
-    },
-    "NFC is not available right now. Make sure it is turned on and try again." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFC غير متاح حاليًا. تأكد من تشغيله وحاول مرة أخرى."
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFC এখন উপলব্ধ নয়। এটি চালু আছে কিনা নিশ্চিত করুন এবং আবার চেষ্টা করুন।"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFC ist gerade nicht verfügbar. Stell sicher, dass es eingeschaltet ist, und versuch es noch einmal."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFC no está disponible ahora mismo. Asegúrate de que esté activado e inténtalo de nuevo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le NFC n'est pas disponible pour le moment. Vérifie qu'il est activé et réessaie."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFC अभी उपलब्ध नहीं है। सुनिश्चित करें कि यह चालू है और फिर से कोशिश करें।"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "現在NFCを利用できません。NFCがオンになっていることを確認して、もう一度お試しください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "지금은 NFC를 사용할 수 없습니다. NFC가 켜져 있는지 확인하고 다시 시도해 주세요."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O NFC não está disponível no momento. Verifique se está ativado e tente novamente."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFC сейчас недоступен. Убедись, что он включён, и попробуй ещё раз."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFC şu anda kullanılamıyor. Açık olduğundan emin ol ve tekrar dene."
-          }
-        }
-      }
-    },
-    "None of the accepted mints hold any ecash in the requested unit." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لا يوجد ecash بالوحدة المطلوبة لدى أي من الـ mints المقبولة."
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "গ্রহণযোগ্য কোনো Mint-এ অনুরোধ করা ইউনিটে কোনো ecash নেই।"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bei keiner der akzeptierten Mints hältst du Ecash in der angefragten Einheit."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ninguno de los mints aceptados tiene ecash en la unidad solicitada."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucun des mints acceptés ne contient d'ecash dans l'unité demandée."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "स्वीकृत किसी भी Mint में अनुरोधित यूनिट में कोई ecash नहीं है।"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "受け入れ可能なミントのいずれにも、要求された単位のecashがありません。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "허용된 민트 중 요청된 단위의 ecash를 보유한 민트가 없습니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nenhum dos mints aceitos tem ecash na unidade solicitada."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ни на одном из принимаемых минтов у тебя нет ecash в запрошенной единице."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kabul edilen Mint'lerin hiçbirinde istenen birimde Ecash yok."
-          }
-        }
-      }
-    },
-    "Receive via NFC" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الاستلام عبر NFC"
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFC-এর মাধ্যমে গ্রহণ করুন"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Per NFC empfangen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recibir por NFC"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recevoir par NFC"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFC से प्राप्त करें"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFCで受け取る"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFC로 받기"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Receber por NFC"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Получить по NFC"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFC ile al"
-          }
-        }
-      }
-    },
-    "Receiving via NFC is not available on this device or in your region." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الاستلام عبر NFC غير متاح على هذا الجهاز أو في منطقتك."
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "এই ডিভাইসে বা আপনার অঞ্চলে NFC-এর মাধ্যমে গ্রহণ করা উপলব্ধ নয়।"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Empfangen per NFC ist auf diesem Gerät oder in deiner Region nicht verfügbar."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recibir por NFC no está disponible en este dispositivo o en tu región."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La réception par NFC n'est pas disponible sur cet appareil ou dans ta région."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "इस डिवाइस या आपके क्षेत्र में NFC से प्राप्त करना उपलब्ध नहीं है।"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFCでの受け取りは、このデバイスまたはお住まいの地域では利用できません。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이 기기 또는 현재 지역에서는 NFC로 받기를 사용할 수 없습니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Receber por NFC não está disponível neste dispositivo ou na sua região."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Получение по NFC недоступно на этом устройстве или в твоём регионе."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NFC ile alma bu cihazda veya bölgende kullanılamıyor."
-          }
-        }
-      }
-    },
-    "The connection to the payer's device was lost. Try again." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "انقطع الاتصال بجهاز الدافع. حاول مرة أخرى."
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "পরিশোধকারীর ডিভাইসের সাথে সংযোগ বিচ্ছিন্ন হয়ে গেছে। আবার চেষ্টা করুন।"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Verbindung zum Gerät des Zahlenden wurde unterbrochen. Versuch es noch einmal."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Se perdió la conexión con el dispositivo del pagador. Inténtalo de nuevo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La connexion avec l'appareil du payeur a été perdue. Réessaie."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "भुगतान करने वाले के डिवाइस से कनेक्शन टूट गया। फिर से कोशिश करें।"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "支払う側のデバイスとの接続が切れました。もう一度お試しください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "결제하는 사람의 기기와 연결이 끊어졌습니다. 다시 시도해 주세요."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A conexão com o dispositivo do pagador foi perdida. Tente novamente."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Соединение с устройством плательщика потеряно. Попробуй ещё раз."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ödeyenin cihazıyla bağlantı kesildi. Tekrar dene."
-          }
-        }
-      }
     },
     "• Allocation:" : {
       "localizations" : {
@@ -1785,6 +1368,9 @@
     },
     "00" : {
       "shouldTranslate" : false
+    },
+    "1 Mint" : {
+
     },
     "12 Word backup seed phrase" : {
       "localizations" : {
@@ -4516,6 +4102,286 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geri"
+          }
+        }
+      }
+    },
+    "Back up now" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انسخ احتياطيًا الآن"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এখনই ব্যাকআপ নিন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt sichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respaldar ahora"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarder maintenant"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी बैकअप लें"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今すぐバックアップ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지금 백업"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fazer backup agora"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить сейчас"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şimdi yedekle"
+          }
+        }
+      }
+    },
+    "Backed up" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم النسخ الاحتياطي"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ব্যাকআপ হয়েছে"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesichert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respaldado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegardé"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बैकअप हो गया"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バックアップ完了"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "백업 완료"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup concluído"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранено"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yedeklendi"
+          }
+        }
+      }
+    },
+    "Backing up…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ النسخ الاحتياطي…"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ব্যাকআপ চলছে…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird gesichert…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respaldando…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarde en cours…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बैकअप हो रहा है…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バックアップ中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "백업 중…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fazendo backup…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранение…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yedekleniyor…"
+          }
+        }
+      }
+    },
+    "Backup failed" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فشل النسخ الاحتياطي"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ব্যাকআপ ব্যর্থ হয়েছে"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherung fehlgeschlagen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error al respaldar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de la sauvegarde"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बैकअप विफल"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バックアップに失敗"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "백업 실패"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha no backup"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ошибка сохранения"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yedekleme başarısız"
           }
         }
       }
@@ -12816,6 +12682,76 @@
         }
       }
     },
+    "Hold the payer's device to this iPhone. Ecash received over NFC is redeemed automatically." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قرّب جهاز الدافع من هذا الـ iPhone. يتم استرداد Ecash المستلم عبر NFC تلقائيًا."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পরিশোধকারীর ডিভাইসটি এই iPhone-এর কাছে ধরুন। NFC-এর মাধ্যমে প্রাপ্ত Ecash স্বয়ংক্রিয়ভাবে রিডিম হয়।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halte das Gerät des Zahlenden an dieses iPhone. Per NFC empfangenes Ecash wird automatisch eingelöst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca el dispositivo del pagador a este iPhone. El Ecash recibido por NFC se canjea automáticamente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approche l'appareil du payeur de cet iPhone. L'Ecash reçu par NFC est encaissé automatiquement."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "भुगतान करने वाले का डिवाइस इस iPhone के पास रखें। NFC से प्राप्त Ecash अपने आप रिडीम हो जाता है।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支払う側のデバイスをこのiPhoneにかざしてください。NFCで受け取ったEcashは自動的に引き換えられます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "결제하는 사람의 기기를 이 iPhone에 가까이 대세요. NFC로 받은 Ecash는 자동으로 사용됩니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aproxime o dispositivo do pagador deste iPhone. O Ecash recebido por NFC é resgatado automaticamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поднеси устройство плательщика к этому iPhone. Ecash, полученный по NFC, зачисляется автоматически."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ödeyenin cihazını bu iPhone'a yaklaştır. NFC ile alınan Ecash otomatik olarak kullanılır."
+          }
+        }
+      }
+    },
     "Hong Kong Dollar" : {
       "localizations" : {
         "ar" : {
@@ -15627,6 +15563,146 @@
         }
       }
     },
+    "Last backed up to nostr %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "آخر نسخ احتياطي على nostr %@"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ nostr-এ সর্বশেষ ব্যাকআপ নেওয়া হয়েছে"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuletzt %@ auf nostr gesichert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Último respaldo en nostr %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dernière sauvegarde sur nostr %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ nostr पर अंतिम बैकअप लिया गया"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@にnostrへバックアップ済み"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ nostr에 백업됨"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Último backup no nostr %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Последняя резервная копия в nostr: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nostr'a son yedekleme %@"
+          }
+        }
+      }
+    },
+    "Last backed up to nostr less than a minute ago" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "آخر نسخ احتياطي على nostr قبل أقل من دقيقة"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এক মিনিটেরও কম আগে nostr-এ সর্বশেষ ব্যাকআপ নেওয়া হয়েছে"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuletzt vor weniger als einer Minute auf nostr gesichert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Último respaldo en nostr hace menos de un minuto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dernière sauvegarde sur nostr il y a moins d'une minute"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक मिनट से भी कम समय पहले nostr पर अंतिम बैकअप लिया गया"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1分以内にnostrへバックアップ済み"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1분 이내에 nostr에 백업됨"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Último backup no nostr há menos de um minuto"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Последняя резервная копия в nostr: меньше минуты назад"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nostr'a son yedekleme bir dakikadan kısa süre önce"
+          }
+        }
+      }
+    },
     "Legacy key" : {
       "localizations" : {
         "ar" : {
@@ -16483,76 +16559,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "macadamia yalnızca Satoshi cinsinden token'ları kullanabilir. Çoklu birim desteği yakında gelecek."
-          }
-        }
-      }
-    },
-    "macadamia can only restore ecash from the mints it knows about. Make sure to include their URLs in the backup of your seed phrase." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يمكن لـ macadamia فقط استعادة ecash من المنتات التي يعرفها. تأكد من تضمين عناوينها في نسخة عبارة البذرة الاحتياطية."
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macadamia শুধুমাত্র পরিচিত Mint থেকে ecash পুনরুদ্ধার করতে পারে। আপনার সিড ফ্রেজ ব্যাকআপে তাদের URL অন্তর্ভুক্ত করুন।"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macadamia kann nur von Mints wiederherstellen, die es kennt. Stelle sicher, dass du eine Liste ihrer URLs in das Backup mit Seed-Phrase einbeziehst."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macadamia solo puede restaurar ecash de los mints que conoce. Asegúrate de incluir sus URLs en el respaldo de tu frase semilla."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macadamia ne peut restaurer de l'ecash que depuis les mints qu'il connaît. Assure-toi d'inclure leurs URLs dans la sauvegarde de ta phrase de récupération."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macadamia केवल उन Mints से ecash पुनर्स्थापित कर सकता है जिन्हें वह जानता है। अपने सीड फ्रेज़ बैकअप में उनके URLs शामिल करना सुनिश्चित करें।"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macadamiaは登録済みのミントからのみecashを復元できます。シードフレーズのバックアップにミントのURLも含めてください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macadamia는 알고 있는 민트에서만 ecash를 복원할 수 있습니다. 시드 구문 백업에 민트 URL을 포함하세요."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macadamia só pode restaurar ecash dos mints que conhece. Certifique-se de incluir as URLs no backup da frase semente."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macadamia может восстановить ecash только из известных минтов. Не забудь включить их URL в резервную копию сид-фразы."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macadamia yalnızca bildiği Mint'lerden ecash geri yükleyebilir. Seed ifadesi yedeğine URL'lerini eklediğinden emin ol."
           }
         }
       }
@@ -19297,6 +19303,76 @@
         }
       }
     },
+    "NFC is not available right now. Make sure it is turned on and try again." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC غير متاح حاليًا. تأكد من تشغيله وحاول مرة أخرى."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC এখন উপলব্ধ নয়। এটি চালু আছে কিনা নিশ্চিত করুন এবং আবার চেষ্টা করুন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC ist gerade nicht verfügbar. Stell sicher, dass es eingeschaltet ist, und versuch es noch einmal."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC no está disponible ahora mismo. Asegúrate de que esté activado e inténtalo de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le NFC n'est pas disponible pour le moment. Vérifie qu'il est activé et réessaie."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC अभी उपलब्ध नहीं है। सुनिश्चित करें कि यह चालू है और फिर से कोशिश करें।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在NFCを利用できません。NFCがオンになっていることを確認して、もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지금은 NFC를 사용할 수 없습니다. NFC가 켜져 있는지 확인하고 다시 시도해 주세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O NFC não está disponível no momento. Verifique se está ativado e tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC сейчас недоступен. Убедись, что он включён, и попробуй ещё раз."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC şu anda kullanılamıyor. Açık olduğundan emin ol ve tekrar dene."
+          }
+        }
+      }
+    },
     "NFC not available on this device" : {
       "localizations" : {
         "ar" : {
@@ -20209,6 +20285,9 @@
           }
         }
       }
+    },
+    "No mints yet" : {
+
     },
     "No mints yet." : {
       "localizations" : {
@@ -21260,6 +21339,76 @@
         }
       }
     },
+    "None of the accepted mints hold any ecash in the requested unit." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يوجد ecash بالوحدة المطلوبة لدى أي من الـ mints المقبولة."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "গ্রহণযোগ্য কোনো Mint-এ অনুরোধ করা ইউনিটে কোনো ecash নেই।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei keiner der akzeptierten Mints hältst du Ecash in der angefragten Einheit."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ninguno de los mints aceptados tiene ecash en la unidad solicitada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun des mints acceptés ne contient d'ecash dans l'unité demandée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्वीकृत किसी भी Mint में अनुरोधित यूनिट में कोई ecash नहीं है।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "受け入れ可能なミントのいずれにも、要求された単位のecashがありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "허용된 민트 중 요청된 단위의 ecash를 보유한 민트가 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum dos mints aceitos tem ecash na unidade solicitada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ни на одном из принимаемых минтов у тебя нет ecash в запрошенной единице."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kabul edilen Mint'lerin hiçbirinde istenen birimde Ecash yok."
+          }
+        }
+      }
+    },
     "Norwegian Krone" : {
       "localizations" : {
         "ar" : {
@@ -21677,6 +21826,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hiçbir Relay'e bağlı değil."
+          }
+        }
+      }
+    },
+    "Not yet backed up to nostr." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يتم النسخ الاحتياطي على nostr بعد."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এখনও nostr-এ ব্যাকআপ নেওয়া হয়নি।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch nicht auf nostr gesichert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no se ha respaldado en nostr."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas encore sauvegardé sur nostr."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी तक nostr पर बैकअप नहीं लिया गया।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだnostrにバックアップされていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아직 nostr에 백업되지 않았습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ainda não foi feito backup no nostr."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Резервная копия в nostr ещё не создана."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Henüz nostr'a yedeklenmedi."
           }
         }
       }
@@ -27230,6 +27449,76 @@
         }
       }
     },
+    "Receive via NFC" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاستلام عبر NFC"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC-এর মাধ্যমে গ্রহণ করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per NFC empfangen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recibir por NFC"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recevoir par NFC"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC से प्राप्त करें"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFCで受け取る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC로 받기"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receber por NFC"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Получить по NFC"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC ile al"
+          }
+        }
+      }
+    },
     "Received at: " : {
       "localizations" : {
         "ar" : {
@@ -27366,6 +27655,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bilinmeyen bir Mint'ten (%@) ecash alındı. Kullanmak için bu Mint'i ekle."
+          }
+        }
+      }
+    },
+    "Receiving via NFC is not available on this device or in your region." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاستلام عبر NFC غير متاح على هذا الجهاز أو في منطقتك."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এই ডিভাইসে বা আপনার অঞ্চলে NFC-এর মাধ্যমে গ্রহণ করা উপলব্ধ নয়।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfangen per NFC ist auf diesem Gerät oder in deiner Region nicht verfügbar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recibir por NFC no está disponible en este dispositivo o en tu región."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La réception par NFC n'est pas disponible sur cet appareil ou dans ta région."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस डिवाइस या आपके क्षेत्र में NFC से प्राप्त करना उपलब्ध नहीं है।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFCでの受け取りは、このデバイスまたはお住まいの地域では利用できません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 기기 또는 현재 지역에서는 NFC로 받기를 사용할 수 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receber por NFC não está disponível neste dispositivo ou na sua região."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Получение по NFC недоступно на этом устройстве или в твоём регионе."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC ile alma bu cihazda veya bölgende kullanılamıyor."
           }
         }
       }
@@ -31867,6 +32226,76 @@
         }
       }
     },
+    "The connection to the payer's device was lost. Try again." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انقطع الاتصال بجهاز الدافع. حاول مرة أخرى."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পরিশোধকারীর ডিভাইসের সাথে সংযোগ বিচ্ছিন্ন হয়ে গেছে। আবার চেষ্টা করুন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Verbindung zum Gerät des Zahlenden wurde unterbrochen. Versuch es noch einmal."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se perdió la conexión con el dispositivo del pagador. Inténtalo de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La connexion avec l'appareil du payeur a été perdue. Réessaie."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "भुगतान करने वाले के डिवाइस से कनेक्शन टूट गया। फिर से कोशिश करें।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支払う側のデバイスとの接続が切れました。もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "결제하는 사람의 기기와 연결이 끊어졌습니다. 다시 시도해 주세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A conexão com o dispositivo do pagador foi perdida. Tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Соединение с устройством плательщика потеряно. Попробуй ещё раз."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ödeyenin cihazıyla bağlantı kesildi. Tekrar dene."
+          }
+        }
+      }
+    },
     "The destination mint did not respond. You can complete this transfer later from the transaction list." : {
       "localizations" : {
         "ar" : {
@@ -32353,6 +32782,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lightning ödemesi hâlâ yolda. Birazdan tekrar kontrol edin."
+          }
+        }
+      }
+    },
+    "The list is encrypted with your seed phrase and stored on nostr, so restoring the wallet also restores its mints." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتم تشفير القائمة بعبارة البذرة الخاصة بك وتخزينها على nostr، لذا فإن استعادة المحفظة تستعيد أيضًا الـ mints الخاصة بها."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "তালিকাটি আপনার সিড ফ্রেজ দিয়ে এনক্রিপ্ট করে nostr-এ রাখা হয়, তাই ওয়ালেট পুনরুদ্ধার করলে Mint-গুলোও ফিরে আসে।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Liste wird mit deiner Seed-Phrase verschlüsselt auf nostr gespeichert. Beim Wiederherstellen der Wallet werden so auch die Mints wiederhergestellt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La lista se cifra con tu frase semilla y se guarda en nostr, así que al restaurar la cartera también se restauran sus mints."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La liste est chiffrée avec ta phrase de récupération et stockée sur nostr : restaurer le portefeuille restaure aussi ses mints."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह सूची आपके सीड फ़्रेज़ से एन्क्रिप्ट होकर nostr पर रखी जाती है, इसलिए वॉलेट रिस्टोर करने पर Mint भी रिस्टोर हो जाते हैं।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リストはシードフレーズで暗号化されnostrに保存されるため、ウォレットを復元するとミントも復元されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목록은 시드 문구로 암호화되어 nostr에 저장되므로, 지갑을 복원하면 민트도 함께 복원됩니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A lista é criptografada com sua frase semente e armazenada no nostr, então restaurar a carteira também restaura os mints."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Список шифруется твоей сид-фразой и хранится в nostr, поэтому при восстановлении кошелька восстанавливаются и минты."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liste seed ifadenle şifrelenip nostr'da saklanır; cüzdanı geri yüklediğinde Mint'ler de geri gelir."
           }
         }
       }
