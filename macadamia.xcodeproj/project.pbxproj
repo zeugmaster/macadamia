@@ -116,6 +116,7 @@
 				AmountView.swift,
 				Currency.swift,
 				MintPicker.swift,
+				NumericalInputView.swift,
 				TokenText.swift,
 			);
 			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
