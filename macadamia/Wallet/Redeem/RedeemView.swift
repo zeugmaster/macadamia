@@ -498,7 +498,12 @@ struct RedeemView<AdditionalControls: View>: View {
     
     private var dleqResult: CashuSwift.Crypto.DLEQVerificationResult {
         if let knownMintFromToken, let token, let proofs = token.proofsByMint.first?.value {
-            return (try? CashuSwift.Crypto.checkDLEQ(for: proofs, with: knownMintFromToken)) ?? .noData
+            do {
+                return try CashuSwift.Crypto.checkDLEQ(for: proofs, with: knownMintFromToken)
+            } catch {
+                redeemLogger.error("DLEQ verification failed with error \(error)")
+                return .fail
+            }
         } else {
             return .noData
         }

@@ -24,7 +24,7 @@ struct WalletView: View {
     @Binding var urlState: URLState?
     @Binding var pendingNavigation: Destination?
     
-    private let buttonCornerRadius = 14.0
+    private let buttonCornerRadius = 20.0
     
     enum Destination: Identifiable, Hashable {
         case mint

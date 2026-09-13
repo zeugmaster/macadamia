@@ -36,17 +36,26 @@ extension AppSchemaV1 {
             throw error
         }
         
-        selection.selected.setState(.spent)
-        
-        let changeProofs = try mint.addProofs(sendResult.change,
-                                                      to: modelContext,
-                                                      state: .valid,
-                                                      increaseDerivationCounter: false)
-        
-        let sentProofs = try mint.addProofs(sendResult.send,
-                                                    to: modelContext,
-                                                    state: .pending,
-                                                    increaseDerivationCounter: false)
+        let sentProofs: [Proof]
+        if sendResult.send.isEmpty && sendResult.change.isEmpty {
+            // Exact-amount direct path: the library skipped the swap and the token
+            // is made of the inputs themselves. They are in flight until the
+            // recipient redeems them, so keep them pending rather than spent.
+            selection.selected.setState(.pending)
+            sentProofs = selection.selected
+        } else {
+            selection.selected.setState(.spent)
+            
+            try mint.addProofs(sendResult.change,
+                               to: modelContext,
+                               state: .valid,
+                               increaseDerivationCounter: false)
+            
+            sentProofs = try mint.addProofs(sendResult.send,
+                                            to: modelContext,
+                                            state: .pending,
+                                            increaseDerivationCounter: false)
+        }
         
         if let increase = sendResult.counterIncrease {
             mint.increaseDerivationCounterForKeysetWithID(increase.keysetID, by: increase.increase)

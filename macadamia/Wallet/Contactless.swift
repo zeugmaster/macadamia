@@ -18,7 +18,7 @@ enum NFCPaymentError: LocalizedError {
     case noAmountSpecified
     case unsupportedUnit(String)
     case noMatchingMint(requestedMints: [String])
-    case insufficientBalance(required: Int, available: Int)
+    case insufficientBalance(required: Int, available: Int, unit: String)
     case proofSelectionFailed
     case tokenCreationFailed(String)
     case nfcReadFailed(String)
@@ -34,7 +34,7 @@ enum NFCPaymentError: LocalizedError {
         case .noAmountSpecified:
             return "Payment request does not specify an amount"
         case .unsupportedUnit(let unit):
-            return "Unsupported unit: \(unit)"
+            return "This payment is requested in \(unit), but none of the mints it accepts hold any \(unit) in your wallet."
         case .noMatchingMint(let requestedMints):
             if requestedMints.count == 1 {
                 let mint = formatMintURL(requestedMints[0])
@@ -43,8 +43,8 @@ enum NFCPaymentError: LocalizedError {
                 let mintList = requestedMints.map { formatMintURL($0) }.joined(separator: ", ")
                 return "This payment requires funds from one of these mints: \(mintList). You don't have any balance with these mints. Add one of them to your wallet and receive some ecash first."
             }
-        case .insufficientBalance(let required, let available):
-            return "Insufficient balance: need \(required), have \(available)"
+        case .insufficientBalance(let required, let available, let unit):
+            return "Insufficient balance: need \(required) \(unit), have \(available) \(unit)"
         case .proofSelectionFailed:
             return "Failed to select proofs for payment"
         case .tokenCreationFailed(let detail):
@@ -91,6 +91,7 @@ struct Contactless: View {
     @State private var paymentComplete = false
     @State private var errorMessage: String?
     @State private var lastPaymentAmount: Int?
+    @State private var lastPaymentUnit: Currency.Unit = .sat
     @State private var bolt11NavigationInvoice: String?
     
     private var isNFCAvailable: Bool {
@@ -123,7 +124,7 @@ struct Contactless: View {
                     Label("Payment sent!", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                         .font(.headline)
-                    AmountView(amount: amount, unit: .sat)
+                    AmountView(amount: amount, unit: lastPaymentUnit)
                         .font(.title2.bold().monospacedDigit())
                 }
                 .padding()
@@ -319,13 +320,11 @@ struct Contactless: View {
             throw macadamiaError.databaseError("No active wallet for this operation.")
         }
         
-        // 2. Validate the unit is supported
+        // 2. The request carries its own unit (NUT-18); a missing unit means sat.
+        //    Any unit is fine as long as an accepted mint holds ecash in it.
         let unit = Unit(code: request.unit ?? Unit.sat.currencyCode)
-        guard unit == .sat else {
-            throw NFCPaymentError.unsupportedUnit(unit.currencyCode)
-        }
         
-        // 3. Find matching mint
+        // 3. Find mints accepted by the request
         let requestedMints = request.mints ?? []
         let matchingMints = mints.acceptedByPaymentRequest(mintURLs: requestedMints)
         
@@ -333,23 +332,39 @@ struct Contactless: View {
             throw NFCPaymentError.noMatchingMint(requestedMints: requestedMints)
         }
         
-        // 4. Find a mint with sufficient balance
-        guard let selectedMint = matchingMints.first(where: { $0.balance(for: .sat) >= amount }) else {
-            let totalAvailable = matchingMints.map { $0.balance(for: .sat) }.max() ?? 0
-            throw NFCPaymentError.insufficientBalance(required: amount, available: totalAvailable)
+        // 4. Of those, keep the ones that hold ecash in the requested unit
+        let mintsWithUnit = matchingMints.filter { $0.balance(for: unit) > 0 }
+        
+        guard !mintsWithUnit.isEmpty else {
+            throw NFCPaymentError.unsupportedUnit(unit.currencyCode)
         }
         
-        // TODO: check for locking requirement
+        // 5. Find a mint with sufficient balance
+        guard let selectedMint = mintsWithUnit.first(where: { $0.balance(for: unit) >= amount }) else {
+            let totalAvailable = mintsWithUnit.map { $0.balance(for: unit) }.max() ?? 0
+            throw NFCPaymentError.insufficientBalance(required: amount, available: totalAvailable, unit: unit.currencyCode)
+        }
         
-        // NFC contactless doesn't yet negotiate a unit — keep the existing
-        // sat-only behavior until a multi-unit handshake is defined.
+        // 6. Honor a P2PK locking condition so the terminal can actually redeem the token
+        let lockingKey: String?
+        if let condition = request.lockingCondition {
+            guard condition.kind == "P2PK" else {
+                throw NFCPaymentError.invalidPaymentRequest("Unsupported locking condition: \(condition.kind)")
+            }
+            lockingKey = condition.data
+        } else {
+            lockingKey = nil
+        }
+        
+        lastPaymentUnit = unit
+        
         let token = try await AppSchemaV1.createToken(mint: selectedMint,
                                                       activeWallet: activeWallet,
                                                       amount: amount,
-                                                      unit: .sat,
-                                                      memo: "",
+                                                      unit: unit,
+                                                      memo: request.description ?? "",
                                                       modelContext: modelContext,
-                                                      lockingKey: nil)
+                                                      lockingKey: lockingKey)
         
         
         try modelContext.save()

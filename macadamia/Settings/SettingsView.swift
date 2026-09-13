@@ -21,7 +21,7 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 Section {
-                    NavigationLink(destination: MnemonicView()) { Text("Show Seed Phrase") }
+                    NavigationLink(destination: MnemonicView()) { Text("Seed Phrase") }
                     NavigationLink(destination: RestoreView()) { Text("Restore") }
                     NavigationLink(destination: PublicKeyView()) { Text("Show Locking Key") }
                 } header: {
