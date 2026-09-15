@@ -131,8 +131,8 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .mint
                         } label: { fade in
-                            menuButtonLabel(title: String(localized: "Lightning"),
-                                            subtitle: String(localized: "Create invoice to add funds"),
+                            menuButtonLabel(title: String(localized: "Deposit"),
+                                            subtitle: String(localized: "Add funds"),
                                             imageSystemName: "bolt.fill",
                                             fade: fade)
                         }
@@ -210,8 +210,8 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .payeeInput
                         } label: { fade in
-                            menuButtonLabel(title: String(localized: "Lightning"),
-                                            subtitle: String(localized: "Pay invoice"),
+                            menuButtonLabel(title: String(localized: "Withdraw"),
+                                            subtitle: String(localized: "Pay Out"),
                                             imageSystemName: "bolt.fill",
                                             fade: fade)
                         }
