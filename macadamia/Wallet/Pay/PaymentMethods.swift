@@ -33,32 +33,48 @@ struct PaymentMethodCard: View {
                     Image(systemName: "building.columns")
                         .font(.caption)
                 }
-                .foregroundStyle(.background)
-                .fontWeight(.semibold)
+                .fontWeight(.regular)
                 .padding(EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4))
                 .background {
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(.primary.opacity(0.9))
+                        .fill(.primary.opacity(0.1))
+                        .stroke(.primary.opacity(0.1))
                 }
             }
             Text(description)
+                .font(.callout)
                 .padding(.top)
         }
         .padding()
         .background {
             RoundedRectangle(cornerRadius: 20)
                 .fill(.primary.opacity(0.05))
-                .stroke(.primary.opacity(0.2).shadow(.drop(color: .primary, radius: 4)), lineWidth: 0.5)
+                .stroke(.primary.opacity(0.2), lineWidth: 0.5)
         }
     }
 }
 
 #Preview {
-    PaymentMethodCard(name: "Bolt12",
-                      icon: Image(systemName: "bolt.fill"),
-                      description: "Pay using a Bolt12 offer",
-                      numberOfSupportingMints: 2)
+    VStack(spacing: 20) {
+        PaymentMethodCard(name: "Bolt11",
+                          icon: Image(systemName: "bolt.fill"),
+                          description: "Pay using a BOLT11",
+                          numberOfSupportingMints: 3)
+        PaymentMethodCard(name: "Bolt12",
+                          icon: Image(systemName: "bolt.fill"),
+                          description: "Pay using a BOLT12 offer",
+                          numberOfSupportingMints: 1)
+        PaymentMethodCard(name: "On-Chain",
+                          icon: Image(systemName: "link"),
+                          description: "Make a payment on the blockchain",
+                          numberOfSupportingMints: 2)
+        PaymentMethodCard(name: "Branch",
+                          icon: Image(systemName: "arrow.down.to.line.compact"),
+                          description: "Make a payment using the method \"branch\" ",
+                          numberOfSupportingMints: 1)
+    }
     .padding()
+    Spacer()
 }
 
 #Preview {
