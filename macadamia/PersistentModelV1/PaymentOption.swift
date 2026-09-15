@@ -2,8 +2,8 @@ import CashuSwift
 import Foundation
 
 enum PaymentDirection: String, Codable, Hashable, Sendable {
-    case mint
-    case melt
+    case deposit
+    case withdraw
 }
 
 struct PaymentMethodKind: Codable, Hashable, Sendable {
@@ -110,9 +110,9 @@ extension AppSchemaV1.Mint {
 
             let nutInfo: CashuSwift.Mint.Info.NutInfo?
             switch direction {
-            case .mint:
+            case .deposit:
                 nutInfo = info.nuts?.nut04
-            case .melt:
+            case .withdraw:
                 nutInfo = info.nuts?.nut05
             }
 

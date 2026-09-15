@@ -460,7 +460,7 @@ struct GenericMeltView: View {
             if let mint = pendingEvent.mints?.first {
                 _selectedMint = State(initialValue: mint)
                 _selectedOption = State(initialValue: PaymentOption(mintID: mint.mintID,
-                                                                    direction: .melt,
+                                                                    direction: .withdraw,
                                                                     unit: Unit(code: quote.unit),
                                                                     method: PaymentMethodKind(quote.method)))
             }
@@ -476,7 +476,7 @@ struct GenericMeltView: View {
                                        exchangeRates: selectedOption?.unit.kind == .other ? nil : appState.exchangeRates,
                                        onReturn: getQuote)
                     MintPicker(label: String(localized: "Mint"), selectedMint: $selectedMint)
-                    PaymentOptionPicker(direction: .melt,
+                    PaymentOptionPicker(direction: .withdraw,
                                         label: String(localized: "Method"),
                                         selectedMint: $selectedMint,
                                         selectedOption: $selectedOption,

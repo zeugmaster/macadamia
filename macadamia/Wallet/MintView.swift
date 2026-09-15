@@ -50,7 +50,7 @@ struct MintView: View {
             _selectedMint = State(initialValue: mint)
             if let variant {
                 _selectedOption = State(initialValue: PaymentOption(mintID: mint.mintID,
-                                                                    direction: .mint,
+                                                                    direction: .deposit,
                                                                     unit: Unit(code: variant.unitCode),
                                                                     method: variant.method))
             }
@@ -73,7 +73,7 @@ struct MintView: View {
                         getQuote()
                     })
                     MintPicker(label: String(localized: "Mint"), selectedMint: $selectedMint)
-                    PaymentOptionPicker(direction: .mint,
+                    PaymentOptionPicker(direction: .deposit,
                                         label: String(localized: "Unit"),
                                         selectedMint: $selectedMint,
                                         selectedOption: $selectedOption)
