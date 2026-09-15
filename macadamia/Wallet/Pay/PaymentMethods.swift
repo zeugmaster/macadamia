@@ -33,11 +33,12 @@ struct PaymentMethodCard: View {
                     Image(systemName: "building.columns")
                         .font(.caption)
                 }
+                .foregroundStyle(.background)
                 .fontWeight(.semibold)
                 .padding(EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4))
                 .background {
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(.primary.opacity(0.1))
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(.primary.opacity(0.9))
                 }
             }
             Text(description)
