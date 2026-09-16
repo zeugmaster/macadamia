@@ -462,7 +462,7 @@ struct GenericMeltView: View {
                 _selectedOption = State(initialValue: PaymentOption(mintID: mint.mintID,
                                                                     direction: .withdraw,
                                                                     unit: Unit(code: quote.unit),
-                                                                    method: PaymentMethodKind(quote.method)))
+                                                                    method: quote.method))
             }
         }
     }
@@ -605,7 +605,7 @@ struct GenericMeltView: View {
         buttonState = .loading()
 
         let sendableMint = CashuSwift.Mint(selectedMint)
-        let methodID = selectedOption.method.id
+        let methodID = selectedOption.method
         // cdk requires `method` repeated inside the body and the payout declared
         // as a flattened `amount` field; harmless for mints that ignore extras.
         let quoteRequest = CashuSwift.Generic.MeltQuoteRequest(

@@ -1,3 +1,4 @@
+import CashuSwift
 import SwiftUI
 import SwiftData
 
@@ -10,7 +11,7 @@ struct MintPicker: View {
     private let label: String
     private let allowsNoneState: Bool
     private let allowedMintIDs: Set<UUID>?
-    private let paymentMethod: PaymentMethodKind?
+    private let paymentMethod: CashuSwift.PaymentMethodID?
     private let hiddenMint: Mint?
 
     @State private var supportedMintIDs = Set<UUID>()
@@ -21,7 +22,7 @@ struct MintPicker: View {
         selectedMint: Binding<Mint?>,
         allowsNoneState: Bool = false,
         allowedMintIDs: Set<UUID>? = nil,
-        paymentMethod: PaymentMethodKind? = nil,
+        paymentMethod: CashuSwift.PaymentMethodID? = nil,
         hide: Mint? = nil
     ) {
         self.label = label

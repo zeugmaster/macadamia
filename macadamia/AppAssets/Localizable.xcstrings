@@ -314,6 +314,9 @@
         }
       }
     },
+    "%@ Deposit" : {
+
+    },
     "%@ Redeem Later" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -12194,6 +12197,7 @@
       }
     },
     "Generic" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {

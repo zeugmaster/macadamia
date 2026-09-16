@@ -1,10 +1,11 @@
+import CashuSwift
 import SwiftUI
 
 struct PaymentOptionPicker: View {
     let direction: PaymentDirection
     let label: String
-    let allowedMethods: Set<PaymentMethodKind>?
-    let excludedMethods: Set<PaymentMethodKind>?
+    let allowedMethods: Set<CashuSwift.PaymentMethodID>?
+    let excludedMethods: Set<CashuSwift.PaymentMethodID>?
     let hidesWhenSingleOption: Bool
 
     @Binding var selectedMint: Mint?
@@ -17,8 +18,8 @@ struct PaymentOptionPicker: View {
          label: String = String(localized: "Payment"),
          selectedMint: Binding<Mint?>,
          selectedOption: Binding<PaymentOption?>,
-         allowedMethods: Set<PaymentMethodKind>? = nil,
-         excludedMethods: Set<PaymentMethodKind>? = nil,
+         allowedMethods: Set<CashuSwift.PaymentMethodID>? = nil,
+         excludedMethods: Set<CashuSwift.PaymentMethodID>? = nil,
          hidesWhenSingleOption: Bool = true) {
         self.direction = direction
         self.label = label

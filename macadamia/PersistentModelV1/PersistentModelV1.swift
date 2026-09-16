@@ -533,7 +533,7 @@ enum AppSchemaV1: VersionedSchema {
                     // (unknown keys are ignored), so route on the persisted method first:
                     // BOLT11 rows never contain a `method` key, generic rows always do.
                     if let method = (try? JSONDecoder().decode(StoredQuoteMethodProbe.self, from: bolt11MintQuoteData))?.method,
-                       method != PaymentMethodKind.bolt11.rawValue {
+                       method != CashuSwift.PaymentMethodID.bolt11.rawValue {
                         return nil
                     }
                     return try? JSONDecoder().decode(CashuSwift.Bolt11.MintQuote.self, from: bolt11MintQuoteData)
@@ -552,7 +552,7 @@ enum AppSchemaV1: VersionedSchema {
                 guard let bolt11MintQuoteData,
                       let quote = try? JSONDecoder().decode(CashuSwift.Generic.MintQuote.self, from: bolt11MintQuoteData),
                       !quote.method.rawValue.isEmpty,
-                      quote.method.rawValue != PaymentMethodKind.bolt11.rawValue else {
+                      quote.method.kind != .bolt11 else {
                     return nil
                 }
                 return quote
@@ -570,7 +570,7 @@ enum AppSchemaV1: VersionedSchema {
                 // BOLT11 shapes below, so route on the persisted method first: BOLT11
                 // rows never contain a `method` key, generic rows always do.
                 if let method = (try? JSONDecoder().decode(StoredQuoteMethodProbe.self, from: data))?.method,
-                   method != PaymentMethodKind.bolt11.rawValue {
+                   method != CashuSwift.PaymentMethodID.bolt11.rawValue {
                     return nil
                 }
                 // Current shape first. Rows written before the cashu-swift payment-method
@@ -592,7 +592,7 @@ enum AppSchemaV1: VersionedSchema {
                 guard let data = bolt11MeltQuoteData,
                       let quote = try? JSONDecoder().decode(CashuSwift.Generic.MeltQuote.self, from: data),
                       !quote.method.rawValue.isEmpty,
-                      quote.method.rawValue != PaymentMethodKind.bolt11.rawValue else {
+                      quote.method.kind != .bolt11 else {
                     return nil
                 }
                 return quote

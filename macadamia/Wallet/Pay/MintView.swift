@@ -196,7 +196,7 @@ struct MintView: View {
     }
 
     private var getQuoteButtonLabel: String {
-        selectedOption == nil || selectedOption?.method == .bolt11
+        selectedOption == nil || selectedOption?.method.kind == .bolt11
             ? String(localized: "Get Invoice")
             : String(localized: "Request Quote")
     }
@@ -232,7 +232,7 @@ struct MintView: View {
 
         buttonState = .loading()
 
-        if selectedOption.method == .bolt11 {
+        if selectedOption.method.kind == .bolt11 {
             let quoteRequest = CashuSwift.Bolt11.MintQuoteRequest(unit: selectedOption.unit.currencyCode.lowercased(),
                                                                   amount: self.amount)
             selectedMint.getQuote(for: quoteRequest) { result in

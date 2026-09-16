@@ -16,6 +16,10 @@ struct DepositQuoteRequestView: View {
     @State private var selectedMint: Mint? = nil
     @State private var selectedUnit: Unit?
     @State private var availableUnits = [Unit]()
+
+    private var paymentMethodKind: PaymentMethodKind {
+        paymentMethod.method.kind
+    }
     
     var body: some View {
         List {
@@ -30,7 +34,7 @@ struct DepositQuoteRequestView: View {
             Section {
                 MintPicker(label: "Mint",
                            selectedMint: $selectedMint,
-                           paymentMethod: PaymentMethodKind(paymentMethod.method))
+                           paymentMethod: paymentMethod.method)
                 if availableUnits.count > 1 {
                     Picker("Unit", selection: $selectedUnit) {
                         ForEach(availableUnits, id: \.self) { unit in
@@ -40,6 +44,8 @@ struct DepositQuoteRequestView: View {
                 }
             }
         }
+        .navigationTitle("\(paymentMethod.displayName) Deposit")
+        .navigationBarTitleDisplayMode(.inline)
         .task(id: "\(selectedMint?.mintID.uuidString ?? "")|\(paymentMethod.method.rawValue)") {
             await refreshUnits()
         }
@@ -58,7 +64,7 @@ struct DepositQuoteRequestView: View {
 
         var seen = Set<Unit>()
         let units = options
-            .filter { $0.method == PaymentMethodKind(paymentMethod.method) }
+            .filter { $0.method == paymentMethod.method }
             .map(\.unit)
             .filter { seen.insert($0).inserted }
         let preferredUnit = selectedUnit ?? Unit(code: paymentMethod.unit.lowercased())
@@ -69,8 +75,10 @@ struct DepositQuoteRequestView: View {
 
 #if DEBUG
 #Preview {
-    DepositQuoteRequestView(paymentMethod: CashuSwift.Mint.Info.PaymentMethod(method: "branch",
-                                                                              unit: "sat"))
+    NavigationStack {
+        DepositQuoteRequestView(paymentMethod: CashuSwift.Mint.Info.PaymentMethod(method: "branch",
+                                                                                unit: "sat"))
+    }
     .previewEnvironment()
 }
 #endif

@@ -76,7 +76,7 @@ extension AppSchemaV1.Mint {
     /// quote before it is handed out so issuance can re-derive the key, also
     /// after an app restart.
     @MainActor
-    func getGenericMintQuote(method: PaymentMethodKind,
+    func getGenericMintQuote(method: CashuSwift.PaymentMethodID,
                              unit unitCode: String,
                              amount: Int,
                              completion: @escaping (Result<(quote: CashuSwift.Generic.MintQuote,
@@ -95,7 +95,7 @@ extension AppSchemaV1.Mint {
                 let counter = UInt32.random(in: 0..<UInt32.max)
                 let key = try CashuSwift.Generic.quoteLockingKey(seed: seed, counter: counter)
 
-                let quoteRequest = CashuSwift.Generic.MintQuoteRequest(method: method.id,
+                let quoteRequest = CashuSwift.Generic.MintQuoteRequest(method: method,
                                                                        unit: unitCode,
                                                                        amount: amount,
                                                                        extra: ["pubkey": .string(key.publicKey)])

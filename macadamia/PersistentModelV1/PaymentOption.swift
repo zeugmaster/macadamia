@@ -6,39 +6,46 @@ enum PaymentDirection: String, Codable, Hashable, Sendable {
     case withdraw
 }
 
-struct PaymentMethodKind: Codable, Hashable, Sendable {
-    let rawValue: String
+enum PaymentMethodKind: Hashable, Sendable {
+    case bolt11
+    case bolt12
+    case onchain
+    case generic
+}
 
-    init(_ id: CashuSwift.PaymentMethodID) {
-        self.rawValue = id.rawValue
-    }
-
-    init(rawValue: String) {
-        self.rawValue = rawValue
-    }
-
-    var id: CashuSwift.PaymentMethodID {
-        CashuSwift.PaymentMethodID(rawValue: rawValue)
-    }
-
-    static let bolt11 = PaymentMethodKind(rawValue: "bolt11")
-    static let bolt12 = PaymentMethodKind(rawValue: "bolt12")
-    static let onchain = PaymentMethodKind(rawValue: "onchain")
-    static let generic = PaymentMethodKind(rawValue: "generic")
-
-    var displayName: String {
+extension CashuSwift.PaymentMethodID {
+    var kind: PaymentMethodKind {
         switch rawValue {
-        case Self.bolt11.rawValue:
-            return "BOLT11"
-        case Self.bolt12.rawValue:
-            return "BOLT12"
-        case Self.onchain.rawValue:
-            return String(localized: "On-chain")
-        case Self.generic.rawValue:
-            return String(localized: "Generic")
-        default:
-            return rawValue.uppercased()
+        case "bolt11": return .bolt11
+        case "bolt12": return .bolt12
+        case "onchain": return .onchain
+        default: return .generic
         }
+    }
+
+    func displayName(methodName: String?) -> String {
+        switch kind {
+        case .bolt11:
+            return "BOLT11"
+        case .bolt12:
+            return "BOLT12"
+        case .onchain:
+            return String(localized: "On-chain")
+        case .generic:
+            if let methodName, !methodName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return methodName
+            }
+            return rawValue
+                .replacingOccurrences(of: "_", with: " ")
+                .replacingOccurrences(of: "-", with: " ")
+                .capitalized
+        }
+    }
+}
+
+extension CashuSwift.Mint.Info.PaymentMethod {
+    var displayName: String {
+        method.displayName(methodName: methodName)
     }
 }
 
@@ -46,7 +53,8 @@ struct PaymentOption: Identifiable, Codable, Hashable, Sendable {
     let mintID: UUID
     let direction: PaymentDirection
     let unitCode: String
-    let method: PaymentMethodKind
+    let method: CashuSwift.PaymentMethodID
+    let methodName: String?
     let minAmount: Int?
     let maxAmount: Int?
     let options: CashuSwift.JSONObject?
@@ -61,17 +69,22 @@ struct PaymentOption: Identifiable, Codable, Hashable, Sendable {
     }
 
     var displayName: String {
-        "\(unit.displayName) - \(method.displayName)"
+        "\(unit.displayName) - \(methodDisplayName)"
     }
 
     var shortDisplayName: String {
-        "\(unit.currencyCode.uppercased()) - \(method.displayName)"
+        "\(unit.currencyCode.uppercased()) - \(methodDisplayName)"
+    }
+
+    var methodDisplayName: String {
+        method.displayName(methodName: methodName)
     }
 
     init(mintID: UUID,
          direction: PaymentDirection,
          unit: Unit,
-         method: PaymentMethodKind,
+         method: CashuSwift.PaymentMethodID,
+         methodName: String? = nil,
          minAmount: Int? = nil,
          maxAmount: Int? = nil,
          options: CashuSwift.JSONObject? = nil,
@@ -80,6 +93,7 @@ struct PaymentOption: Identifiable, Codable, Hashable, Sendable {
         self.direction = direction
         self.unitCode = unit.currencyCode.lowercased()
         self.method = method
+        self.methodName = methodName
         self.minAmount = minAmount
         self.maxAmount = maxAmount
         self.options = options
@@ -92,7 +106,8 @@ struct PaymentOption: Identifiable, Codable, Hashable, Sendable {
         self.init(mintID: mintID,
                   direction: direction,
                   unit: Unit(code: methodSetting.unit),
-                  method: PaymentMethodKind(methodSetting.method),
+                  method: methodSetting.method,
+                  methodName: methodSetting.methodName,
                   minAmount: methodSetting.minAmount,
                   maxAmount: methodSetting.maxAmount,
                   options: methodSetting.options,
@@ -167,7 +182,10 @@ extension Array where Element == PaymentOption {
             if $0.method != .bolt11 && $1.method == .bolt11 {
                 return false
             }
-            return $0.method.displayName < $1.method.displayName
+            if $0.methodDisplayName != $1.methodDisplayName {
+                return $0.methodDisplayName < $1.methodDisplayName
+            }
+            return $0.method.rawValue < $1.method.rawValue
         }
     }
 
@@ -227,10 +245,10 @@ enum MintQuoteVariant {
         }
     }
 
-    var method: PaymentMethodKind {
+    var method: CashuSwift.PaymentMethodID {
         switch self {
         case .bolt11: return .bolt11
-        case .generic(let quote): return PaymentMethodKind(quote.method)
+        case .generic(let quote): return quote.method
         }
     }
 
