@@ -6,13 +6,14 @@
 //
 
 import SwiftUI
+import CashuSwift
 
 struct PaymentView: View {
+    let direction: PaymentDirection
+    let paymentMethod: CashuSwift.Mint.Info.PaymentMethod
+    
     var body: some View {
         Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
     }
 }
 
-#Preview {
-    PaymentView()
-}

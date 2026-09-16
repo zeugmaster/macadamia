@@ -12470,6 +12470,9 @@
         }
       }
     },
+    "Hello, World!" : {
+
+    },
     "Here goes the slider for %@" : {
       "shouldTranslate" : false
     },
