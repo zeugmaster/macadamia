@@ -6137,6 +6137,9 @@
         }
       }
     },
+    "Checking support..." : {
+
+    },
     "Chilean Peso" : {
       "localizations" : {
         "ar" : {
@@ -18815,6 +18818,7 @@
       }
     },
     "Multiple..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -21059,6 +21063,9 @@
           }
         }
       }
+    },
+    "No supported mints" : {
+
     },
     "No supported payment method found in bitcoin URI" : {
       "localizations" : {

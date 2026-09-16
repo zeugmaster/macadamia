@@ -68,9 +68,6 @@ struct PaymentOptionPicker: View {
         .task(id: refreshID) {
             await refreshOptions()
         }
-        .onChange(of: selectedMint?.mintID) { _, _ in
-            Task { await refreshOptions() }
-        }
     }
 
     private var refreshID: String {
@@ -88,11 +85,13 @@ struct PaymentOptionPicker: View {
         guard let selectedMint else {
             options = []
             selectedOption = nil
+            isLoading = false
             return
         }
 
         isLoading = true
         let loadedOptions = await selectedMint.supportedPaymentOptions(direction: direction)
+        guard !Task.isCancelled, self.selectedMint?.mintID == selectedMint.mintID else { return }
         var filteredOptions: [PaymentOption]
         if let allowedMethods {
             filteredOptions = loadedOptions.filter { allowedMethods.contains($0.method) }
