@@ -8,7 +8,7 @@
 import SwiftUI
 import CashuSwift
 
-struct DepositView: View {
+struct DepositQuoteView: View {
     
     let paymentMethod: CashuSwift.Mint.Info.PaymentMethod
     
@@ -30,6 +30,6 @@ struct DepositView: View {
 }
 
 #Preview {
-    DepositView(paymentMethod: CashuSwift.Mint.Info.PaymentMethod(method: "bolt11", unit: "sat"))
+    DepositQuoteView(paymentMethod: CashuSwift.Mint.Info.PaymentMethod(method: "bolt11", unit: "sat"))
 }
 

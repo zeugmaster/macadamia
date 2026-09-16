@@ -308,6 +308,15 @@ enum AppSchemaV1: VersionedSchema {
             }
             return info
         }
+
+        #if DEBUG
+        /// Seeds the info cache so preview payment options load without a network request.
+        @MainActor
+        func setPreviewInfo(_ info: CashuSwift.Mint.Info) throws {
+            infoData = try JSONEncoder().encode(info)
+            infoLastUpdated = Date.now
+        }
+        #endif
     }
 
     @Model
