@@ -132,7 +132,7 @@ struct PaymentMethodCard: View {
         .padding()
         .background {
             RoundedRectangle(cornerRadius: 20)
-                .fill(.primary.opacity(0.05))
+                .fill(.primary.opacity(0.07))
                 .stroke(.primary.opacity(0.2), lineWidth: 0.5)
         }
     }

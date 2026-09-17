@@ -9,6 +9,8 @@ import SwiftUI
 import SwiftData
 import CashuSwift
 
+// TODO: add "no mints yet" and "no mints support this payment method
+
 struct DepositQuoteRequestView: View {
     let paymentMethod: CashuSwift.Mint.Info.PaymentMethod
 

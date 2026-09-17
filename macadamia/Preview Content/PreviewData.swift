@@ -128,16 +128,17 @@ enum PreviewData {
                                  proofs: buxProofs + spentBuxProofs,
                                  memo: "Preview branch deposit",
                                  mints: [buxMint])
+        let quoteID = UUID().uuidString
         buxMintEvent.genericMintQuote = CashuSwift.Generic.MintQuote(
             method: "branch",
-            quote: "preview-branch-deposit",
+            quote: quoteID,
             request: "BRANCH-PREVIEW-1024",
             unit: "bux",
             amount: 1024,
             state: .issued,
             expiry: nil,
             raw: ["method": .string("branch"),
-                  "quote": .string("preview-branch-deposit"),
+                  "quote": .string(quoteID),
                   "request": .string("BRANCH-PREVIEW-1024"),
                   "unit": .string("bux"),
                   "amount": .integer(1024),
