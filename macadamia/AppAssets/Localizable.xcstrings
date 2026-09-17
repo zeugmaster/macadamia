@@ -2780,6 +2780,9 @@
         }
       }
     },
+    "Address" : {
+
+    },
     "Already Spent 💸" : {
       "localizations" : {
         "ar" : {
@@ -3061,7 +3064,6 @@
       }
     },
     "Amount:" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -7348,6 +7350,9 @@
           }
         }
       }
+    },
+    "Copy Quote ID" : {
+
     },
     "Copy to clipboad" : {
       "localizations" : {
@@ -24814,6 +24819,9 @@
         }
       }
     },
+    "Payment received!" : {
+
+    },
     "Payment Request" : {
       "localizations" : {
         "ar" : {
@@ -26928,6 +26936,9 @@
           }
         }
       }
+    },
+    "Quote" : {
+
     },
     "Quote amount mismatch" : {
       "localizations" : {
@@ -39351,6 +39362,9 @@
           }
         }
       }
+    },
+    "Waiting for payment..." : {
+
     },
     "Waiting for the mint operator to confirm the payout. This can take a few minutes." : {
       "localizations" : {

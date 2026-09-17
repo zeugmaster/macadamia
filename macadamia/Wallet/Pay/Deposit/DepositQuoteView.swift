@@ -48,9 +48,9 @@ struct DepositQuoteView: View {
     let quote: DepositQuote
 
     private var paymentMethodKind: PaymentMethodKind { quote.paymentMethodKind }
-    
-    @State private var actionButtonState: ActionButtonState = .idle("")
-    
+
+    @Environment(\.dismissToRoot) private var dismissToRoot
+
     @State private var copied = false
     @State private var showDetails = false
     @State private var hourglassStatus: HourglassProgressView.Status = .waiting
@@ -132,20 +132,44 @@ struct DepositQuoteView: View {
                 case .generic: Text("Quote")
                 }
             }
+
             Section {
-                
+                HStack {
+                    Spacer()
+                    HourglassProgressView(status: hourglassStatus)
+                    switch hourglassStatus {
+                    case .waiting:
+                        Text("Waiting for payment...")
+                    case .success:
+                        Text("Payment received!")
+                    case .failure:
+                        Text("Error")
+                    }
+                    Spacer()
+                }
+                .listRowBackground(EmptyView())
+                .font(.title3)
+//                .fontWeight(.light)
+                .fontDesign(.rounded)
+                .listRowInsets(.none)
             }
-            
+            .listSectionSpacing(12)
         }
         .navigationTitle("\(quote.paymentMethodName) Deposit")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)    // we replace the system back button
+        .toolbar {                              // with one that dismisses to root
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    withAnimation {
+                        dismissToRoot()
+                    }
+                } label: {
+                    Label("Done", systemImage: "chevron.backward")
+                }
+            }
+        }
     }
-    
-//    private var qrContent: String {
-//        switch quote.paymentMethodKind {
-//        case .
-//        }
-//    }
 }
 
 struct HourglassProgressView: View {
