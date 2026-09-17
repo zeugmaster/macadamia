@@ -56,7 +56,7 @@ enum PreviewData {
 
         let mint = makeMint(name: "Preview Mint", host: "preview.mint",
                             keysetPrefix: "preview", units: [.sat, .usd],
-                            method: "bolt11", wallet: wallet, context: context)
+                            method: "bolt11", userIndex: 0, wallet: wallet, context: context)
 
         // Live sat balance: 256 + 512 + 1024 + 2048 = 3,840 sat
         addProofs(amounts: [256, 512, 1024, 2048], unit: .sat,
@@ -85,7 +85,7 @@ enum PreviewData {
 
         let dualUnitMint = makeMint(name: "Sat & USD Mint", host: "sat-usd.preview.mint",
                                     keysetPrefix: "preview-dual", units: [.sat, .usd],
-                                    method: "bolt11", wallet: wallet, context: context)
+                                    method: "bolt11", userIndex: 1, wallet: wallet, context: context)
 
         // Additional balances: 12,288 sat and 2,500 cents ($25.00).
         let satProofs = addProofs(amounts: [4096, 8192], unit: .sat,
@@ -111,7 +111,7 @@ enum PreviewData {
         let bux: Currency.Unit = .other("bux")
         let buxMint = makeMint(name: "Bux Mint", host: "bux.preview.mint",
                                keysetPrefix: "preview-bux", units: [bux],
-                               method: "branch", wallet: wallet, context: context)
+                               method: "branch", userIndex: 2, wallet: wallet, context: context)
 
         // 1,024 bux issued, then 256 sent: live balance = 768 bux.
         let buxProofs = addProofs(amounts: [256, 512], unit: bux,
@@ -161,7 +161,7 @@ enum PreviewData {
     }
 
     private static func makeMint(name: String, host: String, keysetPrefix: String,
-                                 units: [Currency.Unit], method: String,
+                                 units: [Currency.Unit], method: String, userIndex: Int,
                                  wallet: Wallet, context: ModelContext) -> Mint {
         do {
             let unitCodes = units.map { $0.currencyCode.lowercased() }
@@ -172,6 +172,7 @@ enum PreviewData {
             let keysets = try JSONDecoder().decode([CashuSwift.Keyset].self, from: keysetData)
             let mint = Mint(url: URL(string: "https://\(host)")!, keysets: keysets)
             mint.nickName = name
+            mint.userIndex = userIndex
             mint.wallet = wallet
 
             let methods = unitCodes.map { ["method": method, "unit": $0] }

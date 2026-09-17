@@ -276,6 +276,53 @@ struct WalletView: View {
         }))
     }
     
+    private func menuLabel(imageName: String,
+                           text: String,
+                           fade: Bool) -> some View {
+        Text("\(Image(systemName: imageName))  \(text)")
+            .opacity(fade ? 0.5 : 1)
+            .font(.title3)
+            .fontWeight(.semibold)
+            .padding(EdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0))
+            .frame(maxWidth: .infinity)
+            .background(Color.secondary.opacity(0.3))
+            .cornerRadius(buttonCornerRadius)
+            .lineLimit(1)
+            .overlay(
+                RoundedRectangle(cornerRadius: buttonCornerRadius)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.gray.opacity(0.6), Color.gray.opacity(0.2)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+    }
+    
+    private func menuButtonLabel(title: String,
+                                 subtitle: String,
+                                 imageSystemName: String,
+                                 fade: Bool) -> some View {
+        Color.clear.overlay(
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(title)
+                        .foregroundStyle(.white)
+                        .font(.title3)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.gray)
+                }
+                Spacer()
+                Image(systemName: imageSystemName)
+            }
+        )
+        .opacity(fade ? 0.5 : 1)
+        .padding(EdgeInsets(top: 24, leading: 12, bottom: 24, trailing: 12))
+    }
+    
     // MARK: - Nostr Ecash Receiving
     
     private var activeReceiveKeysExist: Bool {
@@ -433,53 +480,6 @@ struct WalletView: View {
                 walletLogger.error("error while trying to auto-redeem token from nostr dm: \(error)")
             }
         }
-    }
-    
-    private func menuLabel(imageName: String,
-                           text: String,
-                           fade: Bool) -> some View {
-        Text("\(Image(systemName: imageName))  \(text)")
-            .opacity(fade ? 0.5 : 1)
-            .font(.title3)
-            .fontWeight(.semibold)
-            .padding(EdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0))
-            .frame(maxWidth: .infinity)
-            .background(Color.secondary.opacity(0.3))
-            .cornerRadius(buttonCornerRadius)
-            .lineLimit(1)
-            .overlay(
-                RoundedRectangle(cornerRadius: buttonCornerRadius)
-                    .stroke(
-                        LinearGradient(
-                            colors: [Color.gray.opacity(0.6), Color.gray.opacity(0.2)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
-            )
-    }
-    
-    private func menuButtonLabel(title: String,
-                                 subtitle: String,
-                                 imageSystemName: String,
-                                 fade: Bool) -> some View {
-        Color.clear.overlay(
-            HStack {
-                VStack(alignment: .leading) {
-                    Text(title)
-                        .foregroundStyle(.white)
-                        .font(.title3)
-                    Text(subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.gray)
-                }
-                Spacer()
-                Image(systemName: imageSystemName)
-            }
-        )
-        .opacity(fade ? 0.5 : 1)
-        .padding(EdgeInsets(top: 24, leading: 12, bottom: 24, trailing: 12))
     }
 
     private func displayAlert(alert: AlertDetail) {

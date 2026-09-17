@@ -7,6 +7,7 @@ enum DepositQuotePreview {
     private static let mint: Mint = {
         let mint = Mint(url: URL(string: "https://deposit.preview.mint")!, keysets: [])
         mint.nickName = "Preview Mint"
+        mint.userIndex = 0
         return mint
     }()
 
