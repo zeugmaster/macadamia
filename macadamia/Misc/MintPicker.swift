@@ -80,6 +80,7 @@ struct MintPicker: View {
                             .selectionDisabled(!isEnabled(mint.mintID))
                     }
                 }
+                .menuOrder(.fixed)
             }
         }
         .task(id: supportRefreshID) {

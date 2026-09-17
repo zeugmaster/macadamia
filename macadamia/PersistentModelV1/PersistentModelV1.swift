@@ -184,6 +184,9 @@ enum AppSchemaV1: VersionedSchema {
         
         var privateKeyData: Data?
 
+        /// Next NUT-20 quote-locking child index. Optional for existing stores.
+        var mintQuoteCounter: Int?
+
         @Relationship(inverse: \Mint.wallet)
         var mints: [Mint]
 
