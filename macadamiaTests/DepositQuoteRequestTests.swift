@@ -139,6 +139,164 @@ final class DepositQuoteRequestTests: XCTestCase {
         XCTAssertThrowsError(try DepositQuoteRequestView.reserveQuoteCounter(for: restored, in: anotherContext))
         XCTAssertEqual(restored.mintQuoteCounter, 0x80000000)
     }
+
+    func testAmountlessAndPartiallyIssuedQuotesUseUnissuedBalance() throws {
+        for method: CashuSwift.PaymentMethodID in [.bolt12, "onchain", "branch"] {
+            for requestedAmount: Int? in [nil, 100] {
+                let response = accountingQuote(method: method, amount: requestedAmount, paid: 250, issued: 100)
+                XCTAssertEqual(try DepositQuoteView.amountToIssue(for: response, requestedAmount: requestedAmount), 150)
+            }
+            for (paid, issued) in [(0, 0), (100, 100)] {
+                let response = accountingQuote(method: method, paid: paid, issued: issued)
+                XCTAssertNil(try DepositQuoteView.amountToIssue(for: response, requestedAmount: nil))
+            }
+        }
+    }
+
+    func testInvalidAccountingAndTerminalStatesCannotIssue() throws {
+        for (paid, issued) in [(-1, 0), (1, -1), (100, 101)] {
+            let response = accountingQuote(paid: paid, issued: issued)
+            XCTAssertThrowsError(try DepositQuoteView.amountToIssue(for: response, requestedAmount: nil)) {
+                XCTAssertEqual($0 as? CashuError, .invalidQuoteAccounting)
+            }
+        }
+        for state in ["ISSUED", "EXPIRED", "FAILED"] {
+            let response = accountingQuote(paid: 100, issued: 0, state: state)
+            XCTAssertThrowsError(try DepositQuoteView.amountToIssue(for: response, requestedAmount: nil))
+        }
+    }
+
+    func testBolt11PaidnessAndExpiry() throws {
+        func response(_ state: CashuSwift.QuoteState, expiry: Int? = nil) -> CashuSwift.Bolt11.MintQuote {
+            .init(quote: "quote", request: "invoice", amount: 100, unit: "sat", state: state, expiry: expiry)
+        }
+        XCTAssertNil(try DepositQuoteView.amountToIssue(for: response(.unpaid), requestedAmount: 100))
+        XCTAssertNil(try DepositQuoteView.amountToIssue(for: response(.pending, expiry: 1), requestedAmount: 100))
+        XCTAssertEqual(try DepositQuoteView.amountToIssue(for: response(.paid, expiry: 1), requestedAmount: 100), 100)
+        XCTAssertThrowsError(try DepositQuoteView.amountToIssue(for: response(.unpaid, expiry: 1), requestedAmount: 100)) {
+            XCTAssertEqual($0 as? CashuError, .quoteIsExpired)
+        }
+        XCTAssertThrowsError(try DepositQuoteView.amountToIssue(for: response(.issued), requestedAmount: 100)) {
+            XCTAssertEqual($0 as? CashuError, .proofsAlreadyIssuedForQuote)
+        }
+        let stateOnly = CashuSwift.Generic.MintQuote(method: "branch", quote: "quote", request: "request",
+                                                    unit: "sat", amount: nil, state: nil, expiry: nil,
+                                                    raw: ["state": .string("paid")])
+        XCTAssertEqual(try DepositQuoteView.amountToIssue(for: stateOnly, requestedAmount: 100), 100)
+        XCTAssertThrowsError(try DepositQuoteView.amountToIssue(for: stateOnly, requestedAmount: nil))
+    }
+
+    @MainActor
+    func testIssuancePersistsProofsCountersAndEventsForEveryMethod() async throws {
+        for (method, requestedAmount): (CashuSwift.PaymentMethodID, Int?) in [
+            (.bolt11, 3), (.bolt12, nil), (.bolt12, 3), ("onchain", nil), ("branch", 3)
+        ] {
+            let key = try CashuSwift.Generic.quoteLockingKey(seed: seed, counter: 7)
+            let stub = try DepositHTTPStub { request in
+                XCTAssertEqual(request.httpMethod, "POST")
+                XCTAssertEqual(request.url?.path, "/v1/mint/\(method.rawValue)")
+                let body = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(request.httpBody)) as? [String: Any])
+                XCTAssertEqual(body["quote"] as? String, "test-quote")
+                XCTAssertNil(body[CashuSwift.Generic.MintQuote.nut20CounterKey])
+                if method == .bolt11 {
+                    XCTAssertNil(body["signature"])
+                } else {
+                    XCTAssertEqual((body["signature"] as? String)?.count, 128)
+                }
+                let outputs = try XCTUnwrap(body["outputs"] as? [[String: Any]])
+                XCTAssertEqual(outputs.compactMap { $0["amount"] as? Int }.reduce(0, +), 3)
+                // Test mint uses private key 1, so signing preserves each blinded point.
+                let signatures = try outputs.map { output in
+                    ["id": try XCTUnwrap(output["id"]), "amount": try XCTUnwrap(output["amount"]),
+                     "C_": try XCTUnwrap(output["B_"])]
+                }
+                return try JSONSerialization.data(withJSONObject: ["signatures": signatures])
+            }
+            defer { stub.remove() }
+            let (container, mint, wallet) = try fixture(url: stub.url)
+            let generator = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+            mint.keysets[0].keys = ["1": generator, "2": generator]
+
+            let response: any CashuSwift.MintQuoteResponse
+            if method == .bolt11 {
+                response = CashuSwift.Bolt11.MintQuote(quote: "test-quote", request: "invoice", amount: 3,
+                                                      unit: "sat", state: .unpaid, expiry: nil)
+            } else {
+                response = accountingQuote(method: method, amount: requestedAmount, paid: 0, issued: 0,
+                                           pubkey: key.publicKey)
+            }
+            let quote = DepositQuote(response: response, mint: mint,
+                                     option: .init(mintID: mint.mintID, direction: .deposit, unit: .sat, method: method),
+                                     requestedAmount: requestedAmount, lockingKeyCounter: method == .bolt11 ? nil : 7)
+            try await DepositQuoteView.issueEcash(for: quote, amount: 3, in: container.mainContext)
+
+            let restored = ModelContext(container)
+            let proofs = try restored.fetch(FetchDescriptor<Proof>())
+            XCTAssertEqual(proofs.reduce(0) { $0 + $1.amount }, 3)
+            XCTAssertEqual(proofs.count, 2)
+            XCTAssertTrue(proofs.allSatisfy { $0.wallet?.id == wallet.id && $0.state == .valid })
+            let savedMint = try XCTUnwrap(try restored.fetch(FetchDescriptor<Mint>()).first)
+            XCTAssertEqual(savedMint.keysets[0].derivationCounter, 2)
+            let events = try restored.fetch(FetchDescriptor<Event>())
+            XCTAssertEqual(events.count, 1)
+            let event = try XCTUnwrap(events.first)
+            XCTAssertEqual(event.kind, .mint)
+            XCTAssertEqual(event.amount, 3)
+            if method == .bolt11 {
+                XCTAssertEqual(event.mintQuote?.quote, quote.quoteID)
+            } else {
+                XCTAssertEqual(event.genericMintQuote?.method, method)
+                XCTAssertEqual(event.genericMintQuote?.nut20Counter, 7)
+                XCTAssertEqual(event.genericMintQuote?.lockingPubkey, key.publicKey)
+            }
+            XCTAssertEqual(stub.requests.count, 1)
+        }
+    }
+
+    @MainActor
+    func testIssuanceRejectsMissingCounterOrWrongSigningKeyBeforeNetworking() async throws {
+        let stub = try DepositHTTPStub { _ in
+            XCTFail("Invalid quote authorization must not reach the mint")
+            return Data()
+        }
+        defer { stub.remove() }
+        let (container, mint, _) = try fixture(url: stub.url)
+        let key = try CashuSwift.Generic.quoteLockingKey(seed: seed, counter: 7)
+        let response = accountingQuote(paid: 3, issued: 0, pubkey: key.publicKey)
+        for counter: UInt32? in [nil, 8] {
+            let quote = DepositQuote(response: response, mint: mint,
+                                     option: .init(mintID: mint.mintID, direction: .deposit, unit: .sat, method: .bolt12),
+                                     requestedAmount: nil, lockingKeyCounter: counter)
+            do {
+                try await DepositQuoteView.issueEcash(for: quote, amount: 3, in: container.mainContext)
+                XCTFail("Accepted invalid quote authorization")
+            } catch let error as CashuError {
+                switch error {
+                case .inputError, .invalidKey: break
+                default: XCTFail("Unexpected error: \(error)")
+                }
+            }
+        }
+        XCTAssertTrue(stub.requests.isEmpty)
+        XCTAssertTrue(try container.mainContext.fetch(FetchDescriptor<Proof>()).isEmpty)
+        XCTAssertTrue(try container.mainContext.fetch(FetchDescriptor<Event>()).isEmpty)
+        XCTAssertEqual(mint.keysets[0].derivationCounter, 0)
+    }
+
+    private func accountingQuote(method: CashuSwift.PaymentMethodID = .bolt12, amount: Int? = nil,
+                                  paid: Int, issued: Int, state: String? = nil,
+                                  pubkey: String? = nil) -> CashuSwift.Generic.MintQuote {
+        var raw: CashuSwift.JSONObject = [
+            "quote": .string("test-quote"), "request": .string("request"), "unit": .string("sat"),
+            "method": .string(method.rawValue), "amount_paid": .integer(Int64(paid)),
+            "amount_issued": .integer(Int64(issued))
+        ]
+        if let amount { raw["amount"] = .integer(Int64(amount)) }
+        if let state { raw["state"] = .string(state) }
+        if let pubkey { raw["pubkey"] = .string(pubkey) }
+        return .init(method: method, quote: "test-quote", request: "request", unit: "sat", amount: amount,
+                     state: nil, expiry: nil, raw: raw)
+    }
 }
 
 private final class DepositHTTPStub: @unchecked Sendable {

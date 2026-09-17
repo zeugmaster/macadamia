@@ -40,6 +40,7 @@ struct PaymentMethodList: View {
                                       numberOfSupportingMints: numberOfMints(for: method))
                         
                 })
+                .disabled(method.method.kind == .onchain)
                 .navigationLinkIndicatorVisibility(.hidden)
                 .listRowBackground(EmptyView())
                 .listRowSeparator(.hidden)

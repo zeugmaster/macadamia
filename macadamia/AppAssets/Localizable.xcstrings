@@ -7494,6 +7494,9 @@
         }
       }
     },
+    "Could not check payment. %@" : {
+
+    },
     "Could not determine the transfer's state. Nothing was changed — try again later." : {
       "localizations" : {
         "ar" : {
@@ -7633,6 +7636,9 @@
           }
         }
       }
+    },
+    "Could not issue ecash. %@" : {
+
     },
     "Could not parse merchant code" : {
       "localizations" : {
@@ -9745,6 +9751,9 @@
           }
         }
       }
+    },
+    "Ecash received!" : {
+
     },
     "Ecash selected" : {
       "extractionState" : "stale",
@@ -24819,7 +24828,7 @@
         }
       }
     },
-    "Payment received!" : {
+    "Payment received. Issuing ecash..." : {
 
     },
     "Payment Request" : {
@@ -33261,6 +33270,9 @@
         }
       }
     },
+    "The mint could not be reached. Check your internet connection." : {
+
+    },
     "The mint reported this withdrawal as failed. Your ecash has been returned to your balance." : {
       "localizations" : {
         "ar" : {
@@ -33331,6 +33343,9 @@
         }
       }
     },
+    "The mint reports that ecash has already been issued for this quote." : {
+
+    },
     "The mint returned an unknown quote state." : {
       "localizations" : {
         "ar" : {
@@ -33400,6 +33415,9 @@
           }
         }
       }
+    },
+    "The mint returned inconsistent paid and issued amounts. The deposit could not be redeemed." : {
+
     },
     "The mint you are trying to add is already known to the wallet. Please add each mint only once." : {
       "localizations" : {
@@ -35361,6 +35379,9 @@
           }
         }
       }
+    },
+    "This payment request has expired. Create a new deposit to continue." : {
+
     },
     "This wallet and the Cashu protocol are in active development. Be cautious when using this software and follow best practices:\n\n• Mint only as much as you are ready to lose\n\n• Only use mints you trust\n\n• Back up your wallet\n\nIf you experience any issues, don't hesitate to send a request for support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues)." : {
       "localizations" : {
