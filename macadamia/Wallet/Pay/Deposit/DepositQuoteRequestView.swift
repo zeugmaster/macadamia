@@ -151,7 +151,7 @@ struct DepositQuoteRequestView: View {
         }
     }
 
-    // Kept on the view; no quote or event is persisted by this flow yet.
+    // Save the quote before navigation so it remains resumable if the view closes.
     @MainActor
     static func loadQuote(from mint: Mint, option: PaymentOption, amount: Int?,
                           in context: ModelContext) async throws -> DepositQuote {
@@ -180,7 +180,7 @@ struct DepositQuoteRequestView: View {
                   pubkey.lowercased() == key.publicKey.lowercased() else {
                 throw CashuError.invalidKey("The mint did not lock the quote to the requested key.")
             }
-            response = quote
+            response = quote.addingNut20Counter(reservedCounter)
         }
 
         guard response.unit == option.unitCode,
@@ -193,8 +193,32 @@ struct DepositQuoteRequestView: View {
         if option.method.kind == .bolt11, response.amount == nil {
             throw CashuError.inputError("The invoice quote is missing its amount.")
         }
+        let expiration = response.expiry.map { Date(timeIntervalSince1970: TimeInterval($0)) }
+        let event: Event
+        switch response {
+        case let bolt11 as CashuSwift.Bolt11.MintQuote:
+            guard let amount = bolt11.amount else { throw CashuError.invalidAmount }
+            event = Event.pendingMintEvent(unit: option.unit, shortDescription: "Pending Ecash",
+                                           wallet: wallet, quote: bolt11, amount: amount,
+                                           expiration: expiration, mint: mint)
+        case let generic as CashuSwift.Generic.MintQuote:
+            event = Event.pendingMintEvent(unit: option.unit, shortDescription: "Pending Ecash",
+                                           wallet: wallet, genericQuote: generic, amount: amount,
+                                           expiration: expiration, mint: mint)
+        default:
+            throw CashuError.unsupportedPaymentMethod("This deposit's quote format cannot be saved.")
+        }
+
+        // A returned quote must be saved even if the requesting task was cancelled.
+        context.insert(event)
+        do {
+            try context.save()
+        } catch {
+            context.delete(event)
+            throw macadamiaError.databaseError("The deposit quote could not be saved. \(error.localizedDescription)")
+        }
         return DepositQuote(response: response, mint: mint, option: option,
-                            requestedAmount: amount, lockingKeyCounter: counter)
+                            requestedAmount: amount, lockingKeyCounter: counter, pendingEvent: event)
     }
 
     static func validateAmount(_ amount: Int?, for option: PaymentOption) throws {

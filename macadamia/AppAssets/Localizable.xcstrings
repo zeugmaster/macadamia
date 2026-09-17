@@ -2780,9 +2780,6 @@
         }
       }
     },
-    "Address" : {
-
-    },
     "Already Spent 💸" : {
       "localizations" : {
         "ar" : {
@@ -7351,8 +7348,15 @@
         }
       }
     },
-    "Copy Quote ID" : {
-
+    "Copy %@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Copy %1$@%2$@"
+          }
+        }
+      }
     },
     "Copy to clipboad" : {
       "localizations" : {
@@ -8696,6 +8700,9 @@
       }
     },
     "Deposit by paying a Bolt11 invoice" : {
+
+    },
+    "Deposit unavailable" : {
 
     },
     "Description" : {
@@ -26945,9 +26952,6 @@
           }
         }
       }
-    },
-    "Quote" : {
-
     },
     "Quote amount mismatch" : {
       "localizations" : {

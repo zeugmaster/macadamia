@@ -9,14 +9,26 @@ import SwiftUI
 import SwiftData
 import CashuSwift
 
-/// In-memory quote and the context needed to display and later redeem it.
+/// A deposit quote and its persisted event, when available.
 struct DepositQuote: Identifiable, Hashable {
-    let id = UUID()
+    let id: UUID
     let response: any CashuSwift.MintQuoteResponse
     let mint: Mint
     let option: PaymentOption
     let requestedAmount: Int?
     let lockingKeyCounter: UInt32?
+    let pendingEvent: Event?
+
+    init(response: any CashuSwift.MintQuoteResponse, mint: Mint, option: PaymentOption,
+         requestedAmount: Int?, lockingKeyCounter: UInt32?, pendingEvent: Event? = nil) {
+        self.id = pendingEvent?.eventID ?? UUID()
+        self.response = response
+        self.mint = mint
+        self.option = option
+        self.requestedAmount = requestedAmount
+        self.lockingKeyCounter = lockingKeyCounter
+        self.pendingEvent = pendingEvent
+    }
 
     var quoteID: String { response.quote }
     var request: String { response.request }
@@ -60,6 +72,8 @@ struct DepositQuoteView: View {
     @State private var pollingTimer: Timer?
     @State private var pollingTask: Task<Void, Never>?
     @State private var isIssuing = false
+
+    @MainActor private static var issuingQuoteIDs: Set<UUID> = []
 
     private var statusColor: Color {
         switch hourglassStatus {
@@ -210,6 +224,40 @@ struct DepositQuoteView: View {
     }
 
     @MainActor
+    static func restoreQuote(from event: Event) throws -> DepositQuote {
+        guard event.kind == .pendingMint else {
+            throw CashuError.inputError("This transaction is not a pending deposit.")
+        }
+        guard let mint = event.mints?.first, let wallet = event.wallet, mint.wallet == wallet else {
+            throw CashuError.inputError("The mint or wallet associated with this deposit is no longer available.")
+        }
+
+        let response: any CashuSwift.MintQuoteResponse
+        let counter: UInt32?
+        if let bolt11 = event.mintQuote {
+            // Older events kept the amount on the event instead of inside the quote.
+            response = CashuSwift.Bolt11.MintQuote(quote: bolt11.quote, request: bolt11.request,
+                                                  amount: bolt11.amount ?? event.amount, unit: bolt11.unit,
+                                                  state: bolt11.state, expiry: bolt11.expiry)
+            counter = nil
+        } else if let generic = event.genericMintQuote {
+            response = generic
+            counter = generic.nut20Counter
+        } else {
+            throw CashuError.inputError("The saved payment quote is missing or could not be read.")
+        }
+        guard !response.quote.isEmpty, !response.request.isEmpty, !response.unit.isEmpty else {
+            throw CashuError.inputError("The saved deposit is missing its quote ID, payment request, or unit.")
+        }
+
+        let amount = event.amount.flatMap { $0 > 0 ? $0 : nil }
+        return DepositQuote(response: response, mint: mint,
+                            option: PaymentOption(mintID: mint.mintID, direction: .deposit,
+                                                  unit: Unit(code: response.unit), method: response.method),
+                            requestedAmount: amount, lockingKeyCounter: counter, pendingEvent: event)
+    }
+
+    @MainActor
     private func startPolling() {
         #if DEBUG
         guard ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" else { return }
@@ -320,6 +368,14 @@ struct DepositQuoteView: View {
         guard let wallet = quote.mint.wallet else {
             throw CashuError.inputError("The wallet associated with this deposit is no longer available.")
         }
+        if let pendingEvent = quote.pendingEvent, !pendingEvent.visible {
+            throw CashuError.proofsAlreadyIssuedForQuote
+        }
+        // A pending event can be reopened while a previous view finishes issuing it.
+        guard issuingQuoteIDs.insert(quote.id).inserted else {
+            throw CashuError.inputError("This deposit is already being issued. Wait for it to finish.")
+        }
+        defer { issuingQuoteIDs.remove(quote.id) }
         let mint = CashuSwift.Mint(quote.mint)
         let result: CashuSwift.IssueResult
         let event: Event
@@ -359,8 +415,10 @@ struct DepositQuoteView: View {
         do {
             try quote.mint.addProofs(result.proofs, to: context)
             context.insert(event)
+            quote.pendingEvent?.visible = false
             try context.save()
         } catch {
+            quote.pendingEvent?.visible = true
             throw macadamiaError.databaseError("Ecash was issued, but could not be saved to the wallet. \(error.localizedDescription)")
         }
         logger.info("DLEQ check on deposit issuance: \(String(describing: result.dleqResult))")

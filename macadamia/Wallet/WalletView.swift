@@ -227,6 +227,13 @@ struct WalletView: View {
                 }
                 .padding(EdgeInsets(top: 20, leading: 16, bottom: 40, trailing: 16))
             }
+            // Keep event destinations alive when a completed deposit hides its pending row.
+            .navigationDestination(for: EventList.Destination.self) { destination in
+                switch destination {
+                case .all: EventList(style: .full)
+                case .event(let group): EventList.destination(for: group)
+                }
+            }
             .navigationDestination(item: $navigationDestination) { destination in
                 switch destination {
                 case .mint:

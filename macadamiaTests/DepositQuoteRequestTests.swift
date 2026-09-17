@@ -7,10 +7,12 @@ final class DepositQuoteRequestTests: XCTestCase {
     private let seed = "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
 
     @MainActor
-    private func fixture(url: URL) throws -> (ModelContainer, Mint, Wallet) {
+    private func fixture(url: URL, storeURL: URL? = nil) throws -> (ModelContainer, Mint, Wallet) {
+        let configuration = storeURL.map { ModelConfiguration(url: $0) }
+            ?? ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: Wallet.self, Mint.self, Proof.self, Event.self,
                                            NostrKeypair.self, NostrMessage.self,
-                                           configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+                                           configurations: configuration)
         let wallet = Wallet(mnemonic: "test", seed: seed)
         let keyset = try JSONDecoder().decode(CashuSwift.Keyset.self, from: Data(#"{"id":"009a1f293253e41e","unit":"sat","active":true,"keys":{},"derivationCounter":0}"#.utf8))
         let mint = Mint(url: url, keysets: [keyset])
@@ -63,7 +65,30 @@ final class DepositQuoteRequestTests: XCTestCase {
             XCTAssertEqual(quote.lockingKeyCounter, method == .bolt11 ? nil : 0)
             XCTAssertEqual(wallet.mintQuoteCounter, method == .bolt11 ? nil : 1)
             XCTAssertEqual(stub.requests.count, 1)
-            XCTAssertTrue(try container.mainContext.fetch(FetchDescriptor<Event>()).isEmpty)
+            let savedContext = ModelContext(container)
+            let events = try savedContext.fetch(FetchDescriptor<Event>())
+            XCTAssertEqual(events.count, 1)
+            let pending = try XCTUnwrap(events.first)
+            XCTAssertEqual(pending.kind, .pendingMint)
+            XCTAssertTrue(pending.visible)
+            XCTAssertEqual(pending.amount, amount)
+            XCTAssertNil(pending.expiration)
+            XCTAssertEqual(pending.wallet?.id, wallet.id)
+            XCTAssertEqual(pending.mints?.first?.mintID, mint.mintID)
+            XCTAssertEqual(quote.pendingEvent?.eventID, pending.eventID)
+
+            let resumed = try DepositQuoteView.restoreQuote(from: pending)
+            XCTAssertEqual(resumed.id, quote.id)
+            XCTAssertEqual(resumed.quoteID, quote.quoteID)
+            XCTAssertEqual(resumed.request, quote.request)
+            XCTAssertEqual(resumed.method, method)
+            XCTAssertEqual(resumed.amount, amount)
+            XCTAssertEqual(resumed.lockingKeyCounter, quote.lockingKeyCounter)
+            if method != .bolt11 {
+                XCTAssertEqual(pending.genericMintQuote?.lockingPubkey, key.publicKey)
+                XCTAssertEqual(pending.genericMintQuote?.nut20Counter, 0)
+                XCTAssertEqual(resumed.raw?["updated_at"], .integer(1_800_000_000))
+            }
         }
     }
 
@@ -225,10 +250,23 @@ final class DepositQuoteRequestTests: XCTestCase {
                 response = accountingQuote(method: method, amount: requestedAmount, paid: 0, issued: 0,
                                            pubkey: key.publicKey)
             }
-            let quote = DepositQuote(response: response, mint: mint,
-                                     option: .init(mintID: mint.mintID, direction: .deposit, unit: .sat, method: method),
-                                     requestedAmount: requestedAmount, lockingKeyCounter: method == .bolt11 ? nil : 7)
-            try await DepositQuoteView.issueEcash(for: quote, amount: 3, in: container.mainContext)
+            let pending: Event
+            if let bolt11 = response as? CashuSwift.Bolt11.MintQuote {
+                pending = Event.pendingMintEvent(unit: .sat, shortDescription: "Pending Ecash", wallet: wallet,
+                                                 quote: bolt11, amount: 3, expiration: nil, mint: mint)
+            } else {
+                let generic = try XCTUnwrap(response as? CashuSwift.Generic.MintQuote).addingNut20Counter(7)
+                pending = Event.pendingMintEvent(unit: .sat, shortDescription: "Pending Ecash", wallet: wallet,
+                                                 genericQuote: generic, amount: requestedAmount,
+                                                 expiration: nil, mint: mint)
+            }
+            container.mainContext.insert(pending)
+            try container.mainContext.save()
+
+            let resumedContext = ModelContext(container)
+            let savedPending = try XCTUnwrap(try resumedContext.fetch(FetchDescriptor<Event>()).first)
+            let quote = try DepositQuoteView.restoreQuote(from: savedPending)
+            try await DepositQuoteView.issueEcash(for: quote, amount: 3, in: resumedContext)
 
             let restored = ModelContext(container)
             let proofs = try restored.fetch(FetchDescriptor<Proof>())
@@ -238,8 +276,12 @@ final class DepositQuoteRequestTests: XCTestCase {
             let savedMint = try XCTUnwrap(try restored.fetch(FetchDescriptor<Mint>()).first)
             XCTAssertEqual(savedMint.keysets[0].derivationCounter, 2)
             let events = try restored.fetch(FetchDescriptor<Event>())
-            XCTAssertEqual(events.count, 1)
-            let event = try XCTUnwrap(events.first)
+            XCTAssertEqual(events.count, 2)
+            XCTAssertEqual(events.filter(\.visible).count, 1)
+            let completedPending = try XCTUnwrap(events.first { $0.kind == .pendingMint })
+            XCTAssertFalse(completedPending.visible)
+            XCTAssertEqual(completedPending.eventID, pending.eventID)
+            let event = try XCTUnwrap(events.first { $0.kind == .mint })
             XCTAssertEqual(event.kind, .mint)
             XCTAssertEqual(event.amount, 3)
             if method == .bolt11 {
@@ -248,6 +290,12 @@ final class DepositQuoteRequestTests: XCTestCase {
                 XCTAssertEqual(event.genericMintQuote?.method, method)
                 XCTAssertEqual(event.genericMintQuote?.nut20Counter, 7)
                 XCTAssertEqual(event.genericMintQuote?.lockingPubkey, key.publicKey)
+            }
+            do {
+                try await DepositQuoteView.issueEcash(for: quote, amount: 3, in: resumedContext)
+                XCTFail("A completed deposit must not issue again")
+            } catch {
+                XCTAssertEqual(error as? CashuError, .proofsAlreadyIssuedForQuote)
             }
             XCTAssertEqual(stub.requests.count, 1)
         }
@@ -281,6 +329,116 @@ final class DepositQuoteRequestTests: XCTestCase {
         XCTAssertTrue(try container.mainContext.fetch(FetchDescriptor<Proof>()).isEmpty)
         XCTAssertTrue(try container.mainContext.fetch(FetchDescriptor<Event>()).isEmpty)
         XCTAssertEqual(mint.keysets[0].derivationCounter, 0)
+    }
+
+    @MainActor
+    func testPendingQuoteSurvivesReopeningStore() async throws {
+        for (method, amount): (CashuSwift.PaymentMethodID, Int?) in [(.bolt11, 123), (.bolt12, nil)] {
+            let storeURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("deposit-\(UUID().uuidString).store")
+            defer {
+                for suffix in ["", "-wal", "-shm"] {
+                    try? FileManager.default.removeItem(atPath: storeURL.path + suffix)
+                }
+            }
+            let stub = try DepositHTTPStub { request in
+                var body = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(request.httpBody)) as? [String: Any])
+                body["quote"] = "persisted-quote"
+                body["request"] = "persisted-request"
+                body["expiry"] = 1_900_000_000
+                body["state"] = "UNPAID"
+                return try JSONSerialization.data(withJSONObject: body)
+            }
+            defer { stub.remove() }
+            let eventID: UUID
+            do {
+                let (container, mint, _) = try fixture(url: stub.url, storeURL: storeURL)
+                let option = PaymentOption(mintID: mint.mintID, direction: .deposit, unit: .sat, method: method)
+                let quote = try await DepositQuoteRequestView.loadQuote(from: mint, option: option, amount: amount,
+                                                                         in: container.mainContext)
+                eventID = try XCTUnwrap(quote.pendingEvent?.eventID)
+            }
+
+            let reopened = try ModelContainer(for: Wallet.self, Mint.self, Proof.self, Event.self,
+                                               NostrKeypair.self, NostrMessage.self,
+                                               configurations: ModelConfiguration(url: storeURL))
+            let events = try reopened.mainContext.fetch(FetchDescriptor<Event>())
+            XCTAssertEqual(events.count, 1)
+            let event = try XCTUnwrap(events.first)
+            let quote = try DepositQuoteView.restoreQuote(from: event)
+            XCTAssertEqual(quote.id, eventID)
+            XCTAssertEqual(quote.quoteID, "persisted-quote")
+            XCTAssertEqual(quote.request, "persisted-request")
+            XCTAssertEqual(quote.method, method)
+            XCTAssertEqual(quote.amount, amount)
+            XCTAssertEqual(quote.lockingKeyCounter, method == .bolt11 ? nil : 0)
+            XCTAssertEqual(event.expiration, Date(timeIntervalSince1970: 1_900_000_000))
+            XCTAssertTrue(event.visible)
+            XCTAssertEqual(stub.requests.count, 1, "Resuming must not request a replacement quote")
+        }
+    }
+
+    @MainActor
+    func testFailedIssuanceLeavesPendingEventResumable() async throws {
+        let stub = try DepositHTTPStub { _ in throw URLError(.notConnectedToInternet) }
+        defer { stub.remove() }
+        let (container, mint, wallet) = try fixture(url: stub.url)
+        mint.keysets[0].keys = ["1": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"]
+        let response = CashuSwift.Bolt11.MintQuote(quote: "unpaid-quote", request: "invoice", amount: 1,
+                                                  unit: "sat", state: .unpaid, expiry: nil)
+        let pending = Event.pendingMintEvent(unit: .sat, shortDescription: "Pending Ecash", wallet: wallet,
+                                             quote: response, amount: 1, expiration: nil, mint: mint)
+        container.mainContext.insert(pending)
+        try container.mainContext.save()
+
+        for _ in 0..<2 {
+            let quote = try DepositQuoteView.restoreQuote(from: pending)
+            do {
+                try await DepositQuoteView.issueEcash(for: quote, amount: 1, in: container.mainContext)
+                XCTFail("Issuance should fail when the mint cannot be reached")
+            } catch { }
+        }
+        let restored = ModelContext(container)
+        let events = try restored.fetch(FetchDescriptor<Event>())
+        XCTAssertEqual(events.count, 1)
+        let savedPending = try XCTUnwrap(events.first)
+        XCTAssertTrue(savedPending.visible)
+        XCTAssertEqual(savedPending.kind, .pendingMint)
+        XCTAssertNoThrow(try DepositQuoteView.restoreQuote(from: savedPending))
+        XCTAssertTrue(try restored.fetch(FetchDescriptor<Proof>()).isEmpty)
+        XCTAssertEqual(mint.keysets[0].derivationCounter, 0)
+        XCTAssertEqual(stub.requests.count, 2, "A failed issuance must release its in-flight guard")
+    }
+
+    @MainActor
+    func testLegacyPendingEventsRestoreAndMissingQuotesFailDescriptively() throws {
+        let (container, mint, wallet) = try fixture(url: XCTUnwrap(URL(string: "https://unused.invalid")))
+        let bolt11 = CashuSwift.Bolt11.MintQuote(quote: "legacy-quote", request: "legacy-invoice", amount: nil,
+                                                unit: "sat", state: .unpaid, expiry: nil)
+        let legacy = Event.pendingMintEvent(unit: .sat, shortDescription: "Pending Ecash", wallet: wallet,
+                                            quote: bolt11, amount: 123, expiration: nil, mint: mint)
+        container.mainContext.insert(legacy)
+        try container.mainContext.save()
+        let restored = try DepositQuoteView.restoreQuote(from: legacy)
+        XCTAssertEqual(restored.amount, 123)
+        XCTAssertEqual(restored.response.amount, 123, "Legacy BOLT11 issuance needs the amount from the event")
+        XCTAssertEqual(restored.method, .bolt11)
+
+        let generic = accountingQuote(method: "branch", amount: 123, paid: 0, issued: 0)
+        let unlocked = Event.pendingMintEvent(unit: .sat, shortDescription: "Pending Ecash", wallet: wallet,
+                                              genericQuote: generic, amount: 123, expiration: nil, mint: mint)
+        let restoredGeneric = try DepositQuoteView.restoreQuote(from: unlocked)
+        XCTAssertEqual(restoredGeneric.method, "branch")
+        XCTAssertNil(restoredGeneric.lockingKeyCounter)
+
+        legacy.mintQuote = nil
+        XCTAssertThrowsError(try DepositQuoteView.restoreQuote(from: legacy)) {
+            XCTAssertTrue($0.localizedDescription.contains("saved payment quote"))
+        }
+        legacy.mints = []
+        XCTAssertThrowsError(try DepositQuoteView.restoreQuote(from: legacy)) {
+            XCTAssertTrue($0.localizedDescription.contains("mint or wallet"))
+        }
     }
 
     private func accountingQuote(method: CashuSwift.PaymentMethodID = .bolt12, amount: Int? = nil,
