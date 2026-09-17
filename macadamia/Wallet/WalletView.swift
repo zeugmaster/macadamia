@@ -20,6 +20,7 @@ struct WalletView: View {
     @State var showAlert: Bool = false
     @State var currentAlert: AlertDetail?
     @State private var processedMessageIds = Set<String>()
+    @State private var supportedPaymentMethods: [CashuSwift.Mint.Info.PaymentMethod]?
 
     @Binding var urlState: URLState?
     @Binding var pendingNavigation: Destination?
@@ -71,8 +72,12 @@ struct WalletView: View {
         self._pendingNavigation = pendingNavigation
     }
     
-    var activeWallet:Wallet? {
+    private var activeWallet:Wallet? {
         wallets.first
+    }
+
+    private var visibleMints:[Mint] {
+        activeWallet?.mints.filter { !$0.hidden } ?? []
     }
 
     var body: some View {
@@ -225,7 +230,7 @@ struct WalletView: View {
             .navigationDestination(item: $navigationDestination) { destination in
                 switch destination {
                 case .mint:
-                    MintView()
+                    depositDestination
                 case .send:
                     SendView()
                 case .receive(let urlString):
@@ -270,10 +275,32 @@ struct WalletView: View {
             }
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
+        .task(id: visibleMints.map(\.mintID)) {
+            await refreshSupportedPaymentMethods()
+        }
         .environment(\.dismissToRoot, DismissToRootAction({ @MainActor in
             navigationDestination = nil
             navigationPath = NavigationPath()
         }))
+    }
+
+    @ViewBuilder
+    private var depositDestination: some View {
+        if let methods = supportedPaymentMethods {
+            if methods.count == 1, let method = methods.first {
+                DepositQuoteRequestView(paymentMethod: method)
+            } else if methods.isEmpty {
+                ContentUnavailableView("No supported payment methods",
+                                       systemImage: "building.columns",
+                                       description: Text("Add a mint that supports deposits to continue."))
+                    .navigationTitle("Deposit")
+            } else {
+                PaymentMethodList(paymentDirection: .deposit, paymentMethods: methods)
+            }
+        } else {
+            ProgressView("Loading payment methods…")
+                .navigationTitle("Deposit")
+        }
     }
     
     private func menuLabel(imageName: String,
@@ -323,6 +350,32 @@ struct WalletView: View {
         .padding(EdgeInsets(top: 24, leading: 12, bottom: 24, trailing: 12))
     }
     
+    private func refreshSupportedPaymentMethods() async {
+        supportedPaymentMethods = nil
+        let mints = visibleMints
+        var methods = [CashuSwift.Mint.Info.PaymentMethod]()
+        var seen = Set<CashuSwift.PaymentMethodID>()
+
+        for mint in mints {
+            // Payment methods are assumed to be available in both directions.
+            let options = await mint.supportedPaymentOptions(direction: .deposit)
+            guard !Task.isCancelled else { return }
+
+            for option in options where seen.insert(option.method).inserted {
+                methods.append(.init(method: option.method,
+                                     unit: option.unitCode,
+                                     methodName: option.methodName,
+                                     minAmount: option.minAmount,
+                                     maxAmount: option.maxAmount,
+                                     options: option.options,
+                                     commands: option.commands))
+            }
+        }
+
+        guard !Task.isCancelled, mints.map(\.mintID) == visibleMints.map(\.mintID) else { return }
+        supportedPaymentMethods = methods
+    }
+
     // MARK: - Nostr Ecash Receiving
     
     private var activeReceiveKeysExist: Bool {

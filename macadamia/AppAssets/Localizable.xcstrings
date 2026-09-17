@@ -2287,6 +2287,9 @@
         }
       }
     },
+    "Add a mint that supports deposits to continue." : {
+
+    },
     "Add a note to the recipient..." : {
       "localizations" : {
         "ar" : {
@@ -7696,6 +7699,9 @@
         }
       }
     },
+    "Create a generic deposit quote for this payment method" : {
+
+    },
     "Create invoice to add funds" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -8677,6 +8683,9 @@
           }
         }
       }
+    },
+    "Deposit by paying a Bolt11 invoice" : {
+
     },
     "Description" : {
       "localizations" : {
@@ -12267,6 +12276,9 @@
         }
       }
     },
+    "Get Address" : {
+
+    },
     "Get Invoice" : {
       "localizations" : {
         "ar" : {
@@ -12336,6 +12348,9 @@
           }
         }
       }
+    },
+    "Get Offer" : {
+
     },
     "Get Quote" : {
       "localizations" : {
@@ -12476,9 +12491,6 @@
           }
         }
       }
-    },
-    "Hello, World!" : {
-
     },
     "Here goes the slider for %@" : {
       "shouldTranslate" : false
@@ -15854,6 +15866,9 @@
         }
       }
     },
+    "Leave the amount empty to create an offer for any amount." : {
+
+    },
     "Legacy key" : {
       "localizations" : {
         "ar" : {
@@ -16147,6 +16162,9 @@
           }
         }
       }
+    },
+    "Loading payment methods…" : {
+
     },
     "Loading quotes..." : {
       "localizations" : {
@@ -16850,6 +16868,9 @@
           }
         }
       }
+    },
+    "Make an on-chain Bitcoin payment" : {
+
     },
     "Make transfer" : {
       "extractionState" : "stale",
@@ -21141,6 +21162,9 @@
         }
       }
     },
+    "No supported payment methods" : {
+
+    },
     "No transactions yet" : {
       "localizations" : {
         "ar" : {
@@ -24015,6 +24039,9 @@
           }
         }
       }
+    },
+    "Pay to a reusable Bolt12 offer" : {
+
     },
     "Pay with NFC" : {
       "localizations" : {
@@ -30206,6 +30233,9 @@
           }
         }
       }
+    },
+    "Select Method" : {
+
     },
     "Select..." : {
       "localizations" : {
