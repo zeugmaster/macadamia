@@ -52,30 +52,39 @@ struct DepositQuoteView: View {
     @State private var actionButtonState: ActionButtonState = .idle("")
     
     @State private var copied = false
+    @State private var showDetails = false
     @State private var hourglassStatus: HourglassProgressView.Status = .waiting
     
     var body: some View {
-        VStack {
-            VStack(alignment: .leading) {
-                switch paymentMethodKind {
-                case .bolt11, .bolt12, .onchain:
-                    QRView(string: quote.request)
-                case .generic:
-                    QRView(string: quote.quoteID)
-                }
-                Spacer().frame(height: 20)
-                HStack(alignment: .center) {
-                    Text(quote.quoteID)
+        List {
+            Section {
+                    if let amount = quote.amount {
+                        HStack {
+                            Text("Amount:")
+                            Spacer()
+                            Text(amountDisplayString(amount, unit: quote.unit))
+                        }
+                        .font(.callout)
                         .foregroundStyle(.secondary)
-                        .monospaced()
-                        .bold()
-                        .lineLimit(1)
-                        .truncationMode(.head)
-                        .padding(8)
-                    Spacer()
+                        .fontWeight(.semibold)
+                        .listRowSeparator(.hidden)
+                    }
+                Group {
+                    switch paymentMethodKind {
+                    case .bolt11, .bolt12, .onchain:
+                        QRView(string: quote.request)
+                    case .generic:
+                        QRView(string: quote.quoteID)
+                    }
+                }
+                .listRowInsets(EdgeInsets(top: quote.amount == nil ? 16 : 0,
+                                          leading: 16,
+                                          bottom: 16,
+                                          trailing: 16))
+                if quote.paymentMethodKind != .generic {
                     Button {
                         if copied { return }
-//                        UIPasteboard.general.string = quote.joined(separator: " ")
+                            UIPasteboard.general.string = quote.request
                         withAnimation {
                             copied = true
                         }
@@ -85,57 +94,49 @@ struct DepositQuoteView: View {
                             }
                         }
                     } label: {
+                        HStack {
+                            Text(quote.request)
+                                .lineLimit(1)
                             Image(systemName: copied ? "clipboard.fill" : "clipboard")
-                            .font(.callout)
-                            .padding(8)
-                            .background {
-                                HStack {
-                                    Rectangle()
-                                        .frame(width: 1)
-                                        .foregroundStyle(.background.opacity(0.7))
-                                    Spacer()
-                                }
-                            }
+                        }
+                    }
+                    .listRowSeparator(.hidden)
+                }
+                HStack {
+                    Text("Quote ID")
+                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                    Spacer()
+                    Text(quote.quoteID)
+                        .lineLimit(1)
+                        .font(.caption)
+                        .monospaced()
+                        .foregroundStyle(.secondary)
+                }
+                .contextMenu {
+                    Button(action: {
+                        UIPasteboard.general.string = quote.quoteID
+                    }) {
+                        Text("Copy Quote ID")
+                        Image(systemName: "doc.on.clipboard")
                     }
                 }
-                .background {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(.secondary.opacity(0.2))
+                .onTapGesture(count: 2) {
+                    UIPasteboard.general.string = quote.quoteID
                 }
-                .font(.footnote)
-            }
-            .padding()
-            .background {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.primary.opacity(0.07))
-                    .stroke(.primary.opacity(0.2), lineWidth: 0.5)
-            }
-            HStack {
-                Spacer()
-                HourglassProgressView(status: hourglassStatus)
-                Group {
-                    switch hourglassStatus {
-                    case .waiting:
-                        Text("Waiting for payment")
-                    case .success:
-                        Text("Payment received!")
-                    case .failure:
-                        Text("Error")
-                    }
+            } header: {
+                switch quote.paymentMethodKind {
+                case .bolt11: Text("Invoice")
+                case .bolt12: Text("Offer")
+                case .onchain: Text("Address")
+                case .generic: Text("Quote")
                 }
-//                .fontWeight(.semibold)
-                Spacer()
             }
-            .padding(10)
-            .foregroundStyle(.secondary)
-//            .background {
-//                RoundedRectangle(cornerRadius: 20)
-//                    .fill(.primary.opacity(0.07))
-//                    .stroke(.primary.opacity(0.2), lineWidth: 0.5)
-//            }
-            Spacer()
+            Section {
+                
+            }
+            
         }
-        .padding()
         .navigationTitle("\(quote.paymentMethodName) Deposit")
         .navigationBarTitleDisplayMode(.inline)
     }
