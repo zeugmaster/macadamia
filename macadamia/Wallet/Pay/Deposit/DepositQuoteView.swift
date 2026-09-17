@@ -96,26 +96,11 @@ struct DepositQuoteView: View {
                                           bottom: 16,
                                           trailing: 16))
                 if quote.paymentMethodKind != .generic {
-                    Button {
-                        if copied { return }
-                            UIPasteboard.general.string = quote.request
-                        withAnimation {
-                            copied = true
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            withAnimation {
-                                copied = false
-                            }
-                        }
-                    } label: {
-                        HStack {
-                            Text(quote.request)
-                                .lineLimit(1)
-                            Image(systemName: copied ? "clipboard.fill" : "clipboard")
-                        }
-                    }
-                    .listRowSeparator(.hidden)
+                    
                 }
+            } header: {
+                Text(quoteKindName)
+            } footer: {
                 HStack {
                     Text("Quote ID")
                         .foregroundStyle(.secondary)
@@ -127,24 +112,31 @@ struct DepositQuoteView: View {
                         .monospaced()
                         .foregroundStyle(.secondary)
                 }
-                .contextMenu {
-                    Button(action: {
-                        UIPasteboard.general.string = quote.quoteID
-                    }) {
-                        Text("Copy Quote ID")
-                        Image(systemName: "doc.on.clipboard")
+            }
+            
+            Section {
+                Button {
+                    if copied { return }
+                        UIPasteboard.general.string = quote.request
+                    withAnimation {
+                        copied = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        withAnimation {
+                            copied = false
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Spacer()
+                        Image(systemName: copied ? "clipboard.fill" : "clipboard")
+                        Text("Copy \(quoteKindName)\(quote.paymentMethodKind == .generic ? " ID" : "")")
+                            .fontWeight(.semibold)
+                            .lineLimit(1)
+                        Spacer()
                     }
                 }
-                .onTapGesture(count: 2) {
-                    UIPasteboard.general.string = quote.quoteID
-                }
-            } header: {
-                switch quote.paymentMethodKind {
-                case .bolt11: Text("Invoice")
-                case .bolt12: Text("Offer")
-                case .onchain: Text("Address")
-                case .generic: Text("Quote")
-                }
+                .listRowSeparator(.hidden)
             }
 
             Section {
@@ -205,6 +197,15 @@ struct DepositQuoteView: View {
             } catch {
                 // Leaving the view cancels its pending dismissal.
             }
+        }
+    }
+    
+    private var quoteKindName: String {
+        switch quote.paymentMethodKind {
+        case .bolt11: "Invoice"
+        case .bolt12: "Offer"
+        case .onchain: "Address"
+        case .generic: "Quote"
         }
     }
 
