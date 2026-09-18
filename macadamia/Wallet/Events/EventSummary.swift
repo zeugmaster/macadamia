@@ -164,6 +164,10 @@ struct MeltEventSummary: View {
                         CopyableRow(label: (event.mints?.first?.displayName ?? "nil") + " - Quote ID",
                                     value: event.bolt11MeltQuote?.quote ?? event.genericMeltQuote?.quote ?? "nil")
                     }
+                    if let quote = events.first?.lightningMeltQuote, quote.method == .bolt12,
+                       let offer = quote.request {
+                        CopyableRow(label: "Offer", value: offer)
+                    }
                     CopyableRow(label: "Preimage", value: events.first?.preImage ?? "nil")
                 }
             }

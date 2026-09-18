@@ -29,7 +29,7 @@ final class DepositQuoteRequestTests: XCTestCase {
             (.bolt11, 123), (.bolt12, nil), (.bolt12, 123), ("onchain", nil), ("branch", 123)
         ] {
             let key = try CashuSwift.Generic.quoteLockingKey(seed: seed, counter: 0)
-            let stub = try DepositHTTPStub { request in
+            let stub = try MintHTTPStub { request in
                 XCTAssertEqual(request.httpMethod, "POST")
                 XCTAssertEqual(request.url?.path, "/v1/mint/quote/\(method.rawValue)")
                 let data = try XCTUnwrap(request.httpBody)
@@ -95,7 +95,7 @@ final class DepositQuoteRequestTests: XCTestCase {
     @MainActor
     func testRejectsMissingOrMismatchedLocksAndWrongUnitOrAmount() async throws {
         for mutation in ["missing-key", "wrong-key", "wrong-unit", "wrong-amount"] {
-            let stub = try DepositHTTPStub { request in
+            let stub = try MintHTTPStub { request in
                 let data = try XCTUnwrap(request.httpBody)
                 var response = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
                 response["quote"] = "test-quote"
@@ -217,7 +217,7 @@ final class DepositQuoteRequestTests: XCTestCase {
             (.bolt11, 3), (.bolt12, nil), (.bolt12, 3), ("onchain", nil), ("branch", 3)
         ] {
             let key = try CashuSwift.Generic.quoteLockingKey(seed: seed, counter: 7)
-            let stub = try DepositHTTPStub { request in
+            let stub = try MintHTTPStub { request in
                 XCTAssertEqual(request.httpMethod, "POST")
                 XCTAssertEqual(request.url?.path, "/v1/mint/\(method.rawValue)")
                 let body = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(request.httpBody)) as? [String: Any])
@@ -303,7 +303,7 @@ final class DepositQuoteRequestTests: XCTestCase {
 
     @MainActor
     func testIssuanceRejectsMissingCounterOrWrongSigningKeyBeforeNetworking() async throws {
-        let stub = try DepositHTTPStub { _ in
+        let stub = try MintHTTPStub { _ in
             XCTFail("Invalid quote authorization must not reach the mint")
             return Data()
         }
@@ -341,7 +341,7 @@ final class DepositQuoteRequestTests: XCTestCase {
                     try? FileManager.default.removeItem(atPath: storeURL.path + suffix)
                 }
             }
-            let stub = try DepositHTTPStub { request in
+            let stub = try MintHTTPStub { request in
                 var body = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(request.httpBody)) as? [String: Any])
                 body["quote"] = "persisted-quote"
                 body["request"] = "persisted-request"
@@ -380,7 +380,7 @@ final class DepositQuoteRequestTests: XCTestCase {
 
     @MainActor
     func testFailedIssuanceLeavesPendingEventResumable() async throws {
-        let stub = try DepositHTTPStub { _ in throw URLError(.notConnectedToInternet) }
+        let stub = try MintHTTPStub { _ in throw URLError(.notConnectedToInternet) }
         defer { stub.remove() }
         let (container, mint, wallet) = try fixture(url: stub.url)
         mint.keysets[0].keys = ["1": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"]
@@ -455,88 +455,4 @@ final class DepositQuoteRequestTests: XCTestCase {
         return .init(method: method, quote: "test-quote", request: "request", unit: "sat", amount: amount,
                      state: nil, expiry: nil, raw: raw)
     }
-}
-
-private final class DepositHTTPStub: @unchecked Sendable {
-    private final class Registry: @unchecked Sendable {
-        let lock = NSLock()
-        var stubs: [String: DepositHTTPStub] = [:]
-        let registered = URLProtocol.registerClass(DepositURLProtocol.self)
-    }
-    private static let registry = Registry()
-    let url: URL
-    private let host: String
-    private let lock = NSLock()
-    private var captured: [URLRequest] = []
-    private let handler: (URLRequest) throws -> Data
-
-    init(handler: @escaping (URLRequest) throws -> Data) throws {
-        host = UUID().uuidString.lowercased() + ".deposit-tests.invalid"
-        url = try XCTUnwrap(URL(string: "https://" + host))
-        self.handler = handler
-        Self.registry.lock.lock()
-        defer { Self.registry.lock.unlock() }
-        Self.registry.stubs[host] = self
-    }
-
-    var requests: [URLRequest] {
-        lock.lock()
-        defer { lock.unlock() }
-        return captured
-    }
-
-    func remove() {
-        Self.registry.lock.lock()
-        defer { Self.registry.lock.unlock() }
-        Self.registry.stubs.removeValue(forKey: host)
-    }
-
-    static func response(to request: URLRequest) throws -> Data {
-        registry.lock.lock()
-        let stub = registry.stubs[request.url?.host ?? ""]
-        registry.lock.unlock()
-        let fixture = try XCTUnwrap(stub)
-        fixture.lock.lock()
-        fixture.captured.append(request)
-        fixture.lock.unlock()
-        return try fixture.handler(request)
-    }
-}
-
-private final class DepositURLProtocol: URLProtocol {
-    override class func canInit(with request: URLRequest) -> Bool {
-        request.url?.host?.hasSuffix(".deposit-tests.invalid") == true
-    }
-
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
-
-    override func startLoading() {
-        do {
-            var captured = request
-            if captured.httpBody == nil, let stream = captured.httpBodyStream {
-                stream.open()
-                defer { stream.close() }
-                var bytes = [UInt8](repeating: 0, count: 4096)
-                var data = Data()
-                while true {
-                    let count = stream.read(&bytes, maxLength: bytes.count)
-                    if count == 0 { break }
-                    guard count > 0 else { throw stream.streamError ?? URLError(.cannotDecodeRawData) }
-                    data.append(contentsOf: bytes.prefix(count))
-                }
-                captured.httpBody = data
-            }
-            let data = try DepositHTTPStub.response(to: captured)
-            let url = try XCTUnwrap(request.url)
-            let response = try XCTUnwrap(HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil,
-                                                       headerFields: ["Content-Type": "application/json"]))
-            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-            client?.urlProtocol(self, didLoad: data)
-            client?.urlProtocolDidFinishLoading(self)
-        } catch {
-            client?.urlProtocol(self, didFailWithError: error)
-        }
-    }
-
-    override func stopLoading() {}
 }

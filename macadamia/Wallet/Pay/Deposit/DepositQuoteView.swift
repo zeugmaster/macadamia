@@ -397,7 +397,7 @@ struct DepositQuoteView: View {
                 generic = generic.addingNut20Counter(counter)
                 result = try await CashuSwift.Generic.mint(quote: generic, from: mint, seed: wallet.seed,
                                                           quoteKey: key.privateKey, amount: amount,
-                                                          signatureFormat: .legacyConcat) // Matches MintView's CDK compatibility.
+                                                          signatureFormat: .legacyConcat) // Compatibility with CDK <= rev 6132607.
             } else {
                 guard quote.lockingKeyCounter == nil else {
                     throw CashuError.invalidKey("The locked deposit is missing its public key.")

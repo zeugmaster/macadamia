@@ -32,6 +32,7 @@ struct WalletView: View {
         case send
         case receive(urlString: String?)
         case melt(invoice: String?)
+        case offer(String)
         case reqPay(req: CashuSwift.PaymentRequest)
         case reqView
         case contactless
@@ -48,6 +49,8 @@ struct WalletView: View {
                 return "receive_\(urlString ?? "nil")"
             case .melt:
                 return "melt"
+            case .offer(let offer):
+                return "offer_\(offer)"
             case .reqPay(_):
                 return "reqPay"
             case .reqView:
@@ -147,7 +150,7 @@ struct WalletView: View {
                     }
                     
                     // MARK: - SCANNER
-                    InputViewModalButton(inputTypes: [.bolt11Invoice, .token, .creq, .lightningAddress, .lnurlPay, .merchantCode]) {
+                    InputViewModalButton(inputTypes: [.bolt11Invoice, .bolt12Offer, .token, .creq, .lightningAddress, .lnurlPay, .merchantCode]) {
                         Image(systemName: "qrcode")
                             .font(.largeTitle)
                             .padding(16)
@@ -166,8 +169,10 @@ struct WalletView: View {
                             )
                     } onResult: { result in
                         switch result.type {
-                            case .bolt11Invoice:
+                        case .bolt11Invoice:
                             navigationDestination = .melt(invoice: result.payload)
+                        case .bolt12Offer:
+                            navigationDestination = .offer(result.payload)
                         case .token:
                             navigationDestination = .receive(urlString: result.payload)
                         case .creq:
@@ -244,6 +249,8 @@ struct WalletView: View {
                     RedeemContainerView(tokenString: urlString)
                 case .melt(let invoice):
                     MeltView(invoice: invoice)
+                case .offer(let offer):
+                    MeltView(offer: offer)
                 case .reqPay(req: let req):
                     RequestPay(paymentRequest: req)
                 case .reqView:

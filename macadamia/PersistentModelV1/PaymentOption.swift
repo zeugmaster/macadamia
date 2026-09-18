@@ -204,65 +204,6 @@ extension Array where Element == PaymentOption {
     }
 }
 
-/// A mint quote in either its first-class BOLT11 shape or the method-agnostic
-/// generic shape used for every other advertised payment method (e.g. "branch").
-enum MintQuoteVariant {
-    case bolt11(CashuSwift.Bolt11.MintQuote)
-    case generic(CashuSwift.Generic.MintQuote)
-
-    var quoteID: String {
-        switch self {
-        case .bolt11(let quote): return quote.quote
-        case .generic(let quote): return quote.quote
-        }
-    }
-
-    var request: String {
-        switch self {
-        case .bolt11(let quote): return quote.request
-        case .generic(let quote): return quote.request
-        }
-    }
-
-    var unitCode: String {
-        switch self {
-        case .bolt11(let quote): return quote.unit
-        case .generic(let quote): return quote.unit
-        }
-    }
-
-    var amount: Int? {
-        switch self {
-        case .bolt11(let quote): return quote.amount
-        case .generic(let quote): return quote.amount
-        }
-    }
-
-    var expiry: Int? {
-        switch self {
-        case .bolt11(let quote): return quote.expiry
-        case .generic(let quote): return quote.expiry
-        }
-    }
-
-    var method: CashuSwift.PaymentMethodID {
-        switch self {
-        case .bolt11: return .bolt11
-        case .generic(let quote): return quote.method
-        }
-    }
-
-    var bolt11Quote: CashuSwift.Bolt11.MintQuote? {
-        if case .bolt11(let quote) = self { return quote }
-        return nil
-    }
-
-    var genericQuote: CashuSwift.Generic.MintQuote? {
-        if case .generic(let quote) = self { return quote }
-        return nil
-    }
-}
-
 extension CashuSwift.Generic.MintQuote {
     /// Key under which the wallet stores the NUT-20 locking-key counter inside
     /// the quote's raw JSON so it round-trips through local persistence. Never

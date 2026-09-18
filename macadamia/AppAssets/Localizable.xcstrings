@@ -5022,6 +5022,7 @@
       }
     },
     "BOLT12 is not yet supported" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -5090,6 +5091,12 @@
           }
         }
       }
+    },
+    "BOLT12 OFFER" : {
+
+    },
+    "BOLT12 payments must be paid in full from one mint." : {
+
     },
     "Brazilian Real" : {
       "localizations" : {
@@ -5790,6 +5797,9 @@
           }
         }
       }
+    },
+    "Change amount" : {
+
     },
     "Change created" : {
       "extractionState" : "stale",
@@ -10043,6 +10053,9 @@
         }
       }
     },
+    "Enter a BOLT12 offer." : {
+
+    },
     "Enter a nickname..." : {
       "localizations" : {
         "ar" : {
@@ -14277,6 +14290,9 @@
         }
       }
     },
+    "Insufficient Balance" : {
+
+    },
     "Insufficient balance (including fees)" : {
       "localizations" : {
         "ar" : {
@@ -14978,6 +14994,7 @@
       }
     },
     "Issue Ecash" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -16100,6 +16117,9 @@
         }
       }
     },
+    "Lightning fee reserve:" : {
+
+    },
     "Liquid Glass" : {
       "shouldTranslate" : false
     },
@@ -16184,7 +16204,13 @@
         }
       }
     },
+    "Loading mints..." : {
+
+    },
     "Loading payment methods…" : {
+
+    },
+    "Loading quote..." : {
 
     },
     "Loading quotes..." : {
@@ -19844,9 +19870,6 @@
         }
       }
     },
-    "No Action" : {
-      "shouldTranslate" : false
-    },
     "No active wallet" : {
       "localizations" : {
         "ar" : {
@@ -21186,6 +21209,9 @@
     "No supported payment methods" : {
 
     },
+    "No supporting mint" : {
+
+    },
     "No transactions yet" : {
       "localizations" : {
         "ar" : {
@@ -21605,6 +21631,9 @@
           }
         }
       }
+    },
+    "None of your mints supports BOLT12 payments in sats." : {
+
     },
     "Norwegian Krone" : {
       "localizations" : {
@@ -22166,6 +22195,12 @@
           }
         }
       }
+    },
+    "Offers priced in other currencies are not supported yet." : {
+
+    },
+    "Offers requiring a quantity are not supported yet." : {
+
     },
     "OK" : {
       "localizations" : {
@@ -24978,6 +25013,9 @@
         }
       }
     },
+    "Payment State Unknown" : {
+
+    },
     "Payment successful!" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -25188,6 +25226,9 @@
           }
         }
       }
+    },
+    "Payment Unavailable" : {
+
     },
     "Payments to this request can be received via Nostr for 90 days." : {
       "localizations" : {
@@ -33277,6 +33318,9 @@
     "The mint could not be reached. Check your internet connection." : {
 
     },
+    "The mint did not return a recognized payment state. Please check again later." : {
+
+    },
     "The mint reported this withdrawal as failed. Your ecash has been returned to your balance." : {
       "localizations" : {
         "ar" : {
@@ -33563,6 +33607,12 @@
         }
       }
     },
+    "The mint's quote does not match this payment." : {
+
+    },
+    "The mint's response does not match the saved payment." : {
+
+    },
     "The mints for this transfer could not be found." : {
       "localizations" : {
         "ar" : {
@@ -33632,6 +33682,9 @@
           }
         }
       }
+    },
+    "The offer has no payment destination." : {
+
     },
     "The operation could not be completed due to an unexpected database inconsistency. %@" : {
       "localizations" : {
@@ -34333,6 +34386,12 @@
         }
       }
     },
+    "The saved payment is missing its quote or proofs." : {
+
+    },
+    "The selected mint cannot cover the payment and fees." : {
+
+    },
     "The state of the reserved ecash could not be checked with the mint. Try again later." : {
       "localizations" : {
         "ar" : {
@@ -34823,7 +34882,11 @@
         }
       }
     },
+    "This field supports BOLT11 invoices, BOLT12 offers, LNURL strings (LNURL1...) or Lightning Addresses (e.g. user@host.com)." : {
+
+    },
     "This field supports BOLT11 invoices, LNURL strings (LNURL1...) or Lightning Addresses (e.g. user@host.com)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -34962,6 +35025,9 @@
           }
         }
       }
+    },
+    "This mint does not support BOLT12 payments in sats." : {
+
     },
     "This payment did not go through and is marked \"unpaid\" with the mint. Would you like to try again?" : {
       "localizations" : {
@@ -37212,6 +37278,9 @@
         }
       }
     },
+    "Try again" : {
+
+    },
     "Turkish Lira" : {
       "localizations" : {
         "ar" : {
@@ -38611,6 +38680,9 @@
           }
         }
       }
+    },
+    "Unsupported Lightning payment unit." : {
+
     },
     "Unsupported URL Scheme" : {
       "localizations" : {
