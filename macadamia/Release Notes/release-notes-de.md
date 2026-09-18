@@ -1,10 +1,11 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Fehlerbehebungen und Stabilitätsverbesserungen**
-Kleine Fehlerbehebungen für Zahlungsanforderungen und weitere Stabilitätsverbesserungen.
+**BOLT12-Unterstützung 🔩**
+Du kannst jetzt mit BOLT12-Angeboten einzahlen und auszahlen!
 
-**Neues App-Icon 🎨**
+**NFC-Zahlungsanforderung**
+Nutzer in der EU können jetzt eine Zahlungsanforderung erstellen und diese mit NFC-fähigen Cashu-Wallets begleichen.
 
 ------
 

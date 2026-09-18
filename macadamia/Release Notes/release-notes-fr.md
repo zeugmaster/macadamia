@@ -1,10 +1,11 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Corrections de bugs et améliorations de la stabilité**
-Petites corrections de bugs pour les demandes de paiement et autres améliorations de la stabilité.
+**Prise en charge de BOLT12 🔩**
+Vous pouvez désormais déposer et retirer des fonds à l'aide d'offres BOLT12 !
 
-**Nouvelle icône d'application 🎨**
+**Demande de paiement par NFC**
+Les utilisateurs de l'UE peuvent désormais créer une demande de paiement et la régler avec des portefeuilles Cashu compatibles NFC.
 
 ------
 

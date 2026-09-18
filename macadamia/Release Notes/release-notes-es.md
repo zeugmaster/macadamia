@@ -1,10 +1,11 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Corrección de errores y mejoras de estabilidad**
-Pequeñas correcciones de errores en las solicitudes de pago y otras mejoras de estabilidad.
+**Compatibilidad con BOLT12 🔩**
+¡Ahora puedes depositar y retirar fondos usando ofertas BOLT12!
 
-**Nuevo ícono de la app 🎨**
+**Solicitud de pago por NFC**
+Los usuarios de la UE ahora pueden crear una solicitud de pago y pagarla con monederos Cashu compatibles con NFC.
 
 ------
 

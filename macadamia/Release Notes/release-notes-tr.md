@@ -1,10 +1,11 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Hata düzeltmeleri ve kararlılık iyileştirmeleri**
-Ödeme istekleri için küçük hata düzeltmeleri ve diğer kararlılık iyileştirmeleri.
+**BOLT12 desteği 🔩**
+Artık BOLT12 teklifleriyle para yatırabilir ve çekebilirsiniz!
 
-**Yeni uygulama simgesi 🎨**
+**NFC ödeme isteği**
+AB'deki kullanıcılar artık bir ödeme isteği oluşturabilir ve NFC destekli Cashu cüzdanlarıyla bu isteği ödeyebilir.
 
 ------
 
