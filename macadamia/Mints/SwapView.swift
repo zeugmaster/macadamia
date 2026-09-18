@@ -115,7 +115,7 @@ struct SwapView: View {
                                selectedMint: $fromMint,
                                allowsNoneState: false,
                                allowedMintIDs: transferCompatibleMintIDs,
-                               hide: $toMint)
+                               hide: toMint)
                     HStack {
                         Text("Balance:")
                         Spacer()
@@ -130,7 +130,7 @@ struct SwapView: View {
                            selectedMint: $toMint,
                            allowsNoneState: true,
                            allowedMintIDs: transferCompatibleMintIDs,
-                           hide: $fromMint)
+                           hide: fromMint)
             }
 
             Section {

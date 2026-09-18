@@ -10,10 +10,21 @@ import SwiftData
 
 struct EventList: View {
     
-    struct EventGroup: Identifiable {
+    struct EventGroup: Identifiable, Hashable {
         let events: [Event]
         let date: Date // hold the latest date for the group for chronological sorting
         let id: UUID
+
+        static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
+
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(id)
+        }
+    }
+
+    enum Destination: Hashable {
+        case all
+        case event(EventGroup)
     }
     
     enum Style { case minimal, full }
@@ -72,7 +83,7 @@ struct EventList: View {
                                 .listRowSeparator(.hidden)
                         }
                         if eventGroups.count > shortListLength {
-                            NavigationLink(destination: EventList(style: .full),
+                            NavigationLink(value: Destination.all,
                                            label: {
                                 HStack {
                                     Spacer().frame(width: 28)
@@ -135,7 +146,7 @@ struct EventList: View {
         let eventGroup: EventGroup
         
         var body: some View {
-            NavigationLink(destination: destination(for: eventGroup)) {
+            NavigationLink(value: Destination.event(eventGroup)) {
                 VStack(alignment: .leading) {
                     HStack {
                         image
@@ -218,7 +229,7 @@ struct EventList: View {
         let eventGroup: EventGroup
         
         var body: some View {
-            NavigationLink(destination: destination(for: eventGroup)) {
+            NavigationLink(value: Destination.event(eventGroup)) {
                 VStack {
                     HStack {
                         Image(systemName: "building.columns.fill")
@@ -308,15 +319,26 @@ struct EventList: View {
         // Events sharing a groupingID belong to the same transaction and
         // therefore share a currency unit; pull it off the first event.
         let unit = group.events.first?.currencyUnit ?? .sat
-        let sum = group.events.reduce(0, { $0 + ($1.amount ?? 0) })
+        let amounts = group.events.compactMap(\.amount)
+        guard !amounts.isEmpty else { return nil }
+        let sum = amounts.reduce(0, +)
         return amountDisplayString(sum, unit: unit, negative: negative)
     }
     
     @ViewBuilder
-    private static func destination(for group: EventGroup) -> some View {
+    static func destination(for group: EventGroup) -> some View {
         switch group.events.first?.kind {
         case .pendingMint:
-            MintView(pendingMintEvent: group.events.first)
+            if let event = group.events.first {
+                let result = Result { try DepositQuoteView.restoreQuote(from: event) }
+                switch result {
+                case .success(let quote):
+                    DepositQuoteView(quote: quote)
+                case .failure(let error):
+                    ContentUnavailableView("Deposit unavailable", systemImage: "exclamationmark.triangle",
+                                           description: Text(error.localizedDescription))
+                }
+            }
         case .mint:
             if let e = group.events.first { MintEventSummary(event: e) } else { Text("No mint event provided.") }
         case .send:
@@ -326,9 +348,8 @@ struct EventList: View {
         case .pendingReceive:
             if let e = group.events.first { RedeemLaterView(event: e) } else { Text("No pending receive event provided.") }
         case .pendingMelt:
-            // Generic (non-BOLT11) melts are single events with their own flow;
-            // BOLT11 payments (incl. MPP groups) resume in MeltView.
-            if let e = group.events.first, e.genericMeltQuote != nil {
+            // Lightning payments resume in the shared melt flow.
+            if let e = group.events.first, let quote = e.genericMeltQuote, quote.method != .bolt12 {
                 GenericMeltView(pendingEvent: e)
             } else {
                 MeltView(events: group.events)

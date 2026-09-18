@@ -1,11 +1,11 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Bug fixes and stability improvements**
-Small bug fixes for payment requests, and other stability improvements.
+**BOLT12 Support 🔩**
+You can now deposit and withdraw using BOLT12 offers!
 
-**New App Icon 🎨**
-
+**NFC Payment Request**
+Users in the EU can now create a payment request and settle it with NFC-capable Cashu wallets.
 ------
 
 As always, thanks for using **macadamia**!

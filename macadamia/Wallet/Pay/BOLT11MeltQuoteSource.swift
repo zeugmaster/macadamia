@@ -2,32 +2,6 @@ import SwiftUI
 import SwiftData
 import CashuSwift
 
-/// A `(Mint, MeltQuote)` pair that's been validated and is ready for execution.
-///
-/// Produced by a quote-source view and consumed by `MeltView` to run the
-/// actual melt operation. The bundle is intentionally specific to BOLT11
-/// today; future payment methods will either add their own bundle shape or
-/// drive a generalization here.
-struct MeltQuoteBundle: Equatable {
-    let mint: Mint
-    let quote: CashuSwift.Bolt11.MeltQuote
-
-    static func == (lhs: MeltQuoteBundle, rhs: MeltQuoteBundle) -> Bool {
-        lhs.mint.mintID == rhs.mint.mintID &&
-        lhs.quote.quote == rhs.quote.quote
-    }
-}
-
-/// What a quote-source view publishes back to its host so the host can
-/// drive its action button and decide when to invoke execution.
-enum MeltSourceState: Equatable {
-    case awaitingInput
-    case loading
-    case insufficientBalance
-    case error(String)
-    case ready(bundles: [MeltQuoteBundle], totalFee: Int)
-}
-
 /// Quote-source view for BOLT11 melts. Owns invoice input, mint
 /// selection (single-mint and MPP), per-mint quote fetching and the
 /// allocation/fee display. Publishes a `MeltSourceState` upward so the
@@ -35,8 +9,7 @@ enum MeltSourceState: Equatable {
 ///
 /// This view knows nothing about how the melt is actually performed;
 /// `MeltView` owns that. The split keeps `MeltView` payment-method
-/// agnostic so future quote sources (BOLT12, on-chain, generic) can
-/// plug in alongside this one.
+/// agnostic so other quote sources can plug in alongside this one.
 struct BOLT11MeltQuoteSource: View {
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
@@ -540,7 +513,7 @@ struct BOLT11MeltQuoteSource: View {
         var bundles: [MeltQuoteBundle] = []
         for mint in currentSelected {
             if case .quote(let quote) = quoteEntries[mint] {
-                bundles.append(MeltQuoteBundle(mint: mint, quote: quote))
+                bundles.append(MeltQuoteBundle(mint: mint, quote: .bolt11(quote)))
             }
         }
         state = .ready(bundles: bundles, totalFee: totalFee)

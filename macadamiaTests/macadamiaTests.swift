@@ -335,10 +335,10 @@ final class macadamiaTests: XCTestCase {
             }
         }
         
-        // Test BOLT12 offers
+        // BOLT12 now validates the offer, rather than accepting its prefix alone.
         let bolt12Tests = [
-            ("lno1234567890", true),
-            ("LNO1234567890", true), // case insensitive
+            ("lno1234567890", false),
+            ("LNO1234567890", false), // case insensitive
         ]
         
         for (input, shouldBeValid) in bolt12Tests {

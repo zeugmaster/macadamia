@@ -88,7 +88,7 @@ struct LockedTokenBanner<Content: View>: View {
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(tint.opacity(0.07))
-                .stroke(tint.opacity(0.7).shadow(.drop(color: tint, radius: 4)), lineWidth: 2))
+                .stroke(tint.opacity(0.7).shadow(.drop(color: tint, radius: 4)), lineWidth: 1))
     }
 }
 

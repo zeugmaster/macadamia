@@ -15,7 +15,7 @@ extension AppSchemaV1.Event {
                                  wallet: Wallet,
                                  quote: CashuSwift.Bolt11.MintQuote,
                                  amount: Int,
-                                 expiration: Date,
+                                 expiration: Date?,
                                  mint: Mint) -> Event {
         Event(date: Date(),
               unit: unit,
@@ -258,7 +258,7 @@ extension AppSchemaV1.Event {
                                  visible: Bool = true,
                                  wallet: Wallet,
                                  genericQuote: CashuSwift.Generic.MintQuote,
-                                 amount: Int,
+                                 amount: Int?,
                                  expiration: Date?,
                                  mint: Mint) -> Event {
         assert(!genericQuote.method.rawValue.isEmpty, "a generic mint quote must carry its payment method")

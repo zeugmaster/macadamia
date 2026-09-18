@@ -20,6 +20,7 @@ struct WalletView: View {
     @State var showAlert: Bool = false
     @State var currentAlert: AlertDetail?
     @State private var processedMessageIds = Set<String>()
+    @State private var supportedPaymentMethods: [CashuSwift.Mint.Info.PaymentMethod]?
 
     @Binding var urlState: URLState?
     @Binding var pendingNavigation: Destination?
@@ -31,6 +32,7 @@ struct WalletView: View {
         case send
         case receive(urlString: String?)
         case melt(invoice: String?)
+        case offer(String)
         case reqPay(req: CashuSwift.PaymentRequest)
         case reqView
         case contactless
@@ -47,6 +49,8 @@ struct WalletView: View {
                 return "receive_\(urlString ?? "nil")"
             case .melt:
                 return "melt"
+            case .offer(let offer):
+                return "offer_\(offer)"
             case .reqPay(_):
                 return "reqPay"
             case .reqView:
@@ -71,8 +75,12 @@ struct WalletView: View {
         self._pendingNavigation = pendingNavigation
     }
     
-    var activeWallet:Wallet? {
+    private var activeWallet:Wallet? {
         wallets.first
+    }
+
+    private var visibleMints:[Mint] {
+        activeWallet?.mints.filter { !$0.hidden } ?? []
     }
 
     var body: some View {
@@ -131,8 +139,8 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .mint
                         } label: { fade in
-                            menuButtonLabel(title: String(localized: "Lightning"),
-                                            subtitle: String(localized: "Create invoice to add funds"),
+                            menuButtonLabel(title: String(localized: "Deposit"),
+                                            subtitle: String(localized: "Add funds"),
                                             imageSystemName: "bolt.fill",
                                             fade: fade)
                         }
@@ -142,7 +150,7 @@ struct WalletView: View {
                     }
                     
                     // MARK: - SCANNER
-                    InputViewModalButton(inputTypes: [.bolt11Invoice, .token, .creq, .lightningAddress, .lnurlPay, .merchantCode]) {
+                    InputViewModalButton(inputTypes: [.bolt11Invoice, .bolt12Offer, .token, .creq, .lightningAddress, .lnurlPay, .merchantCode]) {
                         Image(systemName: "qrcode")
                             .font(.largeTitle)
                             .padding(16)
@@ -161,8 +169,10 @@ struct WalletView: View {
                             )
                     } onResult: { result in
                         switch result.type {
-                            case .bolt11Invoice:
+                        case .bolt11Invoice:
                             navigationDestination = .melt(invoice: result.payload)
+                        case .bolt12Offer:
+                            navigationDestination = .offer(result.payload)
                         case .token:
                             navigationDestination = .receive(urlString: result.payload)
                         case .creq:
@@ -210,8 +220,8 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .payeeInput
                         } label: { fade in
-                            menuButtonLabel(title: String(localized: "Lightning"),
-                                            subtitle: String(localized: "Pay invoice"),
+                            menuButtonLabel(title: String(localized: "Withdraw"),
+                                            subtitle: String(localized: "Pay Out"),
                                             imageSystemName: "bolt.fill",
                                             fade: fade)
                         }
@@ -222,16 +232,25 @@ struct WalletView: View {
                 }
                 .padding(EdgeInsets(top: 20, leading: 16, bottom: 40, trailing: 16))
             }
+            // Keep event destinations alive when a completed deposit hides its pending row.
+            .navigationDestination(for: EventList.Destination.self) { destination in
+                switch destination {
+                case .all: EventList(style: .full)
+                case .event(let group): EventList.destination(for: group)
+                }
+            }
             .navigationDestination(item: $navigationDestination) { destination in
                 switch destination {
                 case .mint:
-                    MintView()
+                    depositDestination
                 case .send:
                     SendView()
                 case .receive(let urlString):
                     RedeemContainerView(tokenString: urlString)
                 case .melt(let invoice):
                     MeltView(invoice: invoice)
+                case .offer(let offer):
+                    MeltView(offer: offer)
                 case .reqPay(req: let req):
                     RequestPay(paymentRequest: req)
                 case .reqView:
@@ -270,12 +289,107 @@ struct WalletView: View {
             }
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
         }
+        .task(id: visibleMints.map(\.mintID)) {
+            await refreshSupportedPaymentMethods()
+        }
         .environment(\.dismissToRoot, DismissToRootAction({ @MainActor in
             navigationDestination = nil
             navigationPath = NavigationPath()
         }))
     }
+
+    @ViewBuilder
+    private var depositDestination: some View {
+        if let methods = supportedPaymentMethods {
+            if methods.count == 1, let method = methods.first {
+                DepositQuoteRequestView(paymentMethod: method)
+            } else if methods.isEmpty {
+                ContentUnavailableView("No supported payment methods",
+                                       systemImage: "building.columns",
+                                       description: Text("Add a mint that supports deposits to continue."))
+                    .navigationTitle("Deposit")
+            } else {
+                PaymentMethodList(paymentDirection: .deposit, paymentMethods: methods)
+            }
+        } else {
+            ProgressView("Loading payment methods…")
+                .navigationTitle("Deposit")
+        }
+    }
     
+    private func menuLabel(imageName: String,
+                           text: String,
+                           fade: Bool) -> some View {
+        Text("\(Image(systemName: imageName))  \(text)")
+            .opacity(fade ? 0.5 : 1)
+            .font(.title3)
+            .fontWeight(.semibold)
+            .padding(EdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0))
+            .frame(maxWidth: .infinity)
+            .background(Color.secondary.opacity(0.3))
+            .cornerRadius(buttonCornerRadius)
+            .lineLimit(1)
+            .overlay(
+                RoundedRectangle(cornerRadius: buttonCornerRadius)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.gray.opacity(0.6), Color.gray.opacity(0.2)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+    }
+    
+    private func menuButtonLabel(title: String,
+                                 subtitle: String,
+                                 imageSystemName: String,
+                                 fade: Bool) -> some View {
+        Color.clear.overlay(
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(title)
+                        .foregroundStyle(.white)
+                        .font(.title3)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.gray)
+                }
+                Spacer()
+                Image(systemName: imageSystemName)
+            }
+        )
+        .opacity(fade ? 0.5 : 1)
+        .padding(EdgeInsets(top: 24, leading: 12, bottom: 24, trailing: 12))
+    }
+    
+    private func refreshSupportedPaymentMethods() async {
+        supportedPaymentMethods = nil
+        let mints = visibleMints
+        var methods = [CashuSwift.Mint.Info.PaymentMethod]()
+        var seen = Set<CashuSwift.PaymentMethodID>()
+
+        for mint in mints {
+            // Payment methods are assumed to be available in both directions.
+            let options = await mint.supportedPaymentOptions(direction: .deposit)
+            guard !Task.isCancelled else { return }
+
+            for option in options where seen.insert(option.method).inserted {
+                methods.append(.init(method: option.method,
+                                     unit: option.unitCode,
+                                     methodName: option.methodName,
+                                     minAmount: option.minAmount,
+                                     maxAmount: option.maxAmount,
+                                     options: option.options,
+                                     commands: option.commands))
+            }
+        }
+
+        guard !Task.isCancelled, mints.map(\.mintID) == visibleMints.map(\.mintID) else { return }
+        supportedPaymentMethods = methods
+    }
+
     // MARK: - Nostr Ecash Receiving
     
     private var activeReceiveKeysExist: Bool {
@@ -433,53 +547,6 @@ struct WalletView: View {
                 walletLogger.error("error while trying to auto-redeem token from nostr dm: \(error)")
             }
         }
-    }
-    
-    private func menuLabel(imageName: String,
-                           text: String,
-                           fade: Bool) -> some View {
-        Text("\(Image(systemName: imageName))  \(text)")
-            .opacity(fade ? 0.5 : 1)
-            .font(.title3)
-            .fontWeight(.semibold)
-            .padding(EdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0))
-            .frame(maxWidth: .infinity)
-            .background(Color.secondary.opacity(0.3))
-            .cornerRadius(buttonCornerRadius)
-            .lineLimit(1)
-            .overlay(
-                RoundedRectangle(cornerRadius: buttonCornerRadius)
-                    .stroke(
-                        LinearGradient(
-                            colors: [Color.gray.opacity(0.6), Color.gray.opacity(0.2)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
-            )
-    }
-    
-    private func menuButtonLabel(title: String,
-                                 subtitle: String,
-                                 imageSystemName: String,
-                                 fade: Bool) -> some View {
-        Color.clear.overlay(
-            HStack {
-                VStack(alignment: .leading) {
-                    Text(title)
-                        .foregroundStyle(.white)
-                        .font(.title3)
-                    Text(subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.gray)
-                }
-                Spacer()
-                Image(systemName: imageSystemName)
-            }
-        )
-        .opacity(fade ? 0.5 : 1)
-        .padding(EdgeInsets(top: 24, leading: 12, bottom: 24, trailing: 12))
     }
 
     private func displayAlert(alert: AlertDetail) {

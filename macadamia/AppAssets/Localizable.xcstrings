@@ -314,6 +314,9 @@
         }
       }
     },
+    "%@ Deposit" : {
+
+    },
     "%@ Redeem Later" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2284,6 +2287,9 @@
         }
       }
     },
+    "Add a mint that supports deposits to continue." : {
+
+    },
     "Add a note to the recipient..." : {
       "localizations" : {
         "ar" : {
@@ -2420,6 +2426,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ekle ve kullan"
+          }
+        }
+      }
+    },
+    "Add funds" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إضافة أموال"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ফান্ড যোগ করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guthaben hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agregar fondos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter des fonds"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फंड जोड़ें"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "資金を追加"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자금 추가"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar fundos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пополнить баланс"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fon ekle"
           }
         }
       }
@@ -2985,7 +3061,6 @@
       }
     },
     "Amount:" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -4947,6 +5022,7 @@
       }
     },
     "BOLT12 is not yet supported" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -5015,6 +5091,12 @@
           }
         }
       }
+    },
+    "BOLT12 OFFER" : {
+
+    },
+    "BOLT12 payments must be paid in full from one mint." : {
+
     },
     "Brazilian Real" : {
       "localizations" : {
@@ -5716,6 +5798,9 @@
         }
       }
     },
+    "Change amount" : {
+
+    },
     "Change created" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6066,6 +6151,9 @@
           }
         }
       }
+    },
+    "Checking support..." : {
+
     },
     "Chilean Peso" : {
       "localizations" : {
@@ -7270,6 +7358,16 @@
         }
       }
     },
+    "Copy %@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Copy %1$@%2$@"
+          }
+        }
+      }
+    },
     "Copy to clipboad" : {
       "localizations" : {
         "ar" : {
@@ -7409,6 +7507,9 @@
           }
         }
       }
+    },
+    "Could not check payment. %@" : {
+
     },
     "Could not determine the transfer's state. Nothing was changed — try again later." : {
       "localizations" : {
@@ -7550,6 +7651,9 @@
         }
       }
     },
+    "Could not issue ecash. %@" : {
+
+    },
     "Could not parse merchant code" : {
       "localizations" : {
         "ar" : {
@@ -7620,7 +7724,11 @@
         }
       }
     },
+    "Create a generic deposit quote for this payment method" : {
+
+    },
     "Create invoice to add funds" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -8530,6 +8638,82 @@
           }
         }
       }
+    },
+    "Deposit" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيداع"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "জমা করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einzahlen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depositar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déposer"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "जमा करें"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "入金"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "입금"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depositar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пополнить"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para yatır"
+          }
+        }
+      }
+    },
+    "Deposit by paying a Bolt11 invoice" : {
+
+    },
+    "Deposit unavailable" : {
+
     },
     "Description" : {
       "localizations" : {
@@ -9585,6 +9769,9 @@
         }
       }
     },
+    "Ecash received!" : {
+
+    },
     "Ecash selected" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -9865,6 +10052,9 @@
           }
         }
       }
+    },
+    "Enter a BOLT12 offer." : {
+
     },
     "Enter a nickname..." : {
       "localizations" : {
@@ -12050,6 +12240,7 @@
       }
     },
     "Generic" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -12118,6 +12309,9 @@
           }
         }
       }
+    },
+    "Get Address" : {
+
     },
     "Get Invoice" : {
       "localizations" : {
@@ -12188,6 +12382,9 @@
           }
         }
       }
+    },
+    "Get Offer" : {
+
     },
     "Get Quote" : {
       "localizations" : {
@@ -14093,6 +14290,9 @@
         }
       }
     },
+    "Insufficient Balance" : {
+
+    },
     "Insufficient balance (including fees)" : {
       "localizations" : {
         "ar" : {
@@ -14794,6 +14994,7 @@
       }
     },
     "Issue Ecash" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -15703,6 +15904,9 @@
         }
       }
     },
+    "Leave the amount empty to create an offer for any amount." : {
+
+    },
     "Legacy key" : {
       "localizations" : {
         "ar" : {
@@ -15843,9 +16047,6 @@
         }
       }
     },
-    "Lightning" : {
-      "shouldTranslate" : false
-    },
     "Lightning Address" : {
       "localizations" : {
         "ar" : {
@@ -15915,6 +16116,9 @@
           }
         }
       }
+    },
+    "Lightning fee reserve:" : {
+
     },
     "Liquid Glass" : {
       "shouldTranslate" : false
@@ -15999,6 +16203,15 @@
           }
         }
       }
+    },
+    "Loading mints..." : {
+
+    },
+    "Loading payment methods…" : {
+
+    },
+    "Loading quote..." : {
+
     },
     "Loading quotes..." : {
       "localizations" : {
@@ -16702,6 +16915,9 @@
           }
         }
       }
+    },
+    "Make an on-chain Bitcoin payment" : {
+
     },
     "Make transfer" : {
       "extractionState" : "stale",
@@ -18674,6 +18890,7 @@
       }
     },
     "Multiple..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -19652,9 +19869,6 @@
           }
         }
       }
-    },
-    "No Action" : {
-      "shouldTranslate" : false
     },
     "No active wallet" : {
       "localizations" : {
@@ -20919,6 +21133,9 @@
         }
       }
     },
+    "No supported mints" : {
+
+    },
     "No supported payment method found in bitcoin URI" : {
       "localizations" : {
         "ar" : {
@@ -20988,6 +21205,12 @@
           }
         }
       }
+    },
+    "No supported payment methods" : {
+
+    },
+    "No supporting mint" : {
+
     },
     "No transactions yet" : {
       "localizations" : {
@@ -21408,6 +21631,9 @@
           }
         }
       }
+    },
+    "None of your mints supports BOLT12 payments in sats." : {
+
     },
     "Norwegian Krone" : {
       "localizations" : {
@@ -21969,6 +22195,12 @@
           }
         }
       }
+    },
+    "Offers priced in other currencies are not supported yet." : {
+
+    },
+    "Offers requiring a quantity are not supported yet." : {
+
     },
     "OK" : {
       "localizations" : {
@@ -23724,6 +23956,7 @@
       }
     },
     "Pay invoice" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -23792,6 +24025,79 @@
           }
         }
       }
+    },
+    "Pay Out" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "دفع الأموال"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "অর্থ প্রদান করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auszahlen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pagar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verser des fonds"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "भुगतान करें"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支払う"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지급"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pagar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выплатить"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ödeme yap"
+          }
+        }
+      }
+    },
+    "Pay to a reusable Bolt12 offer" : {
+
     },
     "Pay with NFC" : {
       "localizations" : {
@@ -24564,6 +24870,9 @@
         }
       }
     },
+    "Payment received. Issuing ecash..." : {
+
+    },
     "Payment Request" : {
       "localizations" : {
         "ar" : {
@@ -24703,6 +25012,9 @@
           }
         }
       }
+    },
+    "Payment State Unknown" : {
+
     },
     "Payment successful!" : {
       "extractionState" : "stale",
@@ -24914,6 +25226,9 @@
           }
         }
       }
+    },
+    "Payment Unavailable" : {
+
     },
     "Payments to this request can be received via Nostr for 90 days." : {
       "localizations" : {
@@ -29634,6 +29949,76 @@
     "Scroll to drag varied content under the\ncheckmark and watch the material respond." : {
       "shouldTranslate" : false
     },
+    "Seed Phrase" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عبارة البذرة"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "সিড ফ্রেজ"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seed-Phrase"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frase semilla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phrase de récupération"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीड फ्रेज़"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シードフレーズ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시드 구문"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frase semente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сид-фраза"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seed ifadesi"
+          }
+        }
+      }
+    },
     "Select" : {
       "localizations" : {
         "ar" : {
@@ -29913,6 +30298,9 @@
           }
         }
       }
+    },
+    "Select Method" : {
+
     },
     "Select..." : {
       "localizations" : {
@@ -30826,6 +31214,7 @@
       }
     },
     "Show Seed Phrase" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -32926,6 +33315,12 @@
         }
       }
     },
+    "The mint could not be reached. Check your internet connection." : {
+
+    },
+    "The mint did not return a recognized payment state. Please check again later." : {
+
+    },
     "The mint reported this withdrawal as failed. Your ecash has been returned to your balance." : {
       "localizations" : {
         "ar" : {
@@ -32996,6 +33391,9 @@
         }
       }
     },
+    "The mint reports that ecash has already been issued for this quote." : {
+
+    },
     "The mint returned an unknown quote state." : {
       "localizations" : {
         "ar" : {
@@ -33065,6 +33463,9 @@
           }
         }
       }
+    },
+    "The mint returned inconsistent paid and issued amounts. The deposit could not be redeemed." : {
+
     },
     "The mint you are trying to add is already known to the wallet. Please add each mint only once." : {
       "localizations" : {
@@ -33206,6 +33607,12 @@
         }
       }
     },
+    "The mint's quote does not match this payment." : {
+
+    },
+    "The mint's response does not match the saved payment." : {
+
+    },
     "The mints for this transfer could not be found." : {
       "localizations" : {
         "ar" : {
@@ -33275,6 +33682,9 @@
           }
         }
       }
+    },
+    "The offer has no payment destination." : {
+
     },
     "The operation could not be completed due to an unexpected database inconsistency. %@" : {
       "localizations" : {
@@ -33976,6 +34386,12 @@
         }
       }
     },
+    "The saved payment is missing its quote or proofs." : {
+
+    },
+    "The selected mint cannot cover the payment and fees." : {
+
+    },
     "The state of the reserved ecash could not be checked with the mint. Try again later." : {
       "localizations" : {
         "ar" : {
@@ -34466,7 +34882,11 @@
         }
       }
     },
+    "This field supports BOLT11 invoices, BOLT12 offers, LNURL strings (LNURL1...) or Lightning Addresses (e.g. user@host.com)." : {
+
+    },
     "This field supports BOLT11 invoices, LNURL strings (LNURL1...) or Lightning Addresses (e.g. user@host.com)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -34605,6 +35025,9 @@
           }
         }
       }
+    },
+    "This mint does not support BOLT12 payments in sats." : {
+
     },
     "This payment did not go through and is marked \"unpaid\" with the mint. Would you like to try again?" : {
       "localizations" : {
@@ -35026,6 +35449,9 @@
           }
         }
       }
+    },
+    "This payment request has expired. Create a new deposit to continue." : {
+
     },
     "This wallet and the Cashu protocol are in active development. Be cautious when using this software and follow best practices:\n\n• Mint only as much as you are ready to lose\n\n• Only use mints you trust\n\n• Back up your wallet\n\nIf you experience any issues, don't hesitate to send a request for support or feedback to [support@macadamia.cash](mailto:support@macadamia.cash) or open an Issue on [Github](https://github.com/zeugmaster/macadamia/issues)." : {
       "localizations" : {
@@ -36852,6 +37278,9 @@
         }
       }
     },
+    "Try again" : {
+
+    },
     "Turkish Lira" : {
       "localizations" : {
         "ar" : {
@@ -38252,6 +38681,9 @@
         }
       }
     },
+    "Unsupported Lightning payment unit." : {
+
+    },
     "Unsupported URL Scheme" : {
       "localizations" : {
         "ar" : {
@@ -39027,6 +39459,9 @@
           }
         }
       }
+    },
+    "Waiting for payment..." : {
+
     },
     "Waiting for the mint operator to confirm the payout. This can take a few minutes." : {
       "localizations" : {
