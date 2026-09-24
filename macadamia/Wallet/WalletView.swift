@@ -14,21 +14,25 @@ struct WalletView: View {
     @Query(filter: #Predicate<Wallet> { wallet in
         wallet.active == true
     }) private var wallets: [Wallet]
-    
+
+    @Query private var nostrKeys: [NostrKeypair]
+
     @State var showAlert: Bool = false
     @State var currentAlert: AlertDetail?
     @State private var processedMessageIds = Set<String>()
+    @State private var supportedPaymentMethods: [CashuSwift.Mint.Info.PaymentMethod]?
 
     @Binding var urlState: URLState?
     @Binding var pendingNavigation: Destination?
     
-    private let buttonCornerRadius = 14.0
+    private let buttonCornerRadius = 20.0
     
     enum Destination: Identifiable, Hashable {
         case mint
         case send
         case receive(urlString: String?)
         case melt(invoice: String?)
+        case offer(String)
         case reqPay(req: CashuSwift.PaymentRequest)
         case reqView
         case contactless
@@ -45,6 +49,8 @@ struct WalletView: View {
                 return "receive_\(urlString ?? "nil")"
             case .melt:
                 return "melt"
+            case .offer(let offer):
+                return "offer_\(offer)"
             case .reqPay(_):
                 return "reqPay"
             case .reqView:
@@ -69,8 +75,12 @@ struct WalletView: View {
         self._pendingNavigation = pendingNavigation
     }
     
-    var activeWallet:Wallet? {
+    private var activeWallet:Wallet? {
         wallets.first
+    }
+
+    private var visibleMints:[Mint] {
+        activeWallet?.mints.filter { !$0.hidden } ?? []
     }
 
     var body: some View {
@@ -129,8 +139,8 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .mint
                         } label: { fade in
-                            menuButtonLabel(title: String(localized: "Lightning"),
-                                            subtitle: String(localized: "Create invoice to add funds"),
+                            menuButtonLabel(title: String(localized: "Deposit"),
+                                            subtitle: String(localized: "Add funds"),
                                             imageSystemName: "bolt.fill",
                                             fade: fade)
                         }
@@ -140,7 +150,7 @@ struct WalletView: View {
                     }
                     
                     // MARK: - SCANNER
-                    InputViewModalButton(inputTypes: [.bolt11Invoice, .token, .creq, .lightningAddress, .lnurlPay, .merchantCode]) {
+                    InputViewModalButton(inputTypes: [.bolt11Invoice, .bolt12Offer, .token, .creq, .lightningAddress, .lnurlPay, .merchantCode]) {
                         Image(systemName: "qrcode")
                             .font(.largeTitle)
                             .padding(16)
@@ -159,8 +169,10 @@ struct WalletView: View {
                             )
                     } onResult: { result in
                         switch result.type {
-                            case .bolt11Invoice:
+                        case .bolt11Invoice:
                             navigationDestination = .melt(invoice: result.payload)
+                        case .bolt12Offer:
+                            navigationDestination = .offer(result.payload)
                         case .token:
                             navigationDestination = .receive(urlString: result.payload)
                         case .creq:
@@ -208,8 +220,8 @@ struct WalletView: View {
                         Templates.MenuItem {
                             navigationDestination = .payeeInput
                         } label: { fade in
-                            menuButtonLabel(title: String(localized: "Lightning"),
-                                            subtitle: String(localized: "Pay invoice"),
+                            menuButtonLabel(title: String(localized: "Withdraw"),
+                                            subtitle: String(localized: "Pay Out"),
                                             imageSystemName: "bolt.fill",
                                             fade: fade)
                         }
@@ -220,16 +232,25 @@ struct WalletView: View {
                 }
                 .padding(EdgeInsets(top: 20, leading: 16, bottom: 40, trailing: 16))
             }
+            // Keep event destinations alive when a completed deposit hides its pending row.
+            .navigationDestination(for: EventList.Destination.self) { destination in
+                switch destination {
+                case .all: EventList(style: .full)
+                case .event(let group): EventList.destination(for: group)
+                }
+            }
             .navigationDestination(item: $navigationDestination) { destination in
                 switch destination {
                 case .mint:
-                    MintView()
+                    depositDestination
                 case .send:
                     SendView()
                 case .receive(let urlString):
                     RedeemContainerView(tokenString: urlString)
                 case .melt(let invoice):
                     MeltView(invoice: invoice)
+                case .offer(let offer):
+                    MeltView(offer: offer)
                 case .reqPay(req: let req):
                     RequestPay(paymentRequest: req)
                 case .reqView:
@@ -261,108 +282,38 @@ struct WalletView: View {
             .onAppear {
                 connectNostrIfConfigured()
             }
+            .onChange(of: nostrKeys) { _, _ in
+                // Fires when the legacy-key migrator or a new payment request adds a key
+                // (or a key is deleted) while this view is already on screen
+                connectNostrIfConfigured()
+            }
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+        }
+        .task(id: visibleMints.map(\.mintID)) {
+            await refreshSupportedPaymentMethods()
         }
         .environment(\.dismissToRoot, DismissToRootAction({ @MainActor in
             navigationDestination = nil
             navigationPath = NavigationPath()
         }))
     }
-    
-    // MARK: - Nostr Ecash Receiving
-    
-    private func connectNostrIfConfigured() {
-        guard autoConnectEnabled else {
-            walletLogger.debug("Auto-connect to relays disabled, skipping connection")
-            return
-        }
-        
-        guard NostrKeychain.hasNsec() else {
-            walletLogger.debug("No Nostr key configured, skipping connection")
-            return
-        }
-        
-        walletLogger.info("Connecting to Nostr relays for ecash messages")
-        nostrService.connect()
-    }
-    
-    private func processNewEcashMessages(_ messages: [ReceivedEcashMessage]) {
-        for message in messages where !processedMessageIds.contains(message.id) && !message.isRedeemed {
-            processedMessageIds.insert(message.id)
-            Task {
-                await receiveEcashFromMessage(message)
+
+    @ViewBuilder
+    private var depositDestination: some View {
+        if let methods = supportedPaymentMethods {
+            if methods.count == 1, let method = methods.first {
+                DepositQuoteRequestView(paymentMethod: method)
+            } else if methods.isEmpty {
+                ContentUnavailableView("No supported payment methods",
+                                       systemImage: "building.columns",
+                                       description: Text("Add a mint that supports deposits to continue."))
+                    .navigationTitle("Deposit")
+            } else {
+                PaymentMethodList(paymentDirection: .deposit, paymentMethods: methods)
             }
-        }
-    }
-    
-    private func receiveEcashFromMessage(_ message: ReceivedEcashMessage) async {
-        guard let activeWallet else {
-            walletLogger.error("No active wallet to receive ecash")
-            return
-        }
-        
-        let token = message.payload.toToken()
-        
-        // Get the mint URL from the token
-        guard let mintURLString = token.proofsByMint.keys.first else {
-            walletLogger.error("Could not determine mint URL from token")
-            return
-        }
-        
-        // Find the mint in our wallet
-        guard let mint = activeWallet.mints.first(where: { $0.url.absoluteString == mintURLString && !$0.hidden }) else {
-            walletLogger.warning("Received ecash from unknown mint: \(mintURLString)")
-            displayAlert(alert: AlertDetail(title: String(localized: "⚡ Incoming Ecash"),
-                                            description: String(localized: "Received ecash from an unknown mint (\(mintURLString)). Add this mint to redeem.")))
-            return
-        }
-        
-        // Check if proofs are still valid/unspent
-        guard let proofs = token.proofsByMint[mintURLString] else {
-            walletLogger.error("No proofs found in token")
-            return
-        }
-        
-        Task { @MainActor in
-            do {
-                let proofStates = try await CashuSwift.check(proofs, mint: CashuSwift.Mint(mint))
-                
-                // All proofs must be unspent to proceed
-                guard proofStates.allSatisfy({ $0 == .unspent }) else {
-                    walletLogger.warning("Received ecash contains spent proofs, skipping")
-                    return
-                }
-                
-                walletLogger.info("Proofs are valid, receiving \(token.sum()) sats")
-                
-                // Get private key for P2PK locked tokens
-                let privateKeyString = activeWallet.privateKeyData.map { String(bytes: $0) }
-                
-                let redeemResult = try await CashuSwift.receive(token: token,
-                                                                of: CashuSwift.Mint(mint),
-                                                                seed: activeWallet.seed,
-                                                                privateKey: privateKeyString)
-                
-                walletLogger.debug("result of redeeming token DLEQ check; in: \(String(describing: redeemResult.inputDLEQ)) out: \(String(describing: redeemResult.outputDLEQ))")
-                
-                let internalProofs = try mint.addProofs(redeemResult.proofs, to: modelContext)
-                
-                modelContext.insert(Event.receiveEvent(unit: .sat,
-                                                       shortDescription: "Receive",
-                                                       wallet: activeWallet,
-                                                       amount: redeemResult.proofs.sum,
-                                                       longDescription: "",
-                                                       proofs: internalProofs,
-                                                       memo: token.memo,
-                                                       mint: mint,
-                                                       redeemed: true))
-                
-                try modelContext.save()
-                
-            } catch {
-                displayAlert(alert: AlertDetail(title: String(localized: "Something went wrong"), description: String(localized: "An error occured while trying to redeem a token received via Nostr DMs. \(String(describing: error))")))
-                walletLogger.error("error while trying to auto-redeem token from nostr dm: \(error)")
-            }
+        } else {
+            ProgressView("Loading payment methods…")
+                .navigationTitle("Deposit")
         }
     }
     
@@ -411,6 +362,191 @@ struct WalletView: View {
         )
         .opacity(fade ? 0.5 : 1)
         .padding(EdgeInsets(top: 24, leading: 12, bottom: 24, trailing: 12))
+    }
+    
+    private func refreshSupportedPaymentMethods() async {
+        supportedPaymentMethods = nil
+        let mints = visibleMints
+        var methods = [CashuSwift.Mint.Info.PaymentMethod]()
+        var seen = Set<CashuSwift.PaymentMethodID>()
+
+        for mint in mints {
+            // Payment methods are assumed to be available in both directions.
+            let options = await mint.supportedPaymentOptions(direction: .deposit)
+            guard !Task.isCancelled else { return }
+
+            for option in options where seen.insert(option.method).inserted {
+                methods.append(.init(method: option.method,
+                                     unit: option.unitCode,
+                                     methodName: option.methodName,
+                                     minAmount: option.minAmount,
+                                     maxAmount: option.maxAmount,
+                                     options: option.options,
+                                     commands: option.commands))
+            }
+        }
+
+        guard !Task.isCancelled, mints.map(\.mintID) == visibleMints.map(\.mintID) else { return }
+        supportedPaymentMethods = methods
+    }
+
+    // MARK: - Nostr Ecash Receiving
+    
+    private var activeReceiveKeysExist: Bool {
+        guard let wallet = wallets.first else { return false }
+        return nostrKeys.contains { $0.wallet?.walletID == wallet.walletID && $0.isActive }
+    }
+
+    private func connectNostrIfConfigured() {
+        guard activeReceiveKeysExist else {
+            walletLogger.debug("No active nostr receive keys, skipping connection")
+            return
+        }
+
+        if nostrService.hasRelayPool {
+            // Already connected: make sure the subscription covers the current key set
+            nostrService.refreshSubscriptions()
+        } else {
+            guard autoConnectEnabled else {
+                walletLogger.debug("Auto-connect to relays disabled, skipping connection")
+                return
+            }
+            walletLogger.info("Connecting to Nostr relays for ecash messages")
+            nostrService.connect()
+        }
+    }
+
+    private func processNewEcashMessages(_ messages: [ReceivedEcashMessage]) {
+        // processedMessageIds only prevents duplicate concurrent tasks within this
+        // session; the persisted NostrMessage ledger is the source of truth
+        for message in messages where !processedMessageIds.contains(message.id) {
+            processedMessageIds.insert(message.id)
+            Task {
+                await receiveEcashFromMessage(message)
+            }
+        }
+    }
+
+    private func ledgerEntry(for messageID: String) -> NostrMessage? {
+        let descriptor = FetchDescriptor<NostrMessage>(predicate: #Predicate<NostrMessage> { $0.messageID == messageID })
+        return try? modelContext.fetch(descriptor).first
+    }
+
+    /// Updates or inserts the persisted ledger row for a processed nostr message.
+    private func recordOutcome(_ outcome: NostrMessage.Outcome,
+                               for message: ReceivedEcashMessage,
+                               eventID: UUID? = nil) {
+        if let existing = ledgerEntry(for: message.id) {
+            existing.outcome = outcome
+            if let eventID { existing.eventID = eventID }
+        } else {
+            let receiverPubkeyHex = message.receiverPubkeyHex
+            let keyDescriptor = FetchDescriptor<NostrKeypair>(predicate: #Predicate<NostrKeypair> { $0.publicKeyHex == receiverPubkeyHex })
+            let keypair = try? modelContext.fetch(keyDescriptor).first
+            modelContext.insert(NostrMessage(messageID: message.id,
+                                             outcome: outcome,
+                                             eventID: eventID,
+                                             keypair: keypair))
+        }
+        do {
+            try modelContext.save()
+        } catch {
+            walletLogger.error("Failed to save nostr message ledger entry: \(error)")
+        }
+    }
+    
+    private func receiveEcashFromMessage(_ message: ReceivedEcashMessage) async {
+        guard let activeWallet else {
+            walletLogger.error("No active wallet to receive ecash")
+            return
+        }
+
+        // The persisted ledger is the cross-launch source of truth: skip anything
+        // already redeemed or known to be spent without touching the network
+        if let existing = ledgerEntry(for: message.id), existing.outcome.isTerminal {
+            walletLogger.debug("Skipping message \(message.id), already processed (\(existing.outcome.rawValue))")
+            return
+        }
+
+        let token = message.payload.toToken()
+
+        // Get the mint URL from the token
+        guard let mintURLString = token.proofsByMint.keys.first else {
+            walletLogger.error("Could not determine mint URL from token")
+            return
+        }
+
+        // Find the mint in our wallet
+        guard let mint = activeWallet.mints.first(where: { $0.url.absoluteString == mintURLString && !$0.hidden }) else {
+            walletLogger.warning("Received ecash from unknown mint: \(mintURLString)")
+            // Retryable: if the user adds the mint later, a future replay redeems it.
+            // Only alert the first time we see this message, not on every replay.
+            let firstSighting = ledgerEntry(for: message.id) == nil
+            recordOutcome(.unknownMint, for: message)
+            if firstSighting {
+                displayAlert(alert: AlertDetail(title: String(localized: "⚡ Incoming Ecash"),
+                                                description: String(localized: "Received ecash from an unknown mint (\(mintURLString)). Add this mint to redeem.")))
+            }
+            return
+        }
+
+        // Check if proofs are still valid/unspent
+        guard let proofs = token.proofsByMint[mintURLString] else {
+            walletLogger.error("No proofs found in token")
+            return
+        }
+
+        Task { @MainActor in
+            do {
+                let proofStates = try await CashuSwift.check(proofs, mint: CashuSwift.Mint(mint))
+
+                // All proofs must be unspent to proceed
+                guard proofStates.allSatisfy({ $0 == .unspent }) else {
+                    walletLogger.warning("Received ecash contains spent proofs, skipping")
+                    recordOutcome(.spent, for: message)
+                    return
+                }
+
+                walletLogger.info("Proofs are valid, receiving \(token.sum()) sats")
+
+                // Get private key for P2PK locked tokens
+                let privateKeyString = activeWallet.privateKeyData.map { String(bytes: $0) }
+
+                let redeemResult = try await CashuSwift.receive(token: token,
+                                                                of: CashuSwift.Mint(mint),
+                                                                seed: activeWallet.seed,
+                                                                privateKey: privateKeyString)
+
+                walletLogger.debug("result of redeeming token DLEQ check; in: \(String(describing: redeemResult.inputDLEQ)) out: \(String(describing: redeemResult.outputDLEQ))")
+
+                let internalProofs = try mint.addProofs(redeemResult.proofs, to: modelContext)
+
+                let receiveEvent = Event.receiveEvent(unit: .sat,
+                                                      shortDescription: "Receive",
+                                                      wallet: activeWallet,
+                                                      amount: redeemResult.proofs.sum,
+                                                      longDescription: "",
+                                                      proofs: internalProofs,
+                                                      memo: token.memo,
+                                                      mint: mint,
+                                                      redeemed: true)
+                modelContext.insert(receiveEvent)
+
+                try modelContext.save()
+
+                recordOutcome(.redeemed, for: message, eventID: receiveEvent.eventID)
+
+            } catch {
+                // Retryable: transient network or mint errors may resolve on a later replay
+                let firstSighting = ledgerEntry(for: message.id) == nil
+                recordOutcome(.failed, for: message)
+                processedMessageIds.remove(message.id)
+                if firstSighting {
+                    displayAlert(alert: AlertDetail(title: String(localized: "Something went wrong"), description: String(localized: "An error occured while trying to redeem a token received via Nostr DMs. \(String(describing: error))")))
+                }
+                walletLogger.error("error while trying to auto-redeem token from nostr dm: \(error)")
+            }
+        }
     }
 
     private func displayAlert(alert: AlertDetail) {

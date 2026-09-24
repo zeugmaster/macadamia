@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import NostrSDK
 import Combine
 import OSLog
@@ -27,20 +28,20 @@ enum NostrServiceError: Error {
 // MARK: - Received Message Model
 
 struct ReceivedEcashMessage: Identifiable, Equatable {
-    let id: String // event id
+    let id: String // event id of the unsealed rumor
     let payload: CashuSwift.PaymentRequestPayload
     let sender: String // sender's pubkey (hex)
+    let receiverPubkeyHex: String // pubkey of the receive key this message was addressed to
     let receivedAt: Date
-    let isRedeemed: Bool
-    
-    init(id: String, payload: CashuSwift.PaymentRequestPayload, sender: String, receivedAt: Date = Date(), isRedeemed: Bool = false) {
+
+    init(id: String, payload: CashuSwift.PaymentRequestPayload, sender: String, receiverPubkeyHex: String, receivedAt: Date = Date()) {
         self.id = id
         self.payload = payload
         self.sender = sender
+        self.receiverPubkeyHex = receiverPubkeyHex
         self.receivedAt = receivedAt
-        self.isRedeemed = isRedeemed
     }
-    
+
     static func == (lhs: ReceivedEcashMessage, rhs: ReceivedEcashMessage) -> Bool {
         lhs.id == rhs.id
     }
@@ -76,6 +77,10 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
     private var messageSubscriptionId: String?
     private var cancellables = Set<AnyCancellable>()
     private var relayCancellables = [URL: AnyCancellable]()
+    private var eventsCancellable: AnyCancellable?
+
+    /// Whether a relay pool currently exists (regardless of per-relay connection state).
+    var hasRelayPool: Bool { relayPool != nil }
     
     @AppStorage("savedURLs") private var savedURLsData: Data = {
         return try! JSONEncoder().encode(defaultRelayURLs)
@@ -135,8 +140,7 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
                 
                 // Check if we should start listening (when most relays are connected)
                 if newState == .connected,
-                   self?.isListeningForMessages == false,
-                   NostrKeychain.hasNsec() {
+                   self?.isListeningForMessages == false {
                     self?.checkAndStartListening()
                 }
             }
@@ -218,27 +222,29 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
         }
     }
     
-    /// Resubscribes to all connected relays (for when new relays connect after initial subscription)
+    /// Resubscribes to all connected relays (for when new relays connect after the initial
+    /// subscription, or when the set of receive keys changed)
     @MainActor
     private func resubscribeToAllRelays() async {
-        guard let keypair = try? getKeypair(),
-              let relayPool = relayPool,
+        guard let relayPool = relayPool,
               let existingSubscriptionId = messageSubscriptionId else {
             return
         }
-        
+
         // Close existing subscription
         relayPool.closeSubscription(with: existingSubscriptionId)
-        
-        // Create new subscription (will subscribe to all currently connected relays)
-        guard let filter = Filter(kinds: [EventKind.giftWrap.rawValue], tags: ["p": [keypair.publicKey.hex]]) else {
-            nostrLogger.error("Failed to create filter for resubscription")
+
+        // Create new subscription from the current key set
+        guard let filter = currentGiftWrapFilter() else {
+            nostrLogger.info("No active receive keys left, stopping message listener")
+            messageSubscriptionId = nil
+            isListeningForMessages = false
             return
         }
-        
+
         let newSubscriptionId = relayPool.subscribe(with: filter)
         messageSubscriptionId = newSubscriptionId
-        
+
         nostrLogger.info("Resubscribed with new subscription id: \(newSubscriptionId)")
     }
     
@@ -248,6 +254,7 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
         relayPool = nil
         cancellables.removeAll()
         relayCancellables.removeAll()
+        eventsCancellable = nil
         connectionStates.removeAll()
         nostrLogger.info("Disconnected from relays")
     }
@@ -258,18 +265,44 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
         disconnect()
         connect()
     }
-    
-    /// Sends a NIP-17 direct message
-    /// - Parameters:
-    ///   - nsec: The sender's private key in nsec (bech32) or hex format
-    ///   - receiverNpub: The receiver's public key in npub or nprofile (bech32) format
-    ///   - message: The message content to send
-    /// - Throws: NostrServiceError if keypair parsing, recipient parsing, or event creation fails
+
+    /// Idempotent entry point for "the set of receive keys changed": starts, updates,
+    /// or stops the gift-wrap subscription to match the database.
     @MainActor
-    func sendNIP17(from nsec: String, to receiverNpub: String, message: String) async throws {
-        // Parse sender's keypair
-        guard let keypair = parseKeypair(from: nsec) else {
-            nostrLogger.error("Failed to parse sender keypair")
+    func refreshSubscriptions() {
+        let keys = activeReceiveKeys()
+
+        if keys.isEmpty {
+            stopListeningForEcashMessages()
+            return
+        }
+
+        if relayPool == nil {
+            // Subscription follows once relays report .connected
+            connect()
+            return
+        }
+
+        if isListeningForMessages {
+            Task { @MainActor in
+                await resubscribeToAllRelays()
+            }
+        } else {
+            checkAndStartListening()
+        }
+    }
+    
+    /// Sends a NIP-17 direct message signed by a throwaway keypair
+    /// - Parameters:
+    ///   - receiverNpub: The receiver's public key in npub, nprofile (bech32) or hex format
+    ///   - message: The message content to send
+    /// - Throws: NostrServiceError if keypair generation, recipient parsing, or event creation fails
+    @MainActor
+    func sendNIP17(to receiverNpub: String, message: String) async throws {
+        // A fresh random sender key per message: the recipient only needs the ecash
+        // payload, and an ephemeral identity avoids linking payments to each other.
+        guard let keypair = Keypair() else {
+            nostrLogger.error("Failed to generate throwaway sender keypair")
             throw NostrServiceError.noKeypairAvailable
         }
         
@@ -341,46 +374,37 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
             nostrLogger.debug("Already listening for ecash messages")
             return
         }
-        
-        guard let keypair = try? getKeypair() else {
-            nostrLogger.error("Cannot start listening: no keypair available")
-            return
-        }
-        
+
         guard let relayPool = relayPool else {
             nostrLogger.error("Cannot start listening: relay pool not initialized")
             return
         }
-        
-        nostrLogger.info("Starting to listen for ecash messages for pubkey: \(keypair.publicKey.hex)")
-        isListeningForMessages = true
-        
-        // Set up event listener FIRST before subscribing
-        relayPool.events
-            .sink { [weak self] relayEvent in
-                guard let self = self else { return }
-                nostrLogger.info("📩 Received relay event, kind: \(relayEvent.event.kind.rawValue)")
-                Task { @MainActor in
-                    await self.handleIncomingEvent(relayEvent.event)
-                }
-            }
-            .store(in: &cancellables)
-        
-        nostrLogger.info("Event listener set up")
-        
-        // NIP-17: Gift wrap events are kind 1059, addressed to recipient's pubkey via p tag
-        guard let filter = Filter(kinds: [EventKind.giftWrap.rawValue], tags: ["p": [keypair.publicKey.hex]]) else {
-            nostrLogger.error("Failed to create filter for gift wrap events")
-            isListeningForMessages = false
+
+        // NIP-17: Gift wrap events are kind 1059, addressed to a receive key via p tag
+        guard let filter = currentGiftWrapFilter() else {
+            nostrLogger.debug("No active receive keys, not starting message listener")
             return
         }
-        
-        nostrLogger.info("Created filter for kind 1059 with p tag for pubkey: \(keypair.publicKey.hex)")
-        
+
+        isListeningForMessages = true
+
+        // Set up the event listener once per pool lifecycle, FIRST before subscribing
+        if eventsCancellable == nil {
+            eventsCancellable = relayPool.events
+                .sink { [weak self] relayEvent in
+                    guard let self = self else { return }
+                    nostrLogger.debug("📩 Received relay event, kind: \(relayEvent.event.kind.rawValue)")
+                    Task { @MainActor in
+                        await self.handleIncomingEvent(relayEvent.event)
+                    }
+                }
+            nostrLogger.info("Event listener set up")
+        }
+
         // Subscribe to the filter
         let subscriptionId = relayPool.subscribe(with: filter)
         messageSubscriptionId = subscriptionId
-        
+
         nostrLogger.info("Subscribed to gift wrap events with subscription id: \(subscriptionId)")
     }
     
@@ -401,43 +425,66 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
     /// Handles an incoming event from a relay
     @MainActor
     private func handleIncomingEvent(_ event: NostrEvent) async {
-        nostrLogger.info("Received event kind: \(event.kind.rawValue), id: \(event.id), type: \(type(of: event))")
-        
-        guard let keypair = try? getKeypair() else {
-            nostrLogger.error("Cannot handle event: no keypair available")
-            return
-        }
-        
+        nostrLogger.debug("Received event kind: \(event.kind.rawValue), id: \(event.id), type: \(type(of: event))")
+
         // Check if this is a gift wrap event (kind 1059)
         guard event.kind == .giftWrap else {
             nostrLogger.debug("Event \(event.id) is not a gift wrap (kind \(event.kind.rawValue))")
             return
         }
-        
+
         // Cast to GiftWrapEvent - NostrSDK should return the correct subtype for kind 1059
         guard let giftWrapEvent = event as? GiftWrapEvent else {
             nostrLogger.error("Failed to cast event to GiftWrapEvent (type: \(type(of: event)))")
             return
         }
-        
-        nostrLogger.info("Successfully cast to GiftWrapEvent")
-        
-        // Try to unseal the rumor inside the gift wrap
-        guard let unwrappedEvent = try? giftWrapEvent.unsealedRumor(using: keypair.privateKey) else {
+
+        let keys = activeReceiveKeys()
+        guard !keys.isEmpty else {
+            nostrLogger.warning("Cannot handle event: no active receive keys")
+            return
+        }
+
+        // Route to the addressed key via the gift wrap's "p" tag, falling back to
+        // trying every active key when the tag doesn't match any of them
+        let referencedPubkeys = Set(giftWrapEvent.referencedPubkeys)
+        var candidates = keys.filter { referencedPubkeys.contains($0.publicKeyHex) }
+        if candidates.isEmpty { candidates = keys }
+
+        var unsealed: (rumor: NostrEvent, key: ReceiveKey)?
+        for key in candidates {
+            if let rumor = try? giftWrapEvent.unsealedRumor(using: key.keypair.privateKey) {
+                unsealed = (rumor, key)
+                break
+            }
+        }
+
+        guard let (unwrappedEvent, matchedKey) = unsealed else {
             nostrLogger.warning("Failed to unwrap gift wrap event \(event.id) - might not be for us or decryption failed")
             return
         }
-        
-        nostrLogger.info("Successfully unwrapped gift wrap event \(event.id), content length: \(unwrappedEvent.content.count)")
-        
+
+        nostrLogger.debug("Successfully unwrapped gift wrap event \(event.id), content length: \(unwrappedEvent.content.count)")
+
+        // Skip messages the persisted ledger already marks as terminally processed
+        let rumorID = unwrappedEvent.id
+        let context = DatabaseManager.shared.container.mainContext
+        let descriptor = FetchDescriptor<NostrMessage>(predicate: #Predicate<NostrMessage> { $0.messageID == rumorID })
+        if let ledgerRow = try? context.fetch(descriptor).first,
+           ledgerRow.outcome.isTerminal {
+            nostrLogger.debug("Message \(rumorID) already processed (\(ledgerRow.outcome.rawValue)), skipping")
+            return
+        }
+
         // Check if the content is a valid PaymentRequestPayload
         if let payload = decodePaymentRequestPayload(unwrappedEvent.content) {
             let message = ReceivedEcashMessage(
                 id: unwrappedEvent.id,
                 payload: payload,
-                sender: unwrappedEvent.pubkey
+                sender: unwrappedEvent.pubkey,
+                receiverPubkeyHex: matchedKey.publicKeyHex
             )
-            
+
             // Check if we already have this message
             if !receivedEcashMessages.contains(where: { $0.id == message.id }) {
                 receivedEcashMessages.append(message)
@@ -446,7 +493,8 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
                 nostrLogger.debug("Duplicate ecash message \(message.id), skipping")
             }
         } else {
-            nostrLogger.warning("Message does not contain valid PaymentRequestPayload. Content: \(unwrappedEvent.content.prefix(200))")
+            // Never log message content: DMs can carry multi-kilobyte token text
+            nostrLogger.warning("Message \(rumorID) does not contain a valid PaymentRequestPayload (content length: \(unwrappedEvent.content.count))")
         }
     }
     
@@ -468,24 +516,54 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
         }
     }
     
-    // MARK: - Helper Methods
-    
-    /// Gets the user's keypair from the keychain
-    private func getKeypair() throws -> Keypair {
-        let nsec = try NostrKeychain.getNsec()
-        guard let keypair = parseKeypair(from: nsec) else {
-            throw NostrServiceError.noKeypairAvailable
-        }
-        return keypair
+    // MARK: - Receive Keys
+
+    /// A receive key rehydrated from the database, ready for filter construction and unsealing.
+    struct ReceiveKey {
+        let keypair: Keypair
+        let publicKeyHex: String
+        let dateCreated: Date
+        let isLegacy: Bool
     }
-    
-    private func parseKeypair(from keyString: String) -> Keypair? {
-        let normalized = keyString.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        if normalized.lowercased().hasPrefix("nsec") {
-            return Keypair(nsec: normalized)
-        } else {
-            return Keypair(hex: normalized)
+
+    /// Fetches the active wallet's non-archived receive keys from the database.
+    @MainActor
+    func activeReceiveKeys() -> [ReceiveKey] {
+        let context = DatabaseManager.shared.container.mainContext
+
+        let activeWalletID: UUID
+        do {
+            let wallets = try context.fetch(FetchDescriptor<Wallet>(predicate: #Predicate<Wallet> { $0.active == true }))
+            guard let wallet = wallets.first else { return [] }
+            activeWalletID = wallet.walletID
+        } catch {
+            nostrLogger.error("Failed to fetch active wallet: \(error)")
+            return []
         }
+
+        let rows = (try? context.fetch(FetchDescriptor<NostrKeypair>())) ?? []
+
+        // isActive is computed (90-day cutoff), so filtering happens in memory
+        return rows
+            .filter { $0.wallet?.walletID == activeWalletID && $0.isActive }
+            .compactMap { row in
+                guard let keypair = NostrKeyMaterial.parseKeypair(row.privateKeyHex) else {
+                    nostrLogger.warning("Could not parse stored receive key \(row.keypairID)")
+                    return nil
+                }
+                return ReceiveKey(keypair: keypair,
+                                  publicKeyHex: row.publicKeyHex,
+                                  dateCreated: row.dateCreated,
+                                  isLegacy: row.isLegacy)
+            }
+    }
+
+    /// The kind-1059 filter covering all currently active receive keys, or nil if there are none.
+    @MainActor
+    private func currentGiftWrapFilter() -> Filter? {
+        let keys = activeReceiveKeys()
+        return NostrKeyMaterial.giftWrapFilter(activePubkeys: keys.map(\.publicKeyHex),
+                                               earliestCreation: keys.map(\.dateCreated).min(),
+                                               containsLegacy: keys.contains(where: \.isLegacy))
     }
 }

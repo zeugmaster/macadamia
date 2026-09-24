@@ -15,7 +15,7 @@ extension AppSchemaV1.Event {
                                  wallet: Wallet,
                                  quote: CashuSwift.Bolt11.MintQuote,
                                  amount: Int,
-                                 expiration: Date,
+                                 expiration: Date?,
                                  mint: Mint) -> Event {
         Event(date: Date(),
               unit: unit,
@@ -195,23 +195,28 @@ extension AppSchemaV1.Event {
                                      meltQuote: CashuSwift.Bolt11.MeltQuote,
                                      mintQuote: CashuSwift.Bolt11.MintQuote,
                                      groupingID: UUID?) -> Event {
-        Event(date: Date(),
-              unit: unit,
-              shortDescription: "Pending Transfer",
-              visible: true,
-              kind: .pendingTransfer,
-              wallet: wallet,
-              mintQuote: mintQuote,
-              bolt11MeltQuote: meltQuote,
-              amount: amount,
-              expiration: nil,
-              longDescription: nil,
-              proofs: proofs,
-              memo: nil,
-              mints: [from, to],
-              preImage: nil,
-              redeemed: nil,
-              groupingID: groupingID)
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: "Pending Transfer",
+                          visible: true,
+                          kind: .pendingTransfer,
+                          wallet: wallet,
+                          mintQuote: mintQuote,
+                          bolt11MeltQuote: meltQuote,
+                          amount: amount,
+                          // the issuance deadline: mints may refuse to issue ecash on an
+                          // expired quote even when it was paid
+                          expiration: mintQuote.expiry.map { Date(timeIntervalSince1970: TimeInterval($0)) },
+                          longDescription: nil,
+                          proofs: proofs,
+                          memo: nil,
+                          mints: [from, to],
+                          preImage: nil,
+                          redeemed: nil,
+                          groupingID: groupingID)
+        event.fromMint = from
+        event.toMint = to
+        return event
     }
     
     static func transferEvent(wallet: Wallet,
@@ -224,22 +229,160 @@ extension AppSchemaV1.Event {
                               mintQuote: CashuSwift.Bolt11.MintQuote,
                               preImage: String?,
                               groupingID: UUID?) -> Event {
-        Event(date: Date(),
-              unit: unit, shortDescription: "Transfer",
-              visible: true,
-              kind: .transfer,
-              wallet: wallet,
-              mintQuote: mintQuote,
-              bolt11MeltQuote: meltQuote,
-              amount: amount,
-              token: nil,
-              expiration: nil,
-              longDescription: nil,
-              proofs: proofs,
-              memo: nil,
-              mints: [from, to],
-              preImage: preImage,
-              redeemed: nil,
-              groupingID: groupingID)
+        let event = Event(date: Date(),
+                          unit: unit, shortDescription: "Transfer",
+                          visible: true,
+                          kind: .transfer,
+                          wallet: wallet,
+                          mintQuote: mintQuote,
+                          bolt11MeltQuote: meltQuote,
+                          amount: amount,
+                          token: nil,
+                          expiration: nil,
+                          longDescription: nil,
+                          proofs: proofs,
+                          memo: nil,
+                          mints: [from, to],
+                          preImage: preImage,
+                          redeemed: nil,
+                          groupingID: groupingID)
+        event.fromMint = from
+        event.toMint = to
+        return event
+    }
+
+    // MARK: - Generic (non-BOLT11) payment methods
+
+    static func pendingMintEvent(unit: Unit,
+                                 shortDescription: String,
+                                 visible: Bool = true,
+                                 wallet: Wallet,
+                                 genericQuote: CashuSwift.Generic.MintQuote,
+                                 amount: Int?,
+                                 expiration: Date?,
+                                 mint: Mint) -> Event {
+        assert(!genericQuote.method.rawValue.isEmpty, "a generic mint quote must carry its payment method")
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: shortDescription,
+                          visible: visible,
+                          kind: .pendingMint,
+                          wallet: wallet,
+                          amount: amount,
+                          expiration: expiration,
+                          mints: [mint])
+        event.genericMintQuote = genericQuote
+        return event
+    }
+
+    static func mintEvent(unit: Unit,
+                          shortDescription: String,
+                          visible: Bool = true,
+                          wallet: Wallet,
+                          genericQuote: CashuSwift.Generic.MintQuote,
+                          mint: Mint,
+                          amount: Int) -> Event {
+        assert(!genericQuote.method.rawValue.isEmpty, "a generic mint quote must carry its payment method")
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: shortDescription,
+                          visible: visible,
+                          kind: .mint,
+                          wallet: wallet,
+                          amount: amount,
+                          mints: [mint])
+        event.genericMintQuote = genericQuote
+        return event
+    }
+
+    static func pendingMeltEvent(unit: Unit,
+                                 shortDescription: String,
+                                 visible: Bool = true,
+                                 wallet: Wallet,
+                                 genericQuote: CashuSwift.Generic.MeltQuote,
+                                 amount: Int,
+                                 expiration: Date?,
+                                 mints: [Mint],
+                                 proofs: [Proof]? = nil,
+                                 memo: String? = nil) -> Event {
+        assert(!genericQuote.method.rawValue.isEmpty, "a generic melt quote must carry its payment method")
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: shortDescription,
+                          visible: visible,
+                          kind: .pendingMelt,
+                          wallet: wallet,
+                          amount: amount,
+                          expiration: expiration,
+                          proofs: proofs,
+                          memo: memo,
+                          mints: mints)
+        event.genericMeltQuote = genericQuote
+        return event
+    }
+
+    static func meltEvent(unit: Unit,
+                          shortDescription: String,
+                          visible: Bool = true,
+                          wallet: Wallet,
+                          amount: Int,
+                          longDescription: String,
+                          mints: [Mint],
+                          change: [Proof]? = nil,
+                          preImage: String? = nil,
+                          memo: String? = nil,
+                          genericQuote: CashuSwift.Generic.MeltQuote) -> Event {
+        assert(!genericQuote.method.rawValue.isEmpty, "a generic melt quote must carry its payment method")
+        let event = Event(date: Date(),
+                          unit: unit,
+                          shortDescription: shortDescription,
+                          visible: visible,
+                          kind: .melt,
+                          wallet: wallet,
+                          amount: amount,
+                          longDescription: longDescription,
+                          proofs: change,
+                          memo: memo,
+                          mints: mints,
+                          preImage: preImage)
+        event.genericMeltQuote = genericQuote
+        return event
+    }
+}
+
+extension AppSchemaV1.Event {
+    /// The endpoints of a transfer event.
+    ///
+    /// New events carry dedicated `fromMint`/`toMint` references. Legacy rows
+    /// fall back to the old positional convention (`mints[0]` = from,
+    /// `mints[1]` = to) — but SwiftData does NOT reliably preserve the order of
+    /// a to-many relationship array, so the proofs relationship disambiguates
+    /// where possible: a pending transfer holds the melt inputs (source mint),
+    /// a completed transfer holds the newly issued ecash (destination mint).
+    var transferMints: (from: Mint, to: Mint)? {
+        if let fromMint, let toMint {
+            return (fromMint, toMint)
+        }
+
+        guard let mints, mints.count >= 2 else { return nil }
+        var endpoints = (from: mints[0], to: mints[1])
+
+        if let proofMint = proofs?.first?.mint {
+            switch kind {
+            case .pendingTransfer where proofMint == endpoints.to,
+                 .transfer where proofMint == endpoints.from:
+                endpoints = (endpoints.to, endpoints.from)
+            default:
+                break
+            }
+        }
+        return endpoints
+    }
+
+    /// Deadline for issuing ecash at the destination mint. Falls back to the
+    /// expiry inside the stored mint quote for events that predate `expiration`
+    /// being set on pending transfers.
+    var mintQuoteExpiry: Date? {
+        expiration ?? mintQuote?.expiry.map { Date(timeIntervalSince1970: TimeInterval($0)) }
     }
 }

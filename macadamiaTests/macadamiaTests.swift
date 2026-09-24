@@ -108,6 +108,77 @@ final class macadamiaTests: XCTestCase {
         print(proofs.sum)
     }
     
+    // MARK: - Multi-unit send path
+
+    /// Builds an offline mint with keysets for the given units. Keysets are decoded
+    /// from JSON because `CashuSwift.Keyset` only exposes a decoder initializer.
+    private func makeOfflineMint(url: String, units: [(unit: String, active: Bool)]) throws -> Mint {
+        let keysets: [CashuSwift.Keyset] = try units.enumerated().map { index, entry in
+            let json = """
+            {"id":"00ks\(index)","unit":"\(entry.unit)","active":\(entry.active),"keys":{},"input_fee_ppk":0}
+            """
+            return try JSONDecoder().decode(CashuSwift.Keyset.self, from: Data(json.utf8))
+        }
+        return Mint(url: URL(string: url)!, keysets: keysets)
+    }
+
+    @MainActor
+    func testProofSelectionIsScopedToRequestedUnit() throws {
+        let context = container.mainContext
+        let mnemonic = Mnemonic()
+        let wallet = Wallet(mnemonic: mnemonic.phrase.joined(separator: " "), seed: String(bytes: mnemonic.seed))
+        context.insert(wallet)
+        let mint = try makeOfflineMint(url: "https://mint.example.com", units: [("sat", true), ("bux", true)])
+        mint.wallet = wallet
+        context.insert(mint)
+
+        let bux = Currency.Unit(code: "bux")
+        let proofs = [
+            Proof(keysetID: "00ks0", C: "C1", secret: "s1", unit: .sat, inputFeePPK: 0, state: .valid, amount: 8, mint: mint, wallet: wallet),
+            Proof(keysetID: "00ks0", C: "C2", secret: "s2", unit: .sat, inputFeePPK: 0, state: .valid, amount: 4, mint: mint, wallet: wallet),
+            Proof(keysetID: "00ks1", C: "C3", secret: "s3", unit: bux, inputFeePPK: 0, state: .valid, amount: 2, mint: mint, wallet: wallet),
+            Proof(keysetID: "00ks1", C: "C4", secret: "s4", unit: bux, inputFeePPK: 0, state: .valid, amount: 1, mint: mint, wallet: wallet),
+            Proof(keysetID: "00ks1", C: "C5", secret: "s5", unit: bux, inputFeePPK: 0, state: .pending, amount: 16, mint: mint, wallet: wallet),
+        ]
+        mint.proofs = proofs
+        proofs.forEach { context.insert($0) }
+        try context.save()
+
+        XCTAssertEqual(mint.balance(for: .sat), 12)
+        XCTAssertEqual(mint.balance(for: bux), 3, "pending proofs must not count toward the spendable balance")
+        XCTAssertEqual(mint.balance(for: .usd), 0)
+
+        let selection = try XCTUnwrap(mint.select(amount: 3, unit: bux))
+        XCTAssertEqual(selection.selected.sum, 3)
+        XCTAssertTrue(selection.selected.allSatisfy { $0.currencyUnit == bux })
+        XCTAssertTrue(selection.selected.allSatisfy { $0.state == .valid })
+
+        XCTAssertNil(mint.select(amount: 4, unit: bux), "must not borrow sat proofs to cover a bux amount")
+        XCTAssertNil(mint.select(amount: 1, unit: .usd), "no proofs exist in that unit")
+
+        let satSelection = try XCTUnwrap(mint.select(amount: 5, unit: .sat))
+        XCTAssertTrue(satSelection.selected.allSatisfy { $0.currencyUnit == .sat })
+    }
+
+    @MainActor
+    func testSupportedUnitsComeFromActiveKeysetsOnly() throws {
+        let mint = try makeOfflineMint(url: "https://mint.example.com",
+                                       units: [("sat", true), ("bux", true), ("usd", false), ("BUX", true)])
+        XCTAssertEqual(mint.supportedUnits, [.sat, .other("bux")],
+                       "inactive keysets are excluded and unit codes de-duplicate case-insensitively")
+    }
+
+    func testUnitCodeParsingForCustomUnits() {
+        XCTAssertEqual(Currency.Unit(code: "bux"), .other("bux"))
+        XCTAssertEqual(Currency.Unit(code: "bux").currencyCode, "bux")
+        XCTAssertEqual(Currency.Unit(code: "bux").kind, .other)
+        XCTAssertEqual(Currency.Unit(code: "bux").minorUnit, 0)
+        XCTAssertEqual(Currency.Unit(code: "SAT"), .sat)
+        XCTAssertEqual(Currency.Unit(code: ""), Currency.Unit.none)
+        XCTAssertEqual(Currency.Unit("bux"), .other("bux"))
+        XCTAssertNil(Currency.Unit(nil), "a request without a unit falls back to sat at the call site, not here")
+    }
+
     @MainActor
     func testMintEcashDerivationCounter() {
         // Set up the test environment synchronously
@@ -264,10 +335,10 @@ final class macadamiaTests: XCTestCase {
             }
         }
         
-        // Test BOLT12 offers
+        // BOLT12 now validates the offer, rather than accepting its prefix alone.
         let bolt12Tests = [
-            ("lno1234567890", true),
-            ("LNO1234567890", true), // case insensitive
+            ("lno1234567890", false),
+            ("LNO1234567890", false), // case insensitive
         ]
         
         for (input, shouldBeValid) in bolt12Tests {
@@ -1305,5 +1376,237 @@ private enum LegacyMeltSchema {
             self.bolt11MeltQuoteData = bolt11MeltQuoteData
             self.amount = amount
         }
+    }
+}
+
+final class GenericQuoteTests: XCTestCase {
+
+    var container: ModelContainer!
+
+    override func setUp() {
+        super.setUp()
+        let schema = Schema([Proof.self, Mint.self, Wallet.self])
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        do {
+            container = try ModelContainer(for: schema, configurations: [configuration])
+        } catch {
+            XCTFail("Failed to create in-memory container: \(error)")
+        }
+    }
+
+    override func tearDown() {
+        container = nil
+        super.tearDown()
+    }
+
+    private func makeGenericMintQuote(counter: UInt32? = nil) -> CashuSwift.Generic.MintQuote {
+        var quote = CashuSwift.Generic.MintQuote(
+            method: CashuSwift.PaymentMethodID(rawValue: "branch"),
+            quote: "0197f3a1-4c2b-7c10-9d3e-8a1b2c3d4e5f",
+            request: "MINT-0197f3a1-4c2b-7c10-9d3e-8a1b2c3d4e5f",
+            unit: "ora",
+            amount: 250,
+            state: nil,
+            expiry: 1785283200,
+            raw: ["quote": .string("0197f3a1-4c2b-7c10-9d3e-8a1b2c3d4e5f"),
+                  "request": .string("MINT-0197f3a1-4c2b-7c10-9d3e-8a1b2c3d4e5f"),
+                  "unit": .string("ora"),
+                  "amount": .integer(250),
+                  "amount_paid": .integer(0),
+                  "amount_issued": .integer(0),
+                  "expiry": .integer(1785283200),
+                  "method": .string("branch"),
+                  "pubkey": .string("02aabbccdd")]
+        )
+        if let counter {
+            quote = quote.addingNut20Counter(counter)
+        }
+        return quote
+    }
+
+    private func makeGenericMeltQuote(rawState: String? = "UNPAID") -> CashuSwift.Generic.MeltQuote {
+        var raw: CashuSwift.JSONObject = ["quote": .string("0197f3b2-melt"),
+                                          "amount": .integer(500),
+                                          "unit": .string("ora"),
+                                          "fee_reserve": .integer(0),
+                                          "expiry": .integer(1785282300),
+                                          "method": .string("branch")]
+        if let rawState {
+            raw["state"] = .string(rawState)
+        }
+        return CashuSwift.Generic.MeltQuote(
+            method: CashuSwift.PaymentMethodID(rawValue: "branch"),
+            quote: "0197f3b2-melt",
+            amount: 500,
+            unit: "ora",
+            feeReserve: 0,
+            state: rawState.flatMap { CashuSwift.QuoteState(rawValue: $0) },
+            expiry: 1785282300,
+            paymentPreimage: nil,
+            change: nil,
+            raw: raw
+        )
+    }
+
+    @MainActor
+    func testGenericMintQuoteAccessorRouting() throws {
+        let context = container.mainContext
+        let mnemonic = Mnemonic()
+        let wallet = Wallet(mnemonic: mnemonic.phrase.joined(separator: " "), seed: String(bytes: mnemonic.seed))
+        context.insert(wallet)
+
+        let event = Event(date: Date(),
+                          unit: Unit(code: "ora"),
+                          shortDescription: "test",
+                          visible: true,
+                          kind: .pendingMint,
+                          wallet: wallet)
+        event.genericMintQuote = makeGenericMintQuote(counter: 1234567)
+        context.insert(event)
+        try context.save()
+
+        // A generic row must never surface through the BOLT11-typed accessor …
+        XCTAssertNil(event.mintQuote)
+        // … and must round-trip through the generic one with method and counter intact.
+        let restored = try XCTUnwrap(event.genericMintQuote)
+        XCTAssertEqual(restored.method.rawValue, "branch")
+        XCTAssertEqual(restored.quote, "0197f3a1-4c2b-7c10-9d3e-8a1b2c3d4e5f")
+        XCTAssertEqual(restored.request, "MINT-0197f3a1-4c2b-7c10-9d3e-8a1b2c3d4e5f")
+        XCTAssertEqual(restored.unit, "ora")
+        XCTAssertEqual(restored.amount, 250)
+        XCTAssertEqual(restored.nut20Counter, 1234567)
+        XCTAssertEqual(restored.lockingPubkey, "02aabbccdd")
+    }
+
+    @MainActor
+    func testBolt11MintQuoteAccessorUnaffected() throws {
+        let context = container.mainContext
+        let mnemonic = Mnemonic()
+        let wallet = Wallet(mnemonic: mnemonic.phrase.joined(separator: " "), seed: String(bytes: mnemonic.seed))
+        context.insert(wallet)
+
+        let bolt11Quote = CashuSwift.Bolt11.MintQuote(quote: "b11-quote",
+                                                      request: "lnbc10n1...",
+                                                      amount: 21,
+                                                      unit: "sat",
+                                                      state: .unpaid,
+                                                      expiry: 1785283200)
+        let event = Event(date: Date(),
+                          unit: .sat,
+                          shortDescription: "test",
+                          visible: true,
+                          kind: .pendingMint,
+                          wallet: wallet,
+                          mintQuote: bolt11Quote)
+        context.insert(event)
+        try context.save()
+
+        XCTAssertEqual(event.mintQuote?.quote, "b11-quote")
+        XCTAssertNil(event.genericMintQuote)
+    }
+
+    @MainActor
+    func testGenericMeltQuoteAccessorRouting() throws {
+        let context = container.mainContext
+        let mnemonic = Mnemonic()
+        let wallet = Wallet(mnemonic: mnemonic.phrase.joined(separator: " "), seed: String(bytes: mnemonic.seed))
+        context.insert(wallet)
+
+        let event = Event(date: Date(),
+                          unit: Unit(code: "ora"),
+                          shortDescription: "test",
+                          visible: true,
+                          kind: .pendingMelt,
+                          wallet: wallet)
+        event.genericMeltQuote = makeGenericMeltQuote()
+        context.insert(event)
+        try context.save()
+
+        XCTAssertNil(event.bolt11MeltQuote)
+        let restored = try XCTUnwrap(event.genericMeltQuote)
+        XCTAssertEqual(restored.method.rawValue, "branch")
+        XCTAssertEqual(restored.amount, 500)
+        XCTAssertEqual(restored.unit, "ora")
+
+        let bolt11Melt = CashuSwift.Bolt11.MeltQuote(quote: "b11-melt",
+                                                     request: "lnbc10n1...",
+                                                     amount: 21,
+                                                     unit: "sat",
+                                                     feeReserve: 1,
+                                                     state: .unpaid,
+                                                     expiry: nil)
+        let bolt11Event = Event(date: Date(),
+                                unit: .sat,
+                                shortDescription: "test",
+                                visible: true,
+                                kind: .pendingMelt,
+                                wallet: wallet,
+                                bolt11MeltQuote: bolt11Melt)
+        context.insert(bolt11Event)
+        try context.save()
+
+        XCTAssertEqual(bolt11Event.bolt11MeltQuote?.quote, "b11-melt")
+        XCTAssertNil(bolt11Event.genericMeltQuote)
+    }
+
+    func testIndicatesPaidAndIssued() {
+        // Nothing paid yet.
+        XCTAssertFalse(makeGenericMintQuote().indicatesPaid)
+
+        // amount_paid covers the quote amount (the "branch" signal — no state field).
+        var quote = makeGenericMintQuote()
+        var raw = quote.raw
+        raw["amount_paid"] = .integer(250)
+        quote = CashuSwift.Generic.MintQuote(method: quote.method, quote: quote.quote, request: quote.request,
+                                             unit: quote.unit, amount: quote.amount, state: quote.state,
+                                             expiry: quote.expiry, raw: raw)
+        XCTAssertTrue(quote.indicatesPaid)
+        XCTAssertFalse(quote.indicatesIssued)
+
+        // Fully issued.
+        raw["amount_issued"] = .integer(250)
+        quote = CashuSwift.Generic.MintQuote(method: quote.method, quote: quote.quote, request: quote.request,
+                                             unit: quote.unit, amount: quote.amount, state: quote.state,
+                                             expiry: quote.expiry, raw: raw)
+        XCTAssertTrue(quote.indicatesIssued)
+
+        // Typed and raw state signals.
+        raw = makeGenericMintQuote().raw
+        raw["state"] = .string("PAID")
+        let statePaid = CashuSwift.Generic.MintQuote(method: "branch", quote: "q", request: "r", unit: "ora",
+                                                     amount: 250, state: nil, expiry: nil, raw: raw)
+        XCTAssertTrue(statePaid.indicatesPaid)
+        raw["state"] = .string("ISSUED")
+        let stateIssued = CashuSwift.Generic.MintQuote(method: "branch", quote: "q", request: "r", unit: "ora",
+                                                       amount: 250, state: nil, expiry: nil, raw: raw)
+        XCTAssertTrue(stateIssued.indicatesIssued)
+    }
+
+    func testMeltQuoteRawStateAndMethodGrafting() throws {
+        // FAILED decodes to a nil typed state but must stay readable.
+        let failed = makeGenericMeltQuote(rawState: "FAILED")
+        XCTAssertNil(failed.state)
+        XCTAssertEqual(failed.rawStateString, "FAILED")
+        XCTAssertTrue(failed.isFailed)
+        XCTAssertFalse(makeGenericMeltQuote(rawState: "UNPAID").isFailed)
+
+        // A melt/meltState result carries no method — settingMethod re-grafts it
+        // so the persisted JSON routes to the generic accessor after a round trip.
+        let wireQuote = CashuSwift.Generic.MeltQuote(
+            method: CashuSwift.PaymentMethodID(rawValue: ""),
+            quote: "0197f3b2-melt", amount: 500, unit: "ora", feeReserve: 0,
+            state: .paid, expiry: nil, paymentPreimage: "operator note", change: nil,
+            raw: ["quote": .string("0197f3b2-melt"),
+                  "amount": .integer(500),
+                  "unit": .string("ora"),
+                  "state": .string("PAID"),
+                  "payment_preimage": .string("operator note")]
+        )
+        let grafted = wireQuote.settingMethod(CashuSwift.PaymentMethodID(rawValue: "branch"))
+        let data = try JSONEncoder().encode(grafted)
+        let decoded = try JSONDecoder().decode(CashuSwift.Generic.MeltQuote.self, from: data)
+        XCTAssertEqual(decoded.method.rawValue, "branch")
+        XCTAssertEqual(decoded.paymentPreimage, "operator note")
+        XCTAssertEqual(decoded.state, .paid)
     }
 }

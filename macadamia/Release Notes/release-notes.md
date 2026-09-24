@@ -1,10 +1,13 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Bug fixes and stability improvements**
-Small bug fixes for payment requests, and other stability improvements.
+**BOLT12 Support 🔩**
 
-**New App Icon 🎨**
+You can now deposit and withdraw using BOLT12 offers!
+
+**NFC Payment Request**
+
+Users in the EU can now create a payment request and settle it with NFC-capable Cashu wallets.
 
 ------
 

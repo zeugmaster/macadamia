@@ -55,13 +55,36 @@ struct RequestPay: View {
         wallets.first
     }
     
-    private var insufficentBalance: Bool {
-        guard let selectedMint else { return false }
-        return selectedMint.balance(for: .sat) < (paymentRequest.amount ?? userProvidedAmount ?? 0)
+    /// The unit the request is denominated in. NUT-18 makes it optional and
+    /// defaults to sat; anything else (fiat, custom units like "bux") is fine as
+    /// long as one of the accepted mints holds ecash in it.
+    private var requestUnit: Currency.Unit {
+        Unit(paymentRequest.unit) ?? .sat
     }
     
-    private var possibleMints: [Mint] {
+    private var requestedAmount: Int? {
+        paymentRequest.amount ?? userProvidedAmount
+    }
+    
+    /// The note the requester attached (NUT-18 `d`). It travels with the
+    /// payment as the payload memo so the recipient sees what was paid for.
+    private var requestMemo: String? {
+        (paymentRequest.description?.trimmingCharacters(in: .whitespacesAndNewlines)).nilWhenEmtpy
+    }
+    
+    private var insufficentBalance: Bool {
+        guard let selectedMint else { return false }
+        return selectedMint.balance(for: requestUnit) < (requestedAmount ?? 0)
+    }
+    
+    /// Mints the request allows, regardless of unit.
+    private var acceptedMints: [Mint] {
         mintsInUse.acceptedByPaymentRequest(mintURLs: paymentRequest.mints ?? [])
+    }
+    
+    /// Accepted mints that hold ecash in the requested unit.
+    private var possibleMints: [Mint] {
+        acceptedMints.filter { $0.balance(for: requestUnit) > 0 }
     }
     
     private var relayConnectionIndicatorColor: Color {
@@ -76,18 +99,15 @@ struct RequestPay: View {
     }
     
     private var actionButtonDisabled: Bool {
-        // Require a selection from the request's accepted mints. When the request
-        // specifies no mints, possibleMints is the whole wallet, so any mint is
-        // allowed; when it requires mints we don't hold, possibleMints is empty and
-        // nothing can be selected, which keeps the button disabled.
+        // Require a selection from the mints that can pay this request: accepted
+        // by the request (any mint when it lists none) and holding ecash in the
+        // requested unit. When no mint qualifies, possibleMints is empty, nothing
+        // can be selected, and the button stays disabled.
         guard let selectedMint, possibleMints.contains(selectedMint) else { return true }
 
-        let requiredAmount = paymentRequest.amount ?? userProvidedAmount ?? 0
+        let requiredAmount = requestedAmount ?? 0
         if requiredAmount <= 0 { return true }
-        if requiredAmount > selectedMint.balance(for: .sat) { return true }
-        if (Unit(paymentRequest.unit) ?? .sat) != .sat {
-            return true
-        }
+        if requiredAmount > selectedMint.balance(for: requestUnit) { return true }
         if let transports = paymentRequest.transports,
            transports.contains(where: { $0.type == "nostr" }) {
             switch nostrService.aggregateConnectionState {
@@ -107,7 +127,7 @@ struct RequestPay: View {
                     HStack(alignment: .center) {
                         if let amount = paymentRequest.amount {
                             AmountView(amount: amount,
-                                       unit: Unit(paymentRequest.unit) ?? .sat,
+                                       unit: requestUnit,
                                        showUnit: false)
                         } else {
                             TextField("", text: $userProvidedAmountString, prompt: Text("Amount..."))
@@ -115,7 +135,7 @@ struct RequestPay: View {
                                 .disabled(buttonState.type != .idle)
                         }
                         Spacer()
-                        Text((Unit(paymentRequest.unit) ?? .sat).currencyCode)
+                        Text(requestUnit.currencyCode)
                     }
                     .monospaced()
                     .lineLimit(1)
@@ -136,6 +156,15 @@ struct RequestPay: View {
                 mintSelector
                     .disabled(buttonState.type != .idle || token != nil)
                 transportSelector
+                    .disabled(buttonState.type != .idle || token != nil)
+                
+                if let requestMemo {
+                    Section {
+                        Text(requestMemo)
+                    } header: {
+                        Text("Memo")
+                    }
+                }
                 
                 if let lockingCondition = paymentRequest.lockingCondition {
                     Section {
@@ -189,9 +218,6 @@ struct RequestPay: View {
                 showBalanceError = insufficentBalance
             }
         }
-        .onChange(of: selectedTransport, {
-            token = nil
-        })
         .navigationTitle("Payment Request")
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
@@ -241,20 +267,18 @@ struct RequestPay: View {
                                 Image(systemName: mint == selectedMint ? "checkmark.circle.fill" : "circle")
                                 Text(mint.displayName)
                                 Spacer()
-                                Group {
-                                    let balance = mint.balance(for: .sat)
-
-                                    AmountView(amount: balance, unit: .sat)
-                                }
-                                .monospaced()
+                                AmountView(amount: mint.balance(for: requestUnit), unit: requestUnit)
+                                    .monospaced()
                             }
                         }
                     }
                 }
             }
         } footer: {
-            if possibleMints.isEmpty {
+            if acceptedMints.isEmpty {
                 Text("Payment is requested from a mint you don't have any ecash with.")
+            } else if possibleMints.isEmpty {
+                Text("None of the accepted mints hold any ecash in the requested unit.")
             }
         }
     }
@@ -307,83 +331,113 @@ struct RequestPay: View {
             return
         }
         
-        guard let amount = paymentRequest.amount ?? userProvidedAmount else {
+        guard let amount = requestedAmount, amount > 0 else {
             logger.error("no amount provided")
             return
         }
         
+        let unit = requestUnit
+        
         Task { @MainActor in
+            buttonState = .loading()
+            
+            guard let selection = selectedMint.select(amount: amount, unit: unit) else {
+                logger.error("proof selection failed for \(amount) \(unit.currencyCode) at \(selectedMint.url.absoluteString)")
+                failAndReset(with: AlertDetail(with: CashuError.insufficientInputs("")))
+                return
+            }
+            
+            selection.selected.setState(.pending)
+            
+            let requestResponse: CashuSwift.SendPayloadResult
             do {
-                buttonState = .loading()
-                
-                guard let proofs = selectedMint.select(amount: amount,
-                                                       unit: Unit(paymentRequest.unit) ?? .sat) else {
-                    // TODO: log error
-                    return
-                }
-                
-                proofs.selected.setState(.pending)
-                
-                // TODO: add memo field
-                let requestResponse = try await CashuSwift.send(request: paymentRequest,
-                                                                mint: CashuSwift.Mint(selectedMint),
-                                                                inputs: proofs.selected.sendable(),
-                                                                memo: nil,
-                                                                seed: activeWallet.seed)
-                
-                if let counterIncrease = requestResponse.counterIncrease {
-                    selectedMint.increaseDerivationCounterForKeysetWithID(counterIncrease.keysetID,
-                                                                          by: counterIncrease.increase)
-                }
-                
-                proofs.selected.setState(.spent)
-                
+                requestResponse = try await CashuSwift.send(request: paymentRequest,
+                                                            mint: CashuSwift.Mint(selectedMint),
+                                                            inputs: selection.selected.sendable(),
+                                                            memo: requestMemo,
+                                                            seed: activeWallet.seed)
+            } catch {
+                // The swap did not go through, so the inputs are still ours.
+                selection.selected.setState(.valid)
+                logger.error("payment request send failed: \(error)")
+                failAndReset(with: AlertDetail(with: error))
+                return
+            }
+            
+            // From here on the mint has swapped our inputs. Nothing below may
+            // return the button to a payable state, or the user could pay twice.
+            if let counterIncrease = requestResponse.counterIncrease {
+                selectedMint.increaseDerivationCounterForKeysetWithID(counterIncrease.keysetID,
+                                                                      by: counterIncrease.increase)
+            }
+            
+            selection.selected.setState(.spent)
+            
+            let payload = requestResponse.payload
+            
+            do {
                 try selectedMint.addProofs(requestResponse.change,
                                            to: modelContext,
                                            increaseDerivationCounter: false)
                 
-                let event = Event.sendEvent(unit: Unit(paymentRequest.unit) ?? .sat,
+                // Keep the outgoing proofs as pending, like a regular send, so
+                // the event can later check whether they were redeemed.
+                let sentProofs = try selectedMint.addProofs(requestResponse.send,
+                                                            to: modelContext,
+                                                            state: .pending,
+                                                            increaseDerivationCounter: false)
+                
+                let event = Event.sendEvent(unit: unit,
                                             shortDescription: "Send",
                                             wallet: activeWallet,
-                                            amount: paymentRequest.amount ?? userProvidedAmount ?? 0,
-                                            token: requestResponse.payload.toToken(),
+                                            amount: amount,
+                                            token: payload.toToken(),
                                             longDescription: "",
-                                            proofs: [],
-                                            memo: "",
+                                            proofs: sentProofs,
+                                            memo: requestMemo ?? "",
                                             mint: selectedMint)
                 
                 modelContext.insert(event)
                 try modelContext.save()
-                
-                if let transport = selectedTransport {
-                    if transport.type == "nostr" {
-                        await sendViaNIP17(payload: requestResponse.payload, receiveerNPUB: transport.target)
-                    } else if transport.type == "post" {
-                        await sendViaHTTP(payload: requestResponse.payload, urlString: transport.target)
-                    } else {
-                        // TODO: show error
-                    }
-                } else {
-                    token = requestResponse.payload.toToken()
-                    buttonState = .success()
-                }
-
             } catch {
-                buttonState = .fail()
+                // Persisting failed but the ecash exists; still deliver it and
+                // tell the user what went wrong.
+                logger.error("failed to persist payment request send: \(error)")
                 displayAlert(alert: AlertDetail(with: error))
             }
+            
+            guard let transport = selectedTransport else {
+                token = payload.toToken()
+                buttonState = .success()
+                return
+            }
+            
+            switch transport.type {
+            case "nostr":
+                await sendViaNIP17(payload: payload, receiveerNPUB: transport.target)
+            case "post":
+                await sendViaHTTP(payload: payload, urlString: transport.target)
+            default:
+                // Unknown transport: hand the token to the user for manual delivery.
+                logger.warning("unsupported transport type \(transport.type), showing token instead")
+                token = payload.toToken()
+                buttonState = .success()
+            }
+        }
+    }
+    
+    /// Marks the action as failed and returns the button to idle after a short
+    /// delay. Only for failures that happen before the mint swapped our inputs.
+    private func failAndReset(with alert: AlertDetail) {
+        buttonState = .fail()
+        displayAlert(alert: alert)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            buttonState = .idle("Pay", action: pay)
         }
     }
     
     private func sendViaNIP17(payload: CashuSwift.PaymentRequestPayload, receiveerNPUB: String) async {
         do {
-            // Get sender's nsec from keychain
-            guard let senderNsec = try? NostrKeychain.getNsec() else {
-                displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Nostr Key Missing"), description: String(localized: "Please configure your Nostr key in Settings to send DMs.")))
-                buttonState = .fail()
-                return
-            }
-            
             // Encode payload as JSON
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
@@ -393,9 +447,9 @@ struct RequestPay: View {
                 buttonState = .fail()
                 return
             }
-            
-            // Send the DM via NIP-17
-            try await nostrService.sendNIP17(from: senderNsec, to: receiveerNPUB, message: jsonString)
+
+            // Send the DM via NIP-17, signed by a throwaway key the service generates
+            try await nostrService.sendNIP17(to: receiveerNPUB, message: jsonString)
             
             buttonState = .success()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -406,7 +460,7 @@ struct RequestPay: View {
             if let nostrError = error as? NostrServiceError {
                 switch nostrError {
                 case .noKeypairAvailable:
-                    errorMessage = "Invalid Nostr key format"
+                    errorMessage = "Failed to generate Nostr key"
                 case .invalidRecipientPubkey:
                     errorMessage = "Invalid recipient public key"
                 case .encryptionFailed:
@@ -421,6 +475,7 @@ struct RequestPay: View {
             }
             
             displayAlert(alert: AlertDetail(title: String(localized: "🛰️ Transmission Error"), description: errorMessage))
+            token = payload.toToken() // the swap already happened; let the user deliver it manually
             buttonState = .fail()
         }
     }
@@ -432,6 +487,7 @@ struct RequestPay: View {
               let url = URL(string: urlString) else {
             displayAlert(alert: AlertDetail(title: String(localized: "HTTP transport URL invalid."), description: String(localized: "The provided string \(urlString) does not seem to be valid. Please send the ecash manually or reclaim it.")))
             token = payload.toToken() // show the token so the user has a fallback
+            buttonState = .fail()
             return
         }
         
@@ -441,10 +497,12 @@ struct RequestPay: View {
             request.httpBody = try JSONEncoder().encode(payload)
             let (_, response) = try await URLSession.shared.data(for: request)
             
-            if let httpResponse = response as? HTTPURLResponse {
-                if !(200...299).contains(httpResponse.statusCode) {
-                    displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Unexpected HTTP Response"), description: String(localized: "The request returned status: \(String(describing: httpResponse))")))
-                }
+            if let httpResponse = response as? HTTPURLResponse,
+               !(200...299).contains(httpResponse.statusCode) {
+                displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Unexpected HTTP Response"), description: String(localized: "The request returned status: \(String(describing: httpResponse.statusCode))")))
+                token = payload.toToken() // the receiver may not have accepted it; keep the token reachable
+                buttonState = .fail()
+                return
             }
             
             buttonState = .success()
@@ -461,6 +519,7 @@ struct RequestPay: View {
                                               }
                                           }),
                                           secondaryButton: AlertButton(title: String(localized: "Cancel"), role: .cancel, action: {
+                                              token = payload.toToken() // keep the swapped ecash reachable
                                               buttonState = .fail()
                                           }))
             displayAlert(alert: alertDetail)

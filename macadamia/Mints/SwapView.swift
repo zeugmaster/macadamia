@@ -6,7 +6,7 @@ import CashuSwift
 struct SwapView: View {
 
     enum PaymentState {
-        case none, ready, setup, melting, minting, success, fail
+        case none, ready, setup, melting, minting, success, parked, fail
     }
 
     @State private var state: PaymentState = .none
@@ -50,15 +50,15 @@ struct SwapView: View {
     }
 
     var isProgressSectionVisible: Bool {
-        state == .melting || state == .setup || state == .minting || state == .success
+        state == .melting || state == .setup || state == .minting || state == .success || state == .parked
     }
 
     var shouldShowSetupCheckmark: Bool {
-        state == .melting || state == .minting || state == .success
+        state == .melting || state == .minting || state == .success || state == .parked
     }
 
     var shouldShowMeltingCheckmark: Bool {
-        state == .minting || state == .success
+        state == .minting || state == .success || state == .parked
     }
 
     private var selectedMintBalance: Int {
@@ -115,7 +115,7 @@ struct SwapView: View {
                                selectedMint: $fromMint,
                                allowsNoneState: false,
                                allowedMintIDs: transferCompatibleMintIDs,
-                               hide: $toMint)
+                               hide: toMint)
                     HStack {
                         Text("Balance:")
                         Spacer()
@@ -130,7 +130,7 @@ struct SwapView: View {
                            selectedMint: $toMint,
                            allowsNoneState: true,
                            allowedMintIDs: transferCompatibleMintIDs,
-                           hide: $fromMint)
+                           hide: fromMint)
             }
 
             Section {
@@ -234,6 +234,11 @@ struct SwapView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 dismiss()
             }
+        case .pending(let message):
+            state = .parked
+            buttonState = .idle(String(localized: "Close"), action: { dismiss() })
+            displayAlert(alert: AlertDetail(title: String(localized: "Transfer Pending"),
+                                            description: message))
         case .fail(let error):
             state = .fail
             buttonState = .fail()

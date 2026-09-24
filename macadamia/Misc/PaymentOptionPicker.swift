@@ -1,9 +1,12 @@
+import CashuSwift
 import SwiftUI
 
 struct PaymentOptionPicker: View {
     let direction: PaymentDirection
     let label: String
-    let allowedMethods: Set<PaymentMethodKind>?
+    let allowedMethods: Set<CashuSwift.PaymentMethodID>?
+    let excludedMethods: Set<CashuSwift.PaymentMethodID>?
+    let hidesWhenSingleOption: Bool
 
     @Binding var selectedMint: Mint?
     @Binding var selectedOption: PaymentOption?
@@ -15,12 +18,16 @@ struct PaymentOptionPicker: View {
          label: String = String(localized: "Payment"),
          selectedMint: Binding<Mint?>,
          selectedOption: Binding<PaymentOption?>,
-         allowedMethods: Set<PaymentMethodKind>? = nil) {
+         allowedMethods: Set<CashuSwift.PaymentMethodID>? = nil,
+         excludedMethods: Set<CashuSwift.PaymentMethodID>? = nil,
+         hidesWhenSingleOption: Bool = true) {
         self.direction = direction
         self.label = label
         self._selectedMint = selectedMint
         self._selectedOption = selectedOption
         self.allowedMethods = allowedMethods
+        self.excludedMethods = excludedMethods
+        self.hidesWhenSingleOption = hidesWhenSingleOption
     }
 
     var body: some View {
@@ -41,7 +48,16 @@ struct PaymentOptionPicker: View {
                         .foregroundStyle(.secondary)
                 }
             } else if distinctOptionCount <= 1 {
-                EmptyView()
+                if hidesWhenSingleOption {
+                    EmptyView()
+                } else {
+                    HStack {
+                        Text(label)
+                        Spacer()
+                        Text(selectedOption?.displayName ?? options.first?.displayName ?? "")
+                            .foregroundStyle(.secondary)
+                    }
+                }
             } else {
                 Picker(label, selection: $selectedOption) {
                     ForEach(options) { option in
@@ -53,13 +69,12 @@ struct PaymentOptionPicker: View {
         .task(id: refreshID) {
             await refreshOptions()
         }
-        .onChange(of: selectedMint?.mintID) { _, _ in
-            Task { await refreshOptions() }
-        }
     }
 
     private var refreshID: String {
-        "\(selectedMint?.mintID.uuidString ?? "nil")|\(direction.rawValue)|\(allowedMethods?.map(\.rawValue).sorted().joined(separator: ",") ?? "all")"
+        let allowed = allowedMethods?.map(\.rawValue).sorted().joined(separator: ",") ?? "all"
+        let excluded = excludedMethods?.map(\.rawValue).sorted().joined(separator: ",") ?? "none"
+        return "\(selectedMint?.mintID.uuidString ?? "nil")|\(direction.rawValue)|\(allowed)|\(excluded)"
     }
 
     private var distinctOptionCount: Int {
@@ -71,16 +86,21 @@ struct PaymentOptionPicker: View {
         guard let selectedMint else {
             options = []
             selectedOption = nil
+            isLoading = false
             return
         }
 
         isLoading = true
         let loadedOptions = await selectedMint.supportedPaymentOptions(direction: direction)
-        let filteredOptions: [PaymentOption]
+        guard !Task.isCancelled, self.selectedMint?.mintID == selectedMint.mintID else { return }
+        var filteredOptions: [PaymentOption]
         if let allowedMethods {
             filteredOptions = loadedOptions.filter { allowedMethods.contains($0.method) }
         } else {
             filteredOptions = loadedOptions
+        }
+        if let excludedMethods {
+            filteredOptions = filteredOptions.filter { !excludedMethods.contains($0.method) }
         }
 
         let previous = selectedOption

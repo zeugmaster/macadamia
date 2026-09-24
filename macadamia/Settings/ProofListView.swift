@@ -4,22 +4,27 @@ import Flow
 import CashuSwift
 
 struct MintListView: View {
-    
-    @Environment(\.modelContext) private var modelContext
-    @Query private var mints: [Mint]
-    
-    var mintOfActiveWallet: [Mint] {
-        mints.filter { $0.wallet?.active == true }
-             .sorted { ($0.userIndex ?? Int.max) < ($1.userIndex ?? Int.max) }
+
+    let wallet: Wallet
+
+    private var sortedMints: [Mint] {
+        wallet.mints.sorted { ($0.userIndex ?? Int.max) < ($1.userIndex ?? Int.max) }
     }
-    
+
     var body: some View {
         List {
-            ForEach(mintOfActiveWallet) { m in
+            ForEach(sortedMints) { m in
                 NavigationLink(destination: ProofListView(mintID: m.mintID),
                                label: {
                     VStack(alignment: .leading) {
-                        Text(m.displayName)
+                        HStack {
+                            Text(m.displayName)
+                            if m.hidden {
+                                Text("hidden")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                         Text(m.url.absoluteString)
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -27,11 +32,9 @@ struct MintListView: View {
                 })
             }
         }
+        .navigationTitle("Proof Database")
+        .navigationBarTitleDisplayMode(.inline)
     }
-}
-
-#Preview {
-    MintListView()
 }
 
 struct ProofListView: View {

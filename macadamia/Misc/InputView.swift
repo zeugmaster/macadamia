@@ -8,7 +8,7 @@ import OSLog
 // MARK: - BIP-321 URI Parser
 
 /// Parses BIP-321 `bitcoin:` URIs and extracts payment instructions.
-/// Prioritizes: cashu payment request (creq) > BOLT11 invoice (lightning) > unsupported.
+/// Prioritizes: cashu payment request (creq) > BOLT11 invoice (lightning) > BOLT12 offer (lno) > unsupported.
 struct BIP321 {
     
     /// Represents the result of parsing a BIP-321 URI.
@@ -65,7 +65,7 @@ struct BIP321 {
     }
     
     /// Resolves a BIP-321 URI to the best supported payment method.
-    /// Priority: creq > lightning (BOLT11) > unsupported.
+    /// Priority: creq > lightning (BOLT11) > lno (BOLT12) > unsupported.
     static func resolve(_ string: String, supportedTypes: [InputView.InputType]) -> InputValidator.ValidationResult {
         guard let parsed = parse(string) else {
             return .invalid(String(localized: "Unsupported Input"))
@@ -81,9 +81,13 @@ struct BIP321 {
             return .valid(InputView.Result(payload: lightning, type: .bolt11Invoice))
         }
         
-        // BOLT12 offers are not yet supported
-        if let lno = parsed.lno, !lno.isEmpty {
-            return .invalid(String(localized: "BOLT12 is not yet supported"))
+        if let lno = parsed.lno, !lno.isEmpty, supportedTypes.contains(.bolt12Offer) {
+            do {
+                let offer = try BOLT12OfferInput(lno)
+                return .valid(InputView.Result(payload: offer.request, type: .bolt12Offer))
+            } catch {
+                return .invalid(error.localizedDescription)
+            }
         }
         
         // On-chain bitcoin addresses are not supported in this wallet
@@ -107,9 +111,9 @@ struct InputValidator {
         let inputLogger = Logger(subsystem: "macadamia", category: "InputValidator")
         inputLogger.info("Validating input (\(string.count) chars): \(string.prefix(120))\(string.count > 120 ? "..." : "")")
         
-        var input = string.removePrefixes(["cashu://", "cashu:", "lightning://", "lightning:"]) // make sure to sort equal prefixes by lenght
-        input = input.replacingOccurrences(of: "+", with: "")
-        input = input.replacingOccurrences(of: " ", with: "")
+        var input = string.trimmingCharacters(in: .whitespacesAndNewlines)
+            .removePrefixes(["cashu://", "cashu:", "lightning://", "lightning:"])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Check for BIP-321 bitcoin: URI before other type detection
         if BIP321.isBitcoinURI(input) {
@@ -123,6 +127,18 @@ struct InputValidator {
             return result
         }
         
+        // Let the BOLT12 decoder validate continuation separators and mixed case.
+        if input.lowercased().hasPrefix("lno") && supportedTypes.contains(.bolt12Offer) {
+            do {
+                let offer = try BOLT12OfferInput(input)
+                return .valid(InputView.Result(payload: offer.request, type: .bolt12Offer))
+            } catch {
+                return .invalid(error.localizedDescription)
+            }
+        }
+        input = input.replacingOccurrences(of: "+", with: "")
+        input = input.replacingOccurrences(of: " ", with: "")
+
         let type: InputView.InputType
         switch input {
         case _ where input.lowercased().hasPrefix("cashu"):

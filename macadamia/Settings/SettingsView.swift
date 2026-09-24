@@ -21,7 +21,7 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 Section {
-                    NavigationLink(destination: MnemonicView()) { Text("Show Seed Phrase") }
+                    NavigationLink(destination: MnemonicView()) { Text("Seed Phrase") }
                     NavigationLink(destination: RestoreView()) { Text("Restore") }
                     NavigationLink(destination: PublicKeyView()) { Text("Show Locking Key") }
                 } header: {
@@ -40,8 +40,7 @@ struct SettingsView: View {
                 
                 if hiddenMenuShowing {
                     Section {
-                        NavigationLink(destination: MintListView()) { Text("Proof Database") }
-                        NavigationLink(destination: WalletInfoListView()) { Text("Wallet Info") }
+                        NavigationLink(destination: WalletInfoListView()) { Text("Wallets") }
                     } header: {
                         Text("Debugging")
                     }

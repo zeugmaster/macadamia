@@ -110,6 +110,7 @@ struct ContentView: View {
             selectedTab = .wallet
         })
         .onAppear {
+            NostrKeyMigrator.run(context: modelContext)
             Task { @MainActor in
                 if let activeWallet {
                     for mint in activeWallet.mints {
@@ -171,13 +172,15 @@ struct ContentView: View {
     }
     
     private func handleBitcoinURI(_ uriString: String) {
-        let supportedTypes: [InputView.InputType] = [.bolt11Invoice, .creq]
+        let supportedTypes: [InputView.InputType] = [.bolt11Invoice, .bolt12Offer, .creq]
         let result = BIP321.resolve(uriString, supportedTypes: supportedTypes)
         switch result {
         case .valid(let inputResult):
             switch inputResult.type {
             case .bolt11Invoice:
                 pendingNavigation = .melt(invoice: inputResult.payload)
+            case .bolt12Offer:
+                pendingNavigation = .offer(inputResult.payload)
             case .creq:
                 do {
                     let req = try parsePaymentRequest(inputResult.payload)

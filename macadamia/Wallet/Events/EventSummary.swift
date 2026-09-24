@@ -34,6 +34,9 @@ struct MintEventSummary: View {
                 if let text = event.mintQuote?.request {
                     CopyableRow(label: "Bolt11 Invoice", value: text)
                         .foregroundStyle(.secondary)
+                } else if let genericQuote = event.genericMintQuote {
+                    CopyableRow(label: String(localized: "Payment Request"), value: genericQuote.request)
+                        .foregroundStyle(.secondary)
                 }
             }
             
@@ -59,7 +62,7 @@ struct MintEventSummary: View {
                 }
                 
                 if showDetails {
-                    CopyableRow(label: "Quote ID", value: event.mintQuote?.quote ?? "nil")
+                    CopyableRow(label: "Quote ID", value: event.mintQuote?.quote ?? event.genericMintQuote?.quote ?? "nil")
                 }
             }
         }
@@ -158,7 +161,12 @@ struct MeltEventSummary: View {
                 
                 if showDetails {
                     ForEach(events) { event in
-                        CopyableRow(label: (event.mints?.first?.displayName ?? "nil") + " - Quote ID", value: event.bolt11MeltQuote?.quote ?? "nil")
+                        CopyableRow(label: (event.mints?.first?.displayName ?? "nil") + " - Quote ID",
+                                    value: event.bolt11MeltQuote?.quote ?? event.genericMeltQuote?.quote ?? "nil")
+                    }
+                    if let quote = events.first?.lightningMeltQuote, quote.method == .bolt12,
+                       let offer = quote.request {
+                        CopyableRow(label: "Offer", value: offer)
                     }
                     CopyableRow(label: "Preimage", value: events.first?.preImage ?? "nil")
                 }
@@ -323,8 +331,8 @@ struct TransferEventSummary: View {
     var body: some View {
         List {
             Section {
-                TransferMintLabel(from: event.mints?[0].displayName ?? "Not found",
-                                  to: event.mints?[1].displayName ?? "Not found")
+                TransferMintLabel(from: event.transferMints?.from.displayName ?? "Not found",
+                                  to: event.transferMints?.to.displayName ?? "Not found")
             } header: {
                 Text("Mints")
             }
