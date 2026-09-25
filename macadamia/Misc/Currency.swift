@@ -8,6 +8,40 @@
 import Foundation
 
 enum Currency {
+    struct ExchangeRate: Decodable, Equatable {
+        let rates: [String: Double]
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            rates = try container.decode([String: Double].self)
+        }
+
+        init(rates: [String: Double]) {
+            self.rates = rates
+        }
+
+        func rate(for unit: Currency.Unit) -> Double? {
+            rates[unit.currencyCode.lowercased()]
+        }
+    }
+
+    private struct ExchangeRateResponse: Decodable {
+        let bitcoin: ExchangeRate
+    }
+
+    static func fetchBitcoinExchangeRates() async -> ExchangeRate? {
+        let currencies = Unit.fiatCases.map { $0.currencyCode.lowercased() }.joined(separator: ",")
+        guard let url = URL(string: "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=\(currencies)") else {
+            return nil
+        }
+
+        guard let (data, _) = try? await URLSession.shared.data(from: url) else {
+            return nil
+        }
+
+        return try? JSONDecoder().decode(ExchangeRateResponse.self, from: data).bitcoin
+    }
+
     struct Amount: Equatable {
         let absoluteValue: Double
         let unit: Unit
@@ -305,13 +339,32 @@ enum Currency {
             try container.encode(currencyCode)
         }
 
-        /// Access the preferred conversion unit directly from UserDefaults without initializing AppState.
+        private static let appGroupID = "group.com.cypherbase.macadamia"
+        private static let preferredConversionUnitKey = "PreferredCurrencyConversionUnit"
+
+        private static var sharedDefaults: UserDefaults {
+            UserDefaults(suiteName: appGroupID) ?? .standard
+        }
+
+        /// Access the preferred conversion unit directly from shared UserDefaults without initializing AppState.
         static var preferred: Unit {
-            let key = "PreferredCurrencyConversionUnit"
-            if let code = UserDefaults.standard.string(forKey: key) {
+            if let code = sharedDefaults.string(forKey: preferredConversionUnitKey) {
                 return Unit(code: code)
             }
             return .usd
+        }
+
+        static func savePreferred(_ unit: Unit) {
+            sharedDefaults.setValue(unit.currencyCode, forKey: preferredConversionUnitKey)
+        }
+
+        static func migratePreferredFromStandardDefaultsIfNeeded() {
+            guard sharedDefaults.object(forKey: preferredConversionUnitKey) == nil,
+                  let code = UserDefaults.standard.string(forKey: preferredConversionUnitKey) else {
+                return
+            }
+
+            sharedDefaults.setValue(code, forKey: preferredConversionUnitKey)
         }
     }
 }
