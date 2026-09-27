@@ -27064,18 +27064,6 @@
         }
       }
     },
-    "Quote amount mismatch: expected %lld sats, received %lld sats." : {
-      "comment" : "BOLT11 payment validation message.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quote amount mismatch: expected %lld sats, received %lld sats."
-          }
-        }
-      }
-    },
     "Quote amounts don't match invoice" : {
       "localizations" : {
         "ar" : {
@@ -34404,18 +34392,6 @@
     "The selected mint cannot cover the payment and fees." : {
 
     },
-    "The selected mints must support partial payments." : {
-      "comment" : "BOLT11 payment validation message.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The selected mints must support partial payments."
-          }
-        }
-      }
-    },
     "The state of the reserved ecash could not be checked with the mint. Try again later." : {
       "localizations" : {
         "ar" : {
@@ -34976,18 +34952,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu alan BOLT11 invoice, LNURL dizileri (LNURL1...) veya Lightning Adresleri (örn. user@host.com) destekler."
-          }
-        }
-      }
-    },
-    "This invoice includes a fraction of a satoshi. Pay it from one mint with enough balance, or request a whole-satoshi invoice to split the payment." : {
-      "comment" : "BOLT11 payment validation message.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This invoice includes a fraction of a satoshi. Pay it from one mint with enough balance, or request a whole-satoshi invoice to split the payment."
           }
         }
       }
@@ -38926,18 +38890,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ABD Doları"
-          }
-        }
-      }
-    },
-    "Use a BOLT11 invoice with an amount." : {
-      "comment" : "BOLT11 payment validation message.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use a BOLT11 invoice with an amount."
           }
         }
       }

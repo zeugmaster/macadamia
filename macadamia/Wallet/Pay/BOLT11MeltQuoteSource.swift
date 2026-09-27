@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import CashuSwift
+import Bolt11
 
 /// Quote-source view for BOLT11 melts. Owns invoice input, mint
 /// selection (single-mint and MPP), per-mint quote fetching and the
@@ -18,13 +19,27 @@ struct BOLT11MeltQuoteSource: View {
     @Binding var state: MeltSourceState
     let initialInvoice: String?
 
-    @StateObject private var loader = BOLT11QuoteLoader()
+    private enum QuoteEntry: Equatable {
+        case quote(CashuSwift.Bolt11.MeltQuote)
+        case error(String)
+
+        static func == (lhs: QuoteEntry, rhs: QuoteEntry) -> Bool {
+            switch (lhs, rhs) {
+            case (.quote(let l), .quote(let r)):
+                return l.quote == r.quote && l.amount == r.amount && l.feeReserve == r.feeReserve
+            case (.error(let l), .error(let r)):
+                return l == r
+            default:
+                return false
+            }
+        }
+    }
+
     @State private var invoiceString: String?
-    @State private var parsed: BOLT11InvoiceInput?
-    @State private var selectedMints = Set<UUID>()
+    @State private var quoteEntries: [Mint: QuoteEntry] = [:]
+    @State private var selectedMints = Set<Mint>()
     @State private var autoSelect = true
     @State private var showSelector = false
-    @State private var loadTask: Task<Void, Never>?
 
     init(initialInvoice: String?, state: Binding<MeltSourceState>) {
         self.initialInvoice = initialInvoice
@@ -46,60 +61,121 @@ struct BOLT11MeltQuoteSource: View {
                 .lineLimit(1)
             } else {
                 InputView(supportedTypes: [.bolt11Invoice]) { input in
-                    invalidateQuotes()
                     withAnimation { invoiceString = input.payload }
                 }
                 .padding()
             }
         }
-        .onChange(of: quoteKey, initial: true) { _, _ in updateQuotes() }
-        .onChange(of: loader.state) { _, newState in state = newState }
-        .onDisappear { invalidateQuotes() }
+        .onAppear {
+            recomputeState()
+            updateQuotes()
+        }
+        .onChange(of: invoiceString) { _, _ in
+            // Old quotes belong to the previous invoice.
+            quoteEntries = [:]
+            recomputeState()
+            updateQuotes()
+        }
+        .onChange(of: selectedMints) { _, _ in recomputeState() }
+        .onChange(of: autoSelect) { _, _ in recomputeState() }
+        .onChange(of: quoteEntries) { _, _ in recomputeState() }
     }
 
     // MARK: - Derived state
 
+    private var activeWallet: Wallet? { wallets.first }
+
     private var mints: [Mint] {
-        wallets.first?.mints.filter { !$0.hidden }.sorted {
-            let lhs = $0.userIndex ?? Int.max, rhs = $1.userIndex ?? Int.max
-            return lhs == rhs ? $0.mintID.uuidString < $1.mintID.uuidString : lhs < rhs
-        } ?? []
+        activeWallet?.mints.filter({ $0.hidden == false })
+            .sorted { ($0.userIndex ?? Int.max) < ($1.userIndex ?? Int.max) } ?? []
     }
 
-    private var candidates: [BOLT11PaymentPlan.Candidate] { mints.map { .init($0) } }
-    private var invoiceAmount: Int? { parsed?.amountSat }
-
-    /// Balances and capabilities are part of the request identity, not just mint IDs.
-    private struct QuoteKey: Equatable {
-        let invoice: String?
-        let candidates: [BOLT11PaymentPlan.Candidate]
-        let selected: Set<UUID>
-        let automatic: Bool
+    private var invoiceAmount: Int? {
+        try? invoiceString.map({ try Self.satAmount(from: $0) })
     }
 
-    private var quoteKey: QuoteKey {
-        .init(invoice: invoiceString, candidates: candidates, selected: selectedMints, automatic: autoSelect)
+    static func satAmount(from invoice: String, isMPP: Bool = false) throws -> Int {
+        guard let msat = try Bolt11Decoder.decode(invoice).amountMillisatoshis else { return 0 }
+        // Whole-sat MPP allocations must not round up the Lightning amount.
+        guard !isMPP || msat % 1_000 == 0 else { throw CashuError.invalidAmount }
+        return Int(msat / 1_000 + (msat % 1_000 == 0 ? 0 : 1))
     }
 
-    private var selected: [Mint] {
-        let ids: Set<UUID>
-        if autoSelect, let parsed {
-            let chosen = (try? BOLT11PaymentPlan.automaticSelection(input: parsed, candidates: candidates)) ?? []
-            ids = Set(chosen.map(\.mintID))
-        } else {
-            ids = selectedMints
+    private var totalFee: Int {
+        quoteEntries.values.compactMap { entry -> Int? in
+            if case .quote(let q) = entry { return q.feeReserve }
+            return nil
+        }.reduce(0, +)
+    }
+
+    private var totalSelectedMintBalance: Int {
+        selected.reduce(0, { $0 + $1.balance(for: .sat) })
+    }
+
+    private var insufficientBalance: Bool {
+        totalSelectedMintBalance < (invoiceAmount ?? 0) + totalFee
+    }
+
+    /// The mints the user is paying from — either the explicit selection or
+    /// — while `autoSelect` is on — the auto-derived selection that satisfies
+    /// the invoice amount.
+    private var selected: Set<Mint> {
+        if autoSelect {
+            guard let amount = invoiceAmount, amount > 0 else { return [] }
+            let ordered = mints
+            if let single = ordered.first(where: { $0.balance(for: .sat) >= amount }) {
+                return [single]
+            }
+            let mpp = ordered.filter { $0.supportsMPP }
+            let total = mpp.reduce(0) { $0 + $1.balance(for: .sat) }
+            if total < amount {
+                DispatchQueue.main.async { self.autoSelect = false }
+                return []
+            }
+            let ranked = mpp.sorted {
+                let lb = $0.balance(for: .sat), rb = $1.balance(for: .sat)
+                return lb == rb ? (($0.userIndex ?? Int.max) < ($1.userIndex ?? Int.max)) : (lb > rb)
+            }
+            var acc = 0
+            var chosen = [Mint]()
+            for mint in ranked where acc < amount {
+                chosen.append(mint)
+                acc += mint.balance(for: .sat)
+            }
+            return Set(chosen)
         }
-        return mints.filter { ids.contains($0.mintID) }
+        return selectedMints
     }
 
-    private var payers: [Mint] {
-        guard let plan = loader.plan else { return selected }
-        let ids = Set(plan.legs.map(\.mintID))
-        return mints.filter { ids.contains($0.mintID) }
+    private var hasQuoteError: Bool {
+        quoteEntries.values.contains(where: { if case .error = $0 { true } else { false } })
     }
 
-    private var totalSelectedMintBalance: Double {
-        payers.reduce(0) { $0 + Double($1.balance(for: .sat)) }
+    private var allSelectedHaveQuotes: Bool {
+        let s = selected
+        guard !s.isEmpty else { return false }
+        return s.allSatisfy { mint in
+            if case .quote = quoteEntries[mint] { return true }
+            return false
+        }
+    }
+
+    /// Sum of `quote.amount` across all loaded quotes for the current
+    /// selection. Used to cross-check against the invoice's own amount —
+    /// a mismatch (MPP allocation rounding, mint disagreement, …) is
+    /// surfaced as an error rather than silently overpaying or underpaying.
+    private var quoteAmountSum: Int {
+        quoteEntries.values.compactMap { entry -> Int? in
+            if case .quote(let q) = entry { return q.amount }
+            return nil
+        }.reduce(0, +)
+    }
+
+    private var hasAmountMismatch: Bool {
+        guard allSelectedHaveQuotes, let expectedAmount = invoiceAmount else {
+            return false
+        }
+        return quoteAmountSum != expectedAmount
     }
 
     // MARK: - Sections
@@ -127,19 +203,19 @@ struct BOLT11MeltQuoteSource: View {
             } label: {
                 HStack {
                     VStack(alignment: .leading) {
-                        switch payers.count {
+                        switch selected.count {
                         case 0:
                             Text("No mint selected")
                         case 1:
-                            Text("Pay from: \(payers.first?.displayName ?? "nil")")
+                            Text("Pay from: \(selected.first?.displayName ?? "nil")")
                         default:
-                            Text("Pay from \(payers.count) mints")
+                            Text("Pay from \(selected.count) mints")
                         }
                         subline
                             .font(.caption)
                     }
                     Spacer()
-                    if payers.count > 1 && autoSelect {
+                    if selected.count > 1 && autoSelect {
                         Image(systemName: "wand.and.stars")
                             .foregroundColor(.secondary)
                             .font(.title3)
@@ -159,11 +235,7 @@ struct BOLT11MeltQuoteSource: View {
                 }
             }
         } footer: {
-            if parsed?.supportsWholeSatMPP == false {
-                Text(BOLT11PaymentError.fractionalMPP.localizedDescription)
-                    .lineLimit(nil)
-            }
-            if Double(invoiceAmount ?? 0) > totalSelectedMintBalance * 0.97 {
+            if Double(invoiceAmount ?? 0) > Double(totalSelectedMintBalance) * 0.97 {
                 Text("Payment amount approaching the total balance risks payment failure due to fees.")
                     .lineLimit(3)
             }
@@ -171,12 +243,12 @@ struct BOLT11MeltQuoteSource: View {
     }
 
     private func mintRow(_ mint: Mint) -> some View {
-        let disableRow = (!mint.supportsMPP || parsed?.supportsWholeSatMPP == false) && mint.balance(for: .sat) < (invoiceAmount ?? 0)
+        let disableRow = !mint.supportsMPP && mint.balance(for: .sat) < (invoiceAmount ?? 0)
         return HStack {
             Button {
                 toggleSelection(for: mint)
             } label: {
-                Image(systemName: payers.contains(mint) ? "checkmark.circle.fill" : "circle")
+                Image(systemName: selected.contains(mint) ? "checkmark.circle.fill" : "circle")
             }
             .disabled(disableRow)
 
@@ -196,7 +268,7 @@ struct BOLT11MeltQuoteSource: View {
                         Text(String(localized: "Full payment"))
                     }
                     Spacer()
-                    if let entry = loader.entries[mint.mintID] {
+                    if let entry = quoteEntries[mint] {
                         switch entry {
                         case .quote(let quote):
                             HStack(spacing: 4) {
@@ -219,21 +291,22 @@ struct BOLT11MeltQuoteSource: View {
 
     @ViewBuilder
     private var subline: some View {
-        switch loader.state {
-        case .awaitingInput, .needsAmount:
+        if selected.isEmpty {
             Text("Tap to select a mint from the list")
                 .foregroundStyle(.secondary)
-        case .loading:
+        } else if hasQuoteError {
+            Text("Error")
+                .foregroundStyle(.orange)
+        } else if !allSelectedHaveQuotes {
             Text("Loading quotes...")
                 .foregroundStyle(.secondary)
-        case .error(let message):
-            Text(message)
+        } else if hasAmountMismatch {
+            Text("Quote amounts don't match invoice")
                 .foregroundStyle(.orange)
-                .lineLimit(nil)
-        case .insufficientBalance:
+        } else if insufficientBalance {
             Text("Insufficient balance (including fees)")
                 .foregroundStyle(.red)
-        case .ready(_, let totalFee):
+        } else {
             HStack(spacing: 4) {
                 Text("Total Lightning Fees:")
                 AmountView(amount: totalFee, unit: .sat, showUnit: false)
@@ -242,48 +315,216 @@ struct BOLT11MeltQuoteSource: View {
         }
     }
 
-    // MARK: - Selection and quote loading
+    // MARK: - Selection
 
     private func toggleSelection(for mint: Mint) {
-        var selection = Set(payers.map(\.mintID))
-        let hasNonMPP = payers.contains { !$0.supportsMPP }
-        invalidateQuotes()
+        if autoSelect { selectedMints = selected }
         withAnimation { autoSelect = false }
-        if selection.contains(mint.mintID) {
-            selection.remove(mint.mintID)
-        } else if parsed?.supportsWholeSatMPP == false || !mint.supportsMPP || hasNonMPP {
-            selection = [mint.mintID]
-        } else {
-            selection.insert(mint.mintID)
+
+        let hasNonMPP = selectedMints.contains { !$0.supportsMPP }
+        switch (selectedMints.contains(mint), mint.supportsMPP, hasNonMPP) {
+        case (true, _, _):
+            selectedMints.remove(mint)
+        case (false, false, _):
+            selectedMints.removeAll()
+            selectedMints.insert(mint)
+        case (false, true, true):
+            selectedMints.removeAll()
+            selectedMints.insert(mint)
+        case (false, true, false):
+            selectedMints.insert(mint)
         }
-        selectedMints = selection
+        quoteEntries = [:]
+
+        updateQuotes()
     }
 
-    private func invalidateQuotes() {
-        loadTask?.cancel()
-        loader.reset()
-        state = .awaitingInput
-    }
+    // MARK: - Quote fetching
 
     private func updateQuotes() {
-        invalidateQuotes()
-        parsed = nil
-        guard let invoiceString else { return }
-        do {
-            let input = try BOLT11InvoiceInput(invoiceString)
-            parsed = input
-            let currentMints = mints
-            let currentCandidates = candidates.filter { autoSelect || selectedMints.contains($0.mintID) }
-            let automatic = autoSelect
-            loader.reset(state: .loading)
-            state = .loading
-            loadTask = Task {
-                await loader.load(input: input, candidates: currentCandidates,
-                                  automatic: automatic, mints: currentMints)
-            }
-        } catch {
-            loader.reset(state: .error(error.localizedDescription))
-            state = loader.state
+        guard let total = invoiceAmount, let invoiceString else {
+            recomputeState()
+            return
         }
+
+        let currentSelected = selected
+        guard !currentSelected.isEmpty else {
+            recomputeState()
+            return
+        }
+
+        let totalSelectedBalance = currentSelected.reduce(0) { $0 + $1.balance(for: .sat) }
+        if total > totalSelectedBalance {
+            // Don't bother asking the mints — recomputeState will surface
+            // the insufficientBalance signal.
+            recomputeState()
+            return
+        }
+
+        let allocationsSendable = msatAllocations(for: total,
+                                                  mints: Array(currentSelected)).map { (mint, allocation) in
+            (CashuSwift.Mint(mint), allocation)
+        }
+
+        Task {
+            var results = [(CashuSwift.Mint, QuoteEntry)]()
+            for (mint, msat) in allocationsSendable {
+                do {
+                    let quote = try await loadQuote(mint: mint,
+                                                    invoice: invoiceString,
+                                                    msat: msat,
+                                                    isMPP: allocationsSendable.count > 1)
+                    results.append((mint, .quote(quote)))
+                } catch CashuError.networkError {
+                    results.append((mint, .error(String(localized: "Network error"))))
+                } catch CashuError.unknownError(let message) where message.contains("internal mpp not allowed") {
+                    logger.warning("user tried to perform self-pay")
+                    results.append((mint, .error(String(localized: "Self-pay not possible"))))
+                } catch {
+                    logger.warning("Error when fetching quote: \(error)")
+                    results.append((mint, .error(String(localized: "Unknown error"))))
+                }
+            }
+            await MainActor.run {
+                for result in results {
+                    if let mint = currentSelected.first(where: { $0.matches(result.0) }) {
+                        quoteEntries[mint] = result.1
+                    }
+                }
+            }
+        }
+    }
+
+    private func loadQuote(mint: CashuSwift.Mint,
+                           invoice: String,
+                           msat: Int,
+                           isMPP: Bool) async throws -> CashuSwift.Bolt11.MeltQuote {
+        if isMPP {
+            _ = try Self.satAmount(from: invoice, isMPP: true)
+            let request = CashuSwift.Generic.MeltQuoteRequest(
+                method: .bolt11,
+                unit: Unit.sat.currencyCode,
+                request: invoice,
+                extra: [
+                    "options": .object([
+                        "mpp": .object([
+                            "amount": .integer(Int64(msat))
+                        ])
+                    ])
+                ]
+            )
+            let quote = try await CashuSwift.Generic.requestMeltQuote(request, from: mint)
+            return CashuSwift.Bolt11.MeltQuote(quote: quote.quote,
+                                               request: invoice,
+                                               amount: quote.amount,
+                                               unit: quote.unit,
+                                               feeReserve: quote.feeReserve,
+                                               state: quote.state,
+                                               expiry: quote.expiry,
+                                               paymentPreimage: quote.paymentPreimage,
+                                               change: quote.change)
+        }
+
+        let request = CashuSwift.Bolt11.MeltQuoteRequest(unit: Unit.sat.currencyCode,
+                                                         request: invoice,
+                                                         options: nil)
+        return try await CashuSwift.Bolt11.requestMeltQuote(request, from: mint)
+    }
+
+    private func msatAllocations(for total: Int, mints: [Mint]) -> [Mint: Int] {
+        let totalBalance = mints.reduce(0) { $0 + $1.balance(for: .sat) }
+        guard totalBalance > 0, total > 0 else {
+            return Dictionary(uniqueKeysWithValues: mints.map { ($0, 0) })
+        }
+
+        let totalMsat = total * 1_000
+
+        // Per-mint share is balance-weighted, but cashu proofs are whole
+        // sats, so each share has to be a multiple of 1000 msat. Floor
+        // each share, then hand out the leftover sats using the
+        // largest-remainder method — the mint whose share got truncated
+        // the most picks up the extra sat first. This keeps the per-mint
+        // shares close to their proportional ideal AND makes the sum
+        // exactly equal the invoice amount (vs. the old per-mint round-up,
+        // which could overshoot the invoice and produce quote sums larger
+        // than the invoice amount).
+        var allocations: [Mint: Int] = [:]
+        var remainders: [(mint: Mint, remainder: Int)] = []
+
+        for mint in mints {
+            let exactMsat = mint.balance(for: .sat) * totalMsat / totalBalance
+            let floored = (exactMsat / 1000) * 1000
+            allocations[mint] = floored
+            remainders.append((mint, exactMsat - floored))
+        }
+
+        let assigned = allocations.values.reduce(0, +)
+        var leftover = totalMsat - assigned
+
+        // Distribute the leftover whole sats. Largest remainder first;
+        // ties broken by larger balance.
+        remainders.sort { lhs, rhs in
+            if lhs.remainder != rhs.remainder { return lhs.remainder > rhs.remainder }
+            return lhs.mint.balance(for: .sat) > rhs.mint.balance(for: .sat)
+        }
+
+        var idx = 0
+        while leftover >= 1000 && idx < remainders.count {
+            allocations[remainders[idx].mint, default: 0] += 1000
+            leftover -= 1000
+            idx += 1
+        }
+
+        logger.info("created payment amount splits for \(total): \(allocations.map({ $0.key.url.absoluteString + ": " + String($0.value) }).joined(separator: ", "))")
+
+        return allocations
+    }
+
+    // MARK: - State publishing
+
+    private func recomputeState() {
+        let currentSelected = selected
+
+        guard invoiceString != nil, let expectedAmount = invoiceAmount else {
+            state = .awaitingInput
+            return
+        }
+
+        if currentSelected.isEmpty {
+            state = .awaitingInput
+            return
+        }
+
+        if hasQuoteError {
+            state = .error(String(localized: "Quote fetch failed"))
+            return
+        }
+
+        if !allSelectedHaveQuotes {
+            state = .loading
+            return
+        }
+
+        // Mints' quoted amounts must sum to the BOLT11 invoice amount.
+        // A mismatch (MPP allocation rounding, mint disagreement, etc.) is
+        // surfaced rather than silently over- or under-paying.
+        if quoteAmountSum != expectedAmount {
+            logger.warning("BOLT11MeltQuoteSource: quote sum (\(quoteAmountSum)) doesn't match invoice amount (\(expectedAmount))")
+            state = .error(String(localized: "Quote amount mismatch"))
+            return
+        }
+
+        if insufficientBalance {
+            state = .insufficientBalance
+            return
+        }
+
+        var bundles: [MeltQuoteBundle] = []
+        for mint in currentSelected {
+            if case .quote(let quote) = quoteEntries[mint] {
+                bundles.append(MeltQuoteBundle(mint: mint, quote: .bolt11(quote)))
+            }
+        }
+        state = .ready(bundles: bundles, totalFee: totalFee)
     }
 }
