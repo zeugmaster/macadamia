@@ -80,6 +80,11 @@ struct PaymentOption: Identifiable, Codable, Hashable, Sendable {
         method.displayName(methodName: methodName)
     }
 
+    func isAmountWithinLimits(_ amount: Int) -> Bool {
+        (minAmount.map { amount >= $0 } ?? true)
+            && (maxAmount.map { amount <= $0 } ?? true)
+    }
+
     init(mintID: UUID,
          direction: PaymentDirection,
          unit: Unit,

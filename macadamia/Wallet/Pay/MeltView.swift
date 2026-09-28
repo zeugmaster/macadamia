@@ -483,6 +483,7 @@ struct GenericMeltView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismissToRoot) private var dismissToRoot
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject private var appState: AppState
 
     @Query(filter: #Predicate<Wallet> { wallet in
@@ -532,6 +533,27 @@ struct GenericMeltView: View {
                                        baseUnit: selectedOption?.unit ?? .sat,
                                        exchangeRates: selectedOption?.unit.kind == .other ? nil : appState.exchangeRates,
                                        onReturn: getQuote)
+                } footer: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if amountOutsideLimits {
+                            Label("Amount is outside the allowed limits.", systemImage: "exclamationmark.triangle")
+                                .transition(.opacity)
+                        }
+                        if let option = selectedOption {
+                            if let minimum = option.minAmount {
+                                Text("Minimum: \(amountDisplayString(minimum, unit: option.unit))")
+                            }
+                            if let maximum = option.maxAmount {
+                                Text("Maximum: \(amountDisplayString(maximum, unit: option.unit))")
+                            }
+                        }
+                    }
+                    .foregroundStyle(amountOutsideLimits ? Color.red : .secondary)
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: amountOutsideLimits)
+                }
+                .disabled(quote != nil || pendingMeltEvent != nil || buttonState.type == .loading)
+
+                Section {
                     MintPicker(label: String(localized: "Mint"), selectedMint: $selectedMint)
                     PaymentOptionPicker(direction: .withdraw,
                                         label: String(localized: "Method"),
@@ -545,7 +567,7 @@ struct GenericMeltView: View {
                             if newValue.count > 1024 { memo = String(newValue.prefix(1024)) }
                         }
                 }
-                .disabled(quote != nil || pendingMeltEvent != nil)
+                .disabled(quote != nil || pendingMeltEvent != nil || buttonState.type == .loading)
 
                 if let quote {
                     Section {
@@ -636,12 +658,17 @@ struct GenericMeltView: View {
 
     // MARK: - Button orchestration
 
+    private var amountOutsideLimits: Bool {
+        amount > 0 && selectedOption?.isAmountWithinLimits(amount) == false
+    }
+
     private var actionButtonDisabled: Bool {
-        if pendingMeltEvent != nil || quote != nil { return false }
-        guard amount > 0, let selectedMint, let selectedOption else { return true }
-        if let minAmount = selectedOption.minAmount, amount < minAmount { return true }
-        if let maxAmount = selectedOption.maxAmount, amount > maxAmount { return true }
-        return selectedMint.balance(for: selectedOption.unit) < amount
+        if pendingMeltEvent != nil { return false }
+        guard let selectedMint, let selectedOption,
+              selectedOption.mintID == selectedMint.mintID,
+              selectedOption.isAmountWithinLimits(quote?.amount ?? amount) else { return true }
+        if quote != nil { return false }
+        return amount <= 0 || selectedMint.balance(for: selectedOption.unit) < amount
     }
 
     private func updateButtonState() {
@@ -657,7 +684,8 @@ struct GenericMeltView: View {
     // MARK: - Quote
 
     private func getQuote() {
-        guard let selectedMint, let selectedOption, amount > 0, quote == nil else { return }
+        guard !actionButtonDisabled, buttonState.type == .idle,
+              let selectedMint, let selectedOption, quote == nil else { return }
 
         buttonState = .loading()
 
@@ -702,7 +730,8 @@ struct GenericMeltView: View {
     // MARK: - Execution
 
     private func executeMelt() {
-        guard let quote, let selectedMint, let selectedOption, let activeWallet,
+        guard !actionButtonDisabled,
+              let quote, let selectedMint, let selectedOption, let activeWallet,
               pendingMeltEvent == nil else { return }
 
         guard let selection = selectedMint.select(amount: quote.amount + quote.feeReserve,

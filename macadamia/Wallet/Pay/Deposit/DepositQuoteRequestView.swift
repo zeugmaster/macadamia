@@ -15,6 +15,7 @@ struct DepositQuoteRequestView: View {
     let paymentMethod: CashuSwift.Mint.Info.PaymentMethod
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var numericalInput: Int = 0
     @State private var selectedMint: Mint?
     @State private var selectedUnit: Unit?
@@ -56,6 +57,10 @@ struct DepositQuoteRequestView: View {
         return (try? Self.validateAmount(requestedAmount, for: selectedOption)) != nil
     }
 
+    private var amountOutsideLimits: Bool {
+        numericalInput > 0 && selectedOption?.isAmountWithinLimits(numericalInput) == false
+    }
+
     var body: some View {
         ZStack {
             List {
@@ -66,9 +71,25 @@ struct DepositQuoteRequestView: View {
                                            exchangeRates: AppState.shared.exchangeRates,
                                            onReturn: requestQuote)
                     } footer: {
-                        if paymentMethodKind == .bolt12 {
-                            Text("Leave the amount empty to create an offer for any amount.")
+                        VStack(alignment: .leading, spacing: 4) {
+                            if amountOutsideLimits {
+                                Label("Amount is outside the allowed limits.", systemImage: "exclamationmark.triangle")
+                                    .transition(.opacity)
+                            }
+                            if let option = selectedOption {
+                                if let minimum = option.minAmount {
+                                    Text("Minimum: \(amountDisplayString(minimum, unit: option.unit))")
+                                }
+                                if let maximum = option.maxAmount {
+                                    Text("Maximum: \(amountDisplayString(maximum, unit: option.unit))")
+                                }
+                            }
+                            if paymentMethodKind == .bolt12 {
+                                Text("Leave the amount empty to create an offer for any amount.")
+                            }
                         }
+                        .foregroundStyle(amountOutsideLimits ? Color.red : .secondary)
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: amountOutsideLimits)
                     }
                 }
                 Section {
@@ -232,8 +253,7 @@ struct DepositQuoteRequestView: View {
         }
         if let amount {
             guard amount > 0 else { throw CashuError.invalidAmount }
-            if let minimum = option.minAmount, amount < minimum { throw CashuError.amountOutsideOfLimitRange }
-            if let maximum = option.maxAmount, amount > maximum { throw CashuError.amountOutsideOfLimitRange }
+            guard option.isAmountWithinLimits(amount) else { throw CashuError.amountOutsideOfLimitRange }
         }
     }
 
