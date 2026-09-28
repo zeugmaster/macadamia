@@ -535,10 +535,6 @@ struct GenericMeltView: View {
                                        onReturn: getQuote)
                 } footer: {
                     VStack(alignment: .leading, spacing: 4) {
-                        if amountOutsideLimits {
-                            Label("Amount is outside the allowed limits.", systemImage: "exclamationmark.triangle")
-                                .transition(.opacity)
-                        }
                         if let option = selectedOption {
                             if let minimum = option.minAmount {
                                 Text("Minimum: \(amountDisplayString(minimum, unit: option.unit))")
@@ -548,8 +544,9 @@ struct GenericMeltView: View {
                             }
                         }
                     }
-                    .foregroundStyle(amountOutsideLimits ? Color.red : .secondary)
-                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: amountOutsideLimits)
+                    .animation(reduceMotion ? nil : .linear(duration: 0.2)) { content in
+                        content.foregroundStyle(amountOutsideLimits ? Color.red : .secondary)
+                    }
                 }
                 .disabled(quote != nil || pendingMeltEvent != nil || buttonState.type == .loading)
 

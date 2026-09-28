@@ -72,10 +72,6 @@ struct DepositQuoteRequestView: View {
                                            onReturn: requestQuote)
                     } footer: {
                         VStack(alignment: .leading, spacing: 4) {
-                            if amountOutsideLimits {
-                                Label("Amount is outside the allowed limits.", systemImage: "exclamationmark.triangle")
-                                    .transition(.opacity)
-                            }
                             if let option = selectedOption {
                                 if let minimum = option.minAmount {
                                     Text("Minimum: \(amountDisplayString(minimum, unit: option.unit))")
@@ -88,8 +84,9 @@ struct DepositQuoteRequestView: View {
                                 Text("Leave the amount empty to create an offer for any amount.")
                             }
                         }
-                        .foregroundStyle(amountOutsideLimits ? Color.red : .secondary)
-                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: amountOutsideLimits)
+                        .animation(reduceMotion ? nil : .linear(duration: 0.2)) { content in
+                            content.foregroundStyle(amountOutsideLimits ? Color.red : .secondary)
+                        }
                     }
                 }
                 Section {
