@@ -534,19 +534,15 @@ struct GenericMeltView: View {
                                        exchangeRates: selectedOption?.unit.kind == .other ? nil : appState.exchangeRates,
                                        onReturn: getQuote)
                 } footer: {
-                    VStack(alignment: .leading, spacing: 4) {
-                        if let option = selectedOption {
-                            if let minimum = option.minAmount {
-                                Text("Minimum: \(amountDisplayString(minimum, unit: option.unit))")
-                            }
-                            if let maximum = option.maxAmount {
-                                Text("Maximum: \(amountDisplayString(maximum, unit: option.unit))")
-                            }
-                        }
+                    HStack {
+                        Text("Min: \(selectedOption?.minAmount ?? 0)")
+                        Text("Max: \(selectedOption?.maxAmount ?? 0)")
                     }
-                    .animation(reduceMotion ? nil : .linear(duration: 0.2)) { content in
-                        content.foregroundStyle(amountOutsideLimits ? Color.red : .secondary)
-                    }
+                    .opacity(amountOutsideLimits ? 1 : 0)
+                    .accessibilityHidden(!amountOutsideLimits)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .foregroundStyle(amountOutsideLimits ? .failureRed : .secondary)
+                    .animation(reduceMotion ? nil : .linear(duration: 0.2), value: amountOutsideLimits)
                 }
                 .disabled(quote != nil || pendingMeltEvent != nil || buttonState.type == .loading)
 

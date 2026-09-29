@@ -15904,7 +15904,7 @@
         }
       }
     },
-    "Leave the amount empty to create an offer for any amount." : {
+    "Leave the amount field empty for an amountless BOLT12 offer." : {
 
     },
     "Legacy key" : {
@@ -17130,6 +17130,9 @@
         }
       }
     },
+    "Max: %lld" : {
+
+    },
     "Melt Quote" : {
       "localizations" : {
         "ar" : {
@@ -17832,6 +17835,9 @@
           }
         }
       }
+    },
+    "Min: %lld" : {
+
     },
     "Mint" : {
       "localizations" : {

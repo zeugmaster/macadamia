@@ -71,22 +71,20 @@ struct DepositQuoteRequestView: View {
                                            exchangeRates: AppState.shared.exchangeRates,
                                            onReturn: requestQuote)
                     } footer: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            if let option = selectedOption {
-                                if let minimum = option.minAmount {
-                                    Text("Minimum: \(amountDisplayString(minimum, unit: option.unit))")
-                                }
-                                if let maximum = option.maxAmount {
-                                    Text("Maximum: \(amountDisplayString(maximum, unit: option.unit))")
-                                }
-                            }
+                        VStack(alignment: .leading) {
                             if paymentMethodKind == .bolt12 {
-                                Text("Leave the amount empty to create an offer for any amount.")
+                                Text("Leave the amount field empty for an amountless BOLT12 offer.")
                             }
+                            HStack {
+                                Text("Min: \(selectedOption?.minAmount ?? 0)")
+                                Text("Max: \(selectedOption?.maxAmount ?? 0)")
+                            }
+                            .opacity(amountOutsideLimits ? 1 : 0)
+                            .accessibilityHidden(!amountOutsideLimits)
                         }
-                        .animation(reduceMotion ? nil : .linear(duration: 0.2)) { content in
-                            content.foregroundStyle(amountOutsideLimits ? Color.red : .secondary)
-                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .foregroundStyle(amountOutsideLimits ? .failureRed : .secondary)
+                        .animation(reduceMotion ? nil : .linear(duration: 0.2), value: amountOutsideLimits)
                     }
                 }
                 Section {
