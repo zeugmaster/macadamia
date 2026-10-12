@@ -396,6 +396,7 @@ struct RequestPay: View {
                                             proofs: sentProofs,
                                             memo: requestMemo ?? "",
                                             mint: selectedMint)
+                event.inputFee = selection.selected.sum - requestResponse.send.sum - requestResponse.change.sum
                 
                 modelContext.insert(event)
                 try modelContext.save()

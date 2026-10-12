@@ -358,6 +358,7 @@ struct RedeemView<AdditionalControls: View>: View {
                                                memo: token.memo ?? "",
                                                mint: mint,
                                                redeemed: true)
+                event.inputFee = token.sum() - proofs.sum
                 
                 modelContext.insert(event)
                 try modelContext.save()

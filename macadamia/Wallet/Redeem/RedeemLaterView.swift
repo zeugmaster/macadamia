@@ -116,6 +116,7 @@ struct RedeemLaterView: View {
                                                           memo: token.memo,
                                                           mint: mint,
                                                           redeemed: true)
+                    receiveEvent.inputFee = token.sum() - internalProofs.sum
                     
                     modelContext.insert(receiveEvent)
                     event.visible = false

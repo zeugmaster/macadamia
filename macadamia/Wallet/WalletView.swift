@@ -530,6 +530,7 @@ struct WalletView: View {
                                                       memo: token.memo,
                                                       mint: mint,
                                                       redeemed: true)
+                receiveEvent.inputFee = token.sum() - redeemResult.proofs.sum
                 modelContext.insert(receiveEvent)
 
                 try modelContext.save()

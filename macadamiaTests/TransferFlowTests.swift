@@ -463,6 +463,8 @@ final class TransferFlowTests: XCTestCase {
             let legacyEvent = try XCTUnwrap(try context.fetch(FetchDescriptor<Event>()).first)
             XCTAssertNil(legacyEvent.fromMint, "rows from before the fields existed must read nil")
             XCTAssertNil(legacyEvent.toMint)
+            XCTAssertNil(legacyEvent.inputFee, "fee columns added later must also read nil on legacy rows")
+            XCTAssertNil(legacyEvent.paymentFee)
 
             // legacy resolution still orients via the proofs relationship
             let endpoints = try XCTUnwrap(legacyEvent.transferMints)

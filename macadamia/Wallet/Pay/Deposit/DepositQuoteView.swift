@@ -149,6 +149,7 @@ struct DepositQuoteView: View {
                             .lineLimit(1)
                         Spacer()
                     }
+                    .foregroundStyle(.primary) // TODO: find our why this does not work
                 }
                 .listRowSeparator(.hidden)
             }
