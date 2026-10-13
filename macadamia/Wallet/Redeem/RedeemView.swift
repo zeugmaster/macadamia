@@ -215,13 +215,9 @@ struct RedeemView<AdditionalControls: View>: View {
                         HStack {
                             Image(systemName: selection == .swap ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(selection == .swap ? .accentColor : .secondary)
-                            Text("Transfer to")
-                            Spacer()
-                            MintPicker(label: "", selectedMint: $swapTargetMint, allowsNoneState: false)
-                            .pickerStyle(MenuPickerStyle())
-                            .labelsHidden()
-                            .tint(.secondary)
-                            .fixedSize(horizontal: true, vertical: false)
+                            MintPicker(label: String(localized: "Transfer to"),
+                                       selectedMint: $swapTargetMint,
+                                       allowsNoneState: false)
                         }
                         .contentShape(Rectangle())
                         .onTapGesture {

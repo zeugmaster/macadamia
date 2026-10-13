@@ -350,7 +350,7 @@ struct ReceiveEventSummary: View {
                 HStack {
                     Text("Swap Fee: ")
                     Spacer()
-                    AmountView(amount: fee, unit: event.currencyUnit, showUnit: false)
+                    AmountView(amount: fee, unit: event.currencyUnit)
                 }
                 .foregroundStyle(.secondary)
             }
