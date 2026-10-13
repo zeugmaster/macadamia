@@ -37,14 +37,18 @@ extension AppSchemaV1 {
         }
         
         let sentProofs: [Proof]
+        let swapFee: Int
         if sendResult.send.isEmpty && sendResult.change.isEmpty {
             // Exact-amount direct path: the library skipped the swap and the token
             // is made of the inputs themselves. They are in flight until the
             // recipient redeems them, so keep them pending rather than spent.
             selection.selected.setState(.pending)
             sentProofs = selection.selected
+            swapFee = 0
         } else {
             selection.selected.setState(.spent)
+            // the library splits inputs into send + keep + fee, so the remainder is the fee
+            swapFee = selection.selected.sum - sendResult.send.sum - sendResult.change.sum
             
             try mint.addProofs(sendResult.change,
                                to: modelContext,
@@ -70,6 +74,7 @@ extension AppSchemaV1 {
                                     proofs: sentProofs,
                                     memo: memo,
                                     mint: mint)
+        event.inputFee = swapFee
         
         modelContext.insert(event)
         try modelContext.save()

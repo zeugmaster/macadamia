@@ -14220,6 +14220,9 @@
         }
       }
     },
+    "Input Fee" : {
+
+    },
     "Insufficient balance" : {
       "localizations" : {
         "ar" : {
@@ -16116,6 +16119,9 @@
           }
         }
       }
+    },
+    "Lightning Fee" : {
+
     },
     "Lightning fee reserve:" : {
 
@@ -24525,6 +24531,9 @@
         }
       }
     },
+    "Payment Fee" : {
+
+    },
     "Payment is requested from a mint you don't have any ecash with." : {
       "localizations" : {
         "ar" : {
@@ -32059,6 +32068,9 @@
           }
         }
       }
+    },
+    "Swap Fee: " : {
+
     },
     "Swedish Krona" : {
       "localizations" : {

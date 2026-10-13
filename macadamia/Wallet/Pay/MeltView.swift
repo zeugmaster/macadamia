@@ -445,6 +445,12 @@ struct MeltView: View {
                                           groupingID: groupingID,
                                           meltQuote: nil)
             completed.lightningMeltQuote = result.quote
+            // NUT-08 change covers everything above amount + inputFee + the actual
+            // Lightning fee, so the fee is what the inputs lost beyond those. Missing
+            // change counts as 0: that is what actually left the wallet.
+            let inputs = pendingMeltEvents.first(where: { $0.mints?.first?.matches(result.mint) == true })?.proofs ?? []
+            completed.inputFee = inputs.inputFee
+            completed.paymentFee = max(0, inputs.sum - result.quote.amount - inputs.inputFee - result.change.sum)
             events.append(completed)
         }
 
@@ -910,6 +916,9 @@ struct GenericMeltView: View {
                                     preImage: result.quote.paymentPreimage,
                                     memo: pendingMeltEvent.memo,
                                     genericQuote: finalQuote)
+        let inputs = pendingMeltEvent.proofs ?? []
+        event.inputFee = inputs.inputFee
+        event.paymentFee = max(0, inputs.sum - result.quote.amount - inputs.inputFee - (result.change ?? []).sum)
         modelContext.insert(event)
         try? modelContext.save()
 
