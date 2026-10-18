@@ -1,5 +1,5 @@
 {
-  "originHash" : "af80550afa0d26540e679425fa503c3579bc6fcfe9aa2fdc9d221e5e897b6bf9",
+  "originHash" : "c5864bf151e4b15fc720bb37f566af5b87309b0b0f391765d6be53bff8b2008b",
   "pins" : [
     {
       "identity" : "base58",
@@ -17,33 +17,6 @@
       "state" : {
         "revision" : "f35a770ff7f3fd553cc44057f492c0107cc7b481",
         "version" : "1.0.1"
-      }
-    },
-    {
-      "identity" : "bcswiftdcbor",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/BlockchainCommons/BCSwiftDCBOR",
-      "state" : {
-        "revision" : "21efa67ada2f22a6c277e1961f1059bb376e9b1a",
-        "version" : "2.0.2"
-      }
-    },
-    {
-      "identity" : "bcswiftfloat16",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/blockchaincommons/BCSwiftFloat16",
-      "state" : {
-        "revision" : "a27f3935a7b1db715713eda67369b02feade2ded",
-        "version" : "2.0.0"
-      }
-    },
-    {
-      "identity" : "bcswifttags",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/BlockchainCommons/BCSwiftTags",
-      "state" : {
-        "revision" : "ced8d92c7cc53375cdf9806c59251fe0161f02ec",
-        "version" : "0.2.3"
       }
     },
     {
@@ -146,6 +119,15 @@
       }
     },
     {
+      "identity" : "prettyswiftqr",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/zeugmaster/PrettySwiftQR",
+      "state" : {
+        "branch" : "main",
+        "revision" : "d004770fb1e849ed136830c5955a567f36e1a22c"
+      }
+    },
+    {
       "identity" : "ripemd160",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/anquii/RIPEMD160.git",
@@ -191,15 +173,6 @@
       }
     },
     {
-      "identity" : "swift-numberkit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/objecthub/swift-numberkit.git",
-      "state" : {
-        "revision" : "33af3f9011e45dcd8ee696492d30dbcd5a8a67f3",
-        "version" : "2.6.0"
-      }
-    },
-    {
       "identity" : "swift-secp256k1",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/21-DOT-DEV/swift-secp256k1",
@@ -218,39 +191,12 @@
       }
     },
     {
-      "identity" : "swiftsortedcollections",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/wolfmcnally/SwiftSortedCollections",
-      "state" : {
-        "revision" : "dd6c8e0eaef987e55a35c056d185144a7c71fc19",
-        "version" : "0.1.0"
-      }
-    },
-    {
       "identity" : "swiftui-flow",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tevelee/SwiftUI-Flow.git",
       "state" : {
         "revision" : "d227f999b2894ab737ef5786d9b14d02d3e5362e",
         "version" : "3.1.1"
-      }
-    },
-    {
-      "identity" : "urkit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/BlockchainCommons/URKit",
-      "state" : {
-        "revision" : "c0a447560768e2552cf85a586dea8cfc26162891",
-        "version" : "15.1.0"
-      }
-    },
-    {
-      "identity" : "urui",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/zeugmaster/URUI",
-      "state" : {
-        "branch" : "master",
-        "revision" : "485f8059803b50f6c92d9a92d80f99dd21530a87"
       }
     }
   ],

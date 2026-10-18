@@ -77,7 +77,7 @@ struct TokenShareView: View {
         Section {
             QRView(string: tokenString)
                 .frame(maxWidth: .infinity, minHeight: 300, maxHeight: .infinity)
-                .listRowBackground(Color.clear)
+//                .listRowBackground(Color.clear)
                 .id(tokenString)
         } header: {
             Text("Share via QR code")
