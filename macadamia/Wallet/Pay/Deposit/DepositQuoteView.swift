@@ -68,7 +68,7 @@ struct DepositQuoteView: View {
 
     @State private var copied = false
     @State private var hourglassStatus: HourglassProgressView.Status = .waiting
-    @State private var statusText = String(localized: "Waiting for payment...")
+    @State private var statusText = String(localized: "Waiting for payment")
     @State private var pollingTimer: Timer?
     @State private var pollingTask: Task<Void, Never>?
     @State private var isIssuing = false
@@ -105,10 +105,10 @@ struct DepositQuoteView: View {
                         QRView(string: quote.quoteID)
                     }
                 }
-                .listRowInsets(EdgeInsets(top: quote.amount == nil ? 16 : 0,
-                                          leading: 16,
-                                          bottom: 16,
-                                          trailing: 16))
+                .listRowInsets(EdgeInsets(top: quote.amount == nil ? 8 : 0,
+                                          leading: 8,
+                                          bottom: 8,
+                                          trailing: 8))
                 if quote.paymentMethodKind != .generic {
                     
                 }
@@ -145,7 +145,7 @@ struct DepositQuoteView: View {
                         Spacer()
                         Image(systemName: copied ? "clipboard.fill" : "clipboard")
                         Text("Copy \(quoteKindName)\(quote.paymentMethodKind == .generic ? " ID" : "")")
-                            .fontWeight(.semibold)
+                            .fontWeight(.medium)
                             .lineLimit(1)
                         Spacer()
                     }
@@ -153,26 +153,32 @@ struct DepositQuoteView: View {
                 }
                 .listRowSeparator(.hidden)
             }
-
+            .listSectionSpacing(16)
+            
             Section {
-                HStack {
-                    Spacer()
-                    HourglassProgressView(status: hourglassStatus)
-                        .accessibilityHidden(true)
-                    Text(statusText)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Spacer()
+                VStack(spacing: 6) {
+                    HStack {
+                        Text("Mint".uppercased())
+                        Spacer()
+                        Text(quote.mint.displayName)
+                    }
+                    HStack {
+                        Text("Status".uppercased())
+                        Spacer()
+                        Text(statusText)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .fontWeight(.regular)
+                        HourglassProgressView(status: hourglassStatus)
+                            .accessibilityHidden(true)
+                    }
+                    .foregroundStyle(statusColor)
+                    .animation(.easeInOut(duration: 0.25), value: hourglassStatus)
                 }
-                .foregroundStyle(statusColor)
-                .animation(.easeInOut(duration: 0.25), value: hourglassStatus)
                 .listRowBackground(EmptyView())
-                .font(.title3)
-                .fontDesign(.rounded)
-                .listRowInsets(.none)
-                .lineLimit(hourglassStatus == .failure ? nil : 2)
+                .font(.caption)
+                .fontWeight(.medium)
             }
-            .listSectionSpacing(12)
         }
         .navigationTitle("\(quote.paymentMethodName) Deposit")
         .navigationBarTitleDisplayMode(.inline)
@@ -306,7 +312,7 @@ struct DepositQuoteView: View {
 
                 stopPolling()
                 isIssuing = true
-                statusText = String(localized: "Payment received. Issuing ecash...")
+//                statusText = String(localized: "Payment received. Issuing ecash...")
                 try await Self.issueEcash(for: quote, amount: amount, in: modelContext)
                 statusText = String(localized: "Ecash received!")
                 hourglassStatus = .success
@@ -472,7 +478,6 @@ struct HourglassProgressView: View {
     var body: some View {
         Image(systemName: symbol)
             .contentTransition(reduceMotion ? .identity : .symbolEffect)
-            .frame(width: 32, height: 32)
             .animation(shouldRotate ? .easeInOut(duration: 0.5) : nil) { content in
                 content.rotationEffect(.degrees(shouldRotate ? rotation : 0))
             }

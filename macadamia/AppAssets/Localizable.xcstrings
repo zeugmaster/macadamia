@@ -24885,9 +24885,6 @@
         }
       }
     },
-    "Payment received. Issuing ecash..." : {
-
-    },
     "Payment Request" : {
       "localizations" : {
         "ar" : {
@@ -39478,7 +39475,7 @@
         }
       }
     },
-    "Waiting for payment..." : {
+    "Waiting for payment" : {
 
     },
     "Waiting for the mint operator to confirm the payout. This can take a few minutes." : {
