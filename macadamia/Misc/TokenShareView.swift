@@ -77,8 +77,8 @@ struct TokenShareView: View {
         Section {
             QRView(string: tokenString)
                 .frame(maxWidth: .infinity, minHeight: 300, maxHeight: .infinity)
-                .listRowBackground(Color.clear)
                 .id(tokenString)
+                .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
         } header: {
             Text("Share via QR code")
         }
@@ -97,3 +97,46 @@ struct TokenShareView: View {
         }
     }
 }
+
+#if DEBUG
+private struct TokenSharePreview: View {
+    private let token: CashuSwift.Token
+
+    init(proofCount: Int, unit: String = "sat") {
+        // Synthetic proofs with valid hex fields for both V3 and V4 serialization.
+        // No mint connection or wallet state is needed by these previews.
+        let proofs = (0..<proofCount).map { index in
+            CashuSwift.Proof(
+                keysetID: "009a1f293253e41e",
+                amount: 1 << index,
+                secret: String(format: "%064x", index + 1),
+                C: "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798")
+        }
+        token = CashuSwift.Token(proofs: ["https://mint.example.com": proofs],
+                                 unit: unit, memo: "Preview token")
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                TokenShareView(token: token)
+            }
+            .navigationTitle("Send")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .preferredColorScheme(.dark)
+    }
+}
+
+#Preview("Static QR") {
+    TokenSharePreview(proofCount: 1)
+}
+
+#Preview("Animated QR") {
+    TokenSharePreview(proofCount: 8)
+}
+
+#Preview("Non-sat token") {
+    TokenSharePreview(proofCount: 1, unit: "usd")
+}
+#endif
