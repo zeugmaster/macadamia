@@ -125,6 +125,7 @@ struct DepositQuoteView: View {
                         .font(.caption)
                         .monospaced()
                         .foregroundStyle(.secondary)
+                        .truncationMode(.head)
                 }
             }
             

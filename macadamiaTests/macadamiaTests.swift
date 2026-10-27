@@ -595,6 +595,26 @@ final class macadamiaTests: XCTestCase {
         XCTAssertEqual(transactions.count, 0, "Empty input should produce no transactions")
     }
 
+    // MARK: - NUT-18 Payload Encoding
+
+    /// Some wallets ship proof amounts as JSON strings; receivers reject those.
+    /// Pin the wire format produced by the encoder RequestPay uses for nostr and HTTP.
+    func testPaymentRequestPayloadEncodesProofAmountAsNumber() throws {
+        let payload = CashuSwift.PaymentRequestPayload(id: "abc",
+                                                       memo: nil,
+                                                       mint: "https://mint.example.com",
+                                                       unit: "sat",
+                                                       proofs: [CashuSwift.Proof(keysetID: "009a1f293253e41e",
+                                                                                 amount: 64,
+                                                                                 secret: "s",
+                                                                                 C: "c")])
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(payload)) as? [String: Any])
+        let proof = try XCTUnwrap((json["proofs"] as? [[String: Any]])?.first)
+        XCTAssertTrue(proof["amount"] is NSNumber, "proof amount must be a JSON number, got \(type(of: proof["amount"]))")
+        XCTAssertFalse(proof["amount"] is String)
+        XCTAssertEqual(proof["amount"] as? Int, 64)
+    }
+
     // MARK: - NUT-26 Codec Tests
 
     func testNUT26EncodeDecodeRoundtrip() throws {
