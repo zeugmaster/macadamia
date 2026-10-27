@@ -1,7 +1,5 @@
-import CoreImage.CIFilterBuiltins
 import SwiftUI
-import URKit
-import URUI
+import PrettySwiftQR
 
 /// View that displays either a static or animated QR code
 struct QRView: View {
@@ -27,134 +25,43 @@ struct QRView: View {
                     .frame(maxWidth: 150, maxHeight: 150)
                     .foregroundColor(Color.gray.opacity(0.3))
             }
-        }.id(string) // forces reload whem token string changes between versions
+        }.id(string) // forces reload when token string changes between versions
     }
 }
 
-/// A view that displays a static QR code
+/// A view that displays a static QR code.
 struct StaticQRView: View {
     let string: String
 
-    enum QRState {
-        case loading
-        case success(UIImage)
-        case failed
-    }
-
-    @State private var state: QRState = .loading
-
-    private let qrGenerator = QRCodeGenerator()
-
     var body: some View {
-        Group {
-            switch state {
-            case .loading:
-                HStack {
-                    Spacer()
-                    ProgressView()
-                    Spacer()
-                }
-            case .success(let image):
-                Image(uiImage: image)
-                    .interpolation(.none)
-                    .resizable()
-                    .scaledToFit()
-                    .clipShape(RoundedRectangle(cornerRadius: 6.0))
-                    .transition(.opacity)
-            case .failed:
-                Text("Failed to generate QR Code")
-                    .transition(.opacity)
-            }
-        }
-        .animation(.easeInOut(duration: 0.3), value: isLoaded)
-        .task {
-            if let image = await qrGenerator.generateQRCode(from: string) {
-                self.state = .success(image)
-            } else {
-                self.state = .failed
-            }
-        }
-    }
-
-    private var isLoaded: Bool {
-        if case .loading = state { return false }
-        return true
+        StyledQRCodeView(payload: .text(string))
     }
 }
 
 struct AnimatedQRView: View {
     let string: String
-    
-    @StateObject private var urDisplayState: URDisplayState
-    
-    init(string: String) {
-        self.string = string
-        
-        do {
-            guard let strData = string.data(using: .utf8) else {
-                _urDisplayState = StateObject(wrappedValue: URDisplayState(ur: UR.dummy,
-                                                                           maxFragmentLen: 200))
-                return
-            }
 
-            let ur = try UR(type: "bytes", cbor: strData.cbor)
-            _urDisplayState = StateObject(wrappedValue: URDisplayState(ur: ur,
-                                                                       maxFragmentLen: 200))
-        } catch {
-            print("Error creating UR: \(error.localizedDescription)")
-            // Create a dummy URDisplayState as a fallback
-            _urDisplayState = StateObject(wrappedValue: URDisplayState(ur: UR.dummy,
-                                                                       maxFragmentLen: 200))
-        }
-    }
-    
     var body: some View {
-        ZStack {
-            Color.white
-            URQRCode(data: .constant(urDisplayState.part), foregroundColor: Color.black, backgroundColor: Color.white)
-                .onAppear {
-                    urDisplayState.run()
-                }
-                .onDisappear {
-                    urDisplayState.stop()
-                }
-                .padding(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 6))
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 6.0))
+        StyledQRCodeView(payload: .animated(text: string, maxFragmentLength: 200))
     }
 }
 
-extension UR {
-    static var dummy: UR {
-        do {
-            return try UR(type: "bytes", cbor: Data(repeating: 0, count: 100).cbor)
-        } catch {
-            fatalError("Failed to create dummy UR: \(error)")
-        }
-    }
-}
+/// Shared rendering keeps static codes and every animated frame styled alike.
+private struct StyledQRCodeView: View {
+    let payload: QRPayload
 
-/// A manager class for QR code generation that handles errors and performs operations asynchronously
-final class QRCodeGenerator:Sendable {
-    /// Generate QR code asynchronously
-    /// - Parameter string: The string to encode in the QR code
-    /// - Returns: Optional UIImage if generation succeeds
-    func generateQRCode(from string: String) async -> UIImage? {
-        return await Task.detached(priority: .userInitiated) { [weak self] in
-            guard let _ = self else { return nil }
-            
-            let filter = CIFilter.qrCodeGenerator()
-            filter.setValue(Data(string.utf8), forKey: "inputMessage")
-            
-            guard let qrCodeImage = filter.outputImage else { return nil }
-            
-            let transformedImage = qrCodeImage.transformed(by: CGAffineTransform(scaleX: 10, y: 10))
-            guard let qrCodeCGImage = CIContext().createCGImage(transformedImage, from: transformedImage.extent) else {
-                return nil
+    var body: some View {
+        QRCodeView(payload) { error in
+            if error != nil {
+                Text("Failed to generate QR Code")
+            } else {
+                ProgressView()
             }
-            
-            return UIImage(cgImage: qrCodeCGImage, scale: 1, orientation: .up)
-        }.value
+        }
+        .qrStyle(.rounded(0.40, inner: 0.40).foreground(.primary).background(.clear))
+        .qrFrameRate(10)
+        .qrReveal(.none)
+        .clipShape(RoundedRectangle(cornerRadius: 6.0))
     }
 }
 

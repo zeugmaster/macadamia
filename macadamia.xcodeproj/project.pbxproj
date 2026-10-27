@@ -16,7 +16,7 @@
 		373CE6582EAE6D66000AC589 /* pull_request_template.md in Resources */ = {isa = PBXBuildFile; fileRef = 373CE6572EAE6D54000AC589 /* pull_request_template.md */; };
 		376F43B22B4FEC0D00E55B0F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 376F43B12B4FEC0D00E55B0F /* README.md */; };
 		377A1BC82E6D9E3B00BC1BC1 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378B20472D09F3FD003FEEBD /* Error.swift */; };
-		377D26262E1FDE7800CFB880 /* URUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377D26252E1FDE7800CFB880 /* URUI */; };
+		377D26262E1FDE7800CFB880 /* PrettySwiftQR in Frameworks */ = {isa = PBXBuildFile; productRef = 377D26252E1FDE7800CFB880 /* PrettySwiftQR */; };
 		377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 377FFEFF2BC43B6900DD2635 /* MarkdownUI */; };
 		3792122E2B29E7520081F161 /* BigNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 3792122D2B29E7520081F161 /* BigNumber */; };
 		379212342B29E7B30081F161 /* BIP39 in Frameworks */ = {isa = PBXBuildFile; productRef = 379212332B29E7B30081F161 /* BIP39 */; };
@@ -157,7 +157,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3725D4D82CD5001A0037DD08 /* AVKit.framework in Frameworks */,
-				377D26262E1FDE7800CFB880 /* URUI in Frameworks */,
+				377D26262E1FDE7800CFB880 /* PrettySwiftQR in Frameworks */,
 				37A988492EBF9A7C0065FCE6 /* NostrSDK in Frameworks */,
 				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
 				370F7F552F16AC6400C625C0 /* LNURL-Swift in Frameworks */,
@@ -281,7 +281,7 @@
 				379212332B29E7B30081F161 /* BIP39 */,
 				377FFEFF2BC43B6900DD2635 /* MarkdownUI */,
 				370A84062CC18AEE0039A413 /* Flow */,
-				377D26252E1FDE7800CFB880 /* URUI */,
+				377D26252E1FDE7800CFB880 /* PrettySwiftQR */,
 				371AA9122E33EB61006D487F /* CashuSwift */,
 				37A988482EBF9A7C0065FCE6 /* NostrSDK */,
 				370A2B322EBFD23800C4A6A5 /* Bolt11 */,
@@ -378,7 +378,7 @@
 				379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */,
 				377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				370A84052CC18AEE0039A413 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
-				377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */,
+				377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "PrettySwiftQR" */,
 				371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */,
 				37A988472EBF9A7C0065FCE6 /* XCRemoteSwiftPackageReference "nostr-sdk-ios" */,
 				370A2B312EBFD23800C4A6A5 /* XCRemoteSwiftPackageReference "Bolt11" */,
@@ -858,11 +858,11 @@
 				minimumVersion = 0.4.5;
 			};
 		};
-		377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */ = {
+		377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "PrettySwiftQR" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/zeugmaster/URUI";
+			repositoryURL = "https://github.com/zeugmaster/PrettySwiftQR";
 			requirement = {
-				branch = master;
+				branch = main;
 				kind = branch;
 			};
 		};
@@ -921,10 +921,10 @@
 			package = 371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */;
 			productName = CashuSwift;
 		};
-		377D26252E1FDE7800CFB880 /* URUI */ = {
+		377D26252E1FDE7800CFB880 /* PrettySwiftQR */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "URUI" */;
-			productName = URUI;
+			package = 377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "PrettySwiftQR" */;
+			productName = PrettySwiftQR;
 		};
 		377FFEFF2BC43B6900DD2635 /* MarkdownUI */ = {
 			isa = XCSwiftPackageProductDependency;
