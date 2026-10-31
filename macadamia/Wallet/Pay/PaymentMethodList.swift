@@ -28,26 +28,33 @@ struct PaymentMethodList: View {
     }
 
     var body: some View {
-        List {
-            ForEach(uniquePaymentMethods, id: \.method) { method in
-                NavigationLink(destination: {
-                    // FIXME: assuming deposit payment direction
-                    DepositQuoteRequestView(paymentMethod: method)
-                }, label: {
-                    PaymentMethodCard(name: name(for: method),
-                                      icon: Image(systemName: imageSystemName(for: method)),
-                                      description: description(for: method),
-                                      numberOfSupportingMints: numberOfMints(for: method))
-                        
-                })
-                .disabled(method.method.kind == .onchain)
-                .navigationLinkIndicatorVisibility(.hidden)
-                .listRowBackground(EmptyView())
-                .listRowSeparator(.hidden)
+        ScrollView {
+            VStack(spacing: 0) {
+                ForEach(uniquePaymentMethods, id: \.method) { method in
+                    if method.method != uniquePaymentMethods.first?.method {
+                        Divider()
+                    }
+                    NavigationLink(destination: {
+                        // FIXME: assuming deposit payment direction
+                        DepositQuoteRequestView(paymentMethod: method)
+                    }, label: {
+                        PaymentMethodCard(name: name(for: method),
+                                          icon: Image(systemName: imageSystemName(for: method)),
+                                          description: description(for: method),
+                                          numberOfSupportingMints: numberOfMints(for: method))
+                    })
+                    .buttonStyle(.plain)
+                    .disabled(method.method.kind == .onchain)
+                }
             }
+            .background {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.primary.opacity(0.07))
+                    .stroke(.primary.opacity(0.2), lineWidth: 0.5)
+            }
+            .padding()
         }
         .navigationTitle("Select Method")
-        .listStyle(.plain)
         .task(id: visibleMints.map(\.mintID)) {
             await refreshMintSupport()
         }
@@ -110,7 +117,6 @@ struct PaymentMethodCard: View {
                 icon
                 Text(name)
                     .bold()
-                Spacer()
                 HStack(alignment: .center, spacing: 2) {
                     Text(String(numberOfSupportingMints))
                         .font(.callout)
@@ -125,17 +131,16 @@ struct PaymentMethodCard: View {
                         .fill(.primary.opacity(0.1))
                         .stroke(.primary.opacity(0.1))
                 }
+                .scaleEffect(0.9)
+                Spacer()
             }
             Text(description)
                 .font(.callout)
-                .padding(.top)
+                .padding(.top, 4)
+                .opacity(0.9)
         }
         .padding()
-        .background {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.primary.opacity(0.07))
-                .stroke(.primary.opacity(0.2), lineWidth: 0.5)
-        }
+        .contentShape(.rect)
     }
 }
 
