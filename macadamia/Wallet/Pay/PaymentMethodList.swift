@@ -44,7 +44,6 @@ struct PaymentMethodList: View {
                                           numberOfSupportingMints: numberOfMints(for: method))
                     })
                     .buttonStyle(.plain)
-                    .disabled(method.method.kind == .onchain)
                 }
             }
             .background {
@@ -123,7 +122,7 @@ struct PaymentMethodCard: View {
                     Image(systemName: "building.columns")
                         .font(.caption)
                 }
-                .fontWeight(.regular)
+                .fontWeight(.semibold)
                 .padding(EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4))
                 .opacity(0.8)
                 .background {

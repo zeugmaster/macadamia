@@ -65,6 +65,9 @@ struct DepositQuoteView: View {
     @Environment(\.dismissToRoot) private var dismissToRoot
     @Environment(\.modelContext) private var modelContext
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    
+//    @AppStorage("amountlessBolt12WarningDismissed") private var amountlessBolt12WarningDismissed = false
+    @AppStorage("amountlessOnchainWarningDismissed") private var amountlessOnchainWarningDismissed = false
 
     @State private var copied = false
     @State private var hourglassStatus: HourglassProgressView.Status = .waiting
@@ -72,6 +75,9 @@ struct DepositQuoteView: View {
     @State private var pollingTimer: Timer?
     @State private var pollingTask: Task<Void, Never>?
     @State private var isIssuing = false
+    
+    @State private var showAlert = false
+    @State private var currentAlert: AlertDetail?
 
     @MainActor private static var issuingQuoteIDs: Set<UUID> = []
 
@@ -130,33 +136,6 @@ struct DepositQuoteView: View {
             }
             
             Section {
-                Button {
-                    if copied { return }
-                        UIPasteboard.general.string = quote.request
-                    withAnimation {
-                        copied = true
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        withAnimation {
-                            copied = false
-                        }
-                    }
-                } label: {
-                    HStack {
-                        Spacer()
-                        Image(systemName: copied ? "clipboard.fill" : "clipboard")
-                        Text("Copy \(quoteKindName)\(quote.paymentMethodKind == .generic ? " ID" : "")")
-                            .fontWeight(.medium)
-                            .lineLimit(1)
-                        Spacer()
-                    }
-                    .foregroundStyle(.primary) // TODO: find our why this does not work
-                }
-                .listRowSeparator(.hidden)
-            }
-            .listSectionSpacing(16)
-            
-            Section {
                 VStack(spacing: 6) {
                     HStack {
                         Text("Mint".uppercased())
@@ -180,6 +159,33 @@ struct DepositQuoteView: View {
                 .font(.caption)
                 .fontWeight(.medium)
             }
+            
+            Section {
+                Button {
+                    if copied { return }
+                        copyButtonPressed()
+                    withAnimation {
+                        copied = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        withAnimation {
+                            copied = false
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Spacer()
+                        Image(systemName: copied ? "clipboard.fill" : "clipboard")
+                        Text("Copy \(quoteKindName)\(quote.paymentMethodKind == .generic ? " ID" : "")")
+                            .fontWeight(.medium)
+                            .lineLimit(1)
+                        Spacer()
+                    }
+                    .foregroundStyle(.primary) // TODO: find our why this does not work
+                }
+                .listRowSeparator(.hidden)
+            }
+            .listSectionSpacing(16)
         }
         .navigationTitle("\(quote.paymentMethodName) Deposit")
         .navigationBarTitleDisplayMode(.inline)
@@ -220,6 +226,7 @@ struct DepositQuoteView: View {
                 // Leaving the view cancels its pending dismissal.
             }
         }
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
     
     private var quoteKindName: String {
@@ -230,7 +237,37 @@ struct DepositQuoteView: View {
         case .generic: "Quote"
         }
     }
-
+    
+    // make sure to show the user an alert for amountless quotes
+    private func copyButtonPressed() {
+        if paymentMethodKind == .onchain && (!amountlessOnchainWarningDismissed) {
+            let dismissButton = AlertButton(title: String(localized: "Got it"),
+                                            role: .cancel,
+                                            action: { })
+            let dontShowAgainButton = AlertButton(title: String(localized: "Don't show again"),
+                                                  role: .destructive) {
+                amountlessOnchainWarningDismissed = true
+            }
+            var description = """
+                Make sure to stay within this mint's limits when sending to the address.
+                Onchain transactions outside of limits might not be honored by the mint, leading to a loss of funds.
+                """
+            if let min = quote.option.minAmount {
+                description += "\n\n" + String(localized: "Minimum: \(amountDisplayString(min, unit: quote.unit))")
+            }
+            if let max = quote.option.maxAmount {
+                description += "\n" + String(localized: "Maximum: \(amountDisplayString(max, unit: quote.unit))")
+            }
+            let alert = AlertDetail(title: "Warning",
+                                    description: description,
+                                    primaryButton: dismissButton,
+                                    secondaryButton: dontShowAgainButton)
+            displayAlert(alert: alert)
+        }
+        
+        UIPasteboard.general.string = quote.request
+    }
+    
     @MainActor
     static func restoreQuote(from event: Event) throws -> DepositQuote {
         guard event.kind == .pendingMint else {
@@ -447,6 +484,11 @@ struct DepositQuoteView: View {
         default:
             error.localizedDescription
         }
+    }
+    
+    private func displayAlert(alert: AlertDetail) {
+        currentAlert = alert
+        showAlert = true
     }
 }
 
