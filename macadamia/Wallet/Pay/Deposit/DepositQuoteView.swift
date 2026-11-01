@@ -65,6 +65,7 @@ struct DepositQuoteView: View {
     @Environment(\.dismissToRoot) private var dismissToRoot
     @Environment(\.modelContext) private var modelContext
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.openURL) private var openURL
     
 //    @AppStorage("amountlessBolt12WarningDismissed") private var amountlessBolt12WarningDismissed = false
     @AppStorage("amountlessOnchainWarningDismissed") private var amountlessOnchainWarningDismissed = false
@@ -161,29 +162,50 @@ struct DepositQuoteView: View {
             }
             
             Section {
-                Button {
-                    if copied { return }
+                // One row holding both buttons so they share the card background like PaymentMethodList.
+                VStack(spacing: 0) {
+                    Button {
+                        if copied { return }
                         copyButtonPressed()
-                    withAnimation {
-                        copied = true
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                         withAnimation {
-                            copied = false
+                            copied = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            withAnimation {
+                                copied = false
+                            }
+                        }
+                    } label: {
+                        Label("Copy \(quoteKindName)\(quote.paymentMethodKind == .generic ? " ID" : "")",
+                              systemImage: copied ? "clipboard.fill" : "clipboard")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .contentShape(.rect)
+                    }
+                    if paymentMethodKind == .onchain {
+                        Divider()
+                        Button {
+                            if let url = URL(string: "bitcoin:\(quote.request)") { openURL(url) }
+                        } label: {
+                            Label("Open in Wallet", systemImage: "rectangle.portrait.and.arrow.forward")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .contentShape(.rect)
                         }
                     }
-                } label: {
-                    HStack {
-                        Spacer()
-                        Image(systemName: copied ? "clipboard.fill" : "clipboard")
-                        Text("Copy \(quoteKindName)\(quote.paymentMethodKind == .generic ? " ID" : "")")
-                            .fontWeight(.medium)
-                            .lineLimit(1)
-                        Spacer()
-                    }
-                    .foregroundStyle(.primary) // TODO: find our why this does not work
                 }
-                .listRowSeparator(.hidden)
+                .buttonStyle(.plain)
+                .fontWeight(.medium)
+                .lineLimit(1)
+                // Drawn by the row itself: UIKit masks listRowBackground slightly inside the row on device, eating the hairline.
+                // 26pt continuous is the inset-grouped section corner on iOS 26; anything squarer gets its corners masked on device.
+                .background {
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .fill(.primary.opacity(0.08))
+                        .strokeBorder(.primary.opacity(0.2), lineWidth: 0.5)
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
             }
             .listSectionSpacing(16)
         }

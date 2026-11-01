@@ -141,7 +141,6 @@ struct PaymentMethodCard: View {
                 }
                 Text(description)
                     .font(.callout)
-                    .padding(.top, 4)
                     .opacity(0.9)
             }
             .contentShape(.rect)

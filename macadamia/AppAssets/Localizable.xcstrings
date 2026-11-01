@@ -9208,6 +9208,9 @@
     "DLEQ Proof" : {
       "shouldTranslate" : false
     },
+    "Don't show again" : {
+
+    },
     "Done" : {
       "localizations" : {
         "ar" : {
@@ -12525,6 +12528,9 @@
           }
         }
       }
+    },
+    "Got it" : {
+
     },
     "Here goes the slider for %@" : {
       "shouldTranslate" : false
@@ -17139,6 +17145,9 @@
     "Max: %lld" : {
 
     },
+    "Maximum: %@" : {
+
+    },
     "Melt Quote" : {
       "localizations" : {
         "ar" : {
@@ -17843,6 +17852,9 @@
       }
     },
     "Min: %lld" : {
+
+    },
+    "Minimum: %@" : {
 
     },
     "Mint" : {
