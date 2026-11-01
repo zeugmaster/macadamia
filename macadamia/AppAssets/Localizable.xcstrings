@@ -32642,6 +32642,9 @@
         }
       }
     },
+    "The amount is optional and only added to the payment link. The mint does not enforce it." : {
+
+    },
     "The connection to the payer's device was lost. Try again." : {
       "localizations" : {
         "ar" : {

@@ -44,6 +44,16 @@ struct DepositQuote: Identifiable, Hashable {
     var amountPaid: Int? { integerField("amount_paid") }
     var amountIssued: Int? { integerField("amount_issued") }
 
+    /// BIP-21 link for wallets. The amount is a local hint only, so it is appended but never sent to the mint.
+    var onchainPaymentURL: URL? {
+        guard paymentMethodKind == .onchain else { return nil }
+        var uri = "bitcoin:\(request)"
+        if unit == .sat, let amount {
+            uri += "?amount=\(Decimal(amount) / 100_000_000)"
+        }
+        return URL(string: uri)
+    }
+
     private func integerField(_ name: String) -> Int? {
         guard case .integer(let value) = raw?[name] else { return nil }
         return Int(exactly: value)
@@ -185,7 +195,7 @@ struct DepositQuoteView: View {
                     if paymentMethodKind == .onchain {
                         Divider()
                         Button {
-                            if let url = URL(string: "bitcoin:\(quote.request)") { openURL(url) }
+                            if let url = quote.onchainPaymentURL { openURL(url) }
                         } label: {
                             Label("Open in Wallet", systemImage: "rectangle.portrait.and.arrow.forward")
                                 .frame(maxWidth: .infinity)
@@ -392,6 +402,8 @@ struct DepositQuoteView: View {
     /// Accounting-based methods can receive multiple payments, including amountless deposits.
     static func amountToIssue(for response: any CashuSwift.MintQuoteResponse,
                               requestedAmount: Int?) throws -> Int? {
+        // An on-chain amount is only a hint for the payment link; never issue against it.
+        let requestedAmount = response.method.kind == .onchain ? nil : requestedAmount
         let generic = response as? CashuSwift.Generic.MintQuote
         let state: String?
         if case .string(let rawState) = generic?.raw["state"] {

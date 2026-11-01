@@ -141,13 +141,43 @@ final class DepositQuoteRequestTests: XCTestCase {
                 XCTAssertThrowsError(try DepositQuoteRequestView.validateAmount(invalid, for: option))
             }
             for valid in [100, 200] {
-                if method.kind == .onchain {
-                    XCTAssertThrowsError(try DepositQuoteRequestView.validateAmount(valid, for: option))
-                } else {
-                    XCTAssertNoThrow(try DepositQuoteRequestView.validateAmount(valid, for: option))
-                }
+                XCTAssertNoThrow(try DepositQuoteRequestView.validateAmount(valid, for: option))
             }
         }
+    }
+
+    @MainActor
+    func testOnchainAmountStaysLocalAndGoesIntoPaymentLink() async throws {
+        let stub = try MintHTTPStub { request in
+            var body = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(request.httpBody)) as? [String: Any])
+            XCTAssertNil(body["amount"], "An on-chain amount must not be sent to the mint")
+            body["quote"] = "test-quote"
+            body["request"] = "bc1qaddress"
+            body["amount_paid"] = 0
+            body["amount_issued"] = 0
+            return try JSONSerialization.data(withJSONObject: body)
+        }
+        defer { stub.remove() }
+        let (container, mint, _) = try fixture(url: stub.url)
+        let option = PaymentOption(mintID: mint.mintID, direction: .deposit, unit: .sat, method: "onchain")
+        let quote = try await DepositQuoteRequestView.loadQuote(from: mint, option: option, amount: 10_000,
+                                                                 in: container.mainContext)
+        XCTAssertEqual(quote.amount, 10_000)
+        XCTAssertEqual(quote.onchainPaymentURL?.absoluteString, "bitcoin:bc1qaddress?amount=0.0001")
+        let pending = try XCTUnwrap(quote.pendingEvent)
+        XCTAssertEqual(pending.amount, 10_000)
+        let resumed = try DepositQuoteView.restoreQuote(from: pending)
+        XCTAssertEqual(resumed.onchainPaymentURL, quote.onchainPaymentURL)
+
+        let amountless = try await DepositQuoteRequestView.loadQuote(from: mint, option: option, amount: nil,
+                                                                      in: container.mainContext)
+        XCTAssertEqual(amountless.onchainPaymentURL?.absoluteString, "bitcoin:bc1qaddress")
+
+        // A mint that reports PAID without accounting must not issue the local hint amount.
+        let paidWithoutAccounting = CashuSwift.Generic.MintQuote(method: "onchain", quote: "q", request: "r",
+                                                                 unit: "sat", amount: nil, state: nil, expiry: nil,
+                                                                 raw: ["state": .string("PAID")])
+        XCTAssertThrowsError(try DepositQuoteView.amountToIssue(for: paidWithoutAccounting, requestedAmount: 10_000))
     }
 
     @MainActor
