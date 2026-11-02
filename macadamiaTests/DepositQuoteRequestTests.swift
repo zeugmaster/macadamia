@@ -23,6 +23,19 @@ final class DepositQuoteRequestTests: XCTestCase {
         return (container, mint, wallet)
     }
 
+    func testExplorerURLsFollowTheAddressNetwork() {
+        let urls = { DepositQuoteView.explorerAddressURLs(for: $0).map(\.absoluteString) }
+        XCTAssertEqual(urls("BC1QXY2KGDYGJRSQTZQ2N0YRF2493P83KKFJHX0WLH"),
+                       ["https://mempool.space/api/address/BC1QXY2KGDYGJRSQTZQ2N0YRF2493P83KKFJHX0WLH"])
+        XCTAssertEqual(urls("1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"),
+                       ["https://mempool.space/api/address/1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"], "base58 keeps its case")
+        XCTAssertEqual(urls("tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"),
+                       ["https://mempool.space/testnet4/api/address/tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx",
+                        "https://mempool.space/testnet/api/address/tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx",
+                        "https://mempool.space/signet/api/address/tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"])
+        XCTAssertEqual(urls("bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"), [], "regtest has no public explorer")
+    }
+
     @MainActor
     func testRequestBodiesAndNavigationValuesForEveryMethod() async throws {
         for (method, amount): (CashuSwift.PaymentMethodID, Int?) in [

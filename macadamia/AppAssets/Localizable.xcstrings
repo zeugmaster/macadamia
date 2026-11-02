@@ -36608,6 +36608,9 @@
         }
       }
     },
+    "Transaction detected. Waiting for the mint" : {
+
+    },
     "Transaction Unbalanced" : {
       "localizations" : {
         "ar" : {

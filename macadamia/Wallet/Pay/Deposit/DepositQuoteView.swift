@@ -77,10 +77,10 @@ struct DepositQuoteView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openURL) private var openURL
     
-//    @AppStorage("amountlessBolt12WarningDismissed") private var amountlessBolt12WarningDismissed = false
     @AppStorage("amountlessOnchainWarningDismissed") private var amountlessOnchainWarningDismissed = false
 
     @State private var copied = false
+    @State private var transactionSeen = false
     @State private var hourglassStatus: HourglassProgressView.Status = .waiting
     @State private var statusText = String(localized: "Waiting for payment")
     @State private var pollingTimer: Timer?
@@ -99,6 +99,14 @@ struct DepositQuoteView: View {
         case .failure: .failureRed
         }
     }
+        
+    private var qrString: String? {
+        switch paymentMethodKind {
+        case .bolt11, .bolt12: quote.request
+        case .onchain: quote.onchainPaymentURL?.absoluteString
+        case .generic: quote.quoteID
+        }
+    }
     
     var body: some View {
         List {
@@ -114,23 +122,11 @@ struct DepositQuoteView: View {
                         .fontWeight(.semibold)
                         .listRowSeparator(.hidden)
                     }
-                Group {
-                    switch paymentMethodKind {
-                    case .bolt11, .bolt12:
-                        QRView(string: quote.request)
-                    case .onchain:
-                        QRView(string: quote.onchainPaymentURL?.absoluteString)
-                    case .generic:
-                        QRView(string: quote.quoteID)
-                    }
-                }
-                .listRowInsets(EdgeInsets(top: quote.amount == nil ? 8 : 0,
-                                          leading: 8,
-                                          bottom: 8,
-                                          trailing: 8))
-                if quote.paymentMethodKind != .generic {
-                    
-                }
+                QRView(string: qrString)
+                    .listRowInsets(EdgeInsets(top: quote.amount == nil ? 8 : 0,
+                                              leading: 8,
+                                              bottom: 8,
+                                              trailing: 8))
             } header: {
                 Text(quoteKindName)
             } footer: {
@@ -364,6 +360,11 @@ struct DepositQuoteView: View {
                 isIssuing = false
             }
             do {
+                if paymentMethodKind == .onchain, !transactionSeen,
+                   await Self.explorerSawPayment(to: quote.request) {
+                    transactionSeen = true
+                    statusText = String(localized: "Transaction detected. Waiting for the mint")
+                }
                 let mint = CashuSwift.Mint(quote.mint)
                 let response: any CashuSwift.MintQuoteResponse
                 if quote.method == .bolt11 {
@@ -503,6 +504,34 @@ struct DepositQuoteView: View {
             throw macadamiaError.databaseError("Ecash was issued, but could not be saved to the wallet. \(error.localizedDescription)")
         }
         logger.info("DLEQ check on deposit issuance: \(String(describing: result.dleqResult))")
+    }
+
+    /// mempool.space instances that can know the address, chosen by its network prefix. The test networks
+    /// share prefixes, so all three are asked. Empty for unknown networks: only quote polling reports then.
+    static func explorerAddressURLs(for address: String) -> [URL] {
+        let prefix = address.lowercased()   // base58 is case-sensitive, so only the check is lowercased
+        let networks: [String]
+        if prefix.hasPrefix("bc1") || prefix.hasPrefix("1") || prefix.hasPrefix("3") {
+            networks = [""]
+        } else if prefix.hasPrefix("tb1") || prefix.hasPrefix("m") || prefix.hasPrefix("n") || prefix.hasPrefix("2") {
+            networks = ["/testnet4", "/testnet", "/signet"]
+        } else {
+            return []
+        }
+        return networks.compactMap { URL(string: "https://mempool.space\($0)/api/address/\(address)") }
+    }
+
+    /// True once an explorer lists a transaction funding the address, in the mempool or confirmed.
+    static func explorerSawPayment(to address: String) async -> Bool {
+        struct Stats: Decodable { let funded_txo_count: Int }
+        struct Address: Decodable { let chain_stats: Stats, mempool_stats: Stats }
+        for url in explorerAddressURLs(for: address) {
+            // Short timeout: an unreachable explorer must not hold up polling the mint.
+            guard let (data, _) = try? await URLSession.shared.data(for: URLRequest(url: url, timeoutInterval: 5)),
+                  let stats = try? JSONDecoder().decode(Address.self, from: data) else { continue }
+            if stats.chain_stats.funded_txo_count + stats.mempool_stats.funded_txo_count > 0 { return true }
+        }
+        return false
     }
 
     private static func errorDescription(_ error: Error) -> String {
