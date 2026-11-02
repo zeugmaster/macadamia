@@ -41,9 +41,12 @@ final class DepositQuoteRequestTests: XCTestCase {
                 return Data("105\n".utf8)
             case "/api/address/\(address)/txs":
                 return Data("""
-                [{"txid":"a","status":{"confirmed":false},"vout":[{"scriptpubkey_address":"\(address)"}]},
-                 {"txid":"b","status":{"confirmed":true,"block_height":104},"vout":[{"scriptpubkey_address":"\(address)"}]},
-                 {"txid":"c","status":{"confirmed":true,"block_height":100},"vout":[{"scriptpubkey_address":"bcrt1qelsewhere"}]}]
+                [{"txid":"a","fee":141,"status":{"confirmed":false},
+                  "vout":[{"scriptpubkey_address":"\(address)","value":20000},{"scriptpubkey_address":"bcrt1qchange","value":5000}]},
+                 {"txid":"b","fee":256,"status":{"confirmed":true,"block_height":104},
+                  "vout":[{"scriptpubkey_address":"\(address)","value":25000}]},
+                 {"txid":"c","status":{"confirmed":true,"block_height":100},
+                  "vout":[{"scriptpubkey_address":"bcrt1qelsewhere","value":1000}]}]
                 """.utf8)
             default:
                 throw URLError(.badURL)
@@ -53,6 +56,9 @@ final class DepositQuoteRequestTests: XCTestCase {
         let states = try await OnchainTransaction.transactionStates(at: stub.url.appending(path: "api"), for: address)
         XCTAssertEqual(states.map(\.txid), ["a", "b"], "a spend from the address is not a deposit")
         XCTAssertEqual(states.map(\.block), [.mempool, .confirmations(2)])
+        XCTAssertEqual(states.map(\.amount), [20_000, 25_000], "only outputs to the address count")
+        XCTAssertEqual(states.map(\.fee), [141, 256])
+        XCTAssertEqual(states.map(\.explorer.absoluteString), Array(repeating: stub.url.absoluteString + "/api", count: 2))
     }
 
     @MainActor
