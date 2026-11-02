@@ -24,16 +24,35 @@ final class DepositQuoteRequestTests: XCTestCase {
     }
 
     func testExplorerURLsFollowTheAddressNetwork() {
-        let urls = { DepositQuoteView.explorerAddressURLs(for: $0).map(\.absoluteString) }
-        XCTAssertEqual(urls("BC1QXY2KGDYGJRSQTZQ2N0YRF2493P83KKFJHX0WLH"),
-                       ["https://mempool.space/api/address/BC1QXY2KGDYGJRSQTZQ2N0YRF2493P83KKFJHX0WLH"])
-        XCTAssertEqual(urls("1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"),
-                       ["https://mempool.space/api/address/1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"], "base58 keeps its case")
+        let urls = { OnchainTransaction.explorerAPIURLs(for: $0).map(\.absoluteString) }
+        XCTAssertEqual(urls("BC1QXY2KGDYGJRSQTZQ2N0YRF2493P83KKFJHX0WLH"), ["https://mempool.space/api"])
+        XCTAssertEqual(urls("1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"), ["https://mempool.space/api"])
         XCTAssertEqual(urls("tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"),
-                       ["https://mempool.space/testnet4/api/address/tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx",
-                        "https://mempool.space/testnet/api/address/tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx",
-                        "https://mempool.space/signet/api/address/tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"])
-        XCTAssertEqual(urls("bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"), [], "regtest has no public explorer")
+                       ["https://mempool.space/testnet4/api", "https://mempool.space/testnet/api", "https://mempool.space/signet/api"])
+        XCTAssertEqual(urls("bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"), ["https://mempool.regtest.macadamia.cash/api"])
+        XCTAssertEqual(urls("gabagool"), [])
+    }
+
+    func testTransactionStatesCountConfirmationsFromTheTip() async throws {
+        let address = "bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"
+        let stub = try MintHTTPStub { request in
+            switch request.url?.path {
+            case "/api/blocks/tip/height":
+                return Data("105\n".utf8)
+            case "/api/address/\(address)/txs":
+                return Data("""
+                [{"txid":"a","status":{"confirmed":false},"vout":[{"scriptpubkey_address":"\(address)"}]},
+                 {"txid":"b","status":{"confirmed":true,"block_height":104},"vout":[{"scriptpubkey_address":"\(address)"}]},
+                 {"txid":"c","status":{"confirmed":true,"block_height":100},"vout":[{"scriptpubkey_address":"bcrt1qelsewhere"}]}]
+                """.utf8)
+            default:
+                throw URLError(.badURL)
+            }
+        }
+        defer { stub.remove() }
+        let states = try await OnchainTransaction.transactionStates(at: stub.url.appending(path: "api"), for: address)
+        XCTAssertEqual(states.map(\.txid), ["a", "b"], "a spend from the address is not a deposit")
+        XCTAssertEqual(states.map(\.block), [.mempool, .confirmations(2)])
     }
 
     @MainActor
