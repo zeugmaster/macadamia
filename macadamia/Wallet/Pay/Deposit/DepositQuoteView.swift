@@ -116,8 +116,10 @@ struct DepositQuoteView: View {
                     }
                 Group {
                     switch paymentMethodKind {
-                    case .bolt11, .bolt12, .onchain:
+                    case .bolt11, .bolt12:
                         QRView(string: quote.request)
+                    case .onchain:
+                        QRView(string: quote.onchainPaymentURL?.absoluteString)
                     case .generic:
                         QRView(string: quote.quoteID)
                     }
