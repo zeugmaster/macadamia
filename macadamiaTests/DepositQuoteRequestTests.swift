@@ -23,6 +23,55 @@ final class DepositQuoteRequestTests: XCTestCase {
         return (container, mint, wallet)
     }
 
+    func testExplorerURLsFollowTheAddressNetwork() {
+        let urls = { OnchainTransaction.explorerAPIURLs(for: $0).map(\.absoluteString) }
+        XCTAssertEqual(urls("BC1QXY2KGDYGJRSQTZQ2N0YRF2493P83KKFJHX0WLH"), ["https://mempool.space/api"])
+        XCTAssertEqual(urls("1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"), ["https://mempool.space/api"])
+        XCTAssertEqual(urls("tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"),
+                       ["https://mempool.space/testnet4/api", "https://mempool.space/testnet/api", "https://mempool.space/signet/api"])
+        XCTAssertEqual(urls("bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"), ["https://mempool.regtest.macadamia.cash/api"])
+        XCTAssertEqual(urls("gabagool"), [])
+    }
+
+    func testTransactionStatesCountConfirmationsFromTheTip() async throws {
+        let address = "bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"
+        let stub = try MintHTTPStub { request in
+            switch request.url?.path {
+            case "/api/blocks/tip/height":
+                return Data("105\n".utf8)
+            case "/api/address/\(address)/txs":
+                return Data("""
+                [{"txid":"a","fee":141,"status":{"confirmed":false},
+                  "vout":[{"scriptpubkey_address":"\(address)","value":20000},{"scriptpubkey_address":"bcrt1qchange","value":5000}]},
+                 {"txid":"b","fee":256,"status":{"confirmed":true,"block_height":104},
+                  "vout":[{"scriptpubkey_address":"\(address)","value":25000}]},
+                 {"txid":"c","status":{"confirmed":true,"block_height":100},
+                  "vout":[{"scriptpubkey_address":"bcrt1qelsewhere","value":1000}]}]
+                """.utf8)
+            default:
+                throw URLError(.badURL)
+            }
+        }
+        defer { stub.remove() }
+        let states = try await OnchainTransaction.transactionStates(at: stub.url.appending(path: "api"), for: address)
+        XCTAssertEqual(states.map(\.txid), ["a", "b"], "a spend from the address is not a deposit")
+        XCTAssertEqual(states.map(\.block), [.mempool, .confirmations(2)])
+        XCTAssertEqual(states.map(\.amount), [20_000, 25_000], "only outputs to the address count")
+        XCTAssertEqual(states.map(\.fee), [141, 256])
+        XCTAssertEqual(states.map(\.explorer.absoluteString), Array(repeating: stub.url.absoluteString + "/api", count: 2))
+    }
+
+    func testFundingTransactionIsTheEarliestUnlessPinned() throws {
+        let api = try XCTUnwrap(URL(string: "https://mempool.space/api"))
+        let states = [OnchainTransaction.TransactionState(txid: "a", block: .mempool, amount: 1, fee: nil, explorer: api),
+                      .init(txid: "b", block: .confirmations(2), amount: 2, fee: nil, explorer: api),
+                      .init(txid: "c", block: .confirmations(5), amount: 3, fee: nil, explorer: api)]
+        XCTAssertEqual(OnchainTransaction.fundingTransaction(in: states, txid: nil)?.txid, "c", "a fresh address is funded once, first")
+        XCTAssertEqual(OnchainTransaction.fundingTransaction(in: states, txid: "a")?.txid, "a", "the mint's outpoint wins")
+        XCTAssertNil(OnchainTransaction.fundingTransaction(in: states, txid: "unknown"))
+        XCTAssertNil(OnchainTransaction.fundingTransaction(in: [], txid: nil))
+    }
+
     @MainActor
     func testRequestBodiesAndNavigationValuesForEveryMethod() async throws {
         for (method, amount): (CashuSwift.PaymentMethodID, Int?) in [
@@ -141,13 +190,43 @@ final class DepositQuoteRequestTests: XCTestCase {
                 XCTAssertThrowsError(try DepositQuoteRequestView.validateAmount(invalid, for: option))
             }
             for valid in [100, 200] {
-                if method.kind == .onchain {
-                    XCTAssertThrowsError(try DepositQuoteRequestView.validateAmount(valid, for: option))
-                } else {
-                    XCTAssertNoThrow(try DepositQuoteRequestView.validateAmount(valid, for: option))
-                }
+                XCTAssertNoThrow(try DepositQuoteRequestView.validateAmount(valid, for: option))
             }
         }
+    }
+
+    @MainActor
+    func testOnchainAmountStaysLocalAndGoesIntoPaymentLink() async throws {
+        let stub = try MintHTTPStub { request in
+            var body = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(request.httpBody)) as? [String: Any])
+            XCTAssertNil(body["amount"], "An on-chain amount must not be sent to the mint")
+            body["quote"] = "test-quote"
+            body["request"] = "bc1qaddress"
+            body["amount_paid"] = 0
+            body["amount_issued"] = 0
+            return try JSONSerialization.data(withJSONObject: body)
+        }
+        defer { stub.remove() }
+        let (container, mint, _) = try fixture(url: stub.url)
+        let option = PaymentOption(mintID: mint.mintID, direction: .deposit, unit: .sat, method: "onchain")
+        let quote = try await DepositQuoteRequestView.loadQuote(from: mint, option: option, amount: 10_000,
+                                                                 in: container.mainContext)
+        XCTAssertEqual(quote.amount, 10_000)
+        XCTAssertEqual(quote.onchainPaymentURL?.absoluteString, "bitcoin:bc1qaddress?amount=0.0001")
+        let pending = try XCTUnwrap(quote.pendingEvent)
+        XCTAssertEqual(pending.amount, 10_000)
+        let resumed = try DepositQuoteView.restoreQuote(from: pending)
+        XCTAssertEqual(resumed.onchainPaymentURL, quote.onchainPaymentURL)
+
+        let amountless = try await DepositQuoteRequestView.loadQuote(from: mint, option: option, amount: nil,
+                                                                      in: container.mainContext)
+        XCTAssertEqual(amountless.onchainPaymentURL?.absoluteString, "bitcoin:bc1qaddress")
+
+        // A mint that reports PAID without accounting must not issue the local hint amount.
+        let paidWithoutAccounting = CashuSwift.Generic.MintQuote(method: "onchain", quote: "q", request: "r",
+                                                                 unit: "sat", amount: nil, state: nil, expiry: nil,
+                                                                 raw: ["state": .string("PAID")])
+        XCTAssertThrowsError(try DepositQuoteView.amountToIssue(for: paidWithoutAccounting, requestedAmount: 10_000))
     }
 
     @MainActor

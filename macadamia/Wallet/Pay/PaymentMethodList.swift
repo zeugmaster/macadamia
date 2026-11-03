@@ -28,26 +28,32 @@ struct PaymentMethodList: View {
     }
 
     var body: some View {
-        List {
-            ForEach(uniquePaymentMethods, id: \.method) { method in
-                NavigationLink(destination: {
-                    // FIXME: assuming deposit payment direction
-                    DepositQuoteRequestView(paymentMethod: method)
-                }, label: {
-                    PaymentMethodCard(name: name(for: method),
-                                      icon: Image(systemName: imageSystemName(for: method)),
-                                      description: description(for: method),
-                                      numberOfSupportingMints: numberOfMints(for: method))
-                        
-                })
-                .disabled(method.method.kind == .onchain)
-                .navigationLinkIndicatorVisibility(.hidden)
-                .listRowBackground(EmptyView())
-                .listRowSeparator(.hidden)
+        ScrollView {
+            VStack(spacing: 0) {
+                ForEach(uniquePaymentMethods, id: \.method) { method in
+                    if method.method != uniquePaymentMethods.first?.method {
+                        Divider()
+                    }
+                    NavigationLink(destination: {
+                        // FIXME: assuming deposit payment direction
+                        DepositQuoteRequestView(paymentMethod: method)
+                    }, label: {
+                        PaymentMethodCard(name: name(for: method),
+                                          icon: Image(systemName: imageSystemName(for: method)),
+                                          description: description(for: method),
+                                          numberOfSupportingMints: numberOfMints(for: method))
+                    })
+                    .buttonStyle(.plain)
+                }
             }
+            .background {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.primary.opacity(0.07))
+                    .stroke(.primary.opacity(0.2), lineWidth: 0.5)
+            }
+            .padding()
         }
         .navigationTitle("Select Method")
-        .listStyle(.plain)
         .task(id: visibleMints.map(\.mintID)) {
             await refreshMintSupport()
         }
@@ -55,9 +61,9 @@ struct PaymentMethodList: View {
 
     private func imageSystemName(for method: CashuSwift.Mint.Info.PaymentMethod) -> String {
         switch method.method {
-        case "bolt11", "bolt12": "bolt.fill"
+        case "bolt11", "bolt12": "bolt"
         case "onchain": "link"
-        default: "arrow.down.to.line.compact"
+        default: "arrow.down.to.line"
         }
     }
 
@@ -105,37 +111,41 @@ struct PaymentMethodCard: View {
     let numberOfSupportingMints: Int
 
     var body: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                icon
-                Text(name)
-                    .bold()
-                Spacer()
-                HStack(alignment: .center, spacing: 2) {
-                    Text(String(numberOfSupportingMints))
-                        .font(.callout)
-                    Image(systemName: "building.columns")
-                        .font(.caption)
+        HStack(spacing: 14) {
+            // circle.fill is the enclosure every .circle symbol uses, so all rows get the same disc.
+            // The glyph is overlaid at its own font, so disc and glyph size are independent.
+            Image(systemName: "circle.fill")
+                .font(.largeTitle)
+                .foregroundStyle(.primary.opacity(0.15))
+                .overlay { icon.symbolVariant(.fill).font(.subheadline) }
+            VStack(alignment: .leading) {
+                HStack {
+                    Text(name)
+                        .bold()
+                    HStack(alignment: .center, spacing: 2) {
+                        Text(String(numberOfSupportingMints))
+                            .font(.callout)
+                        Image(systemName: "building.columns")
+                            .font(.caption)
+                    }
+                    .fontWeight(.semibold)
+                    .padding(EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4))
+                    .opacity(0.8)
+                    .background {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(.primary.opacity(0.1))
+                            .stroke(.primary.opacity(0.1))
+                    }
+                    .scaleEffect(0.9)
+                    Spacer()
                 }
-                .fontWeight(.regular)
-                .padding(EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4))
-                .opacity(0.8)
-                .background {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(.primary.opacity(0.1))
-                        .stroke(.primary.opacity(0.1))
-                }
+                Text(description)
+                    .font(.callout)
+                    .opacity(0.9)
             }
-            Text(description)
-                .font(.callout)
-                .padding(.top)
+            .contentShape(.rect)
         }
         .padding()
-        .background {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.primary.opacity(0.07))
-                .stroke(.primary.opacity(0.2), lineWidth: 0.5)
-        }
     }
 }
 

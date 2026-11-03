@@ -44,6 +44,16 @@ struct DepositQuote: Identifiable, Hashable {
     var amountPaid: Int? { integerField("amount_paid") }
     var amountIssued: Int? { integerField("amount_issued") }
 
+    /// BIP-21 link for wallets. The amount is a local hint only, so it is appended but never sent to the mint.
+    var onchainPaymentURL: URL? {
+        guard paymentMethodKind == .onchain else { return nil }
+        var uri = "bitcoin:\(request)"
+        if unit == .sat, let amount {
+            uri += "?amount=\(Decimal(amount) / 100_000_000)"
+        }
+        return URL(string: uri)
+    }
+
     private func integerField(_ name: String) -> Int? {
         guard case .integer(let value) = raw?[name] else { return nil }
         return Int(exactly: value)
@@ -65,122 +75,56 @@ struct DepositQuoteView: View {
     @Environment(\.dismissToRoot) private var dismissToRoot
     @Environment(\.modelContext) private var modelContext
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.openURL) private var openURL
+    
+    @AppStorage("amountlessOnchainWarningDismissed") private var amountlessOnchainWarningDismissed = false
 
     @State private var copied = false
+    @State private var transactionSeen = false
+    @State private var fetchedConfirmations: Int?
     @State private var hourglassStatus: HourglassProgressView.Status = .waiting
     @State private var statusText = String(localized: "Waiting for payment")
     @State private var pollingTimer: Timer?
     @State private var pollingTask: Task<Void, Never>?
     @State private var isIssuing = false
+    
+    @State private var showAlert = false
+    @State private var currentAlert: AlertDetail?
 
     @MainActor private static var issuingQuoteIDs: Set<UUID> = []
 
-    private var statusColor: Color {
-        switch hourglassStatus {
-        case .waiting: .primary
-        case .success: .successGreen
-        case .failure: .failureRed
+    /// Resumed quotes carry a bare option, so the mint's threshold is fetched on demand.
+    private var requiredConfirmations: Int? {
+        quote.option.requiredConfirmations ?? fetchedConfirmations
+    }
+
+    private var showsTransaction: Bool {
+        paymentMethodKind == .onchain && transactionSeen
+    }
+
+    private var statusRow: MintStatusRow {
+        MintStatusRow(mint: quote.mint.displayName, text: statusText, status: hourglassStatus)
+    }
+        
+    private var qrString: String? {
+        switch paymentMethodKind {
+        case .bolt11, .bolt12: quote.request
+        case .onchain: quote.onchainPaymentURL?.absoluteString
+        case .generic: quote.quoteID
         }
     }
     
     var body: some View {
-        List {
-            Section {
-                    if let amount = quote.amount {
-                        HStack {
-                            Text("Amount:")
-                            Spacer()
-                            Text(amountDisplayString(amount, unit: quote.unit))
-                        }
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .fontWeight(.semibold)
-                        .listRowSeparator(.hidden)
-                    }
-                Group {
-                    switch paymentMethodKind {
-                    case .bolt11, .bolt12, .onchain:
-                        QRView(string: quote.request)
-                    case .generic:
-                        QRView(string: quote.quoteID)
-                    }
-                }
-                .listRowInsets(EdgeInsets(top: quote.amount == nil ? 8 : 0,
-                                          leading: 8,
-                                          bottom: 8,
-                                          trailing: 8))
-                if quote.paymentMethodKind != .generic {
-                    
-                }
-            } header: {
-                Text(quoteKindName)
-            } footer: {
-                HStack {
-                    Text("Quote ID")
-                        .foregroundStyle(.secondary)
-                        .font(.caption)
-                    Spacer()
-                    Text(quote.quoteID)
-                        .lineLimit(1)
-                        .font(.caption)
-                        .monospaced()
-                        .foregroundStyle(.secondary)
-                        .truncationMode(.head)
-                }
-            }
-            
-            Section {
-                Button {
-                    if copied { return }
-                        UIPasteboard.general.string = quote.request
-                    withAnimation {
-                        copied = true
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        withAnimation {
-                            copied = false
-                        }
-                    }
-                } label: {
-                    HStack {
-                        Spacer()
-                        Image(systemName: copied ? "clipboard.fill" : "clipboard")
-                        Text("Copy \(quoteKindName)\(quote.paymentMethodKind == .generic ? " ID" : "")")
-                            .fontWeight(.medium)
-                            .lineLimit(1)
-                        Spacer()
-                    }
-                    .foregroundStyle(.primary) // TODO: find our why this does not work
-                }
-                .listRowSeparator(.hidden)
-            }
-            .listSectionSpacing(16)
-            
-            Section {
-                VStack(spacing: 6) {
-                    HStack {
-                        Text("Mint".uppercased())
-                        Spacer()
-                        Text(quote.mint.displayName)
-                    }
-                    HStack {
-                        Text("Status".uppercased())
-                        Spacer()
-                        Text(statusText)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .fontWeight(.regular)
-                        HourglassProgressView(status: hourglassStatus)
-                            .accessibilityHidden(true)
-                    }
-                    .foregroundStyle(statusColor)
-                    .animation(.easeInOut(duration: 0.25), value: hourglassStatus)
-                }
-                .listRowBackground(EmptyView())
-                .font(.caption)
-                .fontWeight(.medium)
+        Group {
+            if showsTransaction {
+                // The cubes take over from the QR code; polling the mint continues underneath.
+                OnchainTransaction(address: quote.request, requiredConfirmations: requiredConfirmations,
+                                   settled: hourglassStatus == .success, quoteID: quote.quoteID, status: statusRow)
+            } else {
+                quoteList
             }
         }
+        .animation(reduceMotion ? nil : .default, value: showsTransaction)
         .navigationTitle("\(quote.paymentMethodName) Deposit")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)    // we replace the system back button
@@ -201,6 +145,7 @@ struct DepositQuoteView: View {
             // Once issuance starts, let it finish saving any returned proofs.
             if !isIssuing { pollingTask?.cancel() }
         }
+        .sensoryFeedback(.impact, trigger: transactionSeen)
         .sensoryFeedback(trigger: hourglassStatus) { _, status in
             switch status {
             case .waiting: nil
@@ -220,6 +165,100 @@ struct DepositQuoteView: View {
                 // Leaving the view cancels its pending dismissal.
             }
         }
+        .task {
+            guard paymentMethodKind == .onchain, requiredConfirmations == nil else { return }
+            fetchedConfirmations = await quote.mint.supportedPaymentOptions(direction: .deposit)
+                .first { $0.method == quote.method && $0.unit == quote.unit }?.requiredConfirmations
+        }
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+    }
+    
+    private var quoteList: some View {
+        List {
+            Section {
+                    if let amount = quote.amount {
+                        HStack {
+                            Text("Amount:")
+                            Spacer()
+                            Text(amountDisplayString(amount, unit: quote.unit))
+                        }
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fontWeight(.semibold)
+                        .listRowSeparator(.hidden)
+                    }
+                QRView(string: qrString)
+                    .listRowInsets(EdgeInsets(top: quote.amount == nil ? 8 : 0,
+                                              leading: 8,
+                                              bottom: 8,
+                                              trailing: 8))
+            } header: {
+                Text(quoteKindName)
+            } footer: {
+                HStack {
+                    Text("Quote ID")
+                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                    Spacer()
+                    Text(quote.quoteID)
+                        .lineLimit(1)
+                        .font(.caption)
+                        .monospaced()
+                        .foregroundStyle(.secondary)
+                        .truncationMode(.head)
+                }
+            }
+            
+            Section { statusRow }
+            
+            Section {
+                // One row holding both buttons so they share the card background like PaymentMethodList.
+                VStack(spacing: 0) {
+                    Button {
+                        if copied { return }
+                        copyButtonPressed()
+                        withAnimation {
+                            copied = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            withAnimation {
+                                copied = false
+                            }
+                        }
+                    } label: {
+                        Label("Copy \(quoteKindName)\(quote.paymentMethodKind == .generic ? " ID" : "")",
+                              systemImage: copied ? "clipboard.fill" : "clipboard")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .contentShape(.rect)
+                    }
+                    if paymentMethodKind == .onchain {
+                        Divider()
+                        Button {
+                            if let url = quote.onchainPaymentURL { openURL(url) }
+                        } label: {
+                            Label("Open in Wallet", systemImage: "rectangle.portrait.and.arrow.forward")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .contentShape(.rect)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .fontWeight(.medium)
+                .lineLimit(1)
+                // Drawn by the row itself: UIKit masks listRowBackground slightly inside the row on device, eating the hairline.
+                // 26pt continuous is the inset-grouped section corner on iOS 26; anything squarer gets its corners masked on device.
+                .background {
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .fill(.primary.opacity(0.08))
+                        .strokeBorder(.primary.opacity(0.2), lineWidth: 0.5)
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+            }
+            .listSectionSpacing(16)
+        }
     }
     
     private var quoteKindName: String {
@@ -230,7 +269,37 @@ struct DepositQuoteView: View {
         case .generic: "Quote"
         }
     }
-
+    
+    // make sure to show the user an alert for amountless quotes
+    private func copyButtonPressed() {
+        if paymentMethodKind == .onchain && (!amountlessOnchainWarningDismissed) {
+            let dismissButton = AlertButton(title: String(localized: "Got it"),
+                                            role: .cancel,
+                                            action: { })
+            let dontShowAgainButton = AlertButton(title: String(localized: "Don't show again"),
+                                                  role: .destructive) {
+                amountlessOnchainWarningDismissed = true
+            }
+            var description = """
+                Make sure to stay within this mint's limits when sending to the address.
+                Onchain transactions outside of limits might not be honored by the mint, leading to a loss of funds.
+                """
+            if let min = quote.option.minAmount {
+                description += "\n\n" + String(localized: "Minimum: \(amountDisplayString(min, unit: quote.unit))")
+            }
+            if let max = quote.option.maxAmount {
+                description += "\n" + String(localized: "Maximum: \(amountDisplayString(max, unit: quote.unit))")
+            }
+            let alert = AlertDetail(title: "Warning",
+                                    description: description,
+                                    primaryButton: dismissButton,
+                                    secondaryButton: dontShowAgainButton)
+            displayAlert(alert: alert)
+        }
+        
+        UIPasteboard.general.string = quote.request
+    }
+    
     @MainActor
     static func restoreQuote(from event: Event) throws -> DepositQuote {
         guard event.kind == .pendingMint else {
@@ -293,6 +362,11 @@ struct DepositQuoteView: View {
                 isIssuing = false
             }
             do {
+                if paymentMethodKind == .onchain, !transactionSeen,
+                   await OnchainTransaction.explorerSawPayment(to: quote.request) {
+                    transactionSeen = true
+                    statusText = String(localized: "Transaction detected. Waiting for the mint")
+                }
                 let mint = CashuSwift.Mint(quote.mint)
                 let response: any CashuSwift.MintQuoteResponse
                 if quote.method == .bolt11 {
@@ -333,6 +407,8 @@ struct DepositQuoteView: View {
     /// Accounting-based methods can receive multiple payments, including amountless deposits.
     static func amountToIssue(for response: any CashuSwift.MintQuoteResponse,
                               requestedAmount: Int?) throws -> Int? {
+        // An on-chain amount is only a hint for the payment link; never issue against it.
+        let requestedAmount = response.method.kind == .onchain ? nil : requestedAmount
         let generic = response as? CashuSwift.Generic.MintQuote
         let state: String?
         if case .string(let rawState) = generic?.raw["state"] {
@@ -447,6 +523,51 @@ struct DepositQuoteView: View {
         default:
             error.localizedDescription
         }
+    }
+    
+    private func displayAlert(alert: AlertDetail) {
+        currentAlert = alert
+        showAlert = true
+    }
+}
+
+/// Mint name and payment status with the hourglass: the row every payment flow shows while it waits on the mint.
+struct MintStatusRow: View {
+    let mint: String
+    let text: String
+    let status: HourglassProgressView.Status
+
+    private var color: Color {
+        switch status {
+        case .waiting: .primary
+        case .success: .successGreen
+        case .failure: .failureRed
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            HStack {
+                Text("Mint".uppercased())
+                Spacer()
+                Text(mint)
+            }
+            HStack {
+                Text("Status".uppercased())
+                Spacer()
+                Text(text)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .fontWeight(.regular)
+                HourglassProgressView(status: status)
+                    .accessibilityHidden(true)
+            }
+            .foregroundStyle(color)
+            .animation(.easeInOut(duration: 0.25), value: status)
+        }
+        .listRowBackground(EmptyView())
+        .font(.caption)
+        .fontWeight(.medium)
     }
 }
 

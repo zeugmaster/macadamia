@@ -80,6 +80,12 @@ struct PaymentOption: Identifiable, Codable, Hashable, Sendable {
         method.displayName(methodName: methodName)
     }
 
+    /// On-chain deposits: confirmations the mint waits for before issuing, when its method settings say so.
+    var requiredConfirmations: Int? {
+        guard case .integer(let value) = options?["confirmations"] else { return nil }
+        return Int(exactly: value)
+    }
+
     func isAmountWithinLimits(_ amount: Int) -> Bool {
         (minAmount.map { amount >= $0 } ?? true)
             && (maxAmount.map { amount <= $0 } ?? true)

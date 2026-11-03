@@ -350,7 +350,11 @@ struct EventList: View {
         case .pendingMelt:
             // Lightning payments resume in the shared melt flow.
             if let e = group.events.first, let quote = e.genericMeltQuote, quote.method != .bolt12 {
-                GenericMeltView(pendingEvent: e)
+                if quote.method.kind == .onchain {
+                    OnchainMeltView(pendingEvent: e)
+                } else {
+                    GenericMeltView(pendingEvent: e)
+                }
             } else {
                 MeltView(events: group.events)
             }

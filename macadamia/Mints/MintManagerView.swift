@@ -234,16 +234,7 @@ struct MintManagerView: View {
             do {
                 let updatedMint = try await CashuSwift.loadMint(url: mint.url)
                 
-                // Update keysets, preserving derivation counters
-                for newKeyset in updatedMint.keysets {
-                    if let existingIndex = mint.keysets.firstIndex(where: { $0.keysetID == newKeyset.keysetID }) {
-                        var updated = newKeyset
-                        updated.derivationCounter = mint.keysets[existingIndex].derivationCounter
-                        mint.keysets[existingIndex] = updated
-                    } else {
-                        mint.keysets.append(newKeyset)
-                    }
-                }
+                mint.mergeKeysets(updatedMint.keysets)
                 
                 _ = try await mint.loadInfo(invalidateCache: true)
                 logger.info("successfully refreshed mint: \(mint.url.absoluteString)")

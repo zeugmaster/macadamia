@@ -90,7 +90,13 @@ struct BIP321 {
             }
         }
         
-        // On-chain bitcoin addresses are not supported in this wallet
+        if let address = parsed.address, supportedTypes.contains(.bitcoinAddress) {
+            // The whole link goes along so its amount can prefill the payment.
+            return InputValidator.isBitcoinAddress(address)
+                ? .valid(InputView.Result(payload: string, type: .bitcoinAddress))
+                : .invalid(String(localized: "Invalid Bitcoin address"))
+        }
+        
         if parsed.address != nil {
             return .invalid(String(localized: "On-chain Bitcoin payments are not supported"))
         }
@@ -158,6 +164,8 @@ struct InputValidator {
             type = .lightningAddress
         case _ where MerchantParser.isMerchantQRCode(input):
             type = .merchantCode
+        case _ where isBitcoinAddress(input):
+            type = .bitcoinAddress
         default:
             if let pubkeyData = try? input.bytes,
                let _ = try? secp256k1.Signing.PublicKey(dataRepresentation: pubkeyData,
@@ -180,6 +188,19 @@ struct InputValidator {
         return .valid(InputView.Result(payload: input, type: type))
     }
     
+    /// Shape check only: the mint validates the address and its network when it quotes.
+    static func isBitcoinAddress(_ string: String) -> Bool {
+        let lowered = string.lowercased()
+        if let hrp = ["bc1", "tb1", "bcrt1"].first(where: { lowered.hasPrefix($0) }) {
+            // Bech32: one case throughout, 32-character alphabet after the separator.
+            guard string == lowered || string == string.uppercased(), (26...90).contains(string.count) else { return false }
+            return lowered.dropFirst(hrp.count).allSatisfy { "qpzry9x8gf2tvdw0s3jn54khce6mua7l".contains($0) }
+        }
+        // Base58: legacy and script addresses on mainnet (1, 3) and testnet (m, n, 2).
+        guard let first = string.first, "13mn2".contains(first), (26...35).contains(string.count) else { return false }
+        return string.allSatisfy { "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".contains($0) }
+    }
+    
     private static func isLightningAddress(_ string: String) -> Bool {
         let components = string.split(separator: "@")
         guard components.count == 2 else { return false }
@@ -197,7 +218,7 @@ struct InputView: View {
     }
     
     enum InputType: Hashable {
-        case bolt11Invoice, bolt12Offer, token, creq, publicKey, lnurlPay, lightningAddress, merchantCode
+        case bolt11Invoice, bolt12Offer, token, creq, publicKey, lnurlPay, lightningAddress, merchantCode, bitcoinAddress
     }
     
     private let invalidScanRetryDelay = 3.0
@@ -323,7 +344,7 @@ struct InputView: View {
 }
 
 struct SupportedTypeIndicator: View {
-    let allTypes: [InputView.InputType] = [.bolt11Invoice, .bolt12Offer, .creq, .publicKey, .token, .lnurlPay, .lightningAddress, .merchantCode]
+    let allTypes: [InputView.InputType] = [.bolt11Invoice, .bolt12Offer, .creq, .publicKey, .token, .lnurlPay, .lightningAddress, .merchantCode, .bitcoinAddress]
     let supportedTypes: [InputView.InputType]
     
     var prioritized: [InputView.InputType] {
@@ -343,6 +364,7 @@ struct SupportedTypeIndicator: View {
             case .lnurlPay:          label = String(localized: "LNURL-pay")
             case .lightningAddress:  label = String(localized: "Lightning Address")
             case .merchantCode:      label = String(localized: "Merchant QR")
+            case .bitcoinAddress:    label = String(localized: "Bitcoin Address")
         }
         return label
     }
