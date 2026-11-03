@@ -266,8 +266,8 @@ enum TransferFlow {
             return .issue
         case .state(.issued):
             return .informAlreadyIssued
-        case .state(.pending):
-            // Destination is mid-issuance (possibly a concurrent attempt) — do not interfere.
+        case .state(.pending), .state(.failed):
+            // Mid-issuance (possibly a concurrent attempt) or a state mint quotes do not take — do not interfere.
             return .keepPendingUnknown
         case .state(.unpaid):
             guard let source = ctx.source else { return .keepPendingUnknown }
@@ -278,7 +278,8 @@ enum TransferFlow {
                 return ctx.mintQuoteExpired ? .expiredStranded : .pollDestinationThenIssue
             case .state(.pending):
                 return .waitSourcePending
-            case .state(.unpaid):
+            case .state(.unpaid), .state(.failed):
+                // Failed means the mint released the inputs, just like unpaid.
                 if ctx.mintQuoteExpired { return .informExpiredUnpaid }
                 return ctx.hasProofs ? .remelt : .missingDataForRemelt
             }
@@ -297,7 +298,7 @@ enum TransferFlow {
     }
 
     static func classifyMeltFailure(error: Error?, reportedState: CashuSwift.QuoteState?) -> MeltFailureClass {
-        if reportedState == .unpaid { return .definitelyUnpaid }
+        if reportedState == .unpaid || reportedState == .failed { return .definitelyUnpaid }
 
         if let cashuError = error as? CashuError {
             switch cashuError {

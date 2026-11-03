@@ -558,7 +558,7 @@ struct GenericMeltView: View {
                                         label: String(localized: "Method"),
                                         selectedMint: $selectedMint,
                                         selectedOption: $selectedOption,
-                                        excludedMethods: [.bolt11, .bolt12],
+                                        excludedMethods: [.bolt11, .bolt12, .onchain],
                                         hidesWhenSingleOption: false)
                     TextField(String(localized: "Memo (optional)"), text: $memo)
                         .autocorrectionDisabled()

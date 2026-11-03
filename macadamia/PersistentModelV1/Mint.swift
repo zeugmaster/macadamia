@@ -122,6 +122,20 @@ extension AppSchemaV1.Mint {
         mintLogger.debug("increased counter for keyset \(keysetID) by \(n)")
     }
     
+    /// Takes the mint's current keyset list without ever moving a counter backwards or forgetting a
+    /// keyset: NUT-13 counters are per keyset and may have advanced while the list was being fetched,
+    /// and proofs or pending melt change can still reference a keyset the mint no longer lists.
+    func mergeKeysets(_ remote: [CashuSwift.Keyset]) {
+        for var keyset in remote {
+            if let index = keysets.firstIndex(where: { $0.keysetID == keyset.keysetID }) {
+                keyset.derivationCounter = max(keyset.derivationCounter, keysets[index].derivationCounter)
+                keysets[index] = keyset
+            } else {
+                keysets.append(keyset)
+            }
+        }
+    }
+    
     func setDerivationCounterForKeysetWithID(_ keysetID:String, to value:Int) {
         if let index = self.keysets.firstIndex(where: { $0.keysetID == keysetID }) {
             var updatedKeysets = self.keysets

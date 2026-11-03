@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+/// Explorer-side view of a payment: cubes for mempool and confirmations, then the details.
+/// Embedded by the deposit and withdrawal flows, which keep their own title; standalone callers set one.
 struct OnchainTransaction: View {
     
     public struct TransactionState {
@@ -23,6 +25,10 @@ struct OnchainTransaction: View {
         let fee: Int?
         /// API root of the explorer that knows the transaction.
         let explorer: URL
+
+        var confirmations: Int {
+            if case .confirmations(let n) = block { n } else { 0 }
+        }
     }
     
     enum Network: String {
@@ -32,19 +38,32 @@ struct OnchainTransaction: View {
     let address: String
     /// Minting: confirmations the mint waits for before issuing. Also sets the number of cubes.
     let requiredConfirmations: Int?
+    /// The mint has settled the payment (ecash issued, payout paid): confirmed whatever the count says.
+    /// Withdrawals rely on this, since mints do not advertise a threshold for payouts.
+    let settled: Bool
     let quoteID: String?
+    /// Melting: the transaction the mint broadcast, so a reused address shows the right one.
+    let txid: String?
+    /// The mint's side of the payment, shown under the cubes by the deposit and withdrawal flows.
+    let status: MintStatusRow?
     
     @Environment(\.openURL) private var openURL
     @State private var firstTransactionState: TransactionState?
     @State private var lookupFailed = false
     @State private var showDetails = false
     @State private var copiedValue: String?
+    private let watchesExplorer: Bool
     
     /// `state`: a known state to show instead of looking one up (previews, callers that already fetched).
-    init(address: String, requiredConfirmations: Int? = nil, quoteID: String? = nil, state: TransactionState? = nil) {
+    init(address: String, requiredConfirmations: Int? = nil, settled: Bool = false, quoteID: String? = nil,
+         txid: String? = nil, state: TransactionState? = nil, status: MintStatusRow? = nil) {
         self.address = address
         self.requiredConfirmations = requiredConfirmations
+        self.settled = settled
         self.quoteID = quoteID
+        self.txid = txid
+        self.status = status
+        watchesExplorer = state == nil
         _firstTransactionState = State(initialValue: state)
     }
     
@@ -64,8 +83,10 @@ struct OnchainTransaction: View {
         if case .confirmations(let n) = firstTransactionState?.block { n > cubeCount } else { false }
     }
     
+    /// Mined with the mint's threshold reached: the advertised count for deposits, the mint's word otherwise.
     private var isConfirmed: Bool {
-        if case .confirmations(let n) = firstTransactionState?.block { n >= (requiredConfirmations ?? 1) } else { false }
+        guard case .confirmations(let n) = firstTransactionState?.block else { return false }
+        return settled || requiredConfirmations.map { n >= $0 } ?? false
     }
     
     private var stateTitle: String {
@@ -74,12 +95,9 @@ struct OnchainTransaction: View {
         case nil:
             return String(localized: "No transaction yet")
         case .mempool:
-            return String(localized: "In the mempool")
-        case .confirmations(let n):
-            if let requiredConfirmations, n < requiredConfirmations {
-                return String(localized: "\(n) of \(requiredConfirmations) confirmations")
-            }
-            return String(localized: "Confirmed")
+            return String(localized: "Waiting to be mined")
+        case .confirmations:
+            return isConfirmed ? String(localized: "Confirmed") : String(localized: "Mined")
         }
     }
     
@@ -89,12 +107,17 @@ struct OnchainTransaction: View {
         case nil:
             return String(localized: "Waiting for a transaction to the address.")
         case .mempool:
-            return String(localized: "Waiting for the first confirmation.")
-        case .confirmations:
-            guard let requiredConfirmations else { return nil }
-            return isConfirmed
-                ? String(localized: "The mint can issue ecash now.")
-                : String(localized: "The mint issues ecash after \(requiredConfirmations) confirmations.")
+            return String(localized: "The transaction is in the mempool.")
+        case .confirmations(let n):
+            if isConfirmed {
+                return requiredConfirmations == nil
+                    ? String(localized: "The mint has confirmed the payment.")
+                    : String(localized: "The mint can issue ecash now.")
+            }
+            if let requiredConfirmations {
+                return String(localized: "\(n) of \(requiredConfirmations) confirmations")
+            }
+            return String(localized: "^[\(n) confirmation](inflect: true). Waiting for the mint's threshold.")
         }
     }
     
@@ -193,6 +216,10 @@ struct OnchainTransaction: View {
                 .listRowBackground(Color.clear)
             }
             
+            if let status {
+                Section { status }
+            }
+            
             Section {
                 // One row keeps the lines tight, like the Mint/Status block in DepositQuoteView.
                 VStack(spacing: 8) {
@@ -276,18 +303,29 @@ struct OnchainTransaction: View {
                 }
             }
         }
-        .navigationTitle("Transaction")
-        .navigationBarTitleDisplayMode(.inline)
-        .task {
-            guard firstTransactionState == nil else { return }   // a known state was handed in
-            do {
-                if let first = try await Self.getTransactionStates(for: address).first {
-                    firstTransactionState = first
-                }
-            } catch {
-                lookupFailed = true
-            }
+        .task(id: "\(txid ?? "")|\(settled)") {
+            guard watchesExplorer else { return }   // a known state was handed in
+            repeat {
+                await refresh()
+                if isConfirmed { return }
+                try? await Task.sleep(for: .seconds(10))
+            } while !Task.isCancelled
         }
+    }
+    
+    private func refresh() async {
+        do {
+            firstTransactionState = Self.fundingTransaction(in: try await Self.getTransactionStates(for: address), txid: txid)
+            lookupFailed = false
+        } catch {
+            lookupFailed = true
+        }
+    }
+    
+    /// A mint hands out a fresh address per quote and a payout goes to its address once, so the earliest
+    /// transaction funding the address is the payment. `txid` pins it once the mint reports one.
+    static func fundingTransaction(in states: [TransactionState], txid: String?) -> TransactionState? {
+        states.filter { txid == nil || $0.txid == txid }.max { $0.confirmations < $1.confirmations }
     }
     
     static func network(for address: String) -> Network? {
@@ -311,16 +349,10 @@ struct OnchainTransaction: View {
     }
     
     /// True once an explorer lists a transaction funding the address, in the mempool or confirmed.
+    /// Reads the transaction list, not the address counters: Electrum-backed mempool instances
+    /// leave `funded_txo_count` at zero even when the address has been paid.
     static func explorerSawPayment(to address: String) async -> Bool {
-        struct Stats: Decodable { let funded_txo_count: Int }
-        struct Address: Decodable { let chain_stats: Stats, mempool_stats: Stats }
-        for api in explorerAPIURLs(for: address) {
-            // Short timeout: an unreachable explorer must not hold up polling the mint.
-            guard let (data, _) = try? await URLSession.shared.data(for: URLRequest(url: api.appending(path: "address/\(address)"), timeoutInterval: 5)),
-                  let stats = try? JSONDecoder().decode(Address.self, from: data) else { continue }
-            if stats.chain_stats.funded_txo_count + stats.mempool_stats.funded_txo_count > 0 { return true }
-        }
-        return false
+        ((try? await getTransactionStates(for: address))?.isEmpty) == false
     }
     
     /// Transactions paying the address, newest first, from the first explorer that knows of any. Empty: no tx found.
@@ -370,7 +402,9 @@ private func previewTransaction(_ block: OnchainTransaction.TransactionState.Blo
     let quote = DepositQuotePreview.onchain
     return NavigationStack {
         OnchainTransaction(address: quote.request, requiredConfirmations: quote.option.requiredConfirmations,
-                           quoteID: quote.quoteID, state: .preview(block))
+                           quoteID: quote.quoteID, state: .preview(block),
+                           status: MintStatusRow(mint: quote.mint.displayName, text: "Transaction detected. Waiting for the mint", status: .waiting))
+            .navigationTitle("Transaction")
     }
 }
 
@@ -382,6 +416,7 @@ private func previewTransaction(_ block: OnchainTransaction.TransactionState.Blo
 #Preview("Live Regtest") {
     NavigationStack {
         OnchainTransaction(address: "bcrt1qdvk49syy2mml59w8sa8qw55rswrf00hpl8nu38", requiredConfirmations: 3)
+            .navigationTitle("Transaction")
     }
 }
 #endif

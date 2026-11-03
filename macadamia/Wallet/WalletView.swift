@@ -38,6 +38,7 @@ struct WalletView: View {
         case contactless
         case lnurl(userInput: String)
         case payeeInput
+        case onchain(request: String)
 
         var id: String {
             switch self {
@@ -61,6 +62,8 @@ struct WalletView: View {
                 return "lnurl"
             case .payeeInput:
                 return "payeeInput"
+            case .onchain(let request):
+                return "onchain_\(request)"
             }
         }
     }
@@ -150,7 +153,7 @@ struct WalletView: View {
                     }
                     
                     // MARK: - SCANNER
-                    InputViewModalButton(inputTypes: [.bolt11Invoice, .bolt12Offer, .token, .creq, .lightningAddress, .lnurlPay, .merchantCode]) {
+                    InputViewModalButton(inputTypes: [.bolt11Invoice, .bolt12Offer, .token, .creq, .lightningAddress, .lnurlPay, .merchantCode, .bitcoinAddress]) {
                         Image(systemName: "qrcode")
                             .font(.largeTitle)
                             .padding(16)
@@ -185,6 +188,8 @@ struct WalletView: View {
                         case .lightningAddress, .lnurlPay, .merchantCode:
                             // merchantCode payload is already converted to a lightning address
                             navigationDestination = .lnurl(userInput: result.payload)
+                        case .bitcoinAddress:
+                            navigationDestination = .onchain(request: result.payload)
                         default:
                             // TODO: ADD LOGGING
                             break
@@ -261,6 +266,8 @@ struct WalletView: View {
                     LNURLPayView(userInput: userInput)
                 case .payeeInput:
                     PayeeInputView()
+                case .onchain(let request):
+                    OnchainMeltView(request: request)
                 }
             }
             .onChange(of: urlState) { oldValue, newValue in

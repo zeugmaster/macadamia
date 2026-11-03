@@ -459,6 +459,11 @@ enum AppSchemaV1: VersionedSchema {
         // another case where SwiftData refuses to store the "complex" codable struct
         // so we need to (de-) serialize it ourselves
         private var blankOutputData: Data?
+
+        // NUT-30 withdrawals persist the library's whole melt context (inputs, blank
+        // outputs, keyset snapshot) instead of `blankOutputData`. Additive optional
+        // like the fee columns, so legacy rows read nil.
+        private var onchainMeltContextData: Data?
         
         var redeemed: Bool?
 
@@ -622,6 +627,16 @@ enum AppSchemaV1: VersionedSchema {
             }
             set {
                 blankOutputData = try? JSONEncoder().encode(newValue)
+            }
+        }
+        
+        var onchainMeltContext: CashuSwift.Onchain.MeltContext? {
+            get {
+                guard let data = onchainMeltContextData else { return nil }
+                return try? JSONDecoder().decode(CashuSwift.Onchain.MeltContext.self, from: data)
+            }
+            set {
+                onchainMeltContextData = newValue.flatMap { try? JSONEncoder().encode($0) }
             }
         }
         

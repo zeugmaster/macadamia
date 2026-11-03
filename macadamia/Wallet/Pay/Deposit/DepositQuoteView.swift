@@ -81,6 +81,7 @@ struct DepositQuoteView: View {
 
     @State private var copied = false
     @State private var transactionSeen = false
+    @State private var fetchedConfirmations: Int?
     @State private var hourglassStatus: HourglassProgressView.Status = .waiting
     @State private var statusText = String(localized: "Waiting for payment")
     @State private var pollingTimer: Timer?
@@ -92,12 +93,17 @@ struct DepositQuoteView: View {
 
     @MainActor private static var issuingQuoteIDs: Set<UUID> = []
 
-    private var statusColor: Color {
-        switch hourglassStatus {
-        case .waiting: .primary
-        case .success: .successGreen
-        case .failure: .failureRed
-        }
+    /// Resumed quotes carry a bare option, so the mint's threshold is fetched on demand.
+    private var requiredConfirmations: Int? {
+        quote.option.requiredConfirmations ?? fetchedConfirmations
+    }
+
+    private var showsTransaction: Bool {
+        paymentMethodKind == .onchain && transactionSeen
+    }
+
+    private var statusRow: MintStatusRow {
+        MintStatusRow(mint: quote.mint.displayName, text: statusText, status: hourglassStatus)
     }
         
     private var qrString: String? {
@@ -109,6 +115,65 @@ struct DepositQuoteView: View {
     }
     
     var body: some View {
+        Group {
+            if showsTransaction {
+                // The cubes take over from the QR code; polling the mint continues underneath.
+                OnchainTransaction(address: quote.request, requiredConfirmations: requiredConfirmations,
+                                   settled: hourglassStatus == .success, quoteID: quote.quoteID, status: statusRow)
+            } else {
+                quoteList
+            }
+        }
+        .animation(reduceMotion ? nil : .default, value: showsTransaction)
+        .navigationTitle("\(quote.paymentMethodName) Deposit")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)    // we replace the system back button
+        .toolbar {                              // with one that dismisses to root
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    withAnimation {
+                        dismissToRoot()
+                    }
+                } label: {
+                    Label("Done", systemImage: "chevron.backward")
+                }
+            }
+        }
+        .onAppear(perform: startPolling)
+        .onDisappear {
+            stopPolling()
+            // Once issuance starts, let it finish saving any returned proofs.
+            if !isIssuing { pollingTask?.cancel() }
+        }
+        .sensoryFeedback(.impact, trigger: transactionSeen)
+        .sensoryFeedback(trigger: hourglassStatus) { _, status in
+            switch status {
+            case .waiting: nil
+            case .success: .success
+            case .failure: .error
+            }
+        }
+        .task(id: hourglassStatus) {
+            guard hourglassStatus == .success else { return }
+            do {
+                try await Task.sleep(for: .seconds(2))
+                try Task.checkCancellation()
+                withAnimation(reduceMotion ? nil : .default) {
+                    dismissToRoot()
+                }
+            } catch {
+                // Leaving the view cancels its pending dismissal.
+            }
+        }
+        .task {
+            guard paymentMethodKind == .onchain, requiredConfirmations == nil else { return }
+            fetchedConfirmations = await quote.mint.supportedPaymentOptions(direction: .deposit)
+                .first { $0.method == quote.method && $0.unit == quote.unit }?.requiredConfirmations
+        }
+        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
+    }
+    
+    private var quoteList: some View {
         List {
             Section {
                     if let amount = quote.amount {
@@ -144,30 +209,7 @@ struct DepositQuoteView: View {
                 }
             }
             
-            Section {
-                VStack(spacing: 6) {
-                    HStack {
-                        Text("Mint".uppercased())
-                        Spacer()
-                        Text(quote.mint.displayName)
-                    }
-                    HStack {
-                        Text("Status".uppercased())
-                        Spacer()
-                        Text(statusText)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .fontWeight(.regular)
-                        HourglassProgressView(status: hourglassStatus)
-                            .accessibilityHidden(true)
-                    }
-                    .foregroundStyle(statusColor)
-                    .animation(.easeInOut(duration: 0.25), value: hourglassStatus)
-                }
-                .listRowBackground(EmptyView())
-                .font(.caption)
-                .fontWeight(.medium)
-            }
+            Section { statusRow }
             
             Section {
                 // One row holding both buttons so they share the card background like PaymentMethodList.
@@ -217,46 +259,6 @@ struct DepositQuoteView: View {
             }
             .listSectionSpacing(16)
         }
-        .navigationTitle("\(quote.paymentMethodName) Deposit")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)    // we replace the system back button
-        .toolbar {                              // with one that dismisses to root
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    withAnimation {
-                        dismissToRoot()
-                    }
-                } label: {
-                    Label("Done", systemImage: "chevron.backward")
-                }
-            }
-        }
-        .onAppear(perform: startPolling)
-        .onDisappear {
-            stopPolling()
-            // Once issuance starts, let it finish saving any returned proofs.
-            if !isIssuing { pollingTask?.cancel() }
-        }
-        .sensoryFeedback(trigger: hourglassStatus) { _, status in
-            switch status {
-            case .waiting: nil
-            case .success: .success
-            case .failure: .error
-            }
-        }
-        .task(id: hourglassStatus) {
-            guard hourglassStatus == .success else { return }
-            do {
-                try await Task.sleep(for: .seconds(2))
-                try Task.checkCancellation()
-                withAnimation(reduceMotion ? nil : .default) {
-                    dismissToRoot()
-                }
-            } catch {
-                // Leaving the view cancels its pending dismissal.
-            }
-        }
-        .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
     
     private var quoteKindName: String {
@@ -526,6 +528,46 @@ struct DepositQuoteView: View {
     private func displayAlert(alert: AlertDetail) {
         currentAlert = alert
         showAlert = true
+    }
+}
+
+/// Mint name and payment status with the hourglass: the row every payment flow shows while it waits on the mint.
+struct MintStatusRow: View {
+    let mint: String
+    let text: String
+    let status: HourglassProgressView.Status
+
+    private var color: Color {
+        switch status {
+        case .waiting: .primary
+        case .success: .successGreen
+        case .failure: .failureRed
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            HStack {
+                Text("Mint".uppercased())
+                Spacer()
+                Text(mint)
+            }
+            HStack {
+                Text("Status".uppercased())
+                Spacer()
+                Text(text)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .fontWeight(.regular)
+                HourglassProgressView(status: status)
+                    .accessibilityHidden(true)
+            }
+            .foregroundStyle(color)
+            .animation(.easeInOut(duration: 0.25), value: status)
+        }
+        .listRowBackground(EmptyView())
+        .font(.caption)
+        .fontWeight(.medium)
     }
 }
 

@@ -61,6 +61,17 @@ final class DepositQuoteRequestTests: XCTestCase {
         XCTAssertEqual(states.map(\.explorer.absoluteString), Array(repeating: stub.url.absoluteString + "/api", count: 2))
     }
 
+    func testFundingTransactionIsTheEarliestUnlessPinned() throws {
+        let api = try XCTUnwrap(URL(string: "https://mempool.space/api"))
+        let states = [OnchainTransaction.TransactionState(txid: "a", block: .mempool, amount: 1, fee: nil, explorer: api),
+                      .init(txid: "b", block: .confirmations(2), amount: 2, fee: nil, explorer: api),
+                      .init(txid: "c", block: .confirmations(5), amount: 3, fee: nil, explorer: api)]
+        XCTAssertEqual(OnchainTransaction.fundingTransaction(in: states, txid: nil)?.txid, "c", "a fresh address is funded once, first")
+        XCTAssertEqual(OnchainTransaction.fundingTransaction(in: states, txid: "a")?.txid, "a", "the mint's outpoint wins")
+        XCTAssertNil(OnchainTransaction.fundingTransaction(in: states, txid: "unknown"))
+        XCTAssertNil(OnchainTransaction.fundingTransaction(in: [], txid: nil))
+    }
+
     @MainActor
     func testRequestBodiesAndNavigationValuesForEveryMethod() async throws {
         for (method, amount): (CashuSwift.PaymentMethodID, Int?) in [

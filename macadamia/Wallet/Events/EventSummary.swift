@@ -37,6 +37,15 @@ struct MintEventSummary: View {
                 } else if let genericQuote = event.genericMintQuote {
                     CopyableRow(label: String(localized: "Payment Request"), value: genericQuote.request)
                         .foregroundStyle(.secondary)
+                    if genericQuote.method.kind == .onchain {
+                        NavigationLink {
+                            OnchainTransaction(address: genericQuote.request, settled: true, quoteID: genericQuote.quote)
+                                .navigationTitle("Transaction")
+                                .navigationBarTitleDisplayMode(.inline)
+                        } label: {
+                            Label("View Transaction", systemImage: "cube")
+                        }
+                    }
                 }
             }
             
@@ -92,6 +101,10 @@ struct MeltEventSummary: View {
     var isMultiPath: Bool {
         events.count > 1
     }
+
+    private var onchainQuote: CashuSwift.Onchain.MeltQuote? {
+        events.first?.onchainMeltQuote
+    }
     
     var body: some View {
         List {
@@ -121,6 +134,8 @@ struct MeltEventSummary: View {
                     HStack {
                         if events.first?.lightningMeltQuote != nil {
                             Text("Lightning Fee")
+                        } else if onchainQuote != nil {
+                            Text("Mining Fee")
                         } else {
                             Text("Payment Fee")
                         }
@@ -149,6 +164,17 @@ struct MeltEventSummary: View {
                         Spacer()
                         Text("\(events.count)")
                             .foregroundStyle(.secondary)
+                    }
+                }
+
+                if let onchainQuote {
+                    NavigationLink {
+                        OnchainTransaction(address: onchainQuote.request, settled: true, quoteID: onchainQuote.quote,
+                                           txid: onchainQuote.transactionID)
+                            .navigationTitle("Transaction")
+                            .navigationBarTitleDisplayMode(.inline)
+                    } label: {
+                        Label("View Transaction", systemImage: "cube")
                     }
                 }
             }
