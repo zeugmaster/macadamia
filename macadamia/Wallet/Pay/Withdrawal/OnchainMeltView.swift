@@ -17,7 +17,7 @@ struct OnchainMeltView: View {
     /// Where the payment goes, from a bare address or a BIP-21 `bitcoin:` link.
     struct Destination: Equatable {
         let address: String
-        /// The link's `amount` (BTC) in sat, when it carries a usable one.
+        
         let amount: Int?
 
         init?(_ input: String) {
