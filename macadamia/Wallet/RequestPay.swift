@@ -555,12 +555,6 @@ struct SystemImageBadge: View {
     }
 }
 
-#Preview {
-    SystemImageBadge(systemName: "network", count: 3)
-        .foregroundStyle(.red)
-}
-
-
 //#Preview {
 //    RequestPay()
 //}
