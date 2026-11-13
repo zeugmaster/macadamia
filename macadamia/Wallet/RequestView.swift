@@ -26,6 +26,9 @@ struct RequestView: View {
     @State private var selectedMints = Set<Mint>()
     @State private var showMintSelector = false
     @State private var useNIP17Transport = true
+    /// Present the request by tap instead: the ecash comes straight back over
+    /// NFC, so the request carries no transport.
+    @State private var useNFC = false
     @State private var useP2PK = false
     @State private var description = ""
     @State private var copied = false
@@ -88,7 +91,9 @@ struct RequestView: View {
                     Text(paymentRequest.paymentId ?? "No ID")
                 }
                 
-                nfcSection
+                if useNFC {
+                    nfcSection
+                }
             } else {
                 mintSelectorSection
                 
@@ -96,6 +101,7 @@ struct RequestView: View {
                     Button {
                         withAnimation {
                             useNIP17Transport.toggle()
+                            if useNIP17Transport { useNFC = false }
                         }
                     } label: {
                         HStack {
@@ -109,6 +115,28 @@ struct RequestView: View {
                             .lineLimit(1)
                         }
                     }
+                    
+                    // Always shown; only selectable once card emulation is known
+                    // to be available on this device and in this region.
+                    Button {
+                        withAnimation {
+                            useNFC.toggle()
+                            if useNFC { useNIP17Transport = false }
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: useNFC ? "checkmark.circle.fill" : "circle")
+                            VStack(alignment: .leading) {
+                                Text(verbatim: "NFC")
+                                Text(nfcAvailable == false
+                                     ? String(localized: "Receiving via NFC is not available on this device or in your region.")
+                                     : String(localized: "Hold the payer's device to this iPhone. Ecash received over NFC is redeemed automatically."))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .disabled(nfcAvailable != true)
                 } header: {
                     Text("Receive via")
                 } footer: {
@@ -182,9 +210,8 @@ struct RequestView: View {
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
     
-    /// Lets the payer read the request from this iPhone by tapping it. The
-    /// button is always shown; it is only enabled once card emulation is known
-    /// to be available on this device and in this region.
+    /// Shown when NFC was chosen as the way to receive: presenting starts on
+    /// its own, this button restarts it after the emulation window ends.
     private var nfcSection: some View {
         Section {
             Button {
@@ -202,14 +229,7 @@ struct RequestView: View {
             }
             .disabled(nfcAvailable != true || nfcSession.isPresenting)
         } footer: {
-            switch nfcAvailable {
-            case true?:
-                Text("Hold the payer's device to this iPhone. Ecash received over NFC is redeemed automatically.")
-            case false?:
-                Text("Receiving via NFC is not available on this device or in your region.")
-            case nil:
-                EmptyView()
-            }
+            Text("Hold the payer's device to this iPhone. Ecash received over NFC is redeemed automatically.")
         }
     }
     
@@ -373,6 +393,10 @@ struct RequestView: View {
         if useNIP17Transport {
             // Start or extend the relay subscription to include the new key
             nostrService.refreshSubscriptions()
+        }
+        
+        if useNFC {
+            presentViaNFC()
         }
     }
 
