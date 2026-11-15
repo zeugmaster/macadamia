@@ -10,6 +10,76 @@
     " %@" : {
       "shouldTranslate" : false
     },
+    "%@\n\nThe ecash has left your balance and is listed in your history. Send the token below to the recipient manually." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@\n\nغادر الـ ecash رصيدك وهو مدرج في سجلك. أرسل الرمز أدناه إلى المستلم يدويًا."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@\n\nEcash আপনার ব্যালেন্স থেকে বেরিয়ে গেছে এবং আপনার ইতিহাসে তালিকাভুক্ত আছে। নিচের টোকেনটি প্রাপককে ম্যানুয়ালি পাঠান।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@\n\nDas Ecash hat dein Guthaben verlassen und steht in deinem Verlauf. Sende den Token unten manuell an den Empfänger."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@\n\nEl ecash ha salido de tu saldo y aparece en tu historial. Envía el token de abajo al destinatario manualmente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@\n\nL'ecash a quitté ton solde et figure dans ton historique. Envoie le token ci-dessous au destinataire manuellement."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@\n\nEcash आपके बैलेंस से निकल चुका है और आपके इतिहास में दर्ज है। नीचे दिया गया टोकन प्राप्तकर्ता को मैन्युअल रूप से भेजें।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@\n\nEcashは残高から差し引かれ、履歴に記録されています。下のトークンを受取人に手動で送ってください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@\n\nEcash가 잔액에서 빠져나갔으며 내역에 기록되어 있습니다. 아래 토큰을 수신자에게 직접 보내 주세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@\n\nO ecash saiu do seu saldo e está listado no seu histórico. Envie o token abaixo ao destinatário manualmente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@\n\nEcash списан с твоего баланса и отображается в истории. Отправь токен ниже получателю вручную."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@\n\nEcash bakiyenden çıktı ve geçmişinde listeleniyor. Aşağıdaki token'ı alıcıya manuel olarak gönder."
+          }
+        }
+      }
+    },
     "-" : {
       "localizations" : {
         "ar" : {
@@ -846,76 +916,6 @@
         }
       }
     },
-    "⚠️ Encoding Error" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ خطأ في الترميز"
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ এনকোডিং ত্রুটি"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Kodierungsfehler"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Error de codificación"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Erreur d'encodage"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ एन्कोडिंग त्रुटि"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ エンコードエラー"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ 인코딩 오류"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Erro de codificação"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Ошибка кодирования"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Kodlama hatası"
-          }
-        }
-      }
-    },
     "⚠️ NFC Error" : {
       "localizations" : {
         "ar" : {
@@ -1056,76 +1056,6 @@
         }
       }
     },
-    "⚠️ Unexpected HTTP Response" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ استجابة HTTP غير متوقعة"
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ অপ্রত্যাশিত HTTP রেসপন্স"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Unerwartete HTTP-Response"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Respuesta HTTP inesperada"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Réponse HTTP inattendue"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ अनपेक्षित HTTP प्रतिक्रिया"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ 予期しないHTTPレスポンス"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ 예기치 않은 HTTP 응답"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Resposta HTTP inesperada"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Неожиданный HTTP-ответ"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⚠️ Beklenmeyen HTTP yanıtı"
-          }
-        }
-      }
-    },
     "⚡ Incoming Ecash" : {
       "localizations" : {
         "ar" : {
@@ -1192,76 +1122,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "⚡ Gelen Ecash"
-          }
-        }
-      }
-    },
-    "🛰️ Transmission Error" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🛰️ خطأ في الإرسال"
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🛰️ ট্রান্সমিশন ত্রুটি"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🛰️ Übertragungsfehler"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🛰️ Error de transmisión"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🛰️ Erreur de transmission"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🛰️ ट्रांसमिशन त्रुटि"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🛰️ 送信エラー"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🛰️ 전송 오류"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🛰️ Erro de transmissão"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🛰️ Ошибка передачи"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🛰️ İletim hatası"
           }
         }
       }
@@ -10890,6 +10750,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ecash oluşturuldu"
+          }
+        }
+      }
+    },
+    "Ecash not delivered" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يتم تسليم Ecash"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash ডেলিভার হয়নি"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash nicht zugestellt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash no entregado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash non livré"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash डिलीवर नहीं हुआ"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecashは未配信です"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash가 전달되지 않았습니다"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash não entregue"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash не доставлен"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecash teslim edilmedi"
           }
         }
       }
@@ -24375,6 +24305,76 @@
         }
       }
     },
+    "Not delivered" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يتم التسليم"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ডেলিভার হয়নি"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht zugestellt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No entregado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non livré"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डिलीवर नहीं हुआ"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未配信"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "전달되지 않음"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não entregue"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не доставлено"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teslim edilmedi"
+          }
+        }
+      }
+    },
     "Not yet backed up to nostr." : {
       "localizations" : {
         "ar" : {
@@ -37417,76 +37417,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ödeme gerçekleşti ancak Mint'in ücret para üstü doğrulanamadı ve bakiyene eklenmedi."
-          }
-        }
-      }
-    },
-    "The provided string %@ does not seem to be valid. Please send the ecash manually or reclaim it." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "النص المقدم %@ لا يبدو صالحًا. يرجى إرسال الـ ecash يدويًا أو استرداده."
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "প্রদত্ত স্ট্রিং %@ বৈধ মনে হচ্ছে না। দয়া করে ecash ম্যানুয়ালি পাঠান বা পুনরুদ্ধার করুন।"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der angegebene Text %@ scheint nicht gültig zu sein. Bitte sende das Ecash manuell oder löse es wieder ein."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El texto proporcionado %@ no parece ser válido. Envía el ecash manualmente o recupéralo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La chaîne fournie %@ ne semble pas valide. Envoie l'ecash manuellement ou récupère-le."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "प्रदान की गई स्ट्रिंग %@ वैध नहीं लगती। कृपया ecash मैन्युअल रूप से भेजें या पुनः प्राप्त करें।"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "提供された文字列%@は有効ではないようです。ecashを手動で送信するか、回収してください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "제공된 문자열 %@이(가) 유효하지 않은 것 같습니다. ecash를 수동으로 보내거나 회수하세요."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A string fornecida %@ não parece ser válida. Envie o ecash manualmente ou recupere-o."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Предоставленная строка %@ не кажется действительной. Отправь ecash вручную или верни его."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sağlanan metin %@ geçerli görünmüyor. Lütfen ecash'i manuel olarak gönder veya geri al."
           }
         }
       }
