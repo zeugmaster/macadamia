@@ -12,7 +12,7 @@ import CashuSwift
 // MARK: - Model
 
 /// A mint listed by the review directory, the auditor, or both. A missing source leaves its summary nil.
-struct DiscoveredMint: Identifiable, Sendable {
+struct DiscoveredMint: Identifiable, Hashable, Sendable {
     let id: String
     var url: URL
     var name: String
@@ -47,6 +47,10 @@ struct DiscoveredMint: Identifiable, Sendable {
         self.info = info.flatMap { try? JSONDecoder().decode(CashuSwift.Mint.Info.self, from: Data($0.utf8)) }
         self.name = Self.clean(self.info?.name) ?? Self.clean(name) ?? url.host() ?? string
     }
+
+    // Navigation identity only: a reloaded listing of the same mint is the same destination.
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
 
     var iconURL: URL? { info?.iconUrl.flatMap(URL.init(string:)) }
 
@@ -264,6 +268,8 @@ enum MintDirectory {
 // MARK: - List
 
 struct MintDiscovery: View {
+    struct Route: Hashable {}
+
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<Wallet> { $0.active == true }) private var wallets: [Wallet]
     @Query private var walletMints: [Mint]
@@ -279,15 +285,15 @@ struct MintDiscovery: View {
             Section {
                 ForEach(mints ?? []) { mint in
                     let added = addedIDs.contains(mint.id)
-                    NavigationLink(destination: MintDiscoveryDetail(mint: mint)) {
+                    NavigationLink(value: mint) {
                         MintDiscoveryRow(mint: mint, added: added, adding: adding.contains(mint.id))
                     }
-                    .swipeActions(edge: .leading) {
+                    .swipeActions(edge: .trailing) {
                         if !added {
                             Button { add(mint) } label: {
                                 Label("Add", systemImage: "plus")
                             }
-                            .tint(.successGreen)
+                            .tint(.gray)
                         }
                     }
                 }
@@ -308,6 +314,7 @@ struct MintDiscovery: View {
                 }
             }
         }
+        .navigationDestination(for: DiscoveredMint.self) { MintDiscoveryDetail(mint: $0) }
         .refreshable { await load() }
         .task {
             if mints == nil { await load() }
@@ -318,7 +325,7 @@ struct MintDiscovery: View {
 
     private func sourcesFooter(_ mints: [DiscoveredMint]) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Swipe right on a mint to add it.")
+            Text("Swipe left on a mint to add it.")
             if let host = mints.lazy.compactMap({ $0.reviews?.host.host() }).first {
                 Text("Ratings from \(host)")
             }
@@ -330,6 +337,8 @@ struct MintDiscovery: View {
 
     private func load() async {
         let result = await MintDirectory.load()
+        // A cancelled load (tab switch) retries on the next appearance; a failed refresh keeps the list on screen.
+        guard !Task.isCancelled, !result.isEmpty || mints == nil else { return }
         withAnimation { mints = result }
     }
 
@@ -369,15 +378,17 @@ struct MintDiscoveryRow: View {
                     .truncationMode(.middle)
                 // Stacks rating and availability when large text leaves no room side by side.
                 ViewThatFits(in: .horizontal) {
+                    // Only picked when its ideal width fits, so pin it there; sub-point rounding otherwise truncates "4,9" to "4…".
                     HStack(spacing: 12) { ratingAndAvailability }
+                        .fixedSize()
                     VStack(alignment: .leading, spacing: 2) { ratingAndAvailability }
                 }
                 .font(.caption)
                 .lineLimit(1)
                 .padding(.top, 2)
             }
-            .layoutPriority(1) // otherwise the Spacer takes half the free width and the rating wraps
-            Spacer(minLength: 8)
+            // Takes all free width; a Spacer here competes for it and squeezes the rating to "…".
+            .frame(maxWidth: .infinity, alignment: .leading)
             if adding {
                 ProgressView()
             } else if added {

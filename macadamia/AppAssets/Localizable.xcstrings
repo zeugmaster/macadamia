@@ -12158,75 +12158,71 @@
       }
     },
     "Enter a URL to add a new mint to the wallet, hit Return to save. " : {
-
-    },
-    "Enter a URL to add a new mint to the wallet, hit Return to save. \nmacadamia Wallet is not affiliated with any mint and does not custody user funds. \nYou can find a list of mints on [bitcoinmints.com](https://bitcoinmints.com)" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "أدخل عنوان URL لإضافة mint جديد إلى المحفظة، اضغط Enter للحفظ.\nmacadamia Wallet غير تابع لأي mint ولا يحتفظ بأموال المستخدمين.\nيمكنك العثور على قائمة بالمنتات على [bitcoinmints.com](https://bitcoinmints.com)"
+            "value" : "أدخل عنوان URL لإضافة mint جديد إلى المحفظة، اضغط Enter للحفظ."
           }
         },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wallet-এ নতুন Mint যোগ করতে URL লিখুন, সেভ করতে Return চাপুন।\nmacadamia Wallet কোনো Mint-এর সাথে সম্পৃক্ত নয় এবং ব্যবহারকারীদের ফান্ড কাস্টডি করে না।\nMint-এর তালিকা [bitcoinmints.com](https://bitcoinmints.com)-এ পাওয়া যাবে"
+            "value" : "Wallet-এ নতুন Mint যোগ করতে URL লিখুন, সেভ করতে Return চাপুন।"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gib eine URL ein um dem Wallet eine neue Mint hinzuzufügen, dann Enter um zu speichern. macadamia Wallet hat keine Zugehörigkeit zu einer Mint und betreut keine Geldmittel der Nutzer. Du kannst eine Liste von Mints finden auf [bitcoinmints.com](https://bitcoinmints.com)"
+            "value" : "Gib eine URL ein, um dem Wallet eine neue Mint hinzuzufügen, und drücke Enter zum Speichern."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ingresa una URL para agregar un nuevo mint al wallet, presiona Enter para guardar.\nmacadamia Wallet no está afiliado a ningún mint y no custodia fondos de los usuarios.\nPuedes encontrar una lista de mints en [bitcoinmints.com](https://bitcoinmints.com)"
+            "value" : "Ingresa una URL para agregar un nuevo mint al wallet, presiona Enter para guardar."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Entre une URL pour ajouter un nouveau mint au wallet, appuie sur Entrée pour sauvegarder.\nmacadamia Wallet n'est affilié à aucun mint et ne garde pas les fonds des utilisateurs.\nTu peux trouver une liste de mints sur [bitcoinmints.com](https://bitcoinmints.com)"
+            "value" : "Entre une URL pour ajouter un nouveau mint au wallet, appuie sur Entrée pour sauvegarder."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wallet में नया Mint जोड़ने के लिए URL दर्ज करें, सेव करने के लिए Return दबाएं।\nmacadamia Wallet किसी Mint से संबद्ध नहीं है और उपयोगकर्ता धन की कस्टडी नहीं करता।\nMints की सूची [bitcoinmints.com](https://bitcoinmints.com) पर मिल सकती है"
+            "value" : "Wallet में नया Mint जोड़ने के लिए URL दर्ज करें, सेव करने के लिए Return दबाएं।"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ウォレットに新しいミントを追加するにはURLを入力し、Returnで保存してください。\nmacadamia Walletはいかなるミントとも提携しておらず、ユーザーの資金を保管しません。\nミントのリストは[bitcoinmints.com](https://bitcoinmints.com)で確認できます"
+            "value" : "ウォレットに新しいミントを追加するにはURLを入力し、Returnで保存してください。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "지갑에 새 민트를 추가하려면 URL을 입력하고 Return을 눌러 저장하세요.\nmacadamia Wallet은 어떤 민트와도 제휴하지 않으며 사용자 자금을 보관하지 않습니다.\n민트 목록은 [bitcoinmints.com](https://bitcoinmints.com)에서 확인할 수 있습니다"
+            "value" : "지갑에 새 민트를 추가하려면 URL을 입력하고 Return을 눌러 저장하세요."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Digite uma URL para adicionar um novo mint ao wallet, pressione Enter para salvar.\nmacadamia Wallet não é afiliado a nenhum mint e não custodia fundos dos usuários.\nVocê pode encontrar uma lista de mints em [bitcoinmints.com](https://bitcoinmints.com)"
+            "value" : "Digite uma URL para adicionar um novo mint ao wallet, pressione Enter para salvar."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Введи URL, чтобы добавить новый минт в кошелёк, нажми Return для сохранения.\nmacadamia Wallet не связан ни с одним минтом и не хранит средства пользователей.\nСписок минтов можно найти на [bitcoinmints.com](https://bitcoinmints.com)"
+            "value" : "Введи URL, чтобы добавить новый минт в кошелёк, нажми Return для сохранения."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cüzdana yeni bir Mint eklemek için URL gir, kaydetmek için Return'e bas.\nmacadamia Wallet hiçbir Mint ile bağlantılı değildir ve kullanıcı fonlarını saklamamaktadır.\nMint listesini [bitcoinmints.com](https://bitcoinmints.com) adresinde bulabilirsin"
+            "value" : "Cüzdana yeni bir Mint eklemek için URL gir, kaydetmek için Return'e bas."
           }
         }
       }
@@ -35888,72 +35884,72 @@
         }
       }
     },
-    "Swipe right on a mint to add it." : {
+    "Swipe left on a mint to add it." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "اسحب الـ Mint إلى اليسار لإضافته."
+            "value" : "اسحب الـ Mint إلى اليمين لإضافته."
           }
         },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "যোগ করতে কোনো Mint ডানদিকে সোয়াইপ করুন।"
+            "value" : "যোগ করতে কোনো Mint বাঁদিকে সোয়াইপ করুন।"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wische auf einer Mint nach rechts, um sie hinzuzufügen."
+            "value" : "Wische auf einer Mint nach links, um sie hinzuzufügen."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Desliza un mint hacia la derecha para agregarlo."
+            "value" : "Desliza un mint hacia la izquierda para agregarlo."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Balaie un mint vers la droite pour l'ajouter."
+            "value" : "Balaie un mint vers la gauche pour l'ajouter."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "जोड़ने के लिए किसी Mint को दाईं ओर स्वाइप करें।"
+            "value" : "जोड़ने के लिए किसी Mint को बाईं ओर स्वाइप करें।"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ミントを右にスワイプして追加します。"
+            "value" : "ミントを左にスワイプして追加します。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "민트를 오른쪽으로 스와이프하여 추가하세요."
+            "value" : "민트를 왼쪽으로 스와이프하여 추가하세요."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deslize um mint para a direita para adicioná-lo."
+            "value" : "Deslize um mint para a esquerda para adicioná-lo."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Смахни минт вправо, чтобы добавить его."
+            "value" : "Смахни минт влево, чтобы добавить его."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eklemek için bir Mint'i sağa kaydır."
+            "value" : "Eklemek için bir Mint'i sola kaydır."
           }
         }
       }

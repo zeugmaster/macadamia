@@ -38,7 +38,7 @@ struct MintManagerView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             if let _ = activeWallet {
                 Form {
                     if !mints.isEmpty {
@@ -104,7 +104,7 @@ struct MintManagerView: View {
                     }
                     .disabled(sortedMintsOfActiveWallet.count < 2)
                     Section {
-                        NavigationLink(destination: MintDiscovery()) {
+                        NavigationLink(value: MintDiscovery.Route()) {
                             HStack {
                                 Image(systemName: "sparkle.magnifyingglass")
                                     .imageScale(.small)
@@ -131,6 +131,8 @@ struct MintManagerView: View {
                 .refreshable {
                     await refreshAllMints()
                 }
+                // Value links let the stack own the pushed views, so re-renders of this list can't rebuild or pop them.
+                .navigationDestination(for: MintDiscovery.Route.self) { _ in MintDiscovery() }
                 .navigationTitle("Mints")
                 .alert(isPresented: $showAlert) {
                     Alert(

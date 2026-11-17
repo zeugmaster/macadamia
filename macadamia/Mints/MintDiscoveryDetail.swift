@@ -12,6 +12,7 @@ struct MintDiscoveryDetail: View {
     let mint: DiscoveredMint
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(filter: #Predicate<Wallet> { $0.active == true }) private var wallets: [Wallet]
     @Query private var walletMints: [Mint]
@@ -19,6 +20,7 @@ struct MintDiscoveryDetail: View {
     @State private var uptime: MintDirectory.Uptime?
     @State private var metrics: MintDirectory.Metrics?
     @State private var reviews = [MintDirectory.Review]()
+    @State private var loaded = false
     @State private var buttonState = ActionButtonState.idle("")
     @State private var copied = false
     @State private var showAlert = false
@@ -64,22 +66,13 @@ struct MintDiscoveryDetail: View {
         .onAppear {
             if buttonState.type == .idle { resetButton() }
         }
+        // Loads once; coming back to the tab doesn't reload, only pulling down does.
         .task {
-            guard let audit = mint.audit else { return }
-            async let uptime = try? MintDirectory.uptime(audit)
-            async let metrics = try? MintDirectory.metrics(audit)
-            let result = await (uptime, metrics)
-            withAnimation(reduceMotion ? nil : .default) {
-                (self.uptime, self.metrics) = result
-            }
+            guard !loaded else { return }
+            await loadDirectoryData()
+            loaded = !Task.isCancelled
         }
-        .task {
-            guard let summary = mint.reviews else { return }
-            let result = (try? await MintDirectory.reviews(summary)) ?? []
-            withAnimation(reduceMotion ? nil : .default) {
-                reviews = result.filter { $0.rating != nil || DiscoveredMint.clean($0.content) != nil }
-            }
-        }
+        .refreshable { await loadDirectoryData() }
         .sensoryFeedback(.success, trigger: copied) { _, new in new }
         .alertView(isPresented: $showAlert, currentAlert: currentAlert)
     }
@@ -308,6 +301,33 @@ struct MintDiscoveryDetail: View {
 
     // MARK: Helpers
 
+    private func loadDirectoryData() async {
+        async let audit: Void = loadAuditData()
+        async let reviews: Void = loadReviews()
+        _ = await (audit, reviews)
+    }
+
+    // Failed or cancelled fetches keep what is on screen.
+    private func loadAuditData() async {
+        guard let audit = mint.audit else { return }
+        async let uptime = try? MintDirectory.uptime(audit)
+        async let metrics = try? MintDirectory.metrics(audit)
+        let result = await (uptime, metrics)
+        guard !Task.isCancelled else { return }
+        withAnimation(reduceMotion ? nil : .default) {
+            self.uptime = result.0 ?? self.uptime
+            self.metrics = result.1 ?? self.metrics
+        }
+    }
+
+    private func loadReviews() async {
+        guard let summary = mint.reviews, let result = try? await MintDirectory.reviews(summary),
+              !Task.isCancelled else { return }
+        withAnimation(reduceMotion ? nil : .default) {
+            reviews = result.filter { $0.rating != nil || DiscoveredMint.clean($0.content) != nil }
+        }
+    }
+
     private func methodNames(_ nut: CashuSwift.Mint.Info.NutInfo?) -> String? {
         guard nut?.disabled != true else { return nil }
         var seen = Set<String>()
@@ -349,6 +369,8 @@ struct MintDiscoveryDetail: View {
             do {
                 try await MintManagerView.addMint(url: mint.url, to: wallet, in: modelContext)
                 buttonState = .success(String(localized: "Added"))
+                try? await Task.sleep(for: .seconds(1.5))
+                dismiss()
             } catch {
                 logger.error("could not add discovered mint \(mint.url.absoluteString): \(error)")
                 buttonState = .fail()
