@@ -250,10 +250,10 @@ struct MintDiscoveryDetail: View {
         if let nuts = mint.info?.nuts {
             Section("Capabilities") {
                 if let receive = methodNames(nuts.nut04) {
-                    LabeledContent("Receive", value: receive)
+                    LabeledContent("Deposit", value: receive)
                 }
                 if let send = methodNames(nuts.nut05) {
-                    LabeledContent("Send", value: send)
+                    LabeledContent("Withdraw", value: send)
                 }
                 MintCapabilityTags(nuts: nuts)
             }
