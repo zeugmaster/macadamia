@@ -104,6 +104,13 @@ struct MintManagerView: View {
                     }
                     .disabled(sortedMintsOfActiveWallet.count < 2)
                     Section {
+                        NavigationLink(destination: MintDiscovery()) {
+                            HStack {
+                                Image(systemName: "sparkle.magnifyingglass")
+                                    .imageScale(.small)
+                                Text("Discover Mints")
+                            }
+                        }
                         TextField("Add new Mint URL...", text: $newMintURLString)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled(true)
@@ -114,8 +121,6 @@ struct MintManagerView: View {
                     } footer: {
                         Text("""
                              Enter a URL to add a new mint to the wallet, hit Return to save. 
-                             macadamia Wallet is not affiliated with any mint and does not custody user funds. 
-                             You can find a list of mints on [bitcoinmints.com](https://bitcoinmints.com)
                              """)
                     }
                     .onTapGesture(count: 3) {
@@ -198,19 +203,21 @@ struct MintManagerView: View {
 
         Task {
             do {
-                let sendableMint = try await CashuSwift.loadMint(url: url)
-                try await MainActor.run {
-                    _ = try AppSchemaV1.addMint(sendableMint, to: modelContext)
-                    newMintURLString = ""
-                    MintListBackup.publishCurrentList(for: activeWallet)
-                }
+                try await Self.addMint(url: url, to: activeWallet, in: modelContext)
+                newMintURLString = ""
             } catch {
                 logger.error("could not add mint due to error \(error)")
-                DispatchQueue.main.async {
-                    displayAlert(alert: AlertDetail(with: error))
-                }
+                displayAlert(alert: AlertDetail(with: error))
             }
         }
+    }
+
+    /// Loads the mint, stores it in the wallet and publishes the updated mint-list backup.
+    @MainActor
+    static func addMint(url: URL, to wallet: Wallet, in context: ModelContext) async throws {
+        let sendableMint = try await CashuSwift.loadMint(url: url)
+        _ = try AppSchemaV1.addMint(sendableMint, to: context)
+        MintListBackup.publishCurrentList(for: wallet)
     }
     
     // fixes wrong indexing

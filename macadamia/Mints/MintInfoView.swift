@@ -78,24 +78,7 @@ struct MintInfoView: View {
                 }
                 if let nuts = info.nuts {
                     Section {
-                        HFlow {
-                            Tag(text: String(localized: "Issue"), enabled: !(nuts.nut04?.disabled ?? true))
-                            Tag(text: String(localized: "Pay"), enabled: !(nuts.nut05?.disabled ?? true))
-                            Tag(text: String(localized: "Restore"), enabled: {
-                                if case .bool(true) = nuts.nut09?.supported {
-                                    return true
-                                }
-                                return false
-                            }())
-                            Tag(text: String(localized: "P2PK"), enabled: {
-                                if case .bool(true) = nuts.nut11?.supported {
-                                    return true
-                                }
-                                return false
-                            }())
-                            Tag(text: String(localized: "MPP"), enabled: nuts.nut15 != nil)
-                        }
-                        .padding(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                        MintCapabilityTags(nuts: nuts)
                     }
                 }
             }
@@ -156,6 +139,31 @@ struct MintInfoView: View {
         withAnimation {
             motd = nil
         }
+    }
+}
+
+struct MintCapabilityTags: View {
+    let nuts: CashuSwift.Mint.Info.Nuts
+
+    var body: some View {
+        HFlow {
+            Tag(text: String(localized: "Issue"), enabled: !(nuts.nut04?.disabled ?? true))
+            Tag(text: String(localized: "Pay"), enabled: !(nuts.nut05?.disabled ?? true))
+            Tag(text: String(localized: "Restore"), enabled: {
+                if case .bool(true) = nuts.nut09?.supported {
+                    return true
+                }
+                return false
+            }())
+            Tag(text: String(localized: "P2PK"), enabled: {
+                if case .bool(true) = nuts.nut11?.supported {
+                    return true
+                }
+                return false
+            }())
+            Tag(text: String(localized: "MPP"), enabled: nuts.nut15 != nil)
+        }
+        .padding(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
     }
 }
 
