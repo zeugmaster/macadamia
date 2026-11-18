@@ -1,13 +1,17 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**BOLT12 Support 🔩**
+**On-chain Bitcoin ⛓️**
 
-You can now deposit and withdraw using BOLT12 offers!
+You can now deposit and withdraw on-chain Bitcoin with mints that support it.
 
-**NFC Payment Request**
+**Discover Mints 🧭**
 
-Users in the EU can now create a payment request and settle it with NFC-capable Cashu wallets.
+Browse a directory of mints with community ratings and availability audits, and add new ones with a single swipe.
+
+**Fee Breakdown 🧾**
+
+Every transaction now shows the fees that were paid.
 
 ------
 

@@ -1,13 +1,17 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Compatibilidad con BOLT12 🔩**
+**Bitcoin on-chain ⛓️**
 
-¡Ahora puedes depositar y retirar fondos usando ofertas BOLT12!
+Ahora puedes depositar y retirar bitcoin on-chain en los Mints que lo admitan.
 
-**Solicitud de pago por NFC**
+**Descubrir Mints 🧭**
 
-Los usuarios de la UE ahora pueden crear una solicitud de pago y pagarla con monederos Cashu compatibles con NFC.
+Explora un directorio de Mints con valoraciones de la comunidad y auditorías de disponibilidad, y añade nuevos con solo deslizar.
+
+**Desglose de comisiones 🧾**
+
+Cada transacción muestra ahora las comisiones pagadas.
 
 ------
 
