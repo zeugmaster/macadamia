@@ -38,7 +38,7 @@ struct MintManagerView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             if let _ = activeWallet {
                 Form {
                     if !mints.isEmpty {
@@ -104,6 +104,13 @@ struct MintManagerView: View {
                     }
                     .disabled(sortedMintsOfActiveWallet.count < 2)
                     Section {
+                        NavigationLink(value: MintDiscovery.Route()) {
+                            HStack {
+                                Image(systemName: "sparkle.magnifyingglass")
+                                    .imageScale(.small)
+                                Text("Discover Mints")
+                            }
+                        }
                         TextField("Add new Mint URL...", text: $newMintURLString)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled(true)
@@ -114,8 +121,6 @@ struct MintManagerView: View {
                     } footer: {
                         Text("""
                              Enter a URL to add a new mint to the wallet, hit Return to save. 
-                             macadamia Wallet is not affiliated with any mint and does not custody user funds. 
-                             You can find a list of mints on [bitcoinmints.com](https://bitcoinmints.com)
                              """)
                     }
                     .onTapGesture(count: 3) {
@@ -126,6 +131,8 @@ struct MintManagerView: View {
                 .refreshable {
                     await refreshAllMints()
                 }
+                // Value links let the stack own the pushed views, so re-renders of this list can't rebuild or pop them.
+                .navigationDestination(for: MintDiscovery.Route.self) { _ in MintDiscovery() }
                 .navigationTitle("Mints")
                 .alert(isPresented: $showAlert) {
                     Alert(
@@ -198,19 +205,21 @@ struct MintManagerView: View {
 
         Task {
             do {
-                let sendableMint = try await CashuSwift.loadMint(url: url)
-                try await MainActor.run {
-                    _ = try AppSchemaV1.addMint(sendableMint, to: modelContext)
-                    newMintURLString = ""
-                    MintListBackup.publishCurrentList(for: activeWallet)
-                }
+                try await Self.addMint(url: url, to: activeWallet, in: modelContext)
+                newMintURLString = ""
             } catch {
                 logger.error("could not add mint due to error \(error)")
-                DispatchQueue.main.async {
-                    displayAlert(alert: AlertDetail(with: error))
-                }
+                displayAlert(alert: AlertDetail(with: error))
             }
         }
+    }
+
+    /// Loads the mint, stores it in the wallet and publishes the updated mint-list backup.
+    @MainActor
+    static func addMint(url: URL, to wallet: Wallet, in context: ModelContext) async throws {
+        let sendableMint = try await CashuSwift.loadMint(url: url)
+        _ = try AppSchemaV1.addMint(sendableMint, to: context)
+        MintListBackup.publishCurrentList(for: wallet)
     }
     
     // fixes wrong indexing
@@ -234,16 +243,7 @@ struct MintManagerView: View {
             do {
                 let updatedMint = try await CashuSwift.loadMint(url: mint.url)
                 
-                // Update keysets, preserving derivation counters
-                for newKeyset in updatedMint.keysets {
-                    if let existingIndex = mint.keysets.firstIndex(where: { $0.keysetID == newKeyset.keysetID }) {
-                        var updated = newKeyset
-                        updated.derivationCounter = mint.keysets[existingIndex].derivationCounter
-                        mint.keysets[existingIndex] = updated
-                    } else {
-                        mint.keysets.append(newKeyset)
-                    }
-                }
+                mint.mergeKeysets(updatedMint.keysets)
                 
                 _ = try await mint.loadInfo(invalidateCache: true)
                 logger.info("successfully refreshed mint: \(mint.url.absoluteString)")

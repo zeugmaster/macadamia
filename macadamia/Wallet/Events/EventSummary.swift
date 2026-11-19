@@ -37,6 +37,15 @@ struct MintEventSummary: View {
                 } else if let genericQuote = event.genericMintQuote {
                     CopyableRow(label: String(localized: "Payment Request"), value: genericQuote.request)
                         .foregroundStyle(.secondary)
+                    if genericQuote.method.kind == .onchain {
+                        NavigationLink {
+                            OnchainTransaction(address: genericQuote.request, settled: true, quoteID: genericQuote.quote)
+                                .navigationTitle("Transaction")
+                                .navigationBarTitleDisplayMode(.inline)
+                        } label: {
+                            Label("View Transaction", systemImage: "cube")
+                        }
+                    }
                 }
             }
             
@@ -77,9 +86,24 @@ struct MeltEventSummary: View {
     var totalAmount: Int {
         events.compactMap { $0.amount }.reduce(0, +)
     }
+
+    // nil when no part carries the field (rows from before it existed)
+    var totalInputFee: Int? {
+        let fees = events.compactMap(\.inputFee)
+        return fees.isEmpty ? nil : fees.reduce(0, +)
+    }
+
+    var totalPaymentFee: Int? {
+        let fees = events.compactMap(\.paymentFee)
+        return fees.isEmpty ? nil : fees.reduce(0, +)
+    }
     
     var isMultiPath: Bool {
         events.count > 1
+    }
+
+    private var onchainQuote: CashuSwift.Onchain.MeltQuote? {
+        events.first?.onchainMeltQuote
     }
     
     var body: some View {
@@ -95,6 +119,30 @@ struct MeltEventSummary: View {
                     Text("Total Amount")
                     Spacer()
                     AmountView(amount: totalAmount, unit: events.first?.currencyUnit ?? .sat)
+                }
+
+                if let totalInputFee {
+                    HStack {
+                        Text("Input Fee")
+                        Spacer()
+                        AmountView(amount: totalInputFee, unit: events.first?.currencyUnit ?? .sat)
+                    }
+                    .foregroundStyle(.secondary)
+                }
+
+                if let totalPaymentFee {
+                    HStack {
+                        if events.first?.lightningMeltQuote != nil {
+                            Text("Lightning Fee")
+                        } else if onchainQuote != nil {
+                            Text("Mining Fee")
+                        } else {
+                            Text("Payment Fee")
+                        }
+                        Spacer()
+                        AmountView(amount: totalPaymentFee, unit: events.first?.currencyUnit ?? .sat)
+                    }
+                    .foregroundStyle(.secondary)
                 }
                 
                 HStack {
@@ -116,6 +164,17 @@ struct MeltEventSummary: View {
                         Spacer()
                         Text("\(events.count)")
                             .foregroundStyle(.secondary)
+                    }
+                }
+
+                if let onchainQuote {
+                    NavigationLink {
+                        OnchainTransaction(address: onchainQuote.request, settled: true, quoteID: onchainQuote.quote,
+                                           txid: onchainQuote.transactionID)
+                            .navigationTitle("Transaction")
+                            .navigationBarTitleDisplayMode(.inline)
+                    } label: {
+                        Label("View Transaction", systemImage: "cube")
                     }
                 }
             }
@@ -228,6 +287,14 @@ struct SendEventView: View {
                         Text(memo)
                     }
                 }
+                if let fee = event.inputFee {
+                    HStack {
+                        Text("Swap Fee: ")
+                        Spacer()
+                        AmountView(amount: fee, unit: event.currencyUnit)
+                    }
+                    .foregroundStyle(.secondary)
+                }
                 if let proofs = event.proofs {
                         switch tokenState {
                         case .unknown:
@@ -304,6 +371,14 @@ struct ReceiveEventSummary: View {
                 Text("Unit: ")
                 Spacer()
                 Text(event.currencyUnit.currencyCode)
+            }
+            if let fee = event.inputFee {
+                HStack {
+                    Text("Swap Fee: ")
+                    Spacer()
+                    AmountView(amount: fee, unit: event.currencyUnit)
+                }
+                .foregroundStyle(.secondary)
             }
         }
     }

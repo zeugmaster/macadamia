@@ -1,84 +1,75 @@
-import Combine
 import SwiftUI
-import URUI
+import PrettySwiftQR
 
 struct QRScanner: View {
     enum ResultValidation { case valid, retryAfter(Double) }
-    
-    private let codesPublisher: URCodesPublisher
 
-    @State private var videoSession: URVideoSession
-    @StateObject private var scanState: URScanState
-
+    @State private var scanner: PrettySwiftQR.QRScanner
     @State private var estimatedPercentComplete = 0.0
-    @State private var fragmentStates = [URFragmentBar.FragmentState]()
-    @State private var result: URScanResult?
-    @State private var hrRes: String?
-    
+
     var onResult: ((String) -> ResultValidation)
 
-    init(onResult: @escaping ((String) -> ResultValidation)) {
+    init(scanner: PrettySwiftQR.QRScanner = PrettySwiftQR.QRScanner(),
+         onResult: @escaping (String) -> ResultValidation) {
+        _scanner = State(initialValue: scanner)
         self.onResult = onResult
-        let codesPublisher = URCodesPublisher()
-        self.codesPublisher = codesPublisher
-        let videoSession: URVideoSession = .init(codesPublisher: codesPublisher)
-        _videoSession = State(wrappedValue: videoSession)
-        _scanState = StateObject(wrappedValue: URScanState(codesPublisher: codesPublisher))
     }
-    
+
     // TODO: add haptic feedback to scan success
-    
+
     var body: some View {
         if ProcessInfo.processInfo.isiOSAppOnMac {
             Text("Animated QR code scanner is unavailable when running on macOS.")
                 .font(.headline)
         } else {
-            URVideo(videoSession: videoSession)
-                .overlay(alignment: .bottomLeading, content: {
-                    CircularProgressView(progress: $estimatedPercentComplete) {
-                        restart()
+            QRScannerView(scanner: scanner) { _ in
+                Color.clear
+                    .overlay(alignment: .bottomLeading) {
+                        CircularProgressView(progress: $estimatedPercentComplete) {
+                            restart()
+                        }
+                        .padding()
+                        .opacity(estimatedPercentComplete > 0 ? 1 : 0)
                     }
-                    .padding()
-                    .opacity(estimatedPercentComplete > 0 ? 1 : 0)
-                })
-            .onReceive(scanState.resultPublisher, perform: handleScanResult)
-        }
-    }
-
-    private func handleScanResult(result: URScanResult) {
-        switch result {
-        case .failure, .reject:
-            estimatedPercentComplete = 0
-        case let .other(resultString):
-            scanCompleted(string: resultString)
-        case let .progress(progress):
-            print(progress.estimatedPercentComplete)
-            estimatedPercentComplete = progress.estimatedPercentComplete
-        case let .ur(ur):
-            if case let .bytes(urBytes) = ur.cbor,
-               let resultString = String(data: urBytes, encoding: .utf8) {
-                scanCompleted(string: resultString)
-            } else {
-                restart()
+            }
+            .onChange(of: scanner.progress) { _, progress in
+                estimatedPercentComplete = progress?.fraction ?? 0
+            }
+            .task(id: scanner.state) {
+                switch scanner.state {
+                case .completed(let result):
+                    await handleScanResult(result)
+                case .failed:
+                    restart()
+                default:
+                    break
+                }
             }
         }
     }
-    
-    private func scanCompleted(string: String) {
+
+    private func handleScanResult(_ result: ScanResult) async {
+        guard let string = result.string else {
+            restart()
+            return
+        }
+
         switch onResult(string) {
         case .valid:
             estimatedPercentComplete = 1
         case .retryAfter(let delay):
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: restart)
+            do {
+                try await Task.sleep(for: .seconds(delay))
+            } catch {
+                return
+            }
+            restart()
         }
     }
 
     private func restart() {
-        result = nil
         estimatedPercentComplete = 0
-        fragmentStates = [.off]
-        scanState.restart()
-        videoSession.resetScanningState()
+        scanner.reset()
     }
 }
 

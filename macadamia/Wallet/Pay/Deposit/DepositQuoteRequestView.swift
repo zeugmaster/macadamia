@@ -15,6 +15,7 @@ struct DepositQuoteRequestView: View {
     let paymentMethod: CashuSwift.Mint.Info.PaymentMethod
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var numericalInput: Int = 0
     @State private var selectedMint: Mint?
     @State private var selectedUnit: Unit?
@@ -39,7 +40,7 @@ struct DepositQuoteRequestView: View {
     }
 
     private var requestedAmount: Int? {
-        paymentMethodKind == .onchain || numericalInput == 0 ? nil : numericalInput
+        numericalInput == 0 ? nil : numericalInput
     }
 
     private var actionTitle: String {
@@ -56,20 +57,36 @@ struct DepositQuoteRequestView: View {
         return (try? Self.validateAmount(requestedAmount, for: selectedOption)) != nil
     }
 
+    private var amountOutsideLimits: Bool {
+        numericalInput > 0 && selectedOption?.isAmountWithinLimits(numericalInput) == false
+    }
+
     var body: some View {
         ZStack {
             List {
-                if paymentMethodKind != .onchain {
-                    Section {
-                        NumericalInputView(output: $numericalInput,
-                                           baseUnit: selectedUnit ?? Unit(code: paymentMethod.unit),
-                                           exchangeRates: AppState.shared.exchangeRates,
-                                           onReturn: requestQuote)
-                    } footer: {
+                Section {
+                    NumericalInputView(output: $numericalInput,
+                                       baseUnit: selectedUnit ?? Unit(code: paymentMethod.unit),
+                                       exchangeRates: AppState.shared.exchangeRates,
+                                       onReturn: requestQuote)
+                } footer: {
+                    VStack(alignment: .leading) {
                         if paymentMethodKind == .bolt12 {
-                            Text("Leave the amount empty to create an offer for any amount.")
+                            Text("Leave the amount field empty for an amountless BOLT12 offer.")
                         }
+                        if paymentMethodKind == .onchain {
+                            Text("The amount is optional and only added to the payment link. The mint does not enforce it.")
+                        }
+                        HStack {
+                            Text("Min: \(selectedOption?.minAmount ?? 0)")
+                            Text("Max: \(selectedOption?.maxAmount ?? 0)")
+                        }
+                        .opacity(amountOutsideLimits ? 1 : 0)
+                        .accessibilityHidden(!amountOutsideLimits)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .foregroundStyle(amountOutsideLimits ? .failureRed : .secondary)
+                    .animation(reduceMotion ? nil : .linear(duration: 0.2), value: amountOutsideLimits)
                 }
                 Section {
                     MintPicker(label: "Mint",
@@ -173,8 +190,10 @@ struct DepositQuoteRequestView: View {
             let reservedCounter = try reserveQuoteCounter(for: wallet, in: context)
             counter = reservedCounter
             let key = try CashuSwift.Generic.quoteLockingKey(seed: wallet.seed, counter: reservedCounter)
+            // On-chain quotes are amountless at the mint; the amount only goes into the payment link.
             let quote = try await CashuSwift.Generic.requestMintQuote(
-                .init(method: option.method, unit: option.unitCode, amount: amount,
+                .init(method: option.method, unit: option.unitCode,
+                      amount: option.method.kind == .onchain ? nil : amount,
                       extra: ["pubkey": .string(key.publicKey)]), from: sendableMint)
             guard case .string(let pubkey) = quote.raw["pubkey"],
                   pubkey.lowercased() == key.publicKey.lowercased() else {
@@ -225,15 +244,12 @@ struct DepositQuoteRequestView: View {
         switch option.method.kind {
         case .bolt11, .generic:
             guard amount != nil else { throw CashuError.invalidAmount }
-        case .bolt12:
+        case .bolt12, .onchain:
             break
-        case .onchain:
-            guard amount == nil else { throw CashuError.invalidAmount }
         }
         if let amount {
             guard amount > 0 else { throw CashuError.invalidAmount }
-            if let minimum = option.minAmount, amount < minimum { throw CashuError.amountOutsideOfLimitRange }
-            if let maximum = option.maxAmount, amount > maximum { throw CashuError.amountOutsideOfLimitRange }
+            guard option.isAmountWithinLimits(amount) else { throw CashuError.amountOutsideOfLimitRange }
         }
     }
 

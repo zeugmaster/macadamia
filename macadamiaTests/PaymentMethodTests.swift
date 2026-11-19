@@ -49,4 +49,26 @@ final class PaymentMethodTests: XCTestCase {
         let restored = try JSONDecoder().decode(PaymentOption.self, from: JSONEncoder().encode(renamed))
         XCTAssertEqual(restored, renamed)
     }
+
+    func testAmountLimitsIncludeBoundariesAndAllowMissingBounds() {
+        let cases: [(Int?, Int?, [Int], [Int])] = [
+            (100, 200, [100, 150, 200], [99, 201]),
+            (100, nil, [100, Int.max], [99]),
+            (nil, 200, [1, 200], [201]),
+            (nil, nil, [1, Int.max], []),
+            (100, 100, [100], [99, 101])
+        ]
+        for direction: PaymentDirection in [.deposit, .withdraw] {
+            for (minimum, maximum, valid, invalid) in cases {
+                let option = PaymentOption(mintID: UUID(), direction: direction, unit: .sat,
+                                           method: "branch", minAmount: minimum, maxAmount: maximum)
+                for amount in valid {
+                    XCTAssertTrue(option.isAmountWithinLimits(amount), "Rejected \(amount) for \(option)")
+                }
+                for amount in invalid {
+                    XCTAssertFalse(option.isAmountWithinLimits(amount), "Accepted \(amount) for \(option)")
+                }
+            }
+        }
+    }
 }

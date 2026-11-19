@@ -1,13 +1,17 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Suporte a BOLT12 🔩**
+**Bitcoin on-chain ⛓️**
 
-Agora você pode depositar e sacar usando ofertas BOLT12!
+Agora você pode depositar e sacar bitcoin on-chain com Mints que oferecem suporte.
 
-**Solicitação de pagamento por NFC**
+**Descobrir Mints 🧭**
 
-Usuários na UE agora podem criar uma solicitação de pagamento e pagá-la com carteiras Cashu compatíveis com NFC.
+Navegue por um diretório de Mints com avaliações da comunidade e auditorias de disponibilidade, e adicione novos com um simples deslize.
+
+**Detalhamento de taxas 🧾**
+
+Cada transação agora mostra as taxas pagas.
 
 ------
 

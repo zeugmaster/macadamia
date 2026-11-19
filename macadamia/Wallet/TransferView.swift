@@ -122,6 +122,9 @@ struct TransferView: View {
                             .foregroundStyle(.orange)
                     case .unpaid:
                         Image(systemName: "circle")
+                    case .failed:
+                        Image(systemName: "xmark.circle")
+                            .foregroundStyle(.red)
                     }
                 case .unavailable:
                     Image(systemName: "questionmark.circle")
@@ -149,6 +152,7 @@ struct TransferView: View {
             case (.unpaid, true):   return String(localized: "Unpaid")
             case (.unpaid, false):  return String(localized: "Awaiting payment")
             case (.issued, _):      return String(localized: "Issued")
+            case (.failed, _):      return String(localized: "Failed")
             }
         }
     }

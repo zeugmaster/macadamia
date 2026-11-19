@@ -1,13 +1,17 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**BOLT12 desteği 🔩**
+**Zincir üstü Bitcoin ⛓️**
 
-Artık BOLT12 teklifleriyle para yatırabilir ve çekebilirsiniz!
+Artık destekleyen Mint'lerle zincir üstü Bitcoin yatırabilir ve çekebilirsiniz.
 
-**NFC ödeme isteği**
+**Mint'leri keşfet 🧭**
 
-AB'deki kullanıcılar artık bir ödeme isteği oluşturabilir ve NFC destekli Cashu cüzdanlarıyla bu isteği ödeyebilir.
+Topluluk puanları ve erişilebilirlik denetimleri içeren bir Mint dizinine göz atın ve yenilerini tek bir kaydırmayla ekleyin.
+
+**Ücret dökümü 🧾**
+
+Her işlem artık ödenen ücretleri gösteriyor.
 
 ------
 

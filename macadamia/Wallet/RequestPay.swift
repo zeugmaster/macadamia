@@ -130,7 +130,9 @@ struct RequestPay: View {
                                        unit: requestUnit,
                                        showUnit: false)
                         } else {
-                            TextField("", text: $userProvidedAmountString, prompt: Text("Amount..."))
+                            TextField("",
+                                      text: $userProvidedAmountString,
+                                      prompt: Text("Amount..."))
                                 .keyboardType(.numberPad)
                                 .disabled(buttonState.type != .idle)
                         }
@@ -396,6 +398,7 @@ struct RequestPay: View {
                                             proofs: sentProofs,
                                             memo: requestMemo ?? "",
                                             mint: selectedMint)
+                event.inputFee = selection.selected.sum - requestResponse.send.sum - requestResponse.change.sum
                 
                 modelContext.insert(event)
                 try modelContext.save()
@@ -443,8 +446,7 @@ struct RequestPay: View {
             encoder.outputFormatting = .prettyPrinted
             let jsonData = try encoder.encode(payload)
             guard let jsonString = String(data: jsonData, encoding: .utf8) else {
-                displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Encoding Error"), description: String(localized: "Failed to encode payment data.")))
-                buttonState = .fail()
+                notDelivered(payload, reason: String(localized: "Failed to encode payment data."))
                 return
             }
 
@@ -474,10 +476,17 @@ struct RequestPay: View {
                 errorMessage = error.localizedDescription
             }
             
-            displayAlert(alert: AlertDetail(title: String(localized: "🛰️ Transmission Error"), description: errorMessage))
-            token = payload.toToken() // the swap already happened; let the user deliver it manually
-            buttonState = .fail()
+            notDelivered(payload, reason: errorMessage)
         }
+    }
+
+    /// Delivery failed after the swap: the ecash already left the balance and is in
+    /// the history, so say that instead of reporting a failed payment.
+    private func notDelivered(_ payload: CashuSwift.PaymentRequestPayload, reason: String) {
+        token = payload.toToken() // let the user deliver it manually
+        buttonState = .fail(String(localized: "Not delivered"))
+        displayAlert(alert: AlertDetail(title: String(localized: "Ecash not delivered"),
+                                        description: String(localized: "\(reason)\n\nThe ecash has left your balance and is listed in your history. Send the token below to the recipient manually.")))
     }
     
     private func sendViaHTTP(payload: CashuSwift.PaymentRequestPayload, urlString: String) async {
@@ -485,23 +494,20 @@ struct RequestPay: View {
         
         guard (string.hasPrefix("http") || string.hasPrefix("https")),
               let url = URL(string: urlString) else {
-            displayAlert(alert: AlertDetail(title: String(localized: "HTTP transport URL invalid."), description: String(localized: "The provided string \(urlString) does not seem to be valid. Please send the ecash manually or reclaim it.")))
-            token = payload.toToken() // show the token so the user has a fallback
-            buttonState = .fail()
+            notDelivered(payload, reason: String(localized: "HTTP transport URL invalid."))
             return
         }
         
         do {
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONEncoder().encode(payload)
             let (_, response) = try await URLSession.shared.data(for: request)
             
             if let httpResponse = response as? HTTPURLResponse,
                !(200...299).contains(httpResponse.statusCode) {
-                displayAlert(alert: AlertDetail(title: String(localized: "⚠️ Unexpected HTTP Response"), description: String(localized: "The request returned status: \(String(describing: httpResponse.statusCode))")))
-                token = payload.toToken() // the receiver may not have accepted it; keep the token reachable
-                buttonState = .fail()
+                notDelivered(payload, reason: String(localized: "The request returned status: \(String(describing: httpResponse.statusCode))"))
                 return
             }
             
@@ -520,7 +526,7 @@ struct RequestPay: View {
                                           }),
                                           secondaryButton: AlertButton(title: String(localized: "Cancel"), role: .cancel, action: {
                                               token = payload.toToken() // keep the swapped ecash reachable
-                                              buttonState = .fail()
+                                              buttonState = .fail(String(localized: "Not delivered"))
                                           }))
             displayAlert(alert: alertDetail)
         }
@@ -552,12 +558,6 @@ struct SystemImageBadge: View {
         }
     }
 }
-
-#Preview {
-    SystemImageBadge(systemName: "network", count: 3)
-        .foregroundStyle(.red)
-}
-
 
 //#Preview {
 //    RequestPay()

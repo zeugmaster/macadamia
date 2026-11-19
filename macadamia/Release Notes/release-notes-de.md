@@ -1,13 +1,17 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**BOLT12-Unterstützung 🔩**
+**On-Chain-Bitcoin ⛓️**
 
-Du kannst jetzt mit BOLT12-Angeboten einzahlen und auszahlen!
+Du kannst jetzt bei Mints, die das unterstützen, On-Chain-Bitcoin einzahlen und auszahlen.
 
-**NFC-Zahlungsanforderung**
+**Mints entdecken 🧭**
 
-Nutzer in der EU können jetzt eine Zahlungsanforderung erstellen und diese mit NFC-fähigen Cashu-Wallets begleichen.
+Durchstöbere ein Verzeichnis von Mints mit Community-Bewertungen und Verfügbarkeitsprüfungen und füge neue mit einem Wisch hinzu.
+
+**Gebührenübersicht 🧾**
+
+Jede Transaktion zeigt jetzt die gezahlten Gebühren an.
 
 ------
 

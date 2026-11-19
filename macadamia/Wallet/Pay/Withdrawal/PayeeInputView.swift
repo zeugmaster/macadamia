@@ -71,7 +71,7 @@ struct PayeeInputView: View {
             
             Spacer().frame(height: 20)
             
-            InputView(supportedTypes: [.bolt11Invoice, .bolt12Offer, .lightningAddress, .lnurlPay, .merchantCode]) { result in
+            InputView(supportedTypes: [.bolt11Invoice, .bolt12Offer, .lightningAddress, .lnurlPay, .merchantCode, .bitcoinAddress]) { result in
                 input = result
             }
             .opacity(hideScanner ? 0 : 1)
@@ -110,6 +110,8 @@ struct PayeeInputView: View {
             case .lightningAddress, .lnurlPay, .merchantCode:
                 // merchantCode payload is already converted to a lightning address
                 LNURLPayView(userInput: input.payload)
+            case .bitcoinAddress:
+                OnchainMeltView(request: input.payload)
             default:
                 Text("Unsupported Input")
             }
@@ -123,15 +125,15 @@ struct PayeeInputView: View {
             return
         }
         
-        let inputValidationResult = InputValidator.validate(textFieldInput, supportedTypes: [.bolt11Invoice, .bolt12Offer, .lightningAddress, .lnurlPay])
+        let inputValidationResult = InputValidator.validate(textFieldInput, supportedTypes: [.bolt11Invoice, .bolt12Offer, .lightningAddress, .lnurlPay, .bitcoinAddress])
         
         switch inputValidationResult {
         case .valid(let result):
             input = result
         case .invalid(let message):
             let desc = String(localized: """
-                This field supports BOLT11 invoices, BOLT12 offers, LNURL strings (LNURL1...) or \
-                Lightning Addresses (e.g. user@host.com).
+                This field supports BOLT11 invoices, BOLT12 offers, LNURL strings (LNURL1...), \
+                Lightning Addresses (e.g. user@host.com) or Bitcoin addresses.
                 """)
             displayAlert(alert: AlertDetail(title: String(localized: "Invalid Input"), description: message + "\n\n" + desc))
         }

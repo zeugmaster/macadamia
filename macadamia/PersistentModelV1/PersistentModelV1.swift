@@ -459,6 +459,11 @@ enum AppSchemaV1: VersionedSchema {
         // another case where SwiftData refuses to store the "complex" codable struct
         // so we need to (de-) serialize it ourselves
         private var blankOutputData: Data?
+
+        // NUT-30 withdrawals persist the library's whole melt context (inputs, blank
+        // outputs, keyset snapshot) instead of `blankOutputData`. Additive optional
+        // like the fee columns, so legacy rows read nil.
+        private var onchainMeltContextData: Data?
         
         var redeemed: Bool?
 
@@ -474,6 +479,16 @@ enum AppSchemaV1: VersionedSchema {
 
         @Relationship(deleteRule: .nullify)
         var toMint: Mint?
+
+        // Fee breakdown, both additive optionals so legacy rows read nil and the
+        // views hide the rows. Set after init like `fromMint`/`toMint`.
+        /// NUT-02 input fee the mint kept on this transaction's ecash inputs
+        /// (the swap fee of a send/receive, the input fee of a melt).
+        var inputFee: Int?
+
+        /// Fee the mint's payment backend charged beyond the invoice amount
+        /// (the Lightning routing fee of a BOLT11/BOLT12 melt). nil for send/receive.
+        var paymentFee: Int?
 
         enum Kind: Codable {
             case pendingMint
@@ -612,6 +627,16 @@ enum AppSchemaV1: VersionedSchema {
             }
             set {
                 blankOutputData = try? JSONEncoder().encode(newValue)
+            }
+        }
+        
+        var onchainMeltContext: CashuSwift.Onchain.MeltContext? {
+            get {
+                guard let data = onchainMeltContextData else { return nil }
+                return try? JSONDecoder().decode(CashuSwift.Onchain.MeltContext.self, from: data)
+            }
+            set {
+                onchainMeltContextData = newValue.flatMap { try? JSONEncoder().encode($0) }
             }
         }
         
@@ -992,6 +1017,12 @@ extension Array where Element == Proof {
 extension Array where Element == Proof {
     func setState(_ state: Proof.State) {
         self.forEach { $0.state = state }
+    }
+
+    /// NUT-02 input fee for spending these proofs: ceil(Σ ppk / 1000), the same
+    /// formula as `Mint.select` and `CashuSwift.calculateFee`.
+    var inputFee: Int {
+        (self.reduce(0) { $0 + $1.inputFeePPK } + 999) / 1000
     }
 }
 

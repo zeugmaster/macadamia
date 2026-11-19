@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import CashuSwift
+import Bolt11
 
 /// Quote-source view for BOLT11 melts. Owns invoice input, mint
 /// selection (single-mint and MPP), per-mint quote fetching and the
@@ -90,7 +91,14 @@ struct BOLT11MeltQuoteSource: View {
     }
 
     private var invoiceAmount: Int? {
-        try? invoiceString.map({ try CashuSwift.Bolt11.satAmount(from: $0) })
+        try? invoiceString.map({ try Self.satAmount(from: $0) })
+    }
+
+    static func satAmount(from invoice: String, isMPP: Bool = false) throws -> Int {
+        guard let msat = try Bolt11Decoder.decode(invoice).amountMillisatoshis else { return 0 }
+        // Whole-sat MPP allocations must not round up the Lightning amount.
+        guard !isMPP || msat % 1_000 == 0 else { throw CashuError.invalidAmount }
+        return Int(msat / 1_000 + (msat % 1_000 == 0 ? 0 : 1))
     }
 
     private var totalFee: Int {
@@ -392,6 +400,7 @@ struct BOLT11MeltQuoteSource: View {
                            msat: Int,
                            isMPP: Bool) async throws -> CashuSwift.Bolt11.MeltQuote {
         if isMPP {
+            _ = try Self.satAmount(from: invoice, isMPP: true)
             let request = CashuSwift.Generic.MeltQuoteRequest(
                 method: .bolt11,
                 unit: Unit.sat.currencyCode,

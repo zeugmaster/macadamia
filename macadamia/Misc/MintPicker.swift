@@ -68,19 +68,35 @@ struct MintPicker: View {
                 Text("No supported mints")
                     .foregroundStyle(.secondary)
             } else {
-                Picker(label, selection: selectedID) {
-                    if allowsNoneState || selectedID.wrappedValue == nil {
-                        Text("Select...")
-                            .tag(UUID?.none)
-                            .selectionDisabled(!allowsNoneState)
+                // Lay the row out manually: the system labeled layout stacks the
+                // value under the label when a long mint name does not fit,
+                // instead of truncating it. No Spacer here on purpose: the
+                // stack would hand the picker only half of the free width.
+                HStack {
+                    if !label.isEmpty {
+                        Text(label)
                     }
-                    ForEach(visibleMints, id: \.mintID) { mint in
-                        Text(mint.displayName)
-                            .tag(Optional(mint.mintID))
-                            .selectionDisabled(!isEnabled(mint.mintID))
+                    Picker(label, selection: selectedID) {
+                        if allowsNoneState || selectedID.wrappedValue == nil {
+                            Text("Select...")
+                                .tag(UUID?.none)
+                                .selectionDisabled(!allowsNoneState)
+                        }
+                        ForEach(visibleMints, id: \.mintID) { mint in
+                            Text(mint.displayName)
+                                .tag(Optional(mint.mintID))
+                                .selectionDisabled(!isEnabled(mint.mintID))
+                        }
                     }
+                    .labelsHidden()
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .menuOrder(.fixed)
+                    // The menu button carries invisible vertical chrome that
+                    // would make the row taller than a plain text row.
+                    .padding(.vertical, -7)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                 }
-                .menuOrder(.fixed)
             }
         }
         .task(id: supportRefreshID) {

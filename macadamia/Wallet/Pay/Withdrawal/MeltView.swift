@@ -445,6 +445,12 @@ struct MeltView: View {
                                           groupingID: groupingID,
                                           meltQuote: nil)
             completed.lightningMeltQuote = result.quote
+            // NUT-08 change covers everything above amount + inputFee + the actual
+            // Lightning fee, so the fee is what the inputs lost beyond those. Missing
+            // change counts as 0: that is what actually left the wallet.
+            let inputs = pendingMeltEvents.first(where: { $0.mints?.first?.matches(result.mint) == true })?.proofs ?? []
+            completed.inputFee = inputs.inputFee
+            completed.paymentFee = max(0, inputs.sum - result.quote.amount - inputs.inputFee - result.change.sum)
             events.append(completed)
         }
 
@@ -483,6 +489,7 @@ struct GenericMeltView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismissToRoot) private var dismissToRoot
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject private var appState: AppState
 
     @Query(filter: #Predicate<Wallet> { wallet in
@@ -532,12 +539,26 @@ struct GenericMeltView: View {
                                        baseUnit: selectedOption?.unit ?? .sat,
                                        exchangeRates: selectedOption?.unit.kind == .other ? nil : appState.exchangeRates,
                                        onReturn: getQuote)
+                } footer: {
+                    HStack {
+                        Text("Min: \(selectedOption?.minAmount ?? 0)")
+                        Text("Max: \(selectedOption?.maxAmount ?? 0)")
+                    }
+                    .opacity(amountOutsideLimits ? 1 : 0)
+                    .accessibilityHidden(!amountOutsideLimits)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .foregroundStyle(amountOutsideLimits ? .failureRed : .secondary)
+                    .animation(reduceMotion ? nil : .linear(duration: 0.2), value: amountOutsideLimits)
+                }
+                .disabled(quote != nil || pendingMeltEvent != nil || buttonState.type == .loading)
+
+                Section {
                     MintPicker(label: String(localized: "Mint"), selectedMint: $selectedMint)
                     PaymentOptionPicker(direction: .withdraw,
                                         label: String(localized: "Method"),
                                         selectedMint: $selectedMint,
                                         selectedOption: $selectedOption,
-                                        excludedMethods: [.bolt11, .bolt12],
+                                        excludedMethods: [.bolt11, .bolt12, .onchain],
                                         hidesWhenSingleOption: false)
                     TextField(String(localized: "Memo (optional)"), text: $memo)
                         .autocorrectionDisabled()
@@ -545,7 +566,7 @@ struct GenericMeltView: View {
                             if newValue.count > 1024 { memo = String(newValue.prefix(1024)) }
                         }
                 }
-                .disabled(quote != nil || pendingMeltEvent != nil)
+                .disabled(quote != nil || pendingMeltEvent != nil || buttonState.type == .loading)
 
                 if let quote {
                     Section {
@@ -636,12 +657,17 @@ struct GenericMeltView: View {
 
     // MARK: - Button orchestration
 
+    private var amountOutsideLimits: Bool {
+        amount > 0 && selectedOption?.isAmountWithinLimits(amount) == false
+    }
+
     private var actionButtonDisabled: Bool {
-        if pendingMeltEvent != nil || quote != nil { return false }
-        guard amount > 0, let selectedMint, let selectedOption else { return true }
-        if let minAmount = selectedOption.minAmount, amount < minAmount { return true }
-        if let maxAmount = selectedOption.maxAmount, amount > maxAmount { return true }
-        return selectedMint.balance(for: selectedOption.unit) < amount
+        if pendingMeltEvent != nil { return false }
+        guard let selectedMint, let selectedOption,
+              selectedOption.mintID == selectedMint.mintID,
+              selectedOption.isAmountWithinLimits(quote?.amount ?? amount) else { return true }
+        if quote != nil { return false }
+        return amount <= 0 || selectedMint.balance(for: selectedOption.unit) < amount
     }
 
     private func updateButtonState() {
@@ -657,7 +683,8 @@ struct GenericMeltView: View {
     // MARK: - Quote
 
     private func getQuote() {
-        guard let selectedMint, let selectedOption, amount > 0, quote == nil else { return }
+        guard !actionButtonDisabled, buttonState.type == .idle,
+              let selectedMint, let selectedOption, quote == nil else { return }
 
         buttonState = .loading()
 
@@ -702,7 +729,8 @@ struct GenericMeltView: View {
     // MARK: - Execution
 
     private func executeMelt() {
-        guard let quote, let selectedMint, let selectedOption, let activeWallet,
+        guard !actionButtonDisabled,
+              let quote, let selectedMint, let selectedOption, let activeWallet,
               pendingMeltEvent == nil else { return }
 
         guard let selection = selectedMint.select(amount: quote.amount + quote.feeReserve,
@@ -888,6 +916,9 @@ struct GenericMeltView: View {
                                     preImage: result.quote.paymentPreimage,
                                     memo: pendingMeltEvent.memo,
                                     genericQuote: finalQuote)
+        let inputs = pendingMeltEvent.proofs ?? []
+        event.inputFee = inputs.inputFee
+        event.paymentFee = max(0, inputs.sum - result.quote.amount - inputs.inputFee - (result.change ?? []).sum)
         modelContext.insert(event)
         try? modelContext.save()
 

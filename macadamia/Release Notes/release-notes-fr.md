@@ -1,13 +1,17 @@
 # Version {{VERSION}}
 ## Build {{BUILD}}
 
-**Prise en charge de BOLT12 🔩**
+**Bitcoin on-chain ⛓️**
 
-Vous pouvez désormais déposer et retirer des fonds à l'aide d'offres BOLT12 !
+Vous pouvez désormais déposer et retirer des bitcoins on-chain auprès des Mints compatibles.
 
-**Demande de paiement par NFC**
+**Découvrir des Mints 🧭**
 
-Les utilisateurs de l'UE peuvent désormais créer une demande de paiement et la régler avec des portefeuilles Cashu compatibles NFC.
+Parcourez un annuaire de Mints avec les notes de la communauté et des audits de disponibilité, et ajoutez-en de nouveaux d'un simple balayage.
+
+**Détail des frais 🧾**
+
+Chaque transaction affiche désormais les frais payés.
 
 ------
 
