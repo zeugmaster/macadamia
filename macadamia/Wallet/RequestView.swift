@@ -414,7 +414,9 @@ struct RequestView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     RequestView()
         .previewEnvironment()
 }
+#endif
