@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+@testable import macadamia
 
 /// Isolated hosts keep mocked mint requests independent when tests run in parallel.
 final class MintHTTPStub: @unchecked Sendable {
@@ -23,6 +24,14 @@ final class MintHTTPStub: @unchecked Sendable {
         defer { Self.registry.lock.unlock() }
         Self.registry.stubs[host] = self
     }
+
+    @MainActor lazy var network: NetworkController = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [MintURLProtocol.self]
+        let defaults = UserDefaults(suiteName: "MintHTTPStub." + host)!
+        defaults.removePersistentDomain(forName: "MintHTTPStub." + host)
+        return NetworkController(defaults: defaults, isExtension: false, configuration: configuration)
+    }()
 
     var requests: [URLRequest] {
         lock.lock()

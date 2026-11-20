@@ -98,7 +98,7 @@ struct ProofListView: View {
                 Section {
                     Button {
                         Task {
-                            let result = try await CashuSwift.check(mintProofs.sendable(), url: mint.url)
+                            let result = try await CashuSwift.check(mintProofs.sendable(), url: mint.url, session: try await NetworkController.shared.session(for: mint.url))
                             await MainActor.run {
                                 var dict = [String : CashuSwift.Proof.ProofState]()
                                 for (i, p) in mintProofs.enumerated() {
@@ -115,7 +115,9 @@ struct ProofListView: View {
                         guard let remoteStates, remoteStates.values.count == sortedProofs.count else {
                             return
                         }
-                        for p in mintProofs {
+                        let reserved = Set((mint.events ?? []).filter { $0.sendContextData != nil }
+                            .flatMap { $0.proofs ?? [] }.map(\.proofID))
+                        for p in mintProofs where !reserved.contains(p.proofID) {
                             if let state = remoteStates[p.C] { p.state = Proof.State(state: state) }
                         }
                     } label: {
@@ -250,12 +252,13 @@ struct ProofListView: View {
         
         Task {
             do {
-                let response = try await CashuSwift.restore(from: sendableMint, with: seed)
+                let response = try await CashuSwift.restore(from: sendableMint, with: seed, session: try await NetworkController.shared.session(for: sendableMint.url))
                 
                 await MainActor.run {
                     for result in response.result {
                         print("new derivation counter \(result.derivationCounter) for keyset \(result.keysetID)")
-                        mint.setDerivationCounterForKeysetWithID(result.keysetID, to: result.derivationCounter)
+                        let reservedCounter = mint.keysets.first { $0.keysetID == result.keysetID }?.derivationCounter ?? 0
+                        mint.setDerivationCounterForKeysetWithID(result.keysetID, to: max(reservedCounter, result.derivationCounter))
                     }
                     loadingCounters = false
                     keysetLabelID = UUID() // force redraw

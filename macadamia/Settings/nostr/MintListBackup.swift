@@ -164,13 +164,13 @@ enum MintListBackup {
             .build(signedBy: keypair)
 
         let confirmation = PublishConfirmation(eventID: event.id)
-        let pool = try RelayPool(relayURLs: Set(relayURLs), delegate: confirmation)
-        try await waitForConnection(pool: pool, timeout: 10)
+        let pool = try await makePool(delegate: confirmation)
         defer { pool.disconnect() }
+        try await waitForConnection(pool: pool, timeout: 30)
 
         let connectedRelays = pool.relays.filter { $0.state == .connected }.count
         pool.publishEvent(event)
-        try await confirmation.waitForAcceptance(from: connectedRelays, timeout: 5)
+        try await confirmation.waitForAcceptance(from: connectedRelays, timeout: 20)
         backupLogger.info("Published mint list backup with \(mints.count) mint(s)")
     }
 
@@ -206,11 +206,23 @@ enum MintListBackup {
         }
     }
 
+    @MainActor
+    private static func makePool(delegate: RelayDelegate? = nil) async throws -> RelayPool {
+        var relays = Set<Relay>()
+        for url in relayURLs {
+            let session = try await NetworkController.shared.session(for: url)
+            try Task.checkCancellation()
+            relays.insert(try Relay(url: url, session: session))
+        }
+        return RelayPool(relays: relays, delegate: delegate)
+    }
+
     static func retrieve(seedHex: String) async throws -> [URL] {
         let keypair = try deriveKeypair(from: seedHex)
 
-        let pool = try RelayPool(relayURLs: Set(relayURLs))
-        try await waitForConnection(pool: pool, timeout: 10)
+        let pool = try await makePool()
+        defer { pool.disconnect() }
+        try await waitForConnection(pool: pool, timeout: 30)
 
         guard let filter = Filter(
             authors: [keypair.publicKey.hex],

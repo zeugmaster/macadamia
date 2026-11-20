@@ -38,6 +38,10 @@ struct SettingsView: View {
                     Text("Nostr")
                 }
                 
+                Section {
+                    NavigationLink("Privacy", destination: TorSettingsView())
+                }
+
                 if hiddenMenuShowing {
                     Section {
                         NavigationLink(destination: WalletInfoListView()) { Text("Wallets") }

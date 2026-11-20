@@ -300,7 +300,7 @@ struct OnchainMeltView: View {
                 let info = try await selectedMint.loadInfo()
                 let fresh = try await CashuSwift.Onchain.requestMeltQuote(
                     .init(unit: Unit.sat.currencyCode, request: destination.address, amount: amount),
-                    from: CashuSwift.Mint(selectedMint), info: info)
+                    from: CashuSwift.Mint(selectedMint), info: info, session: try await NetworkController.shared.session(for: selectedMint.url))
                 quote = fresh
                 selectedFeeIndex = Self.defaultFeeIndex(in: fresh.feeOptions, preferred: preferredFeeIndex)
             } catch {
@@ -364,7 +364,7 @@ struct OnchainMeltView: View {
     private func submit(_ event: Event) async {
         guard let context = event.onchainMeltContext, let mint = event.mints?.first else { return }
         do {
-            let result = try await CashuSwift.Onchain.melt(context: context, from: CashuSwift.Mint(mint))
+            let result = try await CashuSwift.Onchain.melt(context: context, from: CashuSwift.Mint(mint), session: try await NetworkController.shared.session(for: mint.url))
             apply(result, to: event)
         } catch {
             show(AlertDetail(with: error))
@@ -385,7 +385,7 @@ struct OnchainMeltView: View {
         isChecking = true
         defer { isChecking = false }
         do {
-            let result = try await CashuSwift.Onchain.meltState(context: context, from: CashuSwift.Mint(mint))
+            let result = try await CashuSwift.Onchain.meltState(context: context, from: CashuSwift.Mint(mint), session: try await NetworkController.shared.session(for: mint.url))
             guard pendingEvent?.eventID == event.eventID else { return }
             apply(result, to: event)
         } catch {

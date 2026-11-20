@@ -264,7 +264,7 @@ struct RedeemView<AdditionalControls: View>: View {
         
         Task {
             do {
-                let sendableMint = try await CashuSwift.loadMint(url: url)
+                let sendableMint = try await CashuSwift.loadMint(url: url, session: try await NetworkController.shared.session(for: url))
                 
                 try await MainActor.run {
                     _ = try AppSchemaV1.addMint(sendableMint, to: modelContext)
@@ -337,7 +337,7 @@ struct RedeemView<AdditionalControls: View>: View {
                 let receiveResult = try await CashuSwift.receive(token: token,
                                                                  of: CashuSwift.Mint(mint),
                                                                  seed: activeWallet.seed,
-                                                                 privateKey: keyString) // if the token is not locked the key is ignored
+                                                                 privateKey: keyString, session: try await NetworkController.shared.session(for: mint.url)) // if the token is not locked the key is ignored
                 redeemLogger.info("""
                                   DLEQ verification for input: \(String(describing: receiveResult.inputDLEQ)), 
                                   output: \(String(describing: receiveResult.outputDLEQ))

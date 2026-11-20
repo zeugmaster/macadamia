@@ -37,7 +37,7 @@ struct MessageMintList: View {
     var body: some View {
         Group {
             if let token = selectedToken {
-                TokenDisplayView(tokenString: token) {
+                TokenDisplayView(vc: vc, tokenString: token) {
                     selectedToken = nil
                 }
             } else {
@@ -86,6 +86,7 @@ struct MessageMintList: View {
                 }
             }
         }
+        .onAppear { NetworkController.shared.refreshPreference() }
         .onReceive(NotificationCenter.default.publisher(for: .messageSelected)) { notification in
             if let tokenString = notification.object as? String {
                 selectedToken = tokenString
@@ -173,7 +174,7 @@ struct MintGridItem: View {
                 if let iconURLString = info.iconUrl,
                    let iconURL = URL(string: iconURLString) {
                     
-                    let (data, _) = try await URLSession.shared.data(from: iconURL)
+                    let (data, _) = try await NetworkController.shared.data(from: iconURL)
                     if let image = UIImage(data: data) {
                         await MainActor.run {
                             mintIcon = image
@@ -207,6 +208,8 @@ struct MessageSendView: View {
         wallets.first
     }
     
+    @ObservedObject private var network = NetworkController.shared
+    @State private var sendError: String?
     @State private var memo: String = ""
     @State private var amountString: String = ""
     @State private var buttonState = ActionButtonState.idle("...")
@@ -255,7 +258,7 @@ struct MessageSendView: View {
                     if let info = try? await mint.loadInfo(),
                        let urlString = info.iconUrl,
                        let url = URL(string: urlString) {
-                        if let (data, _) = try? await URLSession.shared.data(from: url),
+                        if let (data, _) = try? await NetworkController.shared.data(from: url),
                            let image = UIImage(data: data) {
                             await MainActor.run {
                                 withAnimation {
@@ -266,6 +269,16 @@ struct MessageSendView: View {
                     }
                 }
                 
+                if network.torOnly || NetworkController.isOnion(mint.url) {
+                    Section {
+                        Text("Tor connections run in macadamia. Exact-amount sends can still be prepared offline here.")
+                            .foregroundStyle(.secondary)
+                        Button("Open macadamia") { openWallet() }
+                    }
+                }
+                if let sendError {
+                    Section { Text(sendError).foregroundStyle(.secondary) }
+                }
                 Section {
                     HStack {
                         TextField("Enter amount...", text: $amountString)
@@ -320,6 +333,7 @@ struct MessageSendView: View {
             }
         }
         .onAppear {
+            network.refreshPreference()
             buttonState = .idle(String(localized: "Send"), action: createToken)
             amountFieldInFocus = true
         }
@@ -327,7 +341,24 @@ struct MessageSendView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
     
+    private func openWallet() {
+        var url = URLComponents()
+        url.scheme = "cashu"
+        url.host = "send"
+        url.queryItems = [URLQueryItem(name: "mint", value: mint.mintID.uuidString),
+                          URLQueryItem(name: "amount", value: String(amount)),
+                          URLQueryItem(name: "memo", value: memo)]
+        if let url = url.url { vc?.extensionContext?.open(url) }
+    }
+
     private func createToken() {
+        network.refreshPreference()
+        if (network.torOnly || NetworkController.isOnion(mint.url)),
+           !CashuSwift.canSendOffline((mint.proofs ?? []).filter { $0.state == .valid },
+                                    amount: amount, mint: mint, unit: "sat") {
+            openWallet()
+            return
+        }
         guard let activeWallet else {
             buttonState = .fail(String(localized: "No active wallet"))
             return
@@ -348,7 +379,8 @@ struct MessageSendView: View {
                 onSuccess(token: token)
                 buttonState = .success()
             } catch {
-                // TODO: add alert view
+                sendError = error.localizedDescription
+                buttonState = .fail()
             }
         }
     }
@@ -397,7 +429,14 @@ struct TokenDisplayView: View {
     let tokenString: String
     let onDismiss: () -> Void
     
+    @ObservedObject private var network = NetworkController.shared
     @State private var copied = false
+
+    private var needsTor: Bool {
+        if network.torOnly { return true }
+        guard let token = try? tokenString.deserializeToken() else { return false }
+        return token.proofsByMint.keys.compactMap { URL(string: $0) }.contains { NetworkController.isOnion($0) }
+    }
     
     private var amount: Int? {
         try? tokenString.deserializeToken().sum()
@@ -424,40 +463,48 @@ struct TokenDisplayView: View {
             }
             .padding(.horizontal)
             
-            RedeemView(tokenString: tokenString) {
-                Button {
-                    UIPasteboard.general.string = tokenString
-                    withAnimation {
-                        copied = true
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+            if needsTor {
+                Text("Open macadamia to redeem this token through Tor.")
+                    .foregroundStyle(.secondary)
+                Button("Open macadamia") {
+                    if let url = URL(string: "cashu:\(tokenString)") { vc?.extensionContext?.open(url) }
+                }
+            } else {
+                RedeemView(tokenString: tokenString) {
+                    Button {
+                        UIPasteboard.general.string = tokenString
                         withAnimation {
-                            copied = false
+                            copied = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                            withAnimation {
+                                copied = false
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text(copied ? String(localized: "Copied!") : String(localized: "Copy"))
+                            Spacer()
+                            Image(systemName: "clipboard")
                         }
                     }
-                } label: {
-                    HStack {
-                        Text(copied ? String(localized: "Copied!") : String(localized: "Copy"))
-                        Spacer()
-                        Image(systemName: "clipboard")
+                    Button {
+                        guard let url = URL(string: "cashu:\(tokenString)") else {
+                            return
+                        }
+                        vc?.extensionContext?.open(url)
+                    } label: {
+                        HStack {
+                            Text("Open in Wallet")
+                            Spacer()
+                            Image(systemName: "arrow.up.right.square")
+                        }
                     }
-                }
-                Button {
-                    guard let url = URL(string: "cashu:\(tokenString)") else {
-                        return
+                } onSuccess: {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        onDismiss()
+                        vc?.requestPresentationStyle(.compact)
                     }
-                    vc?.extensionContext?.open(url)
-                } label: {
-                    HStack {
-                        Text("Open in Wallet")
-                        Spacer()
-                        Image(systemName: "arrow.up.right.square")
-                    }
-                }
-            } onSuccess: {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    onDismiss()
-                    vc?.requestPresentationStyle(.compact)
                 }
             }
         }

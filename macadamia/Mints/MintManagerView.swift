@@ -188,7 +188,7 @@ struct MintManagerView: View {
             displayAlert(alert: AlertDetail(title: String(localized: "Invalid URL"),
                                             description: String(localized: """
                                                          Please enter a valid URL. \
-                                                         If no protocol is specified, https:// will be used.
+                                                         If no protocol is specified, public addresses use HTTPS and onion addresses use HTTP through Tor.
                                                          """)))
             return
         }
@@ -217,7 +217,7 @@ struct MintManagerView: View {
     /// Loads the mint, stores it in the wallet and publishes the updated mint-list backup.
     @MainActor
     static func addMint(url: URL, to wallet: Wallet, in context: ModelContext) async throws {
-        let sendableMint = try await CashuSwift.loadMint(url: url)
+        let sendableMint = try await CashuSwift.loadMint(url: url, session: try await NetworkController.shared.session(for: url))
         _ = try AppSchemaV1.addMint(sendableMint, to: context)
         MintListBackup.publishCurrentList(for: wallet)
     }
@@ -241,7 +241,7 @@ struct MintManagerView: View {
         
         for mint in sortedMintsOfActiveWallet {
             do {
-                let updatedMint = try await CashuSwift.loadMint(url: mint.url)
+                let updatedMint = try await CashuSwift.loadMint(url: mint.url, session: try await NetworkController.shared.session(for: mint.url))
                 
                 mint.mergeKeysets(updatedMint.keysets)
                 
@@ -314,6 +314,11 @@ struct MintInfoRowView: View {
                 Text(mint.nickName ?? mint.url.host(percentEncoded: false) ?? mint.url.absoluteString)
                     .bold()
                     .dynamicTypeSize(.xLarge)
+                if NetworkController.isOnion(mint.url) {
+                    Label("Tor", systemImage: "network")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 if let amountDisplayString {
                     AmountView(text: amountDisplayString)
                         .foregroundStyle(.gray)

@@ -92,7 +92,7 @@ class RestoreViewModel {
         row.status = .loading
         do {
             let url = row.url
-            let mint = try await CashuSwift.loadMint(url: url)
+            let mint = try await CashuSwift.loadMint(url: url, session: try await NetworkController.shared.session(for: url))
             withAnimation { row.status = .loaded(mint) }
         } catch {
             withAnimation { row.status = .failed }
@@ -151,7 +151,7 @@ struct RestoreViewV2: View {
                                 displayAlert(alert: AlertDetail(title: String(localized: "Invalid URL"),
                                                                 description: String(localized: """
                                                                              Please enter a valid URL. \
-                                                                             If no protocol is specified, https:// will be used.
+                                                                             If no protocol is specified, public addresses use HTTPS and onion addresses use HTTP through Tor.
                                                                              """)))
                                 return
                             }
@@ -161,7 +161,7 @@ struct RestoreViewV2: View {
                                 displayAlert(alert: AlertDetail(title: String(localized: "Duplicate Mint"),
                                                                 description: String(localized: """
                                                                              Please enter each mint URL only once. \
-                                                                             If no protocol is specified, https:// will be used.
+                                                                             If no protocol is specified, public addresses use HTTPS and onion addresses use HTTP through Tor.
                                                                              """)))
                                 return
                             }

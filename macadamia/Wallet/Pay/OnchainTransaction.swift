@@ -365,19 +365,19 @@ struct OnchainTransaction: View {
     }
     
     /// Esplora lookup against one API root. Spends from the address are dropped; confirmations count from the tip.
-    static func transactionStates(at api: URL, for address: String) async throws -> [TransactionState] {
+    static func transactionStates(at api: URL, for address: String, network: NetworkController = .shared) async throws -> [TransactionState] {
         struct Tx: Decodable {
             struct Status: Decodable { let block_height: Int? }
             struct Output: Decodable { let scriptpubkey_address: String?, value: Int }
             let txid: String, fee: Int?, status: Status, vout: [Output]
         }
-        let (data, _) = try await URLSession.shared.data(for: URLRequest(url: api.appending(path: "address/\(address)/txs"), timeoutInterval: 10))
+        let (data, _) = try await network.data(for: URLRequest(url: api.appending(path: "address/\(address)/txs")))
         let funding = try JSONDecoder().decode([Tx].self, from: data).compactMap { tx -> (tx: Tx, amount: Int)? in
             let paid = tx.vout.filter { $0.scriptpubkey_address?.lowercased() == address.lowercased() }.map(\.value).reduce(0, +)
             return paid > 0 ? (tx, paid) : nil
         }
         guard !funding.isEmpty else { return [] }
-        let (tipData, _) = try await URLSession.shared.data(for: URLRequest(url: api.appending(path: "blocks/tip/height"), timeoutInterval: 10))
+        let (tipData, _) = try await network.data(for: URLRequest(url: api.appending(path: "blocks/tip/height")))
         guard let tip = Int(String(decoding: tipData, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)) else {
             throw URLError(.cannotParseResponse)
         }

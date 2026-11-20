@@ -47,6 +47,7 @@ struct MintInfoView: View {
             }
             Section {
                 TextDescriptionCell(description: String(localized: "URL"), text: mint.url.absoluteString)
+                if NetworkController.isOnion(mint.url) { TorStatusView() }
                 VStack(alignment: .leading) {
                     Text("Nickname")
                         .foregroundStyle(.secondary)

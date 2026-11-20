@@ -105,7 +105,9 @@ struct LNURLPayView: View {
     private func resolveRequest() {
         Task {
             do {
-                let response = try await LNURL.shared.fetchPayRequest(userInput)
+                let endpoint = try LNURL.parse(userInput).url
+                let session = try await NetworkController.shared.session(for: endpoint)
+                let response = try await LNURL(session: session).fetchPayRequest(userInput)
                 withAnimation {
                     payResponse = response
                 }
@@ -127,7 +129,9 @@ struct LNURLPayView: View {
         
         Task {
             do {
-                let paymentRequest = try await LNURL.shared.pay.requestInvoice(from: payResponse,
+                guard let callback = URL(string: payResponse.callback) else { throw NetworkController.Error.invalidURL }
+                let session = try await NetworkController.shared.session(for: callback)
+                let paymentRequest = try await LNURL(session: session).pay.requestInvoice(from: payResponse,
                                                                                amountMsat: Int64(amount * 1000))
                 
                 invoiceString = paymentRequest.pr

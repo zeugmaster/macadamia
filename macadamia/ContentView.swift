@@ -33,6 +33,8 @@ struct ContentView: View {
 
     @EnvironmentObject private var appState: AppState
     
+    @ObservedObject private var network = NetworkController.shared
+
     @State private var releaseNotesPopoverShowing = false
     
     @State private var selectedTab: Tab = .wallet
@@ -79,6 +81,9 @@ struct ContentView: View {
                     }
                     .tag(Tab.settings)
             }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if network.torOnly { TorStatusView() }
+            }
             .persistentSystemOverlays(.hidden)
             .background(Color.black)
             if wallets.isEmpty {
@@ -95,6 +100,7 @@ struct ContentView: View {
                     }
                     do {
                         try modelContext.save()
+                        appState.loadExchangeRates()
                     } catch {
                         logger.critical("Could not save wallet from onboarding: \(error)")
                     }
@@ -106,6 +112,7 @@ struct ContentView: View {
         .onAppear(perform: {
             if !wallets.isEmpty {
                 releaseNotesPopoverShowing = AppState.showReleaseNotes()
+                appState.loadExchangeRates()
             }
             selectedTab = .wallet
         })
@@ -115,7 +122,7 @@ struct ContentView: View {
                 if let activeWallet {
                     for mint in activeWallet.mints {
                         do {
-                            let newKeysets = try await CashuSwift.updatedKeysetsForMint(CashuSwift.Mint(mint))
+                            let newKeysets = try await CashuSwift.updatedKeysetsForMint(CashuSwift.Mint(mint), session: try await NetworkController.shared.session(for: mint.url))
                             mint.mergeKeysets(newKeysets)
                         } catch {
                             logger.warning("""
@@ -158,7 +165,16 @@ struct ContentView: View {
                     URL has been passed to the application: \ 
                     \(url.absoluteString)
                     """)
-         if url.scheme == "cashu" {
+         if url.scheme == "cashu", url.host == "send",
+            let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+            let idString = components.queryItems?.first(where: { $0.name == "mint" })?.value,
+            let mintID = UUID(uuidString: idString),
+            activeWallet?.mints.contains(where: { $0.mintID == mintID }) == true {
+             let amount = Int(components.queryItems?.first(where: { $0.name == "amount" })?.value ?? "") ?? 0
+             let memo = components.queryItems?.first(where: { $0.name == "memo" })?.value ?? ""
+             selectedTab = .wallet
+             pendingNavigation = .sendFromMessages(mintID: mintID, amount: max(0, amount), memo: memo)
+         } else if url.scheme == "cashu" {
              let noURLPrefix = url.absoluteStringWithoutPrefix("cashu")
              selectedTab = .wallet
              

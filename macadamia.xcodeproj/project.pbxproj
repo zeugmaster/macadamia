@@ -31,6 +31,7 @@
 		37C4CC912E5CB1A90028E4FE /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3793B99D2CFCC8F80077F755 /* AppState.swift */; };
 		37C4CC922E5CB1A90028E4FE /* macadamiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372034B92B29E1BC00C4F955 /* macadamiaApp.swift */; };
 		37E700132B4C0DD100CB1A58 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37E700122B4C0DD100CB1A58 /* Launch Screen.storyboard */; };
+		70A000012F00000000000001 /* CTor in Frameworks */ = {isa = PBXBuildFile; productRef = 70A000022F00000000000001 /* CTor */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -116,6 +117,7 @@
 				AmountView.swift,
 				Currency.swift,
 				MintPicker.swift,
+				Networking/NetworkController.swift,
 				TokenText.swift,
 			);
 			target = 37C4CC2D2E5CA4660028E4FE /* macadamiaMessages */;
@@ -162,6 +164,7 @@
 				379212342B29E7B30081F161 /* BIP39 in Frameworks */,
 				370F7F552F16AC6400C625C0 /* LNURL-Swift in Frameworks */,
 				371AA9132E33EB61006D487F /* CashuSwift in Frameworks */,
+				70A000012F00000000000001 /* CTor in Frameworks */,
 				370A2B332EBFD23800C4A6A5 /* Bolt11 in Frameworks */,
 				3792122E2B29E7520081F161 /* BigNumber in Frameworks */,
 				377FFF002BC43B6900DD2635 /* MarkdownUI in Frameworks */,
@@ -283,6 +286,7 @@
 				370A84062CC18AEE0039A413 /* Flow */,
 				377D26252E1FDE7800CFB880 /* PrettySwiftQR */,
 				371AA9122E33EB61006D487F /* CashuSwift */,
+				70A000022F00000000000001 /* CTor */,
 				37A988482EBF9A7C0065FCE6 /* NostrSDK */,
 				370A2B322EBFD23800C4A6A5 /* Bolt11 */,
 				370F7F542F16AC6400C625C0 /* LNURL-Swift */,
@@ -374,6 +378,7 @@
 			);
 			mainGroup = 372034AD2B29E1BC00C4F955;
 			packageReferences = (
+				70A000032F00000000000001 /* XCRemoteSwiftPackageReference "Tor.framework" */,
 				3792122C2B29E7520081F161 /* XCRemoteSwiftPackageReference "Swift-BigInt" */,
 				379212322B29E7B30081F161 /* XCRemoteSwiftPackageReference "BIP39" */,
 				377FFEFE2BC43B6900DD2635 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
@@ -854,8 +859,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/zeugmaster/cashu-swift.git";
 			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.5.0;
+				kind = revision;
+				revision = 894dee7d20fd00d09a9ba3ae0314bc2bf6524b9f;
 			};
 		};
 		377D26242E1FDE7800CFB880 /* XCRemoteSwiftPackageReference "PrettySwiftQR" */ = {
@@ -894,8 +899,16 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/zeugmaster/nostr-sdk-ios.git";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.3.4;
+				kind = revision;
+				revision = 5d0fe8a4d673bda3559f329e4d47a26a983aeb8f;
+			};
+		};
+		70A000032F00000000000001 /* XCRemoteSwiftPackageReference "Tor.framework" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/iCepa/Tor.framework.git";
+			requirement = {
+				kind = exactVersion;
+				version = 409.17.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -970,6 +983,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 371AA9112E33EB61006D487F /* XCRemoteSwiftPackageReference "cashu-swift" */;
 			productName = CashuSwift;
+		};
+		70A000022F00000000000001 /* CTor */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 70A000032F00000000000001 /* XCRemoteSwiftPackageReference "Tor.framework" */;
+			productName = CTor;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

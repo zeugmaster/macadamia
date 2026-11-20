@@ -1546,9 +1546,9 @@ final class GenericQuoteTests: XCTestCase {
     }
 
     func testMeltQuoteRawStateAndMethodGrafting() throws {
-        // FAILED decodes to a nil typed state but must stay readable.
+        // FAILED is a typed state and must also remain readable in the raw response.
         let failed = makeGenericMeltQuote(rawState: "FAILED")
-        XCTAssertNil(failed.state)
+        XCTAssertEqual(failed.state, .failed)
         XCTAssertEqual(failed.rawStateString, "FAILED")
         XCTAssertTrue(failed.isFailed)
         XCTAssertFalse(makeGenericMeltQuote(rawState: "UNPAID").isFailed)

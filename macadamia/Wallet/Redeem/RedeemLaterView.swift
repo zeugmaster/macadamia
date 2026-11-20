@@ -102,7 +102,7 @@ struct RedeemLaterView: View {
                 let receiveResult = try await CashuSwift.receive(token: token,
                                                                   of: CashuSwift.Mint(mint),
                                                                   seed: wallet.seed,
-                                                                  privateKey: privateKeyHex)
+                                                                  privateKey: privateKeyHex, session: try await NetworkController.shared.session(for: mint.url))
                 
                 try await MainActor.run {
                     let internalProofs = try mint.addProofs(receiveResult.proofs, to: modelContext)

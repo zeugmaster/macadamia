@@ -462,6 +462,14 @@ struct SetupSelectionPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 8) {
+                    TorOnlyToggle()
+                    Text("Use Tor for all connections made by macadamia. When off, onion addresses still use Tor and other addresses connect directly.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+
                 HStack {
                     Image(systemName: "plus")
                     Text("Create new wallet")

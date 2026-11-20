@@ -105,13 +105,15 @@ struct EventList: View {
                     ForEach(eventGroups) { group in
                         FullRow(eventGroup: group)
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button {
-                                deleteEvents(of: group)
-                            } label: {
-                                Image(systemName: "trash")
-                                    .foregroundColor(.white)
+                            if group.events.allSatisfy({ $0.sendContextData == nil }) {
+                                Button {
+                                    deleteEvents(of: group)
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .foregroundColor(.white)
+                                }
+                                .tint(Color.black)
                             }
-                            .tint(Color.black)
                         }
                     }
                 }
@@ -282,6 +284,8 @@ struct EventList: View {
     }
     
     private func deleteEvents(of group: EventGroup) {
+        // Pending sends contain secrets required to recover a lost mint response.
+        guard group.events.allSatisfy({ $0.sendContextData == nil }) else { return }
         withTransaction(Transaction(animation: .default)) {
             group.events.forEach { modelContext.delete($0) }
             try? modelContext.save()
@@ -297,7 +301,7 @@ struct EventList: View {
         switch primaryEvent.kind {
         case .pendingMint:      return (String(localized: "Pending Ecash"), nil)
         case .mint:             return (String(localized: "Ecash created"), nil)
-        case .send:             return (String(localized: "Send"), primaryEvent.memo.nilWhenEmtpy)
+        case .send:             return (primaryEvent.sendContextData == nil ? String(localized: "Send") : String(localized: "Pending Send"), primaryEvent.memo.nilWhenEmtpy)
         case .receive:          return (String(localized: "Receive"), primaryEvent.memo.nilWhenEmtpy)
         case .pendingReceive:   return (String(localized: "Pending Receive"), nil)
         case .pendingMelt:      return (String(localized: "Pending Payment"), nil)

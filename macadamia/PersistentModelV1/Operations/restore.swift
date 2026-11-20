@@ -37,7 +37,7 @@ extension macadamiaApp {
                         let (proofsByKeyset, dleqPassed) = try await CashuSwift.restore(
                             from: mint,
                             with: seed,
-                            batchSize: 50
+                            batchSize: 50, session: try await NetworkController.shared.session(for: mint.url)
                         )
 
                         restoreLogger.info("""

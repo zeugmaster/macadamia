@@ -74,6 +74,8 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
     }
     
     private var relayPool: RelayPool?
+    private var connectionTasks: [Task<Void, Never>] = []
+    private var policyObserver: AnyCancellable?
     private var messageSubscriptionId: String?
     private var cancellables = Set<AnyCancellable>()
     private var relayCancellables = [URL: AnyCancellable]()
@@ -96,39 +98,42 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
         }
     }
     
+    @MainActor
     init() {
+        policyObserver = NotificationCenter.default.publisher(for: NetworkController.policyChanged)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    if self?.relayPool != nil { self?.reconnect() }
+                }
+            }
         // Initialize relayURLs from persisted data
         relayURLs = savedURLs
     }
     
+    @MainActor
     func connect() {
-        nostrLogger.info("🔌 connect() called for nostr service")
-        
-        guard relayPool == nil else {
-            nostrLogger.info("RelayPool already exists, skipping creation")
-            return
-        }
-        
-        let urlsToConnect = savedURLs
-        relayURLs = urlsToConnect
-        
-        relayPool = try? RelayPool(relayURLs: Set(urlsToConnect))
-        nostrLogger.info("Created RelayPool with \(urlsToConnect.count) relay URLs")
-        
-        // Subscribe to relay states
-        subscribeToRelayStates()
-        
-        nostrLogger.info("Calling relayPool.connect()")
-        relayPool?.connect()
-    }
-    
-    /// Subscribes to state changes for all relays in the pool
-    private func subscribeToRelayStates() {
-        relayPool?.relays.forEach { relay in
-            subscribeToRelayState(relay)
+        guard relayPool == nil else { return }
+        let pool = RelayPool()
+        relayPool = pool
+        relayURLs = savedURLs
+        for url in savedURLs {
+            connectionStates[url] = .connecting
+            connectionTasks.append(Task { @MainActor [weak self, weak pool] in
+                do {
+                    let session = try await NetworkController.shared.session(for: url)
+                    try Task.checkCancellation()
+                    guard let self, let pool, relayPool === pool else { return }
+                    let relay = try Relay(url: url, session: session)
+                    subscribeToRelayState(relay)
+                    pool.add(relay: relay)
+                } catch {
+                    guard !Task.isCancelled else { return }
+                    self?.connectionStates[url] = .error(error)
+                }
+            })
         }
     }
-    
+
     /// Subscribes to state changes for a single relay
     private func subscribeToRelayState(_ relay: Relay) {
         nostrLogger.info("Setting up state observer for relay: \(relay.url)")
@@ -138,9 +143,7 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
                 nostrLogger.info("Relay \(relay.url) state changed to: \(String(describing: newState))")
                 self?.connectionStates[relay.url] = newState
                 
-                // Check if we should start listening (when most relays are connected)
-                if newState == .connected,
-                   self?.isListeningForMessages == false {
+                if newState == .connected {
                     self?.checkAndStartListening()
                 }
             }
@@ -197,7 +200,7 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
         connectionStates[url]
     }
     
-    /// Checks if enough relays are connected and starts listening
+    /// Starts listening as relays connect, including slower Tor connections.
     private func checkAndStartListening() {
         let connectedCount = connectionStates.filter { $0.value == .connected }.count
         let totalCount = connectionStates.count
@@ -213,8 +216,8 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
             return
         }
         
-        // Start listening when at least half of the relays are connected
-        if connectedCount >= max(1, totalCount / 2) {
+        // An unavailable Tor relay must not hold up a connected public relay.
+        if connectedCount > 0 {
             nostrLogger.info("Enough relays connected, starting message listener")
             Task { @MainActor in
                 await startListeningForEcashMessages()
@@ -249,6 +252,8 @@ class NostrService: ObservableObject, EventCreating, MetadataCoding {
     }
     
     @MainActor func disconnect() {
+        connectionTasks.forEach { $0.cancel() }
+        connectionTasks.removeAll()
         stopListeningForEcashMessages()
         relayPool?.disconnect()
         relayPool = nil

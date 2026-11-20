@@ -171,7 +171,7 @@ struct DepositQuoteRequestView: View {
     // Save the quote before navigation so it remains resumable if the view closes.
     @MainActor
     static func loadQuote(from mint: Mint, option: PaymentOption, amount: Int?,
-                          in context: ModelContext) async throws -> DepositQuote {
+                          in context: ModelContext, network: NetworkController = .shared) async throws -> DepositQuote {
         try validateAmount(amount, for: option)
         guard option.mintID == mint.mintID, option.direction == .deposit,
               mint.supportedUnits.contains(option.unit), let wallet = mint.wallet else {
@@ -185,7 +185,7 @@ struct DepositQuoteRequestView: View {
         if option.method.kind == .bolt11 {
             guard let amount else { throw CashuError.invalidAmount }
             response = try await CashuSwift.Bolt11.requestMintQuote(
-                .init(unit: option.unitCode, amount: amount), from: sendableMint)
+                .init(unit: option.unitCode, amount: amount), from: sendableMint, session: try await network.session(for: sendableMint.url))
         } else {
             let reservedCounter = try reserveQuoteCounter(for: wallet, in: context)
             counter = reservedCounter
@@ -194,7 +194,7 @@ struct DepositQuoteRequestView: View {
             let quote = try await CashuSwift.Generic.requestMintQuote(
                 .init(method: option.method, unit: option.unitCode,
                       amount: option.method.kind == .onchain ? nil : amount,
-                      extra: ["pubkey": .string(key.publicKey)]), from: sendableMint)
+                      extra: ["pubkey": .string(key.publicKey)]), from: sendableMint, session: try await network.session(for: sendableMint.url))
             guard case .string(let pubkey) = quote.raw["pubkey"],
                   pubkey.lowercased() == key.publicKey.lowercased() else {
                 throw CashuError.invalidKey("The mint did not lock the quote to the requested key.")

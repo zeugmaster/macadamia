@@ -107,24 +107,26 @@ enum LightningMeltQuote: Codable, Sendable {
         let change: [CashuSwift.Proof]
     }
 
-    func melt(from mint: CashuSwift.Mint, proofs: [CashuSwift.Proof], blankOutputs: BlankOutputs?) async throws -> Result {
+    @MainActor
+    func melt(from mint: CashuSwift.Mint, proofs: [CashuSwift.Proof], blankOutputs: BlankOutputs?, network: NetworkController = .shared) async throws -> Result {
         switch self {
         case .bolt11(let quote):
-            let result = try await CashuSwift.Bolt11.melt(quote: quote, from: mint, proofs: proofs, blankOutputs: blankOutputs)
+            let result = try await CashuSwift.Bolt11.melt(quote: quote, from: mint, proofs: proofs, blankOutputs: blankOutputs, session: try await network.session(for: mint.url))
             return Result(quote: try validatedResponse(.bolt11(result.quote)), change: result.change ?? [])
         case .bolt12(let quote):
-            let result = try await CashuSwift.Bolt12.melt(quote: quote, from: mint, proofs: proofs, blankOutputs: blankOutputs)
+            let result = try await CashuSwift.Bolt12.melt(quote: quote, from: mint, proofs: proofs, blankOutputs: blankOutputs, session: try await network.session(for: mint.url))
             return Result(quote: try validatedResponse(.bolt12(result.quote)), change: result.change ?? [])
         }
     }
 
-    func checkState(from mint: CashuSwift.Mint, blankOutputs: BlankOutputs?) async throws -> Result {
+    @MainActor
+    func checkState(from mint: CashuSwift.Mint, blankOutputs: BlankOutputs?, network: NetworkController = .shared) async throws -> Result {
         switch self {
         case .bolt11:
-            let result = try await CashuSwift.Bolt11.meltState(quote, from: mint, blankOutputs: blankOutputs)
+            let result = try await CashuSwift.Bolt11.meltState(quote, from: mint, blankOutputs: blankOutputs, session: try await network.session(for: mint.url))
             return Result(quote: try validatedResponse(.bolt11(result.quote)), change: result.change ?? [])
         case .bolt12:
-            let result = try await CashuSwift.Bolt12.meltState(quote, from: mint, blankOutputs: blankOutputs)
+            let result = try await CashuSwift.Bolt12.meltState(quote, from: mint, blankOutputs: blankOutputs, session: try await network.session(for: mint.url))
             return Result(quote: try validatedResponse(.bolt12(result.quote)), change: result.change ?? [])
         }
     }

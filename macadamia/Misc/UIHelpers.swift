@@ -55,12 +55,14 @@ extension URL {
     static func fromUserInput(_ inputString: String) -> URL? {
         let trimmedURLString = inputString.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        // Add https prefix if no protocol is specified, preserve http if explicitly entered
+        // Preserve explicit endpoints; bare onion addresses use HTTP inside Tor.
         let finalURLString: String
-        if trimmedURLString.starts(with: "http://") || trimmedURLString.starts(with: "https://") {
+        if trimmedURLString.lowercased().starts(with: "http://") || trimmedURLString.lowercased().starts(with: "https://") {
             finalURLString = trimmedURLString
         } else {
-            finalURLString = "https://" + trimmedURLString
+            let candidate = URL(string: "http://" + trimmedURLString)
+            let onion = candidate.map { NetworkController.isOnion($0) } ?? false
+            finalURLString = (onion ? "http://" : "https://") + trimmedURLString
         }
         
         return URL(string: finalURLString)

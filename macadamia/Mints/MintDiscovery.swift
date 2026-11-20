@@ -254,9 +254,7 @@ enum MintDirectory {
     }
 
     private static func send<T: Decodable>(_ request: URLRequest) async throws -> T {
-        var request = request
-        request.timeoutInterval = 15
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await NetworkController.shared.data(for: request)
         guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw URLError(.badServerResponse) }
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -425,18 +423,26 @@ struct MintIcon: View {
     let url: URL?
     let size: CGFloat
 
+    @State private var image: UIImage?
+    @ObservedObject private var network = NetworkController.shared
+
     var body: some View {
-        AsyncImage(url: url) { image in
-            image
-                .resizable()
-                .scaledToFill()
-        } placeholder: {
-            ZStack {
-                Color.gray.opacity(0.3)
-                Image(systemName: "building.columns")
-                    .font(.system(size: size * 0.4))
-                    .foregroundStyle(.white)
+        Group {
+            if let image {
+                Image(uiImage: image).resizable().scaledToFill()
+            } else {
+                ZStack {
+                    Color.gray.opacity(0.3)
+                    Image(systemName: "building.columns")
+                        .font(.system(size: size * 0.4))
+                        .foregroundStyle(.white)
+                }
             }
+        }
+        .task(id: "\(url?.absoluteString ?? "")-\(network.torOnly)") {
+            image = nil
+            guard let url, let (data, _) = try? await network.data(from: url), !Task.isCancelled else { return }
+            image = UIImage(data: data)
         }
         .frame(width: size, height: size)
         .clipShape(Circle())

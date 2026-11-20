@@ -370,11 +370,11 @@ struct DepositQuoteView: View {
                 let mint = CashuSwift.Mint(quote.mint)
                 let response: any CashuSwift.MintQuoteResponse
                 if quote.method == .bolt11 {
-                    response = try await CashuSwift.Bolt11.mintQuoteState(quote.quoteID, from: mint)
+                    response = try await CashuSwift.Bolt11.mintQuoteState(quote.quoteID, from: mint, session: try await NetworkController.shared.session(for: mint.url))
                 } else {
                     response = try await CashuSwift.Generic.mintQuoteState(quote.quoteID,
                                                                           method: quote.method,
-                                                                          from: mint)
+                                                                          from: mint, session: try await NetworkController.shared.session(for: mint.url))
                 }
                 try Task.checkCancellation()
                 guard response.quote == quote.quoteID, response.unit == quote.response.unit,
@@ -448,7 +448,7 @@ struct DepositQuoteView: View {
     }
 
     @MainActor
-    static func issueEcash(for quote: DepositQuote, amount: Int, in context: ModelContext) async throws {
+    static func issueEcash(for quote: DepositQuote, amount: Int, in context: ModelContext, network: NetworkController = .shared) async throws {
         guard let wallet = quote.mint.wallet else {
             throw CashuError.inputError("The wallet associated with this deposit is no longer available.")
         }
@@ -466,7 +466,7 @@ struct DepositQuoteView: View {
 
         switch quote.response {
         case let bolt11 as CashuSwift.Bolt11.MintQuote:
-            result = try await CashuSwift.Bolt11.mint(quote: bolt11, from: mint, seed: wallet.seed)
+            result = try await CashuSwift.Bolt11.mint(quote: bolt11, from: mint, seed: wallet.seed, session: try await network.session(for: mint.url))
             event = Event.mintEvent(unit: quote.unit, shortDescription: "Ecash created", wallet: wallet,
                                     quote: bolt11, mint: quote.mint, amount: result.proofs.sum)
         case var generic as CashuSwift.Generic.MintQuote:
@@ -481,13 +481,13 @@ struct DepositQuoteView: View {
                 generic = generic.addingNut20Counter(counter)
                 result = try await CashuSwift.Generic.mint(quote: generic, from: mint, seed: wallet.seed,
                                                           quoteKey: key.privateKey, amount: amount,
-                                                          signatureFormat: .legacyConcat) // Compatibility with CDK <= rev 6132607.
+                                                          signatureFormat: .legacyConcat, session: try await network.session(for: mint.url)) // Compatibility with CDK <= rev 6132607.
             } else {
                 guard quote.lockingKeyCounter == nil else {
                     throw CashuError.invalidKey("The locked deposit is missing its public key.")
                 }
                 result = try await CashuSwift.Generic.mint(quote: generic, from: mint,
-                                                          amount: amount, seed: wallet.seed)
+                                                          amount: amount, seed: wallet.seed, session: try await network.session(for: mint.url))
             }
             event = Event.mintEvent(unit: quote.unit, shortDescription: "Ecash created", wallet: wallet,
                                     genericQuote: generic, mint: quote.mint, amount: result.proofs.sum)

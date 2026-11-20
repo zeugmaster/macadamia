@@ -1,5 +1,4 @@
 {
-  "originHash" : "c5864bf151e4b15fc720bb37f566af5b87309b0b0f391765d6be53bff8b2008b",
   "pins" : [
     {
       "identity" : "base58",
@@ -78,8 +77,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/cashu-swift.git",
       "state" : {
-        "revision" : "37a7675dea5e542e464a110fdcb513ac97167dff",
-        "version" : "0.5.0"
+        "revision" : "894dee7d20fd00d09a9ba3ae0314bc2bf6524b9f"
       }
     },
     {
@@ -114,8 +112,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/zeugmaster/nostr-sdk-ios.git",
       "state" : {
-        "revision" : "ff02be10f4a482a49e6f0617daa5e3b2e457077d",
-        "version" : "0.3.7"
+        "revision" : "5d0fe8a4d673bda3559f329e4d47a26a983aeb8f"
       }
     },
     {
@@ -197,6 +194,15 @@
       "state" : {
         "revision" : "196e7256758333914eb2313e349032fcd057ba6e",
         "version" : "3.5.5"
+      }
+    },
+    {
+      "identity" : "tor.framework",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/iCepa/Tor.framework.git",
+      "state" : {
+        "revision" : "9c5df82840cd83a62b592293c2e53249ffa1e083",
+        "version" : "409.17.1"
       }
     }
   ],

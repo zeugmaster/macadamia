@@ -30,6 +30,7 @@ struct WalletView: View {
     enum Destination: Identifiable, Hashable {
         case mint
         case send
+        case sendFromMessages(mintID: UUID, amount: Int, memo: String)
         case receive(urlString: String?)
         case melt(invoice: String?)
         case offer(String)
@@ -46,6 +47,8 @@ struct WalletView: View {
                 return "mint"
             case .send:
                 return "send"
+            case .sendFromMessages(let mintID, let amount, _):
+                return "send_\(mintID)_\(amount)"
             case .receive(let urlString):
                 return "receive_\(urlString ?? "nil")"
             case .melt:
@@ -250,6 +253,8 @@ struct WalletView: View {
                     depositDestination
                 case .send:
                     SendView()
+                case .sendFromMessages(let mintID, let amount, let memo):
+                    SendView(mintID: mintID, amount: amount, memo: memo)
                 case .receive(let urlString):
                     RedeemContainerView(tokenString: urlString)
                 case .melt(let invoice):
@@ -505,7 +510,7 @@ struct WalletView: View {
 
         Task { @MainActor in
             do {
-                let proofStates = try await CashuSwift.check(proofs, mint: CashuSwift.Mint(mint))
+                let proofStates = try await CashuSwift.check(proofs, mint: CashuSwift.Mint(mint), session: try await NetworkController.shared.session(for: mint.url))
 
                 // All proofs must be unspent to proceed
                 guard proofStates.allSatisfy({ $0 == .unspent }) else {
@@ -522,7 +527,7 @@ struct WalletView: View {
                 let redeemResult = try await CashuSwift.receive(token: token,
                                                                 of: CashuSwift.Mint(mint),
                                                                 seed: activeWallet.seed,
-                                                                privateKey: privateKeyString)
+                                                                privateKey: privateKeyString, session: try await NetworkController.shared.session(for: mint.url))
 
                 walletLogger.debug("result of redeeming token DLEQ check; in: \(String(describing: redeemResult.inputDLEQ)) out: \(String(describing: redeemResult.outputDLEQ))")
 

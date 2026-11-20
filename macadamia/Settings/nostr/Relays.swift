@@ -85,6 +85,13 @@ struct Relays: View {
             return
         }
         
+        do { _ = try NetworkController.route(for: url, torOnly: NetworkController.shared.torOnly) }
+        catch {
+            errorMessage = error.localizedDescription
+            showError = true
+            return
+        }
+
         // Check if URL already exists
         guard !urls.contains(url) else {
             errorMessage = "This relay is already in your list"

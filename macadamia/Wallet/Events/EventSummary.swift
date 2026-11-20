@@ -239,6 +239,9 @@ struct MeltEventSummary: View {
 struct SendEventView: View {
     var event: Event
     
+    @Environment(\.modelContext) private var modelContext
+    @State private var recovering = false
+    @State private var recoveryError: String?
     @State private var tokenState: TokenState = .unknown
     
     enum TokenState {
@@ -248,6 +251,7 @@ struct SendEventView: View {
     }
     
     var token: CashuSwift.Token? {
+        guard event.sendContextData == nil else { return nil }
         if let token = event.token { return token }
         
         if let proofs = event.proofs,
@@ -295,7 +299,23 @@ struct SendEventView: View {
                     }
                     .foregroundStyle(.secondary)
                 }
-                if let proofs = event.proofs {
+                if event.sendContextData != nil {
+                    Text("This send is awaiting confirmation. Its funds remain reserved.")
+                        .foregroundStyle(.secondary)
+                    Button("Recover send") {
+                        Task {
+                            recovering = true
+                            defer { recovering = false }
+                            do {
+                                _ = try await AppSchemaV1.recoverSend(event: event, modelContext: modelContext)
+                                recoveryError = nil
+                            } catch { recoveryError = error.localizedDescription }
+                        }
+                    }
+                    .disabled(recovering)
+                    if recovering { ProgressView() }
+                    if let recoveryError { Text(recoveryError).foregroundStyle(.secondary) }
+                } else if let proofs = event.proofs {
                         switch tokenState {
                         case .unknown:
                             Button {
@@ -338,7 +358,7 @@ struct SendEventView: View {
         }
         
         Task {
-            let result = try await CashuSwift.check(proofs, url: url)
+            let result = try await CashuSwift.check(proofs, url: url, session: try await NetworkController.shared.session(for: url))
             await MainActor.run {
                 withAnimation {
                     if result.allSatisfy({ $0 == CashuSwift.Proof.ProofState.unspent }) {

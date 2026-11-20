@@ -81,7 +81,6 @@ class AppState: ObservableObject {
 
         concealAmounts = AmountConcealment.userDefaults.bool(forKey: AmountConcealment.userDefaultsKey)
 
-        loadExchangeRates()
     }
     
     // Preview/Mock initializer - skips network calls and UserDefaults
@@ -120,7 +119,7 @@ class AppState: ObservableObject {
         }
         
         Task {
-            guard let (data, _) = try? await URLSession.shared.data(from: url) else {
+            guard let (data, _) = try? await NetworkController.shared.data(from: url) else {
                 logger.warning("unable to load conversion data.")
                 return
             }

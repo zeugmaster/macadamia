@@ -189,14 +189,14 @@ struct TransferView: View {
         let meltQuote = pendingTransferEvent.bolt11MeltQuote
 
         if let mintQuote,
-           let state = (try? await CashuSwift.Bolt11.mintQuoteState(mintQuote.quote, from: sendableTo))?.state {
+           let state = (try? await CashuSwift.Bolt11.mintQuoteState(mintQuote.quote, from: sendableTo, session: try await NetworkController.shared.session(for: sendableTo.url)))?.state {
             destinationStatus = .state(state)
         } else {
             destinationStatus = .unavailable
         }
 
         if let meltQuote,
-           let state = (try? await CashuSwift.Bolt11.meltQuoteState(meltQuote.quote, from: sendableFrom))?.state {
+           let state = (try? await CashuSwift.Bolt11.meltQuoteState(meltQuote.quote, from: sendableFrom, session: try await NetworkController.shared.session(for: sendableFrom.url)))?.state {
             sourceStatus = .state(state)
         } else {
             sourceStatus = .unavailable
@@ -282,7 +282,7 @@ struct TransferView: View {
 
         Task {
             if let meltQuote {
-                let state = (try? await CashuSwift.Bolt11.meltQuoteState(meltQuote.quote, from: sendableFrom))?.state
+                let state = (try? await CashuSwift.Bolt11.meltQuoteState(meltQuote.quote, from: sendableFrom, session: try await NetworkController.shared.session(for: sendableFrom.url)))?.state
                 guard state == .unpaid else {
                     buttonState = .idle(String(localized: "Complete Transfer"), action: { complete() })
                     displayAlert(alert: AlertDetail(title: String(localized: "Cannot Remove"),
@@ -295,7 +295,7 @@ struct TransferView: View {
             }
 
             if !proofs.isEmpty {
-                guard let states = try? await CashuSwift.check(proofs.sendable(), mint: sendableFrom),
+                guard let states = try? await CashuSwift.check(proofs.sendable(), mint: sendableFrom, session: try await NetworkController.shared.session(for: sendableFrom.url)),
                       states.count == proofs.count else {
                     buttonState = .idle(String(localized: "Complete Transfer"), action: { complete() })
                     displayAlert(alert: AlertDetail(title: String(localized: "Cannot Remove"),

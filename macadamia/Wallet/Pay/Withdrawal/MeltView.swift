@@ -703,7 +703,7 @@ struct GenericMeltView: View {
 
         Task {
             do {
-                let freshQuote = try await CashuSwift.Generic.requestMeltQuote(quoteRequest, from: sendableMint)
+                let freshQuote = try await CashuSwift.Generic.requestMeltQuote(quoteRequest, from: sendableMint, session: try await NetworkController.shared.session(for: sendableMint.url))
                 await MainActor.run {
                     guard freshQuote.amount == requestedAmount else {
                         displayAlert(alert: AlertDetail(title: String(localized: "Amount Mismatch"),
@@ -790,7 +790,7 @@ struct GenericMeltView: View {
                                                                from: sendableMint,
                                                                proofs: sendableProofs,
                                                                blankOutputs: blankOutputs,
-                                                               preferAsync: true)
+                                                               preferAsync: true, session: try await NetworkController.shared.session(for: sendableMint.url))
                 await MainActor.run {
                     if result.quote.state == .paid {
                         finalize(result: result)
@@ -839,7 +839,7 @@ struct GenericMeltView: View {
                 let result = try await CashuSwift.Generic.meltState(quote.quote,
                                                                     method: quote.method,
                                                                     from: sendableMint,
-                                                                    blankOutputs: blankOutputs)
+                                                                    blankOutputs: blankOutputs, session: try await NetworkController.shared.session(for: sendableMint.url))
                 await MainActor.run {
                     isCheckingState = false
                     switch result.quote.state {

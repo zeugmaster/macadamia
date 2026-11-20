@@ -343,72 +343,26 @@ struct RequestPay: View {
         Task { @MainActor in
             buttonState = .loading()
             
-            guard let selection = selectedMint.select(amount: amount, unit: unit) else {
-                logger.error("proof selection failed for \(amount) \(unit.currencyCode) at \(selectedMint.url.absoluteString)")
-                failAndReset(with: AlertDetail(with: CashuError.insufficientInputs("")))
-                return
-            }
-            
-            selection.selected.setState(.pending)
-            
-            let requestResponse: CashuSwift.SendPayloadResult
+            let payload: CashuSwift.PaymentRequestPayload
             do {
-                requestResponse = try await CashuSwift.send(request: paymentRequest,
-                                                            mint: CashuSwift.Mint(selectedMint),
-                                                            inputs: selection.selected.sendable(),
-                                                            memo: requestMemo,
-                                                            seed: activeWallet.seed)
+                if let condition = paymentRequest.lockingCondition, condition.kind != "P2PK" {
+                    throw CashuError.paymentRequestValidation("Only P2PK payment requests are supported.")
+                }
+                let token = try await AppSchemaV1.createToken(mint: selectedMint, activeWallet: activeWallet,
+                    amount: amount, unit: unit, memo: requestMemo ?? "", modelContext: modelContext,
+                    lockingKey: paymentRequest.lockingCondition?.data)
+                payload = CashuSwift.PaymentRequestPayload(id: paymentRequest.paymentId, memo: requestMemo,
+                    mint: selectedMint.url.absoluteString, unit: token.unit,
+                    proofs: token.proofsByMint.values.flatMap { $0 })
+            } catch is AppSchemaV1.SendError {
+                buttonState = .fail(String(localized: "Pending"))
+                displayAlert(alert: AlertDetail(with: AppSchemaV1.SendError.pending))
+                return
             } catch {
-                // The swap did not go through, so the inputs are still ours.
-                selection.selected.setState(.valid)
-                logger.error("payment request send failed: \(error)")
                 failAndReset(with: AlertDetail(with: error))
                 return
             }
-            
-            // From here on the mint has swapped our inputs. Nothing below may
-            // return the button to a payable state, or the user could pay twice.
-            if let counterIncrease = requestResponse.counterIncrease {
-                selectedMint.increaseDerivationCounterForKeysetWithID(counterIncrease.keysetID,
-                                                                      by: counterIncrease.increase)
-            }
-            
-            selection.selected.setState(.spent)
-            
-            let payload = requestResponse.payload
-            
-            do {
-                try selectedMint.addProofs(requestResponse.change,
-                                           to: modelContext,
-                                           increaseDerivationCounter: false)
-                
-                // Keep the outgoing proofs as pending, like a regular send, so
-                // the event can later check whether they were redeemed.
-                let sentProofs = try selectedMint.addProofs(requestResponse.send,
-                                                            to: modelContext,
-                                                            state: .pending,
-                                                            increaseDerivationCounter: false)
-                
-                let event = Event.sendEvent(unit: unit,
-                                            shortDescription: "Send",
-                                            wallet: activeWallet,
-                                            amount: amount,
-                                            token: payload.toToken(),
-                                            longDescription: "",
-                                            proofs: sentProofs,
-                                            memo: requestMemo ?? "",
-                                            mint: selectedMint)
-                event.inputFee = selection.selected.sum - requestResponse.send.sum - requestResponse.change.sum
-                
-                modelContext.insert(event)
-                try modelContext.save()
-            } catch {
-                // Persisting failed but the ecash exists; still deliver it and
-                // tell the user what went wrong.
-                logger.error("failed to persist payment request send: \(error)")
-                displayAlert(alert: AlertDetail(with: error))
-            }
-            
+
             guard let transport = selectedTransport else {
                 token = payload.toToken()
                 buttonState = .success()
@@ -499,18 +453,9 @@ struct RequestPay: View {
         }
         
         do {
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try JSONEncoder().encode(payload)
-            let (_, response) = try await URLSession.shared.data(for: request)
-            
-            if let httpResponse = response as? HTTPURLResponse,
-               !(200...299).contains(httpResponse.statusCode) {
-                notDelivered(payload, reason: String(localized: "The request returned status: \(String(describing: httpResponse.statusCode))"))
-                return
-            }
-            
+            _ = try await CashuSwift.sendPaymentViaHTTP(payload: payload, to: url.absoluteString,
+                session: NetworkController.shared.session(for: url))
+
             buttonState = .success()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 dismiss()

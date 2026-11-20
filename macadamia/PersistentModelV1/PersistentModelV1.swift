@@ -304,7 +304,7 @@ enum AppSchemaV1: VersionedSchema {
         
         @MainActor
         func updatedInfo() async throws -> CashuSwift.Mint.Info {
-            let info = try await CashuSwift.loadMintInfo(from: CashuSwift.Mint(self))
+            let info = try await CashuSwift.loadMintInfo(from: CashuSwift.Mint(self), session: try await NetworkController.shared.session(for: self.url))
             try await MainActor.run {
                 infoData = try JSONEncoder().encode(info)
                 infoLastUpdated = Date.now
@@ -464,6 +464,9 @@ enum AppSchemaV1: VersionedSchema {
         // outputs, keyset snapshot) instead of `blankOutputData`. Additive optional
         // like the fee columns, so legacy rows read nil.
         private var onchainMeltContextData: Data?
+
+        // Saved before a swap, including random locked outputs that a seed cannot restore.
+        var sendContextData: Data?
         
         var redeemed: Bool?
 

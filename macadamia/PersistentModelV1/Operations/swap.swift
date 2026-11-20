@@ -107,18 +107,18 @@ final class SwapManager: ObservableObject {
         Task {
             do {
                 swapLogger.debug("loading mint for untrusted swap \(mintURLstring)...")
-                let fromMint = try await CashuSwift.loadMint(url: mintURL)
+                let fromMint = try await CashuSwift.loadMint(url: mintURL, session: try await NetworkController.shared.session(for: mintURL))
 
                 let dummyMintQuoteRequest = CashuSwift.Bolt11.MintQuoteRequest(unit: token.unit, amount: tokenSum)
                 let dummyMintQuote = try await CashuSwift.Bolt11.requestMintQuote(dummyMintQuoteRequest,
-                                                                                  from: CashuSwift.Mint(toMint))
+                                                                                  from: CashuSwift.Mint(toMint), session: try await NetworkController.shared.session(for: toMint.url))
 
                 let dummyMeltQuoteRequest = CashuSwift.Bolt11.MeltQuoteRequest(unit: token.unit,
                                                                                request: dummyMintQuote.request,
                                                                                options:nil)
 
                 let dummyMeltQuote = try await CashuSwift.Bolt11.requestMeltQuote(dummyMeltQuoteRequest,
-                                                                                  from: fromMint)
+                                                                                  from: fromMint, session: try await NetworkController.shared.session(for: fromMint.url))
 
                 guard let proofs = token.proofsByMint.first?.value else {
                     swapLogger.error("No proofs found in token for swap")
@@ -154,12 +154,12 @@ final class SwapManager: ObservableObject {
                 let mintQuoteRequest = CashuSwift.Bolt11.MintQuoteRequest(unit: Unit.sat.currencyCode,
                                                                           amount: amount)
                 let mintQuote = try await CashuSwift.Bolt11.requestMintQuote(mintQuoteRequest,
-                                                                             from: CashuSwift.Mint(toMint))
+                                                                             from: CashuSwift.Mint(toMint), session: try await NetworkController.shared.session(for: toMint.url))
                 let meltQuoteRequest = CashuSwift.Bolt11.MeltQuoteRequest(unit: Unit.sat.currencyCode,
                                                                           request: mintQuote.request,
                                                                           options: nil)
                 let meltQuote = try await CashuSwift.Bolt11.requestMeltQuote(meltQuoteRequest,
-                                                                             from: CashuSwift.Mint(fromMint))
+                                                                             from: CashuSwift.Mint(fromMint), session: try await NetworkController.shared.session(for: fromMint.url))
 
                 await MainActor.run {
                     guard let selection = fromMint.select(amount: amount + meltQuote.feeReserve,
@@ -208,7 +208,7 @@ final class SwapManager: ObservableObject {
         Task {
             // destination first: did the payment arrive, was the ecash already issued?
             let destination: TransferFlow.QuoteCheck
-            if let state = (try? await CashuSwift.Bolt11.mintQuoteState(mintQuote.quote, from: sendableTo))?.state {
+            if let state = (try? await CashuSwift.Bolt11.mintQuoteState(mintQuote.quote, from: sendableTo, session: try await NetworkController.shared.session(for: sendableTo.url)))?.state {
                 destination = .state(state)
             } else {
                 destination = .unavailable
@@ -221,7 +221,7 @@ final class SwapManager: ObservableObject {
                 let outputs = (blankOutputSet?.outputs.isEmpty == false) ? blankOutputSet?.tuple() : nil
                 sourceMeltResult = try? await CashuSwift.Bolt11.meltState(meltQuote.quote,
                                                                           from: sendableFrom,
-                                                                          blankOutputs: outputs)
+                                                                          blankOutputs: outputs, session: try await NetworkController.shared.session(for: sendableFrom.url))
                 source = sourceMeltResult.flatMap { result in
                     result.quote.state.map { TransferFlow.QuoteCheck.state($0) }
                 } ?? .unavailable
@@ -376,7 +376,7 @@ final class SwapManager: ObservableObject {
                 let meltResult = try await CashuSwift.Bolt11.melt(quote: meltQuote,
                                                                   from: sendableFrom,
                                                                   proofs: proofs.sendable(),
-                                                                  blankOutputs: blankOutputSet?.tuple())
+                                                                  blankOutputs: blankOutputSet?.tuple(), session: try await NetworkController.shared.session(for: sendableFrom.url))
 
                 swapLogger.info("DLEQ check on melt change proofs: \(String(describing: meltResult.dleqResult))")
 
@@ -411,7 +411,7 @@ final class SwapManager: ObservableObject {
                 let outputs = (blankOutputSet?.outputs.isEmpty == false) ? blankOutputSet?.tuple() : nil
                 let recheck = try? await CashuSwift.Bolt11.meltState(meltQuote.quote,
                                                                      from: sendableFrom,
-                                                                     blankOutputs: outputs)
+                                                                     blankOutputs: outputs, session: try await NetworkController.shared.session(for: sendableFrom.url))
 
                 if let recheck, recheck.quote.state == .paid {
                     swapLogger.info("melt threw but the quote is PAID — continuing with issuance")
@@ -626,13 +626,13 @@ final class SwapService {
                     let mintQuoteRequest = CashuSwift.Bolt11.MintQuoteRequest(unit: Unit.sat.currencyCode,
                                                                               amount: amount)
                     let mintQuote = try await CashuSwift.Bolt11.requestMintQuote(mintQuoteRequest,
-                                                                                 from: CashuSwift.Mint(toMint))
+                                                                                 from: CashuSwift.Mint(toMint), session: try await NetworkController.shared.session(for: toMint.url))
 
                     let meltQuoteRequest = CashuSwift.Bolt11.MeltQuoteRequest(unit: Unit.sat.currencyCode,
                                                                               request: mintQuote.request,
                                                                               options: nil)
                     let meltQuote = try await CashuSwift.Bolt11.requestMeltQuote(meltQuoteRequest,
-                                                                                 from: CashuSwift.Mint(fromMint))
+                                                                                 from: CashuSwift.Mint(fromMint), session: try await NetworkController.shared.session(for: fromMint.url))
 
                     continuation.yield(.melting)
                     guard let selection = fromMint.select(amount: amount + meltQuote.feeReserve,
@@ -676,7 +676,7 @@ final class SwapService {
                     let meltResult = try await CashuSwift.Bolt11.melt(quote: meltQuote,
                                                                       from: CashuSwift.Mint(fromMint),
                                                                       proofs: selection.selected.sendable(),
-                                                                      blankOutputs: blankOutputs)
+                                                                      blankOutputs: blankOutputs, session: try await NetworkController.shared.session(for: fromMint.url))
                     selection.selected.setState(.spent)
 
                     let meltEvent = Event.meltEvent(unit: .sat,
@@ -698,7 +698,7 @@ final class SwapService {
                     continuation.yield(.minting)
                     let mintResult = try await CashuSwift.Bolt11.mint(quote: mintQuote,
                                                                       from: CashuSwift.Mint(toMint),
-                                                                      seed: activeWallet.seed)
+                                                                      seed: activeWallet.seed, session: try await NetworkController.shared.session(for: toMint.url))
 
                     try toMint.addProofs(mintResult.proofs, to: modelContext)
 
@@ -756,18 +756,18 @@ final class InlineSwapManager: ObservableObject {
         Task {
             do {
                 swapLogger.debug("loading mint for untrusted swap \(mintURLstring)...")
-                let fromMint = try await CashuSwift.loadMint(url: mintURL)
+                let fromMint = try await CashuSwift.loadMint(url: mintURL, session: try await NetworkController.shared.session(for: mintURL))
 
                 let dummyMintQuoteRequest = CashuSwift.Bolt11.MintQuoteRequest(unit: token.unit, amount: tokenSum)
                 let dummyMintQuote = try await CashuSwift.Bolt11.requestMintQuote(dummyMintQuoteRequest,
-                                                                                  from: CashuSwift.Mint(toMint))
+                                                                                  from: CashuSwift.Mint(toMint), session: try await NetworkController.shared.session(for: toMint.url))
 
                 let dummyMeltQuoteRequest = CashuSwift.Bolt11.MeltQuoteRequest(unit: token.unit,
                                                                                request: dummyMintQuote.request,
                                                                                options:nil)
 
                 let dummyMeltQuote = try await CashuSwift.Bolt11.requestMeltQuote(dummyMeltQuoteRequest,
-                                                                                  from: fromMint)
+                                                                                  from: fromMint, session: try await NetworkController.shared.session(for: fromMint.url))
 
                 guard let proofs = token.proofsByMint.first?.value else {
                     updateHandler(.fail(error: nil))
@@ -801,12 +801,12 @@ final class InlineSwapManager: ObservableObject {
                 let mintQuoteRequest = CashuSwift.Bolt11.MintQuoteRequest(unit: Unit.sat.currencyCode,
                                                                           amount: amount)
                 let mintQuote = try await CashuSwift.Bolt11.requestMintQuote(mintQuoteRequest,
-                                                                             from: CashuSwift.Mint(toMint))
+                                                                             from: CashuSwift.Mint(toMint), session: try await NetworkController.shared.session(for: toMint.url))
                 let meltQuoteRequest = CashuSwift.Bolt11.MeltQuoteRequest(unit: Unit.sat.currencyCode,
                                                                           request: mintQuote.request,
                                                                           options: nil)
                 let meltQuote = try await CashuSwift.Bolt11.requestMeltQuote(meltQuoteRequest,
-                                                                             from: CashuSwift.Mint(fromMint))
+                                                                             from: CashuSwift.Mint(fromMint), session: try await NetworkController.shared.session(for: fromMint.url))
 
                 await MainActor.run {
                     guard let selection = fromMint.select(amount: amount + meltQuote.feeReserve,
@@ -851,7 +851,7 @@ final class InlineSwapManager: ObservableObject {
         Task {
             // destination first: did the payment arrive, was the ecash already issued?
             let destination: TransferFlow.QuoteCheck
-            if let state = (try? await CashuSwift.Bolt11.mintQuoteState(mintQuote.quote, from: sendableTo))?.state {
+            if let state = (try? await CashuSwift.Bolt11.mintQuoteState(mintQuote.quote, from: sendableTo, session: try await NetworkController.shared.session(for: sendableTo.url)))?.state {
                 destination = .state(state)
             } else {
                 destination = .unavailable
@@ -864,7 +864,7 @@ final class InlineSwapManager: ObservableObject {
                 let outputs = (blankOutputSet?.outputs.isEmpty == false) ? blankOutputSet?.tuple() : nil
                 sourceMeltResult = try? await CashuSwift.Bolt11.meltState(meltQuote.quote,
                                                                           from: sendableFrom,
-                                                                          blankOutputs: outputs)
+                                                                          blankOutputs: outputs, session: try await NetworkController.shared.session(for: sendableFrom.url))
                 source = sourceMeltResult.flatMap { result in
                     result.quote.state.map { TransferFlow.QuoteCheck.state($0) }
                 } ?? .unavailable
@@ -1012,7 +1012,7 @@ final class InlineSwapManager: ObservableObject {
                 let meltResult = try await CashuSwift.Bolt11.melt(quote: meltQuote,
                                                                   from: sendableFrom,
                                                                   proofs: proofs.sendable(),
-                                                                  blankOutputs: blankOutputSet?.tuple())
+                                                                  blankOutputs: blankOutputSet?.tuple(), session: try await NetworkController.shared.session(for: sendableFrom.url))
 
                 swapLogger.info("DLEQ check on melt change proofs: \(String(describing: meltResult.dleqResult))")
 
@@ -1045,7 +1045,7 @@ final class InlineSwapManager: ObservableObject {
                 let outputs = (blankOutputSet?.outputs.isEmpty == false) ? blankOutputSet?.tuple() : nil
                 let recheck = try? await CashuSwift.Bolt11.meltState(meltQuote.quote,
                                                                      from: sendableFrom,
-                                                                     blankOutputs: outputs)
+                                                                     blankOutputs: outputs, session: try await NetworkController.shared.session(for: sendableFrom.url))
 
                 if let recheck, recheck.quote.state == .paid {
                     swapLogger.info("melt threw but the quote is PAID — continuing with issuance")

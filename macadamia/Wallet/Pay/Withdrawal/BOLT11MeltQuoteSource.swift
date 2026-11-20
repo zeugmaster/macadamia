@@ -413,7 +413,7 @@ struct BOLT11MeltQuoteSource: View {
                     ])
                 ]
             )
-            let quote = try await CashuSwift.Generic.requestMeltQuote(request, from: mint)
+            let quote = try await CashuSwift.Generic.requestMeltQuote(request, from: mint, session: try await NetworkController.shared.session(for: mint.url))
             return CashuSwift.Bolt11.MeltQuote(quote: quote.quote,
                                                request: invoice,
                                                amount: quote.amount,
@@ -428,7 +428,7 @@ struct BOLT11MeltQuoteSource: View {
         let request = CashuSwift.Bolt11.MeltQuoteRequest(unit: Unit.sat.currencyCode,
                                                          request: invoice,
                                                          options: nil)
-        return try await CashuSwift.Bolt11.requestMeltQuote(request, from: mint)
+        return try await CashuSwift.Bolt11.requestMeltQuote(request, from: mint, session: try await NetworkController.shared.session(for: mint.url))
     }
 
     private func msatAllocations(for total: Int, mints: [Mint]) -> [Mint: Int] {

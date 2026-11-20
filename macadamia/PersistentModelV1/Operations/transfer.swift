@@ -140,10 +140,10 @@ enum TransferFlow {
                              sleeper: (@Sendable (TimeInterval) async -> Void)? = nil) async -> IssueOutcome {
 
         let fetchQuoteState = quoteState ?? { id, mint in
-            try await CashuSwift.Bolt11.mintQuoteState(id, from: mint)
+            try await CashuSwift.Bolt11.mintQuoteState(id, from: mint, session: try await NetworkController.shared.session(for: mint.url))
         }
         let executeMint = mintExecutor ?? { quote, mint, seed in
-            try await CashuSwift.Bolt11.mint(quote: quote, from: mint, seed: seed)
+            try await CashuSwift.Bolt11.mint(quote: quote, from: mint, seed: seed, session: try await NetworkController.shared.session(for: mint.url))
         }
         let sleep = sleeper ?? { seconds in
             try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
@@ -335,7 +335,7 @@ enum TransferFlow {
             let outputs = (blankOutputSet?.outputs.isEmpty == false) ? blankOutputSet?.tuple() : nil
             result = try? await CashuSwift.Bolt11.meltState(meltQuote.quote,
                                                             from: sendableFrom,
-                                                            blankOutputs: outputs)
+                                                            blankOutputs: outputs, session: try await NetworkController.shared.session(for: sendableFrom.url))
         }
 
         guard let result, result.quote.state == .paid else { return }

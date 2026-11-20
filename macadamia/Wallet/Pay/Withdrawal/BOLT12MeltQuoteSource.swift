@@ -71,7 +71,7 @@ final class BOLT12QuoteLoader: ObservableObject {
     }
 
     typealias FetchQuote = @Sendable (CashuSwift.Bolt12.MeltQuoteRequest, CashuSwift.Mint) async throws -> CashuSwift.Bolt12.MeltQuote
-    nonisolated static let fetchFromMint: FetchQuote = { try await CashuSwift.Bolt12.requestMeltQuote($0, from: $1) }
+    nonisolated static let fetchFromMint: FetchQuote = { try await CashuSwift.Bolt12.requestMeltQuote($0, from: $1, session: try await NetworkController.shared.session(for: $1.url)) }
 
     func load(offer: BOLT12OfferInput, amount: Int, mint: Mint, option: PaymentOption,
               fetch: FetchQuote = fetchFromMint) async {

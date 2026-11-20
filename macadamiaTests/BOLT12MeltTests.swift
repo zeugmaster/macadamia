@@ -292,7 +292,8 @@ final class BOLT12MeltTests: XCTestCase {
                 let input = try BOLT12OfferInput(offer())
                 let loader = BOLT12QuoteLoader()
                 await loader.load(offer: input, amount: 100, mint: mint,
-                                  option: .init(mintID: mint.mintID, direction: .withdraw, unit: .sat, method: .bolt12))
+                                  option: .init(mintID: mint.mintID, direction: .withdraw, unit: .sat, method: .bolt12),
+                                  fetch: { try await CashuSwift.Bolt12.requestMeltQuote($0, from: $1, session: stub.network.session(for: $1.url)) })
                 guard case .ready(let bundles, _) = loader.state, let quote = bundles.first?.quote else {
                     return XCTFail("Expected a real BOLT12 quote request to the HTTP stub")
                 }
@@ -302,11 +303,11 @@ final class BOLT12MeltTests: XCTestCase {
                                         feeReserve: 1, state: .unpaid, expiry: nil))
             }
             let proofs = try container.mainContext.fetch(FetchDescriptor<Proof>()).sendable()
-            let result = try await payment.melt(from: CashuSwift.Mint(mint), proofs: proofs, blankOutputs: nil)
+            let result = try await payment.melt(from: CashuSwift.Mint(mint), proofs: proofs, blankOutputs: nil, network: await stub.network)
             XCTAssertEqual(result.quote.method, method)
             XCTAssertEqual(result.quote.state, .paid)
             XCTAssertEqual(result.quote.request, payment.request)
-            let recovered = try await payment.checkState(from: CashuSwift.Mint(mint), blankOutputs: nil)
+            let recovered = try await payment.checkState(from: CashuSwift.Mint(mint), blankOutputs: nil, network: await stub.network)
             XCTAssertEqual(recovered.quote.method, method)
             XCTAssertEqual(recovered.quote.paymentPreimage, "preimage")
             XCTAssertEqual(recovered.quote.request, payment.request)
@@ -321,7 +322,7 @@ final class BOLT12MeltTests: XCTestCase {
             let response = quote(state: state)
             let stub = try MintHTTPStub { _ in try JSONEncoder().encode(response) }
             defer { stub.remove() }
-            let result = try await payment.checkState(from: .init(url: stub.url, keysets: []), blankOutputs: nil)
+            let result = try await payment.checkState(from: .init(url: stub.url, keysets: []), blankOutputs: nil, network: await stub.network)
             XCTAssertEqual(result.quote.state, state)
             XCTAssertEqual(result.quote.request, payment.request)
         }
@@ -330,7 +331,7 @@ final class BOLT12MeltTests: XCTestCase {
             let stub = try MintHTTPStub { _ in try JSONEncoder().encode(response) }
             defer { stub.remove() }
             do {
-                _ = try await payment.checkState(from: .init(url: stub.url, keysets: []), blankOutputs: nil)
+                _ = try await payment.checkState(from: .init(url: stub.url, keysets: []), blankOutputs: nil, network: await stub.network)
                 XCTFail("Must not settle a different payment")
             } catch { }
         }

@@ -34,8 +34,14 @@ struct SendView: View {
     @State private var showAlert: Bool = false
     @State private var currentAlert: AlertDetail?
 
-    init(token: CashuSwift.Token? = nil) {
+    private let initialMintID: UUID?
+    @State private var appliedHandoff = false
+
+    init(token: CashuSwift.Token? = nil, mintID: UUID? = nil, amount: Int = 0, memo: String = "") {
         self.token = token
+        self.initialMintID = mintID
+        self._amount = State(initialValue: amount)
+        self._tokenMemo = State(initialValue: memo)
     }
 
     var body: some View {
@@ -125,6 +131,11 @@ struct SendView: View {
             .navigationBarTitleDisplayMode(.inline)
             .alertView(isPresented: $showAlert, currentAlert: currentAlert)
             .onAppear(perform: {
+                if !appliedHandoff, let initialMintID {
+                    selectedMint = activeWallet?.mints.first { $0.mintID == initialMintID }
+                    updateBalance()
+                    appliedHandoff = true
+                }
                 buttonState = .idle("Generate Token", action: generateToken)
             })
 
@@ -193,6 +204,9 @@ struct SendView: View {
                                                           modelContext: modelContext,
                                                           lockingKey: pubkey)
                 buttonState = .success()
+            } catch is AppSchemaV1.SendError {
+                buttonState = .fail(String(localized: "Pending"))
+                displayAlert(alert: AlertDetail(with: AppSchemaV1.SendError.pending))
             } catch {
                 logger.error("error when preparing send \(error)")
                 displayAlert(alert: AlertDetail(with: error))

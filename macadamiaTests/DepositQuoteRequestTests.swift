@@ -53,7 +53,7 @@ final class DepositQuoteRequestTests: XCTestCase {
             }
         }
         defer { stub.remove() }
-        let states = try await OnchainTransaction.transactionStates(at: stub.url.appending(path: "api"), for: address)
+        let states = try await OnchainTransaction.transactionStates(at: stub.url.appending(path: "api"), for: address, network: await stub.network)
         XCTAssertEqual(states.map(\.txid), ["a", "b"], "a spend from the address is not a deposit")
         XCTAssertEqual(states.map(\.block), [.mempool, .confirmations(2)])
         XCTAssertEqual(states.map(\.amount), [20_000, 25_000], "only outputs to the address count")
@@ -104,7 +104,7 @@ final class DepositQuoteRequestTests: XCTestCase {
             let (container, mint, wallet) = try fixture(url: stub.url)
             let option = PaymentOption(mintID: mint.mintID, direction: .deposit, unit: .sat, method: method)
             let quote = try await DepositQuoteRequestView.loadQuote(from: mint, option: option, amount: amount,
-                                                                     in: container.mainContext)
+                                                                     in: container.mainContext, network: await stub.network)
             XCTAssertEqual(quote.method, method)
             XCTAssertEqual(quote.paymentMethodKind, method.kind)
             XCTAssertEqual(quote.unit, .sat)
@@ -162,7 +162,7 @@ final class DepositQuoteRequestTests: XCTestCase {
             let option = PaymentOption(mintID: mint.mintID, direction: .deposit, unit: .sat, method: "branch")
             do {
                 _ = try await DepositQuoteRequestView.loadQuote(from: mint, option: option, amount: 123,
-                                                                 in: container.mainContext)
+                                                                 in: container.mainContext, network: await stub.network)
                 XCTFail("Accepted \(mutation)")
             } catch let error as CashuError {
                 switch (mutation, error) {
@@ -210,7 +210,7 @@ final class DepositQuoteRequestTests: XCTestCase {
         let (container, mint, _) = try fixture(url: stub.url)
         let option = PaymentOption(mintID: mint.mintID, direction: .deposit, unit: .sat, method: "onchain")
         let quote = try await DepositQuoteRequestView.loadQuote(from: mint, option: option, amount: 10_000,
-                                                                 in: container.mainContext)
+                                                                 in: container.mainContext, network: await stub.network)
         XCTAssertEqual(quote.amount, 10_000)
         XCTAssertEqual(quote.onchainPaymentURL?.absoluteString, "bitcoin:bc1qaddress?amount=0.0001")
         let pending = try XCTUnwrap(quote.pendingEvent)
@@ -219,7 +219,7 @@ final class DepositQuoteRequestTests: XCTestCase {
         XCTAssertEqual(resumed.onchainPaymentURL, quote.onchainPaymentURL)
 
         let amountless = try await DepositQuoteRequestView.loadQuote(from: mint, option: option, amount: nil,
-                                                                      in: container.mainContext)
+                                                                      in: container.mainContext, network: await stub.network)
         XCTAssertEqual(amountless.onchainPaymentURL?.absoluteString, "bitcoin:bc1qaddress")
 
         // A mint that reports PAID without accounting must not issue the local hint amount.
@@ -345,7 +345,7 @@ final class DepositQuoteRequestTests: XCTestCase {
             let resumedContext = ModelContext(container)
             let savedPending = try XCTUnwrap(try resumedContext.fetch(FetchDescriptor<Event>()).first)
             let quote = try DepositQuoteView.restoreQuote(from: savedPending)
-            try await DepositQuoteView.issueEcash(for: quote, amount: 3, in: resumedContext)
+            try await DepositQuoteView.issueEcash(for: quote, amount: 3, in: resumedContext, network: await stub.network)
 
             let restored = ModelContext(container)
             let proofs = try restored.fetch(FetchDescriptor<Proof>())
@@ -371,7 +371,7 @@ final class DepositQuoteRequestTests: XCTestCase {
                 XCTAssertEqual(event.genericMintQuote?.lockingPubkey, key.publicKey)
             }
             do {
-                try await DepositQuoteView.issueEcash(for: quote, amount: 3, in: resumedContext)
+                try await DepositQuoteView.issueEcash(for: quote, amount: 3, in: resumedContext, network: await stub.network)
                 XCTFail("A completed deposit must not issue again")
             } catch {
                 XCTAssertEqual(error as? CashuError, .proofsAlreadyIssuedForQuote)
@@ -395,7 +395,7 @@ final class DepositQuoteRequestTests: XCTestCase {
                                      option: .init(mintID: mint.mintID, direction: .deposit, unit: .sat, method: .bolt12),
                                      requestedAmount: nil, lockingKeyCounter: counter)
             do {
-                try await DepositQuoteView.issueEcash(for: quote, amount: 3, in: container.mainContext)
+                try await DepositQuoteView.issueEcash(for: quote, amount: 3, in: container.mainContext, network: await stub.network)
                 XCTFail("Accepted invalid quote authorization")
             } catch let error as CashuError {
                 switch error {
@@ -434,7 +434,7 @@ final class DepositQuoteRequestTests: XCTestCase {
                 let (container, mint, _) = try fixture(url: stub.url, storeURL: storeURL)
                 let option = PaymentOption(mintID: mint.mintID, direction: .deposit, unit: .sat, method: method)
                 let quote = try await DepositQuoteRequestView.loadQuote(from: mint, option: option, amount: amount,
-                                                                         in: container.mainContext)
+                                                                         in: container.mainContext, network: await stub.network)
                 eventID = try XCTUnwrap(quote.pendingEvent?.eventID)
             }
 
@@ -473,7 +473,7 @@ final class DepositQuoteRequestTests: XCTestCase {
         for _ in 0..<2 {
             let quote = try DepositQuoteView.restoreQuote(from: pending)
             do {
-                try await DepositQuoteView.issueEcash(for: quote, amount: 1, in: container.mainContext)
+                try await DepositQuoteView.issueEcash(for: quote, amount: 1, in: container.mainContext, network: await stub.network)
                 XCTFail("Issuance should fail when the mint cannot be reached")
             } catch { }
         }
