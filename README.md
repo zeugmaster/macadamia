@@ -24,8 +24,8 @@ Please only experiment with amounts of sats you are ready to lose!
 
 The default connection mode supports public HTTPS/WSS endpoints directly and v3
 onion endpoints through embedded Tor. Settings → Privacy → **Tor only** routes all
-wallet connections through Tor and fails closed if Tor is unavailable. The setting
-is also available before onboarding makes its first network request. Public HTTP,
+wallet connections through Tor and fails closed if Tor is unavailable. New installs
+start in Automatic mode; Tor only is available in Settings. Public HTTP,
 cross-origin redirects, and local destinations in Tor only mode are rejected.
 Links opened in another app use that app's settings.
 
