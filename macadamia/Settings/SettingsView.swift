@@ -39,7 +39,9 @@ struct SettingsView: View {
                 }
                 
                 Section {
-                    NavigationLink("Privacy", destination: TorSettingsView())
+                    NavigationLink("Network", destination: TorSettingsView())
+                } header: {
+                    Text("Privacy")
                 }
 
                 if hiddenMenuShowing {

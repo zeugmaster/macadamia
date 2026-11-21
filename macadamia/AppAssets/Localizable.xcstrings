@@ -1,226 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Connected to Tor" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connected to Tor"
-          }
-        }
-      }
-    },
-    "Connecting to Tor…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connecting to Tor…"
-          }
-        }
-      }
-    },
-    "Could not connect to Tor. Check your connection and try again." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not connect to Tor. Check your connection and try again."
-          }
-        }
-      }
-    },
-    "Links opened in other apps use those apps’ connection settings." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Links opened in other apps use those apps’ connection settings."
-          }
-        }
-      }
-    },
-    "Local network addresses cannot be reached in Tor only mode." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Local network addresses cannot be reached in Tor only mode."
-          }
-        }
-      }
-    },
-    "Open macadamia to connect through Tor." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open macadamia to connect through Tor."
-          }
-        }
-      }
-    },
-    "Open macadamia to redeem this token through Tor." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open macadamia to redeem this token through Tor."
-          }
-        }
-      }
-    },
-    "Pending Send" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pending Send"
-          }
-        }
-      }
-    },
-    "Privacy" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Privacy"
-          }
-        }
-      }
-    },
-    "Reconnecting to Tor…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reconnecting to Tor…"
-          }
-        }
-      }
-    },
-    "Recover send" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recover send"
-          }
-        }
-      }
-    },
-    "The connection mode changed. Please try again." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The connection mode changed. Please try again."
-          }
-        }
-      }
-    },
-    "The mint has not confirmed this send. Your funds remain reserved. Open this send in History to recover it before trying another payment." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The mint has not confirmed this send. Your funds remain reserved. Open this send in History to recover it before trying another payment."
-          }
-        }
-      }
-    },
-    "This connection address is invalid." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This connection address is invalid."
-          }
-        }
-      }
-    },
-    "This send is awaiting confirmation. Its funds remain reserved." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This send is awaiting confirmation. Its funds remain reserved."
-          }
-        }
-      }
-    },
-    "Tor" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tor"
-          }
-        }
-      }
-    },
-    "Tor connections run in macadamia. Exact-amount sends can still be prepared offline here." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tor connections run in macadamia. Exact-amount sends can still be prepared offline here."
-          }
-        }
-      }
-    },
-    "Tor is idle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tor is idle"
-          }
-        }
-      }
-    },
-    "Tor is unavailable" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tor is unavailable"
-          }
-        }
-      }
-    },
-    "Tor only" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tor only"
-          }
-        }
-      }
-    },
-    "Use HTTPS for public addresses. HTTP is supported for onion addresses through Tor." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use HTTPS for public addresses. HTTP is supported for onion addresses through Tor."
-          }
-        }
-      }
-    },
-    "Use Tor for all connections made by macadamia. When off, onion addresses still use Tor and other addresses connect directly." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use Tor for all connections made by macadamia. When off, onion addresses still use Tor and other addresses connect directly."
-          }
-        }
-      }
-    },
     "" : {
       "shouldTranslate" : false
     },
@@ -8384,6 +8164,26 @@
         }
       }
     },
+    "Connected to Tor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected to Tor"
+          }
+        }
+      }
+    },
+    "Connecting to Tor…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting to Tor…"
+          }
+        }
+      }
+    },
     "Contact the developer" : {
       "localizations" : {
         "ar" : {
@@ -9220,6 +9020,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ödeme kontrol edilemedi. %@"
+          }
+        }
+      }
+    },
+    "Could not connect to Tor. Check your connection and try again." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not connect to Tor. Check your connection and try again."
           }
         }
       }
@@ -18552,6 +18362,16 @@
         }
       }
     },
+    "Links opened in other apps use those apps’ connection settings." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Links opened in other apps use those apps’ connection settings."
+          }
+        }
+      }
+    },
     "Liquid Glass" : {
       "shouldTranslate" : false
     },
@@ -18912,6 +18732,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Teklifler yükleniyor…"
+          }
+        }
+      }
+    },
+    "Local network addresses cannot be reached in Tor only mode." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local network addresses cannot be reached in Tor only mode."
           }
         }
       }
@@ -26628,6 +26458,26 @@
         }
       }
     },
+    "Open macadamia to connect through Tor." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open macadamia to connect through Tor."
+          }
+        }
+      }
+    },
+    "Open macadamia to redeem this token through Tor." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open macadamia to redeem this token through Tor."
+          }
+        }
+      }
+    },
     "Open the NFC contactless payment screen to pay a terminal" : {
       "localizations" : {
         "ar" : {
@@ -29641,6 +29491,16 @@
         }
       }
     },
+    "Pending Send" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pending Send"
+          }
+        }
+      }
+    },
     "Pending Transfer" : {
       "localizations" : {
         "ar" : {
@@ -29922,6 +29782,7 @@
       }
     },
     "Please enter a valid URL. If no protocol is specified, https:// will be used." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -29991,7 +29852,11 @@
         }
       }
     },
+    "Please enter a valid URL. If no protocol is specified, public addresses use HTTPS and onion addresses use HTTP through Tor." : {
+
+    },
     "Please enter each mint URL only once. If no protocol is specified, https:// will be used." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -30060,6 +29925,9 @@
           }
         }
       }
+    },
+    "Please enter each mint URL only once. If no protocol is specified, public addresses use HTTPS and onion addresses use HTTP through Tor." : {
+
     },
     "Polish Złoty" : {
       "localizations" : {
@@ -30197,6 +30065,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hazırlanıyor..."
+          }
+        }
+      }
+    },
+    "Privacy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy"
           }
         }
       }
@@ -31958,6 +31836,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "NFC ile alma bu cihazda veya bölgende kullanılamıyor."
+          }
+        }
+      }
+    },
+    "Reconnecting to Tor…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnecting to Tor…"
+          }
+        }
+      }
+    },
+    "Recover send" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recover send"
           }
         }
       }
@@ -36734,6 +36632,16 @@
         }
       }
     },
+    "The connection mode changed. Please try again." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The connection mode changed. Please try again."
+          }
+        }
+      }
+    },
     "The connection to the payer's device was lost. Try again." : {
       "localizations" : {
         "ar" : {
@@ -37990,6 +37898,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mint ödemeyi onayladı."
+          }
+        }
+      }
+    },
+    "The mint has not confirmed this send. Your funds remain reserved. Open this send in History to recover it before trying another payment." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The mint has not confirmed this send. Your funds remain reserved. Open this send in History to recover it before trying another payment."
           }
         }
       }
@@ -39395,6 +39313,7 @@
       }
     },
     "The request returned status: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -40234,6 +40153,16 @@
         }
       }
     },
+    "This connection address is invalid." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This connection address is invalid."
+          }
+        }
+      }
+    },
     "This field supports BOLT11 invoices, BOLT12 offers, LNURL strings (LNURL1...), Lightning Addresses (e.g. user@host.com) or Bitcoin addresses." : {
       "localizations" : {
         "ar" : {
@@ -40930,6 +40859,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu ödeme isteğinin süresi doldu. Devam etmek için yeni bir yatırma oluştur."
+          }
+        }
+      }
+    },
+    "This send is awaiting confirmation. Its funds remain reserved." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This send is awaiting confirmation. Its funds remain reserved."
           }
         }
       }
@@ -41703,6 +41642,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Token kullanıldı."
+          }
+        }
+      }
+    },
+    "Tor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tor"
+          }
+        }
+      }
+    },
+    "Tor connections run in macadamia. Exact-amount sends can still be prepared offline here." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tor connections run in macadamia. Exact-amount sends can still be prepared offline here."
+          }
+        }
+      }
+    },
+    "Tor is idle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tor is idle"
+          }
+        }
+      }
+    },
+    "Tor is unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tor is unavailable"
+          }
+        }
+      }
+    },
+    "Tor only" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tor only"
           }
         }
       }
@@ -44923,6 +44912,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ABD Doları"
+          }
+        }
+      }
+    },
+    "Use HTTPS for public addresses. HTTP is supported for onion addresses through Tor." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use HTTPS for public addresses. HTTP is supported for onion addresses through Tor."
+          }
+        }
+      }
+    },
+    "Use Tor for all connections made by macadamia. When off, onion addresses still use Tor and other addresses connect directly." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Tor for all connections made by macadamia. When off, onion addresses still use Tor and other addresses connect directly."
           }
         }
       }

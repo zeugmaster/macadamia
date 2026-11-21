@@ -13,12 +13,9 @@ struct TorSettingsView: View {
             if network.torOnly || network.torState != .stopped {
                 Section { TorStatusView() }
             }
-            Section {
-                Text("Links opened in other apps use those apps’ connection settings.")
-                    .foregroundStyle(.secondary)
-            }
         }
         .navigationTitle("Privacy")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
