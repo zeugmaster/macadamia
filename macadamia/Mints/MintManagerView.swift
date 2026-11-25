@@ -314,11 +314,7 @@ struct MintInfoRowView: View {
                 Text(mint.nickName ?? mint.url.host(percentEncoded: false) ?? mint.url.absoluteString)
                     .bold()
                     .dynamicTypeSize(.xLarge)
-                if NetworkController.isOnion(mint.url) {
-                    Label("Tor", systemImage: "network")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                    .truncationMode(.middle)
                 if let amountDisplayString {
                     AmountView(text: amountDisplayString)
                         .foregroundStyle(.gray)

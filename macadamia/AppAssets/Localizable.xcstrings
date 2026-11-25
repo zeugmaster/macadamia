@@ -18363,6 +18363,7 @@
       }
     },
     "Links opened in other apps use those apps’ connection settings." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -41647,6 +41648,7 @@
       }
     },
     "Tor" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
